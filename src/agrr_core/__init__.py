@@ -16,7 +16,7 @@ from .adapter import (
     InMemoryPredictionRepository,
     WeatherDataMapper,
 )
-from .framework import WeatherController
+from .adapter.controllers.weather_controller import WeatherController
 
 __version__ = "0.1.0"
 

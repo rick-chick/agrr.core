@@ -3,7 +3,9 @@
 import pytest
 from unittest.mock import Mock, AsyncMock
 
-from agrr_core.framework.controllers.weather_controller import WeatherController
+from agrr_core.adapter.controllers.weather_controller import WeatherController
+from agrr_core.adapter.services.weather_service_impl import WeatherServiceImpl
+from agrr_core.adapter.services.prediction_service_impl import PredictionServiceImpl
 from agrr_core.usecase.interactors.fetch_weather_data_interactor import FetchWeatherDataInteractor
 from agrr_core.usecase.interactors.predict_weather_interactor import PredictWeatherInteractor
 from agrr_core.adapter.repositories.in_memory_weather_repository import InMemoryWeatherRepository
@@ -29,8 +31,12 @@ class TestWeatherControllerIntegration:
         self.fetch_interactor = FetchWeatherDataInteractor(self.weather_repo)
         self.predict_interactor = PredictWeatherInteractor(self.weather_repo, self.prediction_repo, self.prediction_service)
         
+        # Create services
+        self.weather_service = WeatherServiceImpl(self.fetch_interactor)
+        self.prediction_service_impl = PredictionServiceImpl(self.predict_interactor)
+        
         # Create controller
-        self.controller = WeatherController(self.fetch_interactor, self.predict_interactor)
+        self.controller = WeatherController(self.weather_service, self.prediction_service_impl)
     
     @pytest.mark.asyncio
     async def test_get_weather_data_integration(self):
@@ -231,8 +237,11 @@ class TestWeatherControllerIntegration:
         fetch_interactor2 = FetchWeatherDataInteractor(weather_repo2)
         predict_interactor2 = PredictWeatherInteractor(weather_repo2, prediction_repo2, self.prediction_service)
         
-        controller2 = WeatherController(fetch_interactor2, predict_interactor2)
+        weather_service2 = WeatherServiceImpl(fetch_interactor2)
+        prediction_service_impl2 = PredictionServiceImpl(predict_interactor2)
+        
+        controller2 = WeatherController(weather_service2, prediction_service_impl2)
         
         # Should initialize without error
-        assert controller2.fetch_weather_interactor == fetch_interactor2
-        assert controller2.predict_weather_interactor == predict_interactor2
+        assert controller2.weather_service == weather_service2
+        assert controller2.prediction_service == prediction_service_impl2

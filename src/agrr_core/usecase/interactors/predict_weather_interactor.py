@@ -7,6 +7,7 @@ from agrr_core.entity.exceptions.prediction_error import PredictionError
 from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
 from agrr_core.usecase.ports.input.weather_prediction_input_port import WeatherPredictionInputPort
 from agrr_core.usecase.ports.output.weather_prediction_output_port import WeatherPredictionOutputPort
+from agrr_core.usecase.ports.output.prediction_presenter_output_port import PredictionPresenterOutputPort
 from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
 from agrr_core.usecase.dto.prediction_request_dto import PredictionRequestDTO
 from agrr_core.usecase.dto.prediction_response_dto import PredictionResponseDTO
@@ -20,13 +21,15 @@ class PredictWeatherInteractor:
         self, 
         weather_data_input_port: WeatherDataInputPort,
         weather_prediction_input_port: WeatherPredictionInputPort,
-        weather_prediction_output_port: WeatherPredictionOutputPort
+        weather_prediction_output_port: WeatherPredictionOutputPort,
+        prediction_presenter_output_port: PredictionPresenterOutputPort
     ):
         self.weather_data_input_port = weather_data_input_port
         self.weather_prediction_input_port = weather_prediction_input_port
         self.weather_prediction_output_port = weather_prediction_output_port
+        self.prediction_presenter_output_port = prediction_presenter_output_port
     
-    async def execute(self, request: PredictionRequestDTO) -> PredictionResponseDTO:
+    async def execute(self, request: PredictionRequestDTO) -> None:
         """Execute weather prediction."""
         try:
             # Validate location
@@ -80,7 +83,7 @@ class PredictWeatherInteractor:
                 )
                 forecast_response.append(forecast_dto)
             
-            return PredictionResponseDTO(
+            response_dto = PredictionResponseDTO(
                 historical_data=historical_response,
                 forecast=forecast_response,
                 model_metrics={
@@ -90,7 +93,13 @@ class PredictWeatherInteractor:
                 }
             )
             
+            # Use presenter to format response
+            formatted_response = self.prediction_presenter_output_port.format_prediction_dto(response_dto)
+            return self.prediction_presenter_output_port.format_success(formatted_response)
+            
         except (ValueError, InvalidLocationError, InvalidDateRangeError) as e:
-            raise InvalidLocationError(f"Invalid request parameters: {e}")
+            error_response = self.prediction_presenter_output_port.format_error(f"Invalid request parameters: {e}")
+            return error_response
         except Exception as e:
-            raise PredictionError(f"Prediction failed: {e}")
+            error_response = self.prediction_presenter_output_port.format_error(f"Prediction failed: {e}")
+            return error_response

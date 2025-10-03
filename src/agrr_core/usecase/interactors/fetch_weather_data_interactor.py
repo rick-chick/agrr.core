@@ -4,6 +4,7 @@ from agrr_core.entity import Location, DateRange
 from agrr_core.entity.exceptions.invalid_location_error import InvalidLocationError
 from agrr_core.entity.exceptions.invalid_date_range_error import InvalidDateRangeError
 from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
+from agrr_core.usecase.ports.output.weather_presenter_output_port import WeatherPresenterOutputPort
 from agrr_core.usecase.dto.weather_data_request_dto import WeatherDataRequestDTO
 from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
 from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataListResponseDTO
@@ -12,10 +13,15 @@ from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataList
 class FetchWeatherDataInteractor:
     """Interactor for fetching weather data."""
     
-    def __init__(self, weather_data_input_port: WeatherDataInputPort):
+    def __init__(
+        self, 
+        weather_data_input_port: WeatherDataInputPort,
+        weather_presenter_output_port: WeatherPresenterOutputPort
+    ):
         self.weather_data_input_port = weather_data_input_port
+        self.weather_presenter_output_port = weather_presenter_output_port
     
-    async def execute(self, request: WeatherDataRequestDTO) -> WeatherDataListResponseDTO:
+    async def execute(self, request: WeatherDataRequestDTO) -> None:
         """Execute weather data fetching."""
         try:
             # Validate location
@@ -46,10 +52,18 @@ class FetchWeatherDataInteractor:
                 )
                 response_data.append(response_dto)
             
-            return WeatherDataListResponseDTO(
+            response_dto = WeatherDataListResponseDTO(
                 data=response_data,
                 total_count=len(response_data)
             )
             
+            # Use presenter to format response
+            formatted_response = self.weather_presenter_output_port.format_weather_data_list_dto(response_dto)
+            return self.weather_presenter_output_port.format_success(formatted_response)
+            
         except (ValueError, InvalidLocationError, InvalidDateRangeError) as e:
-            raise InvalidLocationError(f"Invalid request parameters: {e}")
+            error_response = self.weather_presenter_output_port.format_error(f"Invalid request parameters: {e}")
+            return error_response
+        except Exception as e:
+            error_response = self.weather_presenter_output_port.format_error(f"Weather data fetch failed: {e}")
+            return error_response

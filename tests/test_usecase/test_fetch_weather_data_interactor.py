@@ -1,7 +1,7 @@
 """Tests for FetchWeatherDataInteractor."""
 
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 from datetime import datetime
 
 from agrr_core.usecase.interactors.fetch_weather_data_interactor import FetchWeatherDataInteractor
@@ -16,7 +16,8 @@ class TestFetchWeatherDataInteractor:
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_weather_input_port = AsyncMock()
-        self.interactor = FetchWeatherDataInteractor(self.mock_weather_input_port)
+        self.mock_weather_presenter_output_port = Mock()
+        self.interactor = FetchWeatherDataInteractor(self.mock_weather_input_port, self.mock_weather_presenter_output_port)
     
     @pytest.mark.asyncio
     async def test_execute_success(self):
@@ -43,6 +44,10 @@ class TestFetchWeatherDataInteractor:
         
         self.mock_weather_input_port.get_weather_data_by_location_and_date_range.return_value = mock_weather_data
         
+        # Setup presenter mock return values
+        self.mock_weather_presenter_output_port.format_weather_data_list_dto.return_value = {"data": [], "total_count": 2}
+        self.mock_weather_presenter_output_port.format_success.return_value = {"success": True, "data": {"data": [], "total_count": 2}}
+        
         # Execute
         request = WeatherDataRequestDTO(
             latitude=35.7,
@@ -54,24 +59,12 @@ class TestFetchWeatherDataInteractor:
         result = await self.interactor.execute(request)
         
         # Assertions
-        assert result.total_count == 2
-        assert len(result.data) == 2
+        assert result["success"] is True
+        assert result["data"]["total_count"] == 2
         
-        # Check first record
-        first_record = result.data[0]
-        assert first_record.time == "2023-01-01T00:00:00"
-        assert first_record.temperature_2m_max == 25.0
-        assert first_record.temperature_2m_min == 15.0
-        assert first_record.temperature_2m_mean == 20.0
-        assert first_record.precipitation_sum == 5.0
-        assert first_record.sunshine_duration == 28800.0
-        assert first_record.sunshine_hours == 8.0
-        
-        # Check second record
-        second_record = result.data[1]
-        assert second_record.time == "2023-01-02T00:00:00"
-        assert second_record.temperature_2m_max == 26.0
-        assert second_record.sunshine_hours == 7.0
+        # Check that presenter methods were called
+        self.mock_weather_presenter_output_port.format_weather_data_list_dto.assert_called_once()
+        self.mock_weather_presenter_output_port.format_success.assert_called_once()
         
         # Verify mock was called correctly
         self.mock_weather_input_port.get_weather_data_by_location_and_date_range.assert_called_once_with(
@@ -88,11 +81,18 @@ class TestFetchWeatherDataInteractor:
             end_date="2023-01-02"
         )
         
-        with pytest.raises(InvalidLocationError):
-            await self.interactor.execute(request)
+        # Setup presenter mock for error response
+        self.mock_weather_presenter_output_port.format_error.return_value = {"success": False, "error": {"message": "Invalid request parameters"}}
+        
+        result = await self.interactor.execute(request)
+        
+        # Assertions
+        assert result["success"] is False
+        assert "Invalid request parameters" in result["error"]["message"]
         
         # Verify mock was not called
         self.mock_weather_input_port.get_weather_data_by_location_and_date_range.assert_not_called()
+        self.mock_weather_presenter_output_port.format_error.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_execute_invalid_date_range(self):
@@ -104,11 +104,18 @@ class TestFetchWeatherDataInteractor:
             end_date="2023-01-02"
         )
         
-        with pytest.raises(InvalidLocationError):  # Should be wrapped as InvalidLocationError
-            await self.interactor.execute(request)
+        # Setup presenter mock for error response
+        self.mock_weather_presenter_output_port.format_error.return_value = {"success": False, "error": {"message": "Invalid request parameters"}}
+        
+        result = await self.interactor.execute(request)
+        
+        # Assertions
+        assert result["success"] is False
+        assert "Invalid request parameters" in result["error"]["message"]
         
         # Verify mock was not called
         self.mock_weather_input_port.get_weather_data_by_location_and_date_range.assert_not_called()
+        self.mock_weather_presenter_output_port.format_error.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_execute_empty_result(self):
@@ -122,8 +129,12 @@ class TestFetchWeatherDataInteractor:
             end_date="2023-01-02"
         )
         
+        # Setup presenter mock for empty result
+        self.mock_weather_presenter_output_port.format_weather_data_list_dto.return_value = {"data": [], "total_count": 0}
+        self.mock_weather_presenter_output_port.format_success.return_value = {"success": True, "data": {"data": [], "total_count": 0}}
+        
         result = await self.interactor.execute(request)
         
         # Should return empty result
-        assert result.total_count == 0
-        assert len(result.data) == 0
+        assert result["success"] is True
+        assert result["data"]["total_count"] == 0

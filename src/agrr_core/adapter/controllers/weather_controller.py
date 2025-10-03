@@ -2,8 +2,10 @@
 
 from typing import Dict, Any
 
-from agrr_core.adapter.interfaces.weather_service_interface import WeatherServiceInterface
-from agrr_core.adapter.interfaces.prediction_service_interface import PredictionServiceInterface
+from agrr_core.usecase.interactors.fetch_weather_data_interactor import FetchWeatherDataInteractor
+from agrr_core.usecase.interactors.predict_weather_interactor import PredictWeatherInteractor
+from agrr_core.usecase.dto.weather_data_request_dto import WeatherDataRequestDTO
+from agrr_core.usecase.dto.prediction_request_dto import PredictionRequestDTO
 
 
 class WeatherController:
@@ -11,11 +13,11 @@ class WeatherController:
     
     def __init__(
         self,
-        weather_service: WeatherServiceInterface,
-        prediction_service: PredictionServiceInterface
+        fetch_weather_data_interactor: FetchWeatherDataInteractor,
+        predict_weather_interactor: PredictWeatherInteractor
     ):
-        self.weather_service = weather_service
-        self.prediction_service = prediction_service
+        self.fetch_weather_data_interactor = fetch_weather_data_interactor
+        self.predict_weather_interactor = predict_weather_interactor
     
     async def get_weather_data(
         self, 
@@ -25,7 +27,13 @@ class WeatherController:
         end_date: str
     ) -> Dict[str, Any]:
         """Get weather data for specified location and date range."""
-        return await self.weather_service.get_weather_data(latitude, longitude, start_date, end_date)
+        request = WeatherDataRequestDTO(
+            latitude=latitude,
+            longitude=longitude,
+            start_date=start_date,
+            end_date=end_date
+        )
+        return await self.fetch_weather_data_interactor.execute(request)
     
     async def predict_weather(
         self,
@@ -36,7 +44,14 @@ class WeatherController:
         prediction_days: int = 365
     ) -> Dict[str, Any]:
         """Predict weather for specified location and date range."""
-        return await self.prediction_service.predict_weather(latitude, longitude, start_date, end_date, prediction_days)
+        request = PredictionRequestDTO(
+            latitude=latitude,
+            longitude=longitude,
+            start_date=start_date,
+            end_date=end_date,
+            prediction_days=prediction_days
+        )
+        return await self.predict_weather_interactor.execute(request)
     
     def get_weather_data_sync(
         self, 
@@ -46,7 +61,15 @@ class WeatherController:
         end_date: str
     ) -> Dict[str, Any]:
         """Synchronous version of get_weather_data."""
-        return self.weather_service.get_weather_data_sync(latitude, longitude, start_date, end_date)
+        request = WeatherDataRequestDTO(
+            latitude=latitude,
+            longitude=longitude,
+            start_date=start_date,
+            end_date=end_date
+        )
+        # Note: This should be made async or use a sync version of the interactor
+        import asyncio
+        return asyncio.run(self.fetch_weather_data_interactor.execute(request))
     
     def predict_weather_sync(
         self,
@@ -57,4 +80,13 @@ class WeatherController:
         prediction_days: int = 365
     ) -> Dict[str, Any]:
         """Synchronous version of predict_weather."""
-        return self.prediction_service.predict_weather_sync(latitude, longitude, start_date, end_date, prediction_days)
+        request = PredictionRequestDTO(
+            latitude=latitude,
+            longitude=longitude,
+            start_date=start_date,
+            end_date=end_date,
+            prediction_days=prediction_days
+        )
+        # Note: This should be made async or use a sync version of the interactor
+        import asyncio
+        return asyncio.run(self.predict_weather_interactor.execute(request))

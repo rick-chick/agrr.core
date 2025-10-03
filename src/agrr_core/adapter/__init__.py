@@ -9,6 +9,8 @@ from .services.weather_service_impl import WeatherServiceImpl
 from .services.prediction_service_impl import PredictionServiceImpl
 from .interfaces.weather_service_interface import WeatherServiceInterface
 from .interfaces.prediction_service_interface import PredictionServiceInterface
+from .presenters.weather_presenter import WeatherPresenter
+from .presenters.prediction_presenter import PredictionPresenter
 
 __all__ = [
     "OpenMeteoWeatherRepository",
@@ -20,4 +22,6 @@ __all__ = [
     "PredictionServiceImpl",
     "WeatherServiceInterface",
     "PredictionServiceInterface",
+    "WeatherPresenter",
+    "PredictionPresenter",
 ]

@@ -7,6 +7,8 @@ from .usecase import (
     WeatherDataInputPort,
     WeatherPredictionInputPort,
     WeatherPredictionOutputPort,
+    WeatherPresenterOutputPort,
+    PredictionPresenterOutputPort,
     WeatherDataRequestDTO,
     PredictionRequestDTO,
 )
@@ -15,6 +17,8 @@ from .adapter import (
     InMemoryWeatherRepository,
     InMemoryPredictionRepository,
     WeatherDataMapper,
+    WeatherPresenter,
+    PredictionPresenter,
 )
 from .adapter.controllers.weather_controller import WeatherController
 
@@ -32,6 +36,8 @@ __all__ = [
     "WeatherDataInputPort",
     "WeatherPredictionInputPort",
     "WeatherPredictionOutputPort",
+    "WeatherPresenterOutputPort",
+    "PredictionPresenterOutputPort",
     "WeatherDataRequestDTO",
     "PredictionRequestDTO",
     # Adapters
@@ -39,6 +45,8 @@ __all__ = [
     "InMemoryWeatherRepository",
     "InMemoryPredictionRepository",
     "WeatherDataMapper",
+    "WeatherPresenter",
+    "PredictionPresenter",
     # Framework
     "WeatherController",
 ]

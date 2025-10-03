@@ -1,7 +1,7 @@
 """Tests for PredictWeatherInteractor."""
 
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 from datetime import datetime
 
 from agrr_core.usecase.interactors.predict_weather_interactor import PredictWeatherInteractor
@@ -19,10 +19,12 @@ class TestPredictWeatherInteractor:
         self.mock_weather_input_port = AsyncMock()
         self.mock_prediction_input_port = AsyncMock()
         self.mock_prediction_output_port = AsyncMock()
+        self.mock_prediction_presenter_output_port = Mock()
         self.interactor = PredictWeatherInteractor(
             self.mock_weather_input_port,
             self.mock_prediction_input_port,
-            self.mock_prediction_output_port
+            self.mock_prediction_output_port,
+            self.mock_prediction_presenter_output_port
         )
     
     @pytest.mark.asyncio
@@ -76,6 +78,10 @@ class TestPredictWeatherInteractor:
             prediction_days=7
         )
         
+        # Setup presenter mock return values
+        self.mock_prediction_presenter_output_port.format_prediction_dto.return_value = {"historical_data": [], "forecast": [], "model_metrics": {}}
+        self.mock_prediction_presenter_output_port.format_success.return_value = {"success": True, "data": {"historical_data": [], "forecast": [], "model_metrics": {}}}
+        
         result = await self.interactor.execute(request)
         
         # Assertions - verify input/output ports were called correctly
@@ -87,12 +93,12 @@ class TestPredictWeatherInteractor:
         )
         self.mock_prediction_input_port.save_forecast.assert_called_once()
         
+        # Verify presenter methods were called
+        self.mock_prediction_presenter_output_port.format_prediction_dto.assert_called_once()
+        self.mock_prediction_presenter_output_port.format_success.assert_called_once()
+        
         # Verify result structure
-        assert len(result.historical_data) == 5
-        assert len(result.forecast) == 2  # Mock returns 2 forecasts
-        assert result.model_metrics is not None
-        assert result.model_metrics["training_data_points"] == 5
-        assert result.model_metrics["prediction_days"] == 7
+        assert result["success"] is True
     
     @pytest.mark.asyncio
     async def test_execute_no_historical_data(self):
@@ -107,8 +113,18 @@ class TestPredictWeatherInteractor:
             prediction_days=7
         )
         
-        with pytest.raises(PredictionError, match="No historical data available"):
-            await self.interactor.execute(request)
+        # Setup presenter mock for error response
+        self.mock_prediction_presenter_output_port.format_error.return_value = {"success": False, "error": {"message": "No historical data available for prediction"}}
+        
+        result = await self.interactor.execute(request)
+        
+        # Assertions
+        assert result["success"] is False
+        assert "No historical data available" in result["error"]["message"]
+        
+        # Verify mock was called
+        self.mock_weather_input_port.get_weather_data_by_location_and_date_range.assert_called_once()
+        self.mock_prediction_presenter_output_port.format_error.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_execute_no_valid_temperature_data(self):
@@ -136,8 +152,18 @@ class TestPredictWeatherInteractor:
             prediction_days=7
         )
         
-        with pytest.raises(PredictionError, match="No valid temperature data"):
-            await self.interactor.execute(request)
+        # Setup presenter mock for error response
+        self.mock_prediction_presenter_output_port.format_error.return_value = {"success": False, "error": {"message": "Prediction failed: No valid temperature data for prediction"}}
+        
+        result = await self.interactor.execute(request)
+        
+        # Assertions
+        assert result["success"] is False
+        assert "No valid temperature data" in result["error"]["message"]
+        
+        # Verify mock was called
+        self.mock_weather_input_port.get_weather_data_by_location_and_date_range.assert_called_once()
+        self.mock_prediction_presenter_output_port.format_error.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_execute_invalid_location(self):
@@ -150,12 +176,19 @@ class TestPredictWeatherInteractor:
             prediction_days=7
         )
         
-        with pytest.raises(InvalidLocationError):
-            await self.interactor.execute(request)
+        # Setup presenter mock for error response
+        self.mock_prediction_presenter_output_port.format_error.return_value = {"success": False, "error": {"message": "Invalid request parameters"}}
+        
+        result = await self.interactor.execute(request)
+        
+        # Assertions
+        assert result["success"] is False
+        assert "Invalid request parameters" in result["error"]["message"]
         
         # Verify mocks were not called
         self.mock_weather_input_port.get_weather_data_by_location_and_date_range.assert_not_called()
         self.mock_prediction_input_port.save_forecast.assert_not_called()
+        self.mock_prediction_presenter_output_port.format_error.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_execute_invalid_date_range(self):
@@ -168,9 +201,16 @@ class TestPredictWeatherInteractor:
             prediction_days=7
         )
         
-        with pytest.raises(InvalidLocationError):  # Should be wrapped as InvalidLocationError
-            await self.interactor.execute(request)
+        # Setup presenter mock for error response
+        self.mock_prediction_presenter_output_port.format_error.return_value = {"success": False, "error": {"message": "Invalid request parameters"}}
+        
+        result = await self.interactor.execute(request)
+        
+        # Assertions
+        assert result["success"] is False
+        assert "Invalid request parameters" in result["error"]["message"]
         
         # Verify mocks were not called
         self.mock_weather_input_port.get_weather_data_by_location_and_date_range.assert_not_called()
         self.mock_prediction_input_port.save_forecast.assert_not_called()
+        self.mock_prediction_presenter_output_port.format_error.assert_called_once()

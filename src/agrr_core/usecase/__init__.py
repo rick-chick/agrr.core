@@ -5,6 +5,8 @@ from .interactors.predict_weather_interactor import PredictWeatherInteractor
 from .ports.input.weather_data_input_port import WeatherDataInputPort
 from .ports.input.weather_prediction_input_port import WeatherPredictionInputPort
 from .ports.output.weather_prediction_output_port import WeatherPredictionOutputPort
+from .ports.output.weather_presenter_output_port import WeatherPresenterOutputPort
+from .ports.output.prediction_presenter_output_port import PredictionPresenterOutputPort
 from .dto.weather_data_request_dto import WeatherDataRequestDTO
 from .dto.weather_data_response_dto import WeatherDataResponseDTO
 from .dto.weather_data_list_response_dto import WeatherDataListResponseDTO
@@ -18,6 +20,8 @@ __all__ = [
     "WeatherDataInputPort",
     "WeatherPredictionInputPort",
     "WeatherPredictionOutputPort",
+    "WeatherPresenterOutputPort",
+    "PredictionPresenterOutputPort",
     "WeatherDataRequestDTO",
     "WeatherDataResponseDTO",
     "WeatherDataListResponseDTO",

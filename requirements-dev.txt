@@ -1,0 +1,18 @@
+# Development dependencies
+-r requirements.txt
+
+# Testing
+pytest>=6.0
+pytest-cov
+pytest-mock
+pytest-xdist
+
+# Code formatting and linting
+black
+flake8
+mypy
+
+# Build tools
+setuptools>=45
+wheel
+setuptools-scm

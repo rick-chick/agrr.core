@@ -5,7 +5,7 @@ import asyncio
 from datetime import datetime
 
 from agrr_core.entity import WeatherData
-from agrr_core.adapter.repositories.weather_repository import InMemoryWeatherRepository
+from agrr_core.adapter.repositories.in_memory_weather_repository import InMemoryWeatherRepository
 from agrr_core.adapter.repositories.prediction_repository import InMemoryPredictionRepository
 
 

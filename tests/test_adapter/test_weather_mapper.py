@@ -6,7 +6,7 @@ from datetime import datetime
 
 from agrr_core.adapter.mappers.weather_mapper import WeatherDataMapper
 from agrr_core.entity import WeatherData
-from agrr_core.usecase.dto.weather_dto import WeatherDataResponseDTO
+from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
 
 
 class TestWeatherDataMapper:

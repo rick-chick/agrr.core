@@ -1,0 +1,96 @@
+"""Predict weather interactor."""
+
+from agrr_core.entity import Location, DateRange
+from agrr_core.entity.exceptions.invalid_location_error import InvalidLocationError
+from agrr_core.entity.exceptions.invalid_date_range_error import InvalidDateRangeError
+from agrr_core.entity.exceptions.prediction_error import PredictionError
+from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
+from agrr_core.usecase.ports.input.weather_prediction_input_port import WeatherPredictionInputPort
+from agrr_core.usecase.ports.output.weather_prediction_output_port import WeatherPredictionOutputPort
+from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
+from agrr_core.usecase.dto.prediction_request_dto import PredictionRequestDTO
+from agrr_core.usecase.dto.prediction_response_dto import PredictionResponseDTO
+from agrr_core.usecase.dto.forecast_response_dto import ForecastResponseDTO
+
+
+class PredictWeatherInteractor:
+    """Interactor for weather prediction."""
+    
+    def __init__(
+        self, 
+        weather_data_input_port: WeatherDataInputPort,
+        weather_prediction_input_port: WeatherPredictionInputPort,
+        weather_prediction_output_port: WeatherPredictionOutputPort
+    ):
+        self.weather_data_input_port = weather_data_input_port
+        self.weather_prediction_input_port = weather_prediction_input_port
+        self.weather_prediction_output_port = weather_prediction_output_port
+    
+    async def execute(self, request: PredictionRequestDTO) -> PredictionResponseDTO:
+        """Execute weather prediction."""
+        try:
+            # Validate location
+            location = Location(request.latitude, request.longitude)
+            
+            # Validate date range
+            date_range = DateRange(request.start_date, request.end_date)
+            
+            # Get historical weather data
+            historical_data_list = await self.weather_data_input_port.get_weather_data_by_location_and_date_range(
+                location.latitude,
+                location.longitude,
+                date_range.start_date,
+                date_range.end_date
+            )
+            
+            if not historical_data_list:
+                raise PredictionError("No historical data available for prediction")
+            
+            # Use prediction service to generate forecasts
+            forecasts = await self.weather_prediction_output_port.predict_weather(
+                historical_data_list, 
+                request.prediction_days
+            )
+            
+            # Save forecasts
+            await self.weather_prediction_input_port.save_forecast(forecasts)
+            
+            # Convert historical data to response DTOs
+            historical_response = []
+            for weather_data in historical_data_list:
+                response_dto = WeatherDataResponseDTO(
+                    time=weather_data.time.isoformat(),
+                    temperature_2m_max=weather_data.temperature_2m_max,
+                    temperature_2m_min=weather_data.temperature_2m_min,
+                    temperature_2m_mean=weather_data.temperature_2m_mean,
+                    precipitation_sum=weather_data.precipitation_sum,
+                    sunshine_duration=weather_data.sunshine_duration,
+                    sunshine_hours=weather_data.sunshine_hours,
+                )
+                historical_response.append(response_dto)
+            
+            # Convert forecasts to response DTOs
+            forecast_response = []
+            for forecast in forecasts:
+                forecast_dto = ForecastResponseDTO(
+                    date=forecast.date.isoformat(),
+                    predicted_value=forecast.predicted_value,
+                    confidence_lower=forecast.confidence_lower,
+                    confidence_upper=forecast.confidence_upper
+                )
+                forecast_response.append(forecast_dto)
+            
+            return PredictionResponseDTO(
+                historical_data=historical_response,
+                forecast=forecast_response,
+                model_metrics={
+                    'training_data_points': len(historical_data_list),
+                    'prediction_days': request.prediction_days,
+                    'model_type': 'Prophet'
+                }
+            )
+            
+        except (ValueError, InvalidLocationError, InvalidDateRangeError) as e:
+            raise InvalidLocationError(f"Invalid request parameters: {e}")
+        except Exception as e:
+            raise PredictionError(f"Prediction failed: {e}")

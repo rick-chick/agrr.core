@@ -1,15 +1,16 @@
-"""Weather data repository implementations."""
+"""Open-Meteo weather repository implementation."""
 
 from typing import List
 import requests
 from datetime import datetime
 
 from agrr_core.entity import WeatherData
-from agrr_core.entity.exceptions.weather_exceptions import WeatherAPIError, WeatherDataNotFoundError
-from agrr_core.usecase.ports.output.weather_output_port import WeatherDataOutputPort
+from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
+from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
+from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
 
 
-class OpenMeteoWeatherRepository(WeatherDataOutputPort):
+class OpenMeteoWeatherRepository(WeatherDataInputPort):
     """Repository for fetching weather data from Open-Meteo API."""
     
     def __init__(self, base_url: str = "https://archive-api.open-meteo.com/v1/archive"):
@@ -80,36 +81,3 @@ class OpenMeteoWeatherRepository(WeatherDataOutputPort):
             return data_list[index] if data_list and index < len(data_list) else None
         except (IndexError, TypeError):
             return None
-
-
-class InMemoryWeatherRepository(WeatherDataOutputPort):
-    """In-memory repository for weather data (useful for testing)."""
-    
-    def __init__(self):
-        self._weather_data: List[WeatherData] = []
-    
-    async def save_weather_data(self, weather_data: List[WeatherData]) -> None:
-        """Save weather data to memory."""
-        self._weather_data.extend(weather_data)
-    
-    async def get_weather_data_by_location_and_date_range(
-        self, 
-        latitude: float, 
-        longitude: float, 
-        start_date: str, 
-        end_date: str
-    ) -> List[WeatherData]:
-        """Get weather data from memory (filtered by date range)."""
-        start_datetime = datetime.fromisoformat(start_date)
-        end_datetime = datetime.fromisoformat(end_date)
-        
-        filtered_data = [
-            data for data in self._weather_data
-            if start_datetime <= data.time <= end_datetime
-        ]
-        
-        return filtered_data
-    
-    def clear(self) -> None:
-        """Clear all stored weather data."""
-        self._weather_data.clear()

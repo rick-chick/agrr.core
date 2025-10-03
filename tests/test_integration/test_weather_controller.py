@@ -4,11 +4,9 @@ import pytest
 from unittest.mock import Mock, AsyncMock
 
 from agrr_core.framework.controllers.weather_controller import WeatherController
-from agrr_core.usecase.interactors.weather_interactor import (
-    FetchWeatherDataInteractor,
-    PredictWeatherInteractor,
-)
-from agrr_core.adapter.repositories.weather_repository import InMemoryWeatherRepository
+from agrr_core.usecase.interactors.fetch_weather_data_interactor import FetchWeatherDataInteractor
+from agrr_core.usecase.interactors.predict_weather_interactor import PredictWeatherInteractor
+from agrr_core.adapter.repositories.in_memory_weather_repository import InMemoryWeatherRepository
 from agrr_core.adapter.repositories.prediction_repository import InMemoryPredictionRepository
 from agrr_core.entity import WeatherData
 from datetime import datetime
@@ -23,9 +21,13 @@ class TestWeatherControllerIntegration:
         self.weather_repo = InMemoryWeatherRepository()
         self.prediction_repo = InMemoryPredictionRepository()
         
+        # Create real prediction service
+        from agrr_core.adapter.services.prophet_weather_prediction_service import ProphetWeatherPredictionService
+        self.prediction_service = ProphetWeatherPredictionService()
+        
         # Create real interactors
         self.fetch_interactor = FetchWeatherDataInteractor(self.weather_repo)
-        self.predict_interactor = PredictWeatherInteractor(self.weather_repo, self.prediction_repo)
+        self.predict_interactor = PredictWeatherInteractor(self.weather_repo, self.prediction_repo, self.prediction_service)
         
         # Create controller
         self.controller = WeatherController(self.fetch_interactor, self.predict_interactor)
@@ -227,7 +229,7 @@ class TestWeatherControllerIntegration:
         prediction_repo2 = InMemoryPredictionRepository()
         
         fetch_interactor2 = FetchWeatherDataInteractor(weather_repo2)
-        predict_interactor2 = PredictWeatherInteractor(weather_repo2, prediction_repo2)
+        predict_interactor2 = PredictWeatherInteractor(weather_repo2, prediction_repo2, self.prediction_service)
         
         controller2 = WeatherController(fetch_interactor2, predict_interactor2)
         

@@ -3,10 +3,10 @@
 from typing import List
 
 from agrr_core.entity import Forecast
-from agrr_core.usecase.ports.output.weather_output_port import WeatherPredictionOutputPort
+from agrr_core.usecase.ports.input.weather_prediction_input_port import WeatherPredictionInputPort
 
 
-class InMemoryPredictionRepository(WeatherPredictionOutputPort):
+class InMemoryPredictionRepository(WeatherPredictionInputPort):
     """In-memory repository for weather predictions (useful for testing)."""
     
     def __init__(self):

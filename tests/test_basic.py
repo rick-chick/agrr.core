@@ -32,13 +32,15 @@ def test_import_weather_interactors():
     from agrr_core.usecase import (
         FetchWeatherDataInteractor,
         PredictWeatherInteractor,
-        WeatherDataOutputPort,
+        WeatherDataInputPort,
+        WeatherPredictionInputPort,
         WeatherPredictionOutputPort,
     )
     
     assert FetchWeatherDataInteractor is not None
     assert PredictWeatherInteractor is not None
-    assert WeatherDataOutputPort is not None
+    assert WeatherDataInputPort is not None
+    assert WeatherPredictionInputPort is not None
     assert WeatherPredictionOutputPort is not None
 
 
@@ -85,15 +87,13 @@ def test_import_dtos():
 
 def test_import_exceptions():
     """Test importing exceptions."""
-    from agrr_core.entity.exceptions.weather_exceptions import (
-        WeatherError,
-        WeatherDataNotFoundError,
-        InvalidLocationError,
-        InvalidDateRangeError,
-        WeatherAPIError,
-        PredictionError,
-    )
-    
+    from agrr_core.entity.exceptions.weather_error import WeatherError
+    from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
+    from agrr_core.entity.exceptions.invalid_location_error import InvalidLocationError
+    from agrr_core.entity.exceptions.invalid_date_range_error import InvalidDateRangeError
+    from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
+    from agrr_core.entity.exceptions.prediction_error import PredictionError
+
     assert WeatherError is not None
     assert WeatherDataNotFoundError is not None
     assert InvalidLocationError is not None

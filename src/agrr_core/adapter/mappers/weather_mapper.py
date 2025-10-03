@@ -4,7 +4,7 @@ from typing import List
 import pandas as pd
 
 from agrr_core.entity import WeatherData
-from agrr_core.usecase.dto.weather_dto import WeatherDataResponseDTO
+from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
 
 
 class WeatherDataMapper:

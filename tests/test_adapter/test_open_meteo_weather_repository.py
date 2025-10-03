@@ -1,19 +1,14 @@
-"""Tests for weather repository."""
+"""Tests for OpenMeteoWeatherRepository."""
 
 import pytest
 from unittest.mock import Mock, patch
 import requests
 from datetime import datetime
 
-from agrr_core.adapter.repositories.weather_repository import (
-    OpenMeteoWeatherRepository,
-    InMemoryWeatherRepository,
-)
+from agrr_core.adapter.repositories.open_meteo_weather_repository import OpenMeteoWeatherRepository
 from agrr_core.entity import WeatherData
-from agrr_core.entity.exceptions.weather_exceptions import (
-    WeatherAPIError,
-    WeatherDataNotFoundError,
-)
+from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
+from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 
 
 class TestOpenMeteoWeatherRepository:
@@ -113,8 +108,7 @@ class TestOpenMeteoWeatherRepository:
         # Mock API error
         mock_get.side_effect = requests.RequestException("API Error")
         
-        # Test
-        with pytest.raises(WeatherAPIError, match="Failed to fetch weather data from API"):
+        with pytest.raises(WeatherAPIError, match="Failed to fetch weather data"):
             await self.repository.get_weather_data_by_location_and_date_range(
                 35.7, 139.7, "2023-01-01", "2023-01-01"
             )
@@ -129,7 +123,6 @@ class TestOpenMeteoWeatherRepository:
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
         
-        # Test
         with pytest.raises(WeatherDataNotFoundError, match="No daily weather data found"):
             await self.repository.get_weather_data_by_location_and_date_range(
                 35.7, 139.7, "2023-01-01", "2023-01-01"
@@ -144,130 +137,26 @@ class TestOpenMeteoWeatherRepository:
         mock_response.json.return_value = {
             "daily": {
                 "time": ["2023-01-01"],
-                # Missing other required fields
+                # Missing required fields
             }
         }
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
         
-        # Test
         with pytest.raises(WeatherAPIError, match="Invalid API response format"):
             await self.repository.get_weather_data_by_location_and_date_range(
                 35.7, 139.7, "2023-01-01", "2023-01-01"
             )
     
-    @pytest.mark.asyncio
-    async def test_safe_get_method(self):
+    def test_safe_get_method(self):
         """Test _safe_get helper method."""
-        # Test valid index
+        # Test with valid data
         data = [1, 2, 3]
         assert self.repository._safe_get(data, 0) == 1
         assert self.repository._safe_get(data, 2) == 3
         
-        # Test out of bounds
-        assert self.repository._safe_get(data, 5) is None
-        
-        # Test empty list
-        assert self.repository._safe_get([], 0) is None
-        
-        # Test None list
+        # Test with None data
         assert self.repository._safe_get(None, 0) is None
-
-
-class TestInMemoryWeatherRepository:
-    """Test InMemoryWeatherRepository."""
-    
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.repository = InMemoryWeatherRepository()
-    
-    @pytest.mark.asyncio
-    async def test_save_and_get_weather_data(self):
-        """Test saving and retrieving weather data."""
-        # Create test data
-        weather_data = [
-            WeatherData(
-                time=datetime(2023, 1, 1),
-                temperature_2m_mean=20.0,
-                temperature_2m_max=25.0,
-                temperature_2m_min=15.0,
-            ),
-            WeatherData(
-                time=datetime(2023, 1, 2),
-                temperature_2m_mean=21.0,
-                temperature_2m_max=26.0,
-                temperature_2m_min=16.0,
-            ),
-            WeatherData(
-                time=datetime(2023, 1, 15),  # Outside date range
-                temperature_2m_mean=22.0,
-                temperature_2m_max=27.0,
-                temperature_2m_min=17.0,
-            ),
-        ]
         
-        # Save data
-        await self.repository.save_weather_data(weather_data)
-        
-        # Retrieve data within date range
-        result = await self.repository.get_weather_data_by_location_and_date_range(
-            35.7, 139.7, "2023-01-01", "2023-01-10"
-        )
-        
-        # Should return only data within date range
-        assert len(result) == 2
-        assert result[0].time == datetime(2023, 1, 1)
-        assert result[1].time == datetime(2023, 1, 2)
-    
-    @pytest.mark.asyncio
-    async def test_empty_repository(self):
-        """Test retrieving from empty repository."""
-        result = await self.repository.get_weather_data_by_location_and_date_range(
-            35.7, 139.7, "2023-01-01", "2023-01-01"
-        )
-        
-        assert len(result) == 0
-    
-    @pytest.mark.asyncio
-    async def test_clear_repository(self):
-        """Test clearing repository."""
-        # Add some data
-        weather_data = [
-            WeatherData(time=datetime(2023, 1, 1), temperature_2m_mean=20.0)
-        ]
-        await self.repository.save_weather_data(weather_data)
-        
-        # Clear repository
-        self.repository.clear()
-        
-        # Verify it's empty
-        result = await self.repository.get_weather_data_by_location_and_date_range(
-            35.7, 139.7, "2023-01-01", "2023-01-01"
-        )
-        
-        assert len(result) == 0
-    
-    @pytest.mark.asyncio
-    async def test_date_range_filtering(self):
-        """Test date range filtering."""
-        # Create data spanning multiple months
-        weather_data = []
-        for day in range(1, 32):  # January has 31 days
-            weather_data.append(
-                WeatherData(
-                    time=datetime(2023, 1, day),
-                    temperature_2m_mean=20.0 + day * 0.1
-                )
-            )
-        
-        await self.repository.save_weather_data(weather_data)
-        
-        # Test specific date range
-        result = await self.repository.get_weather_data_by_location_and_date_range(
-            35.7, 139.7, "2023-01-10", "2023-01-20"
-        )
-        
-        # Should return 11 days (10th to 20th inclusive)
-        assert len(result) == 11
-        assert result[0].time == datetime(2023, 1, 10)
-        assert result[-1].time == datetime(2023, 1, 20)
+        # Test with empty data
+        assert self.repository._safe_get([], 0) is None

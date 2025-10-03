@@ -1,8 +1,8 @@
 """
-Basic tests for agrr.core package.
+Basic tests for agrr_core package.
 """
 import pytest
-from agrr.core import __version__
+from agrr_core import __version__
 
 
 def test_version():
@@ -13,8 +13,8 @@ def test_version():
 
 def test_import():
     """Test that package can be imported."""
-    import agrr.core
-    assert hasattr(agrr.core, "__version__")
+    import agrr_core
+    assert hasattr(agrr_core, "__version__")
 
 
 @pytest.mark.parametrize("test_input,expected", [

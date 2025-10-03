@@ -17,6 +17,91 @@ def test_import():
     assert hasattr(agrr_core, "__version__")
 
 
+def test_import_weather_entities():
+    """Test importing weather entities."""
+    from agrr_core.entity import WeatherData, Location, DateRange, Forecast
+    
+    assert WeatherData is not None
+    assert Location is not None
+    assert DateRange is not None
+    assert Forecast is not None
+
+
+def test_import_weather_interactors():
+    """Test importing weather interactors."""
+    from agrr_core.usecase import (
+        FetchWeatherDataInteractor,
+        PredictWeatherInteractor,
+        WeatherDataOutputPort,
+        WeatherPredictionOutputPort,
+    )
+    
+    assert FetchWeatherDataInteractor is not None
+    assert PredictWeatherInteractor is not None
+    assert WeatherDataOutputPort is not None
+    assert WeatherPredictionOutputPort is not None
+
+
+def test_import_weather_repositories():
+    """Test importing weather repositories."""
+    from agrr_core.adapter import (
+        OpenMeteoWeatherRepository,
+        InMemoryWeatherRepository,
+        InMemoryPredictionRepository,
+        WeatherDataMapper,
+    )
+    
+    assert OpenMeteoWeatherRepository is not None
+    assert InMemoryWeatherRepository is not None
+    assert InMemoryPredictionRepository is not None
+    assert WeatherDataMapper is not None
+
+
+def test_import_weather_controller():
+    """Test importing weather controller."""
+    from agrr_core.framework import WeatherController
+    
+    assert WeatherController is not None
+
+
+def test_import_dtos():
+    """Test importing DTOs."""
+    from agrr_core.usecase import (
+        WeatherDataRequestDTO,
+        WeatherDataResponseDTO,
+        WeatherDataListResponseDTO,
+        PredictionRequestDTO,
+        PredictionResponseDTO,
+        ForecastResponseDTO,
+    )
+    
+    assert WeatherDataRequestDTO is not None
+    assert WeatherDataResponseDTO is not None
+    assert WeatherDataListResponseDTO is not None
+    assert PredictionRequestDTO is not None
+    assert PredictionResponseDTO is not None
+    assert ForecastResponseDTO is not None
+
+
+def test_import_exceptions():
+    """Test importing exceptions."""
+    from agrr_core.entity.exceptions.weather_exceptions import (
+        WeatherError,
+        WeatherDataNotFoundError,
+        InvalidLocationError,
+        InvalidDateRangeError,
+        WeatherAPIError,
+        PredictionError,
+    )
+    
+    assert WeatherError is not None
+    assert WeatherDataNotFoundError is not None
+    assert InvalidLocationError is not None
+    assert InvalidDateRangeError is not None
+    assert WeatherAPIError is not None
+    assert PredictionError is not None
+
+
 @pytest.mark.parametrize("test_input,expected", [
     (1, 1),
     (2, 2),

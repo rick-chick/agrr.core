@@ -1,123 +1,212 @@
-"""Test configuration and fixtures."""
+"""Pytest configuration and shared fixtures."""
 
 import pytest
-from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock
+from datetime import datetime, timedelta
 
-from agrr_core.entity import WeatherData
-from agrr_core.adapter.repositories.in_memory_weather_repository import InMemoryWeatherRepository
-from agrr_core.adapter.repositories.prediction_repository import InMemoryPredictionRepository
-
-
-@pytest.fixture
-def sample_weather_data():
-    """Sample weather data for testing."""
-    return [
-        WeatherData(
-            time=datetime(2023, 1, 1),
-            temperature_2m_max=25.0,
-            temperature_2m_min=15.0,
-            temperature_2m_mean=20.0,
-            precipitation_sum=5.0,
-            sunshine_duration=28800.0,
-        ),
-        WeatherData(
-            time=datetime(2023, 1, 2),
-            temperature_2m_max=26.0,
-            temperature_2m_min=16.0,
-            temperature_2m_mean=21.0,
-            precipitation_sum=3.0,
-            sunshine_duration=25200.0,
-        ),
-        WeatherData(
-            time=datetime(2023, 1, 3),
-            temperature_2m_max=27.0,
-            temperature_2m_min=17.0,
-            temperature_2m_mean=22.0,
-            precipitation_sum=2.0,
-            sunshine_duration=21600.0,
-        ),
-    ]
+from agrr_core.entity import WeatherData, Forecast, Location
 
 
 @pytest.fixture
-def sample_weather_data_with_none():
-    """Sample weather data with None values for testing."""
-    return [
-        WeatherData(
-            time=datetime(2023, 1, 1),
-            temperature_2m_max=None,
-            temperature_2m_min=15.0,
-            temperature_2m_mean=20.0,
-            precipitation_sum=None,
-            sunshine_duration=None,
-        ),
-        WeatherData(
-            time=datetime(2023, 1, 2),
-            temperature_2m_max=26.0,
-            temperature_2m_min=None,
-            temperature_2m_mean=None,
-            precipitation_sum=3.0,
-            sunshine_duration=25200.0,
-        ),
-    ]
+def mock_weather_data():
+    """Mock weather data for testing."""
+    return WeatherData(
+        time=datetime(2024, 1, 1),
+        temperature_2m_max=25.0,
+        temperature_2m_min=15.0,
+        temperature_2m_mean=20.0,
+        precipitation_sum=5.0,
+        sunshine_duration=28800.0
+    )
 
 
 @pytest.fixture
-def extended_weather_data():
-    """Extended weather data for prediction testing."""
+def mock_forecast():
+    """Mock forecast for testing."""
+    return Forecast(
+        date=datetime(2024, 1, 2),
+        predicted_value=22.0,
+        confidence_lower=20.0,
+        confidence_upper=24.0
+    )
+
+
+@pytest.fixture
+def mock_location():
+    """Mock location for testing."""
+    return Location(35.6762, 139.6503)
+
+
+@pytest.fixture
+def sample_weather_data_list():
+    """Sample list of weather data for testing."""
     data = []
-    for i in range(30):  # 30 days of data
-        data.append(
-            WeatherData(
-                time=datetime(2023, 1, i + 1),
-                temperature_2m_mean=20.0 + i * 0.1,  # Slight trend
-                temperature_2m_max=25.0 + i * 0.1,
-                temperature_2m_min=15.0 + i * 0.1,
-                precipitation_sum=5.0,
-                sunshine_duration=28800.0,
-            )
+    base_date = datetime(2024, 1, 1)
+    
+    for i in range(30):
+        date = base_date + timedelta(days=i)
+        weather_data = WeatherData(
+            time=date,
+            temperature_2m_max=20.0 + i * 0.5,
+            temperature_2m_min=10.0 + i * 0.3,
+            temperature_2m_mean=15.0 + i * 0.4,
+            precipitation_sum=float(i % 5),
+            sunshine_duration=3600.0 + i * 100
         )
+        data.append(weather_data)
+    
     return data
 
 
 @pytest.fixture
-def empty_weather_repository():
-    """Empty weather repository for testing."""
-    return InMemoryWeatherRepository()
-
-
-@pytest.fixture
-def empty_prediction_repository():
-    """Empty prediction repository for testing."""
-    return InMemoryPredictionRepository()
-
-
-@pytest.fixture
-def populated_weather_repository(sample_weather_data):
-    """Weather repository populated with sample data."""
-    repo = InMemoryWeatherRepository()
-    # Note: This fixture will be populated in tests that need it
-    return repo
-
-
-@pytest.fixture
-async def async_populated_weather_repository(sample_weather_data):
-    """Async populated weather repository for testing."""
-    repo = InMemoryWeatherRepository()
-    await repo.save_weather_data(sample_weather_data)
-    return repo
-
-
-# Skip e2e tests by default
-def pytest_collection_modifyitems(config, items):
-    """Skip e2e tests by default unless explicitly requested."""
-    # If user explicitly specified "-m" option, respect it
-    markexpr = config.getoption("-m", "")
-    if markexpr and ("e2e" in markexpr or markexpr == ""):
-        return
+def sample_forecast_list():
+    """Sample list of forecasts for testing."""
+    forecasts = []
+    base_date = datetime(2024, 2, 1)
     
-    # Otherwise, skip e2e tests by default
-    skip_e2e = pytest.mark.skip(reason="E2E tests are skipped by default. Use '-m e2e' or '-m \"\"' to run them.")
-    for item in items:
-        if "e2e" in item.keywords:
-            item.add_marker(skip_e2e)
+    for i in range(7):
+        date = base_date + timedelta(days=i)
+        forecast = Forecast(
+            date=date,
+            predicted_value=20.0 + i * 0.5,
+            confidence_lower=18.0 + i * 0.5,
+            confidence_upper=22.0 + i * 0.5
+        )
+        forecasts.append(forecast)
+    
+    return forecasts
+
+
+@pytest.fixture
+def mock_prophet_service():
+    """Mock Prophet prediction service."""
+    service = AsyncMock()
+    service.predict_weather.return_value = sample_forecast_list()
+    return service
+
+
+@pytest.fixture
+def mock_lstm_service():
+    """Mock LSTM prediction service."""
+    service = AsyncMock()
+    service.predict_multiple_metrics.return_value = {
+        'temperature': sample_forecast_list()
+    }
+    return service
+
+
+@pytest.fixture
+def mock_arima_service():
+    """Mock ARIMA prediction service."""
+    service = AsyncMock()
+    service.predict_multiple_metrics.return_value = {
+        'temperature': sample_forecast_list()
+    }
+    return service
+
+
+@pytest.fixture
+def mock_weather_data_repository():
+    """Mock weather data repository."""
+    repository = AsyncMock()
+    repository.get_weather_data_by_location_and_date_range.return_value = (
+        sample_weather_data_list(), mock_location()
+    )
+    repository.save_weather_data.return_value = None
+    return repository
+
+
+@pytest.fixture
+def mock_prediction_repository():
+    """Mock prediction repository."""
+    repository = AsyncMock()
+    repository.save_forecast.return_value = None
+    repository.get_forecast_by_date_range.return_value = sample_forecast_list()
+    repository.clear.return_value = None
+    return repository
+
+
+@pytest.fixture
+def mock_prediction_presenter():
+    """Mock prediction presenter."""
+    presenter = MagicMock()
+    presenter.format_prediction_dto.return_value = {'success': True}
+    presenter.format_error.return_value = {'error': 'Test error'}
+    presenter.format_success.return_value = {'success': True, 'data': {}}
+    return presenter
+
+
+@pytest.fixture
+def mock_advanced_prediction_input_port():
+    """Mock advanced prediction input port."""
+    port = AsyncMock()
+    port.save_prediction_config.return_value = None
+    port.get_model_performance.return_value = {'accuracy': 0.85}
+    port.save_model_evaluation.return_value = None
+    port.get_available_models.return_value = ['prophet', 'lstm', 'arima']
+    port.save_forecast_with_metadata.return_value = None
+    return port
+
+
+@pytest.fixture
+def mock_advanced_prediction_output_port():
+    """Mock advanced prediction output port."""
+    port = AsyncMock()
+    port.predict_multiple_metrics.return_value = {
+        'temperature': sample_forecast_list(),
+        'precipitation': sample_forecast_list()
+    }
+    port.evaluate_model_accuracy.return_value = {
+        'mae': 1.5,
+        'mse': 2.25,
+        'rmse': 1.5,
+        'mape': 5.0
+    }
+    port.train_model.return_value = {'status': 'trained'}
+    port.get_model_info.return_value = {
+        'model_type': 'prophet',
+        'description': 'Test model'
+    }
+    port.predict_with_confidence_intervals.return_value = sample_forecast_list()
+    port.batch_predict.return_value = [
+        {'temperature': sample_forecast_list()},
+        {'temperature': sample_forecast_list()}
+    ]
+    port.get_available_models.return_value = [
+        {'model_type': 'prophet', 'name': 'Facebook Prophet'},
+        {'model_type': 'lstm', 'name': 'LSTM'},
+        {'model_type': 'arima', 'name': 'ARIMA'}
+    ]
+    return port
+
+
+@pytest.fixture
+def mock_visualization_service():
+    """Mock visualization service."""
+    service = AsyncMock()
+    service.create_prediction_chart.return_value = {
+        'status': 'success',
+        'image_base64': 'base64_encoded_image_data'
+    }
+    service.create_trend_analysis_chart.return_value = {
+        'status': 'success',
+        'image_base64': 'base64_encoded_trend_data'
+    }
+    service.create_model_comparison_chart.return_value = {
+        'status': 'success',
+        'image_base64': 'base64_encoded_comparison_data'
+    }
+    service.create_visualization_data.return_value = MagicMock()
+    return service
+
+
+# Async test marker
+pytest_plugins = ['pytest_asyncio']
+
+
+def pytest_configure(config):
+    """Configure pytest with custom markers."""
+    config.addinivalue_line("markers", "asyncio: mark test as async")
+    config.addinivalue_line("markers", "slow: mark test as slow running")
+    config.addinivalue_line("markers", "integration: mark test as integration test")
+    config.addinivalue_line("markers", "unit: mark test as unit test")

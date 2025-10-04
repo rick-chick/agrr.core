@@ -26,6 +26,59 @@ pip install -e ".[dev]"
 
 ## Quick Start
 
+### CLI Usage
+
+Get weather data from the command line:
+
+```bash
+# Get weather for Tokyo for the last 7 days (table format)
+python -m agrr_core.cli weather --location 35.6762,139.6503 --days 7
+
+# Get weather for specific date range
+python -m agrr_core.cli weather --location 35.6762,139.6503 --start-date 2024-01-01 --end-date 2024-01-07
+
+# Get weather for New York with JSON output
+python -m agrr_core.cli weather --location 40.7128,-74.0060 --days 5 --json
+
+# Short options
+python -m agrr_core.cli weather -l 35.6762,139.6503 -d 7 --json
+```
+
+#### Output Formats
+
+**Table format (default):**
+```
+================================================================================
+WEATHER FORECAST
+================================================================================
+
+Date         Max Temp   Min Temp   Avg Temp   Precip   Sunshine  
+----------------------------------------------------------------------
+2024-01-15   15.5°C     8.2°C      11.8°C     5.0mm    8.0h      
+...
+```
+
+**JSON format (with `--json` flag):**
+```json
+{
+  "success": true,
+  "data": {
+    "data": [
+      {
+        "time": "2024-01-15",
+        "temperature_2m_max": 15.5,
+        "temperature_2m_min": 8.2,
+        "temperature_2m_mean": 11.8,
+        "precipitation_sum": 5.0,
+        "sunshine_duration": 28800.0,
+        "sunshine_hours": 8.0
+      }
+    ],
+    "total_count": 1
+  }
+}
+```
+
 ### Basic Usage
 
 ```python
@@ -78,6 +131,7 @@ python example_usage.py
 - 🏗️ **Clean Architecture**: Implemented following clean architecture principles
 - 📊 **Data Processing**: Convert and process weather data using pandas
 - 🎯 **Easy to Use**: Simple API for both synchronous and asynchronous usage
+- 💻 **CLI Support**: Command-line interface with table and JSON output formats
 
 ## Development
 

@@ -6,6 +6,7 @@ pytest>=6.0
 pytest-cov
 pytest-mock
 pytest-xdist
+pytest-asyncio>=0.21.0
 
 # Code formatting and linting
 black
@@ -16,3 +17,5 @@ mypy
 setuptools>=45
 wheel
 setuptools-scm
+
+-e .

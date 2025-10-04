@@ -1,3 +1,5 @@
-"""Framework layer package."""
+"""Framework layer for CLI application."""
 
-__all__ = []
+from .container import CLIContainer
+
+__all__ = ["CLIContainer"]

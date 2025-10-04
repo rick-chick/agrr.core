@@ -13,3 +13,4 @@ class LocationResponseDTO:
     elevation: Optional[float] = None
     timezone: Optional[str] = None
 
+

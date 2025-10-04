@@ -1,7 +1,6 @@
 """Test configuration and fixtures."""
 
 import pytest
-import asyncio
 from datetime import datetime
 
 from agrr_core.entity import WeatherData
@@ -109,21 +108,16 @@ async def async_populated_weather_repository(sample_weather_data):
     return repo
 
 
-@pytest.fixture
-def event_loop():
-    """Create an instance of the default event loop for the test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-
-# Markers for different test types
-def pytest_configure(config):
-    """Configure pytest markers."""
-    config.addinivalue_line("markers", "unit: mark test as a unit test")
-    config.addinivalue_line("markers", "integration: mark test as an integration test")
-    config.addinivalue_line("markers", "slow: mark test as slow running")
-    config.addinivalue_line("markers", "entity: mark test as entity layer test")
-    config.addinivalue_line("markers", "usecase: mark test as use case layer test")
-    config.addinivalue_line("markers", "adapter: mark test as adapter layer test")
-    config.addinivalue_line("markers", "framework: mark test as framework layer test")
+# Skip e2e tests by default
+def pytest_collection_modifyitems(config, items):
+    """Skip e2e tests by default unless explicitly requested."""
+    # If user explicitly specified "-m" option, respect it
+    markexpr = config.getoption("-m", "")
+    if markexpr and ("e2e" in markexpr or markexpr == ""):
+        return
+    
+    # Otherwise, skip e2e tests by default
+    skip_e2e = pytest.mark.skip(reason="E2E tests are skipped by default. Use '-m e2e' or '-m \"\"' to run them.")
+    for item in items:
+        if "e2e" in item.keywords:
+            item.add_marker(skip_e2e)

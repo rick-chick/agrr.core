@@ -52,6 +52,8 @@ python -m agrr_core.cli weather -l 35.6762,139.6503 -d 7 --json
 WEATHER FORECAST
 ================================================================================
 
+Location: 35.6762°N, 139.6911°E | Elevation: 37m | Timezone: Asia/Tokyo
+
 Date         Max Temp   Min Temp   Avg Temp   Precip   Sunshine  
 ----------------------------------------------------------------------
 2024-01-15   15.5°C     8.2°C      11.8°C     5.0mm    8.0h      
@@ -74,7 +76,13 @@ Date         Max Temp   Min Temp   Avg Temp   Precip   Sunshine
         "sunshine_hours": 8.0
       }
     ],
-    "total_count": 1
+    "total_count": 1,
+    "location": {
+      "latitude": 35.6762,
+      "longitude": 139.6911,
+      "elevation": 37.0,
+      "timezone": "Asia/Tokyo"
+    }
   }
 }
 ```

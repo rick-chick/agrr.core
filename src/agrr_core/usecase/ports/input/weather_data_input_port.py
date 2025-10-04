@@ -1,9 +1,9 @@
 """Weather data input port interface."""
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Tuple
 
-from agrr_core.entity import WeatherData
+from agrr_core.entity import WeatherData, Location
 
 
 class WeatherDataInputPort(ABC):
@@ -21,6 +21,11 @@ class WeatherDataInputPort(ABC):
         longitude: float, 
         start_date: str, 
         end_date: str
-    ) -> List[WeatherData]:
-        """Get weather data by location and date range."""
+    ) -> Tuple[List[WeatherData], Location]:
+        """Get weather data by location and date range.
+        
+        Returns:
+            Tuple of (weather_data_list, location) where location contains
+            the actual coordinates and metadata.
+        """
         pass

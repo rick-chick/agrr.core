@@ -1,6 +1,7 @@
 """Location entity for weather data requests."""
 
 from dataclasses import dataclass
+from typing import Optional
 
 from ..exceptions.invalid_location_error import InvalidLocationError
 
@@ -11,6 +12,8 @@ class Location:
     
     latitude: float
     longitude: float
+    elevation: Optional[float] = None
+    timezone: Optional[str] = None
     
     def __post_init__(self):
         """Validate latitude and longitude values."""

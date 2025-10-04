@@ -53,24 +53,22 @@ Examples:
             help='Location coordinates as "latitude,longitude" (e.g., "35.6762,139.6503" for Tokyo)'
         )
         
-        # Date range arguments (mutually exclusive with days)
-        date_group = weather_parser.add_mutually_exclusive_group()
-        
-        date_group.add_argument(
+        # Date range arguments
+        weather_parser.add_argument(
             '--start-date', '-s',
             help='Start date in YYYY-MM-DD format'
         )
         
-        date_group.add_argument(
+        weather_parser.add_argument(
             '--end-date', '-e',
             help='End date in YYYY-MM-DD format'
         )
         
-        date_group.add_argument(
+        weather_parser.add_argument(
             '--days', '-d',
             type=int,
             default=7,
-            help='Number of days from today (default: 7)'
+            help='Number of days from today (default: 7, ignored if start-date or end-date is specified)'
         )
         
         # Output format

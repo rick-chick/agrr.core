@@ -8,6 +8,7 @@ from datetime import datetime
 from agrr_core.framework.presenters.cli_weather_presenter import CLIWeatherPresenter
 from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
 from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataListResponseDTO
+from agrr_core.usecase.dto.location_response_dto import LocationResponseDTO
 
 
 class TestCLIWeatherPresenter:
@@ -227,3 +228,75 @@ class TestCLIWeatherPresenter:
         
         # Should not be valid JSON
         assert "❌ Error [TEST_ERROR]: Test error" in output
+    
+    def test_display_weather_data_with_location(self):
+        """Test displaying weather data with location information."""
+        dto = WeatherDataResponseDTO(
+            time="2024-01-15T00:00:00Z",
+            temperature_2m_max=15.5,
+            temperature_2m_min=8.2,
+            temperature_2m_mean=11.8,
+            precipitation_sum=5.0,
+            sunshine_duration=28800.0,
+            sunshine_hours=8.0
+        )
+        
+        location_dto = LocationResponseDTO(
+            latitude=35.6762,
+            longitude=139.6911,
+            elevation=37.0,
+            timezone="Asia/Tokyo"
+        )
+        
+        list_dto = WeatherDataListResponseDTO(
+            data=[dto],
+            total_count=1,
+            location=location_dto
+        )
+        
+        self.presenter.display_weather_data(list_dto)
+        output = self.output_stream.getvalue()
+        
+        assert "WEATHER FORECAST" in output
+        assert "Location: 35.6762°N, 139.6911°E" in output
+        assert "Elevation: 37m" in output
+        assert "Timezone: Asia/Tokyo" in output
+        assert "2024-01-15" in output
+    
+    def test_display_weather_data_json_with_location(self):
+        """Test displaying weather data in JSON format with location."""
+        dto = WeatherDataResponseDTO(
+            time="2024-01-15T00:00:00Z",
+            temperature_2m_max=15.5,
+            temperature_2m_min=8.2,
+            temperature_2m_mean=11.8,
+            precipitation_sum=5.0,
+            sunshine_duration=28800.0,
+            sunshine_hours=8.0
+        )
+        
+        location_dto = LocationResponseDTO(
+            latitude=35.6762,
+            longitude=139.6911,
+            elevation=37.0,
+            timezone="Asia/Tokyo"
+        )
+        
+        list_dto = WeatherDataListResponseDTO(
+            data=[dto],
+            total_count=1,
+            location=location_dto
+        )
+        
+        self.presenter.display_weather_data_json(list_dto)
+        output = self.output_stream.getvalue()
+        
+        # Parse JSON output
+        result = json.loads(output)
+        
+        assert result["success"] is True
+        assert "location" in result["data"]
+        assert result["data"]["location"]["latitude"] == 35.6762
+        assert result["data"]["location"]["longitude"] == 139.6911
+        assert result["data"]["location"]["elevation"] == 37.0
+        assert result["data"]["location"]["timezone"] == "Asia/Tokyo"

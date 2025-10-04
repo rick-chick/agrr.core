@@ -4,7 +4,7 @@ import pytest
 from datetime import datetime
 
 from agrr_core.adapter.repositories.in_memory_weather_repository import InMemoryWeatherRepository
-from agrr_core.entity import WeatherData
+from agrr_core.entity import WeatherData, Location
 
 
 class TestInMemoryWeatherRepository:
@@ -43,23 +43,27 @@ class TestInMemoryWeatherRepository:
         await self.repository.save_weather_data(weather_data)
         
         # Retrieve data within date range
-        result = await self.repository.get_weather_data_by_location_and_date_range(
+        weather_data_list, location = await self.repository.get_weather_data_by_location_and_date_range(
             35.7, 139.7, "2023-01-01", "2023-01-10"
         )
         
         # Should return only data within date range
-        assert len(result) == 2
-        assert result[0].time == datetime(2023, 1, 1)
-        assert result[1].time == datetime(2023, 1, 2)
+        assert len(weather_data_list) == 2
+        assert weather_data_list[0].time == datetime(2023, 1, 1)
+        assert weather_data_list[1].time == datetime(2023, 1, 2)
+        assert isinstance(location, Location)
+        assert location.latitude == 35.7
+        assert location.longitude == 139.7
     
     @pytest.mark.asyncio
     async def test_empty_repository(self):
         """Test retrieving from empty repository."""
-        result = await self.repository.get_weather_data_by_location_and_date_range(
+        weather_data_list, location = await self.repository.get_weather_data_by_location_and_date_range(
             35.7, 139.7, "2023-01-01", "2023-01-01"
         )
         
-        assert len(result) == 0
+        assert len(weather_data_list) == 0
+        assert isinstance(location, Location)
     
     @pytest.mark.asyncio
     async def test_clear_repository(self):
@@ -74,11 +78,11 @@ class TestInMemoryWeatherRepository:
         self.repository.clear()
         
         # Verify it's empty
-        result = await self.repository.get_weather_data_by_location_and_date_range(
+        weather_data_list, location = await self.repository.get_weather_data_by_location_and_date_range(
             35.7, 139.7, "2023-01-01", "2023-01-01"
         )
         
-        assert len(result) == 0
+        assert len(weather_data_list) == 0
     
     @pytest.mark.asyncio
     async def test_date_range_filtering(self):
@@ -96,11 +100,11 @@ class TestInMemoryWeatherRepository:
         await self.repository.save_weather_data(weather_data)
         
         # Test specific date range
-        result = await self.repository.get_weather_data_by_location_and_date_range(
+        weather_data_list, location = await self.repository.get_weather_data_by_location_and_date_range(
             35.7, 139.7, "2023-01-10", "2023-01-20"
         )
         
         # Should return 11 days (10th to 20th inclusive)
-        assert len(result) == 11
-        assert result[0].time == datetime(2023, 1, 10)
-        assert result[-1].time == datetime(2023, 1, 20)
+        assert len(weather_data_list) == 11
+        assert weather_data_list[0].time == datetime(2023, 1, 10)
+        assert weather_data_list[-1].time == datetime(2023, 1, 20)

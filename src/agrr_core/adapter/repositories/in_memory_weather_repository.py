@@ -1,9 +1,9 @@
 """In-memory weather repository implementation."""
 
-from typing import List
+from typing import List, Tuple
 from datetime import datetime
 
-from agrr_core.entity import WeatherData
+from agrr_core.entity import WeatherData, Location
 from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
 
 
@@ -23,8 +23,13 @@ class InMemoryWeatherRepository(WeatherDataInputPort):
         longitude: float, 
         start_date: str, 
         end_date: str
-    ) -> List[WeatherData]:
-        """Get weather data from memory (filtered by date range)."""
+    ) -> Tuple[List[WeatherData], Location]:
+        """Get weather data from memory (filtered by date range).
+        
+        Returns:
+            Tuple of (weather_data_list, location) where location contains
+            the requested coordinates.
+        """
         start_datetime = datetime.fromisoformat(start_date)
         end_datetime = datetime.fromisoformat(end_date)
         
@@ -33,7 +38,10 @@ class InMemoryWeatherRepository(WeatherDataInputPort):
             if start_datetime <= data.time <= end_datetime
         ]
         
-        return filtered_data
+        # Return the requested location (no elevation/timezone for in-memory)
+        location = Location(latitude=latitude, longitude=longitude)
+        
+        return filtered_data, location
     
     def clear(self) -> None:
         """Clear all stored weather data."""

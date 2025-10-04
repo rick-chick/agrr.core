@@ -1,10 +1,10 @@
 """Open-Meteo weather repository implementation."""
 
-from typing import List
+from typing import List, Tuple
 import requests
 from datetime import datetime
 
-from agrr_core.entity import WeatherData
+from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
@@ -27,8 +27,13 @@ class OpenMeteoWeatherRepository(WeatherDataInputPort):
         longitude: float, 
         start_date: str, 
         end_date: str
-    ) -> List[WeatherData]:
-        """Get weather data from Open-Meteo API."""
+    ) -> Tuple[List[WeatherData], Location]:
+        """Get weather data from Open-Meteo API.
+        
+        Returns:
+            Tuple of (weather_data_list, location) where location contains
+            the actual coordinates and metadata from the API response.
+        """
         try:
             params = {
                 "latitude": latitude,
@@ -53,6 +58,14 @@ class OpenMeteoWeatherRepository(WeatherDataInputPort):
             if "daily" not in data:
                 raise WeatherDataNotFoundError("No daily weather data found in API response")
             
+            # Extract location information from API response
+            location = Location(
+                latitude=data.get("latitude", latitude),
+                longitude=data.get("longitude", longitude),
+                elevation=data.get("elevation"),
+                timezone=data.get("timezone")
+            )
+            
             # Convert API response to WeatherData entities
             weather_data_list = []
             daily_data = data["daily"]
@@ -68,7 +81,7 @@ class OpenMeteoWeatherRepository(WeatherDataInputPort):
                 )
                 weather_data_list.append(weather_data)
             
-            return weather_data_list
+            return weather_data_list, location
             
         except requests.RequestException as e:
             raise WeatherAPIError(f"Failed to fetch weather data from API: {e}")

@@ -47,10 +47,21 @@ class CLIWeatherPresenter(WeatherPresenterOutputPort):
     
     def format_weather_data_list_dto(self, dto: WeatherDataListResponseDTO) -> Dict[str, Any]:
         """Format weather data list DTO to response format."""
-        return {
+        result = {
             "data": [self.format_weather_data_dto(item) for item in dto.data],
             "total_count": dto.total_count,
         }
+        
+        # Include location information if available
+        if dto.location:
+            result["location"] = {
+                "latitude": dto.location.latitude,
+                "longitude": dto.location.longitude,
+                "elevation": dto.location.elevation,
+                "timezone": dto.location.timezone,
+            }
+        
+        return result
     
     def format_error(self, error_message: str, error_code: str = "WEATHER_ERROR") -> Dict[str, Any]:
         """Format error response."""
@@ -78,7 +89,19 @@ class CLIWeatherPresenter(WeatherPresenterOutputPort):
         # Header
         self.output_stream.write("\n" + "="*80 + "\n")
         self.output_stream.write("WEATHER FORECAST\n")
-        self.output_stream.write("="*80 + "\n\n")
+        self.output_stream.write("="*80 + "\n")
+        
+        # Location information
+        if weather_data_list.location:
+            loc = weather_data_list.location
+            self.output_stream.write(f"\nLocation: {loc.latitude:.4f}°N, {loc.longitude:.4f}°E")
+            if loc.elevation is not None:
+                self.output_stream.write(f" | Elevation: {loc.elevation:.0f}m")
+            if loc.timezone:
+                self.output_stream.write(f" | Timezone: {loc.timezone}")
+            self.output_stream.write("\n")
+        
+        self.output_stream.write("\n")
         
         # Table header
         header = f"{'Date':<12} {'Max Temp':<10} {'Min Temp':<10} {'Avg Temp':<10} {'Precip':<8} {'Sunshine':<10}"

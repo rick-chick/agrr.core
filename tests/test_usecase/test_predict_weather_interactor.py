@@ -47,8 +47,10 @@ class TestPredictWeatherInteractor:
                 )
             )
         
-        # Mock input/output ports
-        self.mock_weather_input_port.get_weather_data_by_location_and_date_range.return_value = mock_historical_data
+        # Mock input/output ports (return tuple: weather_data, location)
+        from agrr_core.entity import Location
+        mock_location = Location(latitude=35.7, longitude=139.7, elevation=37.0, timezone="Asia/Tokyo")
+        self.mock_weather_input_port.get_weather_data_by_location_and_date_range.return_value = (mock_historical_data, mock_location)
         self.mock_prediction_input_port.save_forecast.return_value = None
         
         # Mock prediction service to return fake forecasts

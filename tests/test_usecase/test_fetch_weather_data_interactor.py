@@ -42,7 +42,10 @@ class TestFetchWeatherDataInteractor:
             ),
         ]
         
-        self.mock_weather_input_port.get_weather_data_by_location_and_date_range.return_value = mock_weather_data
+        # Mock return value should be tuple (weather_data, location)
+        from agrr_core.entity import Location
+        mock_location = Location(latitude=35.7, longitude=139.7, elevation=37.0, timezone="Asia/Tokyo")
+        self.mock_weather_input_port.get_weather_data_by_location_and_date_range.return_value = (mock_weather_data, mock_location)
         
         # Setup presenter mock return values
         self.mock_weather_presenter_output_port.format_weather_data_list_dto.return_value = {"data": [], "total_count": 2}
@@ -120,7 +123,9 @@ class TestFetchWeatherDataInteractor:
     @pytest.mark.asyncio
     async def test_execute_empty_result(self):
         """Test execution with empty weather data."""
-        self.mock_weather_input_port.get_weather_data_by_location_and_date_range.return_value = []
+        from agrr_core.entity import Location
+        mock_location = Location(latitude=35.7, longitude=139.7)
+        self.mock_weather_input_port.get_weather_data_by_location_and_date_range.return_value = ([], mock_location)
         
         request = WeatherDataRequestDTO(
             latitude=35.7,

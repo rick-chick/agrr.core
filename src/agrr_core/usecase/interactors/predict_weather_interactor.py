@@ -38,8 +38,8 @@ class PredictWeatherInteractor:
             # Validate date range
             date_range = DateRange(request.start_date, request.end_date)
             
-            # Get historical weather data
-            historical_data_list = await self.weather_data_input_port.get_weather_data_by_location_and_date_range(
+            # Get historical weather data (returns tuple of data and location)
+            historical_data_list, actual_location = await self.weather_data_input_port.get_weather_data_by_location_and_date_range(
                 location.latitude,
                 location.longitude,
                 date_range.start_date,

@@ -9,6 +9,8 @@
 """CLI application entry point."""
 ```
 
+**パス**: `src/agrr_core/cli.py`
+
 ## 主要関数
 
 ### `main()`

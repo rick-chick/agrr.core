@@ -9,6 +9,8 @@ class CLIContainer:
     """Dependency injection container for CLI application."""
 ```
 
+**パス**: `src/agrr_core/framework/container.py`
+
 ## コンストラクタ
 
 ```python

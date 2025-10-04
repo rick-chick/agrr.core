@@ -4,7 +4,7 @@
 
 ## ドキュメント構成
 
-- **[API Reference](api/README.md)** - 全APIの詳細なリファレンス
+- **[API Reference](api/README.md)** - CLI APIの詳細なリファレンス
 - **[Architecture](../ARCHITECTURE.md)** - プロジェクトのアーキテクチャ設計
 - **[README](../README.md)** - プロジェクトの概要とセットアップ
 
@@ -22,21 +22,16 @@ agrr.coreはクリーンアーキテクチャに基づいて設計された天�
 ### CLIアプリケーションの使用
 
 ```bash
-# 天気予報を取得
+# 天気予報を取得（過去7日間）
 python -m agrr_core.cli weather --location 35.6762,139.6503 --days 7
+
+# JSON形式で出力
+python -m agrr_core.cli weather --location 35.6762,139.6503 --days 7 --json
 ```
-
-### APIリファレンスの閲覧
-
-各層のAPIリファレンスは以下のリンクからアクセスできます：
-
-- [Entity Layer API](api/entity/README.md)
-- [UseCase Layer API](api/usecase/README.md)
-- [Adapter Layer API](api/adapter/README.md)
-- [Framework Layer API](api/framework/README.md)
 
 ## 開発者向け情報
 
 - テストの実行: `pytest`
+- カバレッジ付きテスト: `pytest --cov=agrr_core`
 - コードフォーマット: `black src/`
 - 型チェック: `mypy src/`

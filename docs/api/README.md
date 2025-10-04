@@ -1,6 +1,6 @@
 # CLI API Reference
 
-agrr.coreのCLIアプリケーションに関するAPIリファレンスです。Framework層のCLI関連コンポーネントを中心に説明します。
+agrr.coreのCLIアプリケーションに関するAPIリファレンスです。
 
 ## 概要
 
@@ -8,8 +8,11 @@ agrr.core CLIは、コマンドラインから天気予報データを取得・�
 
 ## CLI構成要素
 
-- **[CLI Controller](framework/cli_controller.md)** - コマンドライン引数の処理とユースケースの呼び出し
-- **[CLI Presenter](framework/cli_presenter.md)** - コンソール出力のフォーマットと表示
+### Adapter Layer
+- **[CLI Controller](adapter/cli_controller.md)** - コマンドライン引数の処理とユースケースの呼び出し
+- **[CLI Presenter](adapter/cli_presenter.md)** - コンソール出力のフォーマットと表示
+
+### Framework Layer
 - **[CLI Container](framework/cli_container.md)** - 依存性注入コンテナ
 - **[CLI Entry Point](framework/cli_entry_point.md)** - アプリケーションのエントリーポイント
 
@@ -36,9 +39,10 @@ python -m agrr_core.cli weather --location 35.6762,139.6503 --start-date 2024-01
 | 引数 | 説明 | 例 |
 |---|---|---|
 | `--location, -l` | 位置情報（緯度,経度） | `35.6762,139.6503` |
-| `--days, -d` | 過去何日分のデータを取得するか | `7` |
+| `--days, -d` | 過去何日分のデータ（デフォルト: 7） | `7` |
 | `--start-date, -s` | 開始日（YYYY-MM-DD形式） | `2024-01-01` |
 | `--end-date, -e` | 終了日（YYYY-MM-DD形式） | `2024-01-07` |
+| `--json` | JSON形式で出力 | - |
 
 ### 主要都市の座標
 
@@ -93,11 +97,13 @@ Total records: 7
 CLIアプリケーションは以下の層で構成されています：
 
 ```
-CLI Entry Point
+CLI Entry Point (トップレベル)
     ↓
-CLI Controller (Framework Layer)
+CLI Container (Framework Layer)
     ↓
-CLI Presenter (Framework Layer)
+CLI Controller (Adapter Layer)
+    ↓
+CLI Presenter (Adapter Layer)
     ↓
 UseCase Interactor (UseCase Layer)
     ↓
@@ -121,11 +127,8 @@ CLIアプリケーションは以下のエラーを適切に処理します：
 
 ```bash
 # CLI関連のテストを実行
-pytest tests/test_framework/ -v
-
-# 特定のコンポーネントのテスト
-pytest tests/test_framework/test_cli_weather_controller.py -v
-pytest tests/test_framework/test_cli_weather_presenter.py -v
+pytest tests/test_adapter/test_cli_weather_controller.py -v
+pytest tests/test_adapter/test_cli_weather_presenter.py -v
 pytest tests/test_framework/test_container.py -v
 ```
 

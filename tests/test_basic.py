@@ -55,13 +55,6 @@ def test_import_weather_repositories():
     assert WeatherMapper is not None
 
 
-def test_import_weather_controller():
-    """Test importing weather controller."""
-    from agrr_core.adapter.controllers.weather_api_controller import WeatherAPIController
-    
-    assert WeatherAPIController is not None
-
-
 def test_import_dtos():
     """Test importing DTOs."""
     from agrr_core.usecase import (

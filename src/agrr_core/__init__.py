@@ -18,7 +18,6 @@ from .adapter import (
     WeatherPresenter,
     PredictionPresenter,
 )
-from .adapter.controllers.weather_api_controller import WeatherAPIController
 
 __version__ = "0.1.0"
 
@@ -44,5 +43,4 @@ __all__ = [
     "WeatherPresenter",
     "PredictionPresenter",
     # Framework
-    "WeatherAPIController",
 ]

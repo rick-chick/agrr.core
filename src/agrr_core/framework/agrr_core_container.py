@@ -6,7 +6,6 @@ from typing import Dict, Any, Optional
 from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
 from agrr_core.framework.repositories.file_repository import FileRepository
 from agrr_core.framework.repositories.http_client import HttpClient
-from agrr_core.framework.services.weather_open_meteo_service import WeatherOpenMeteoService
 from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.adapter.controllers.weather_cli_controller import WeatherCLIController
@@ -35,13 +34,6 @@ class AgrrCoreContainer:
         self._instances = {}
     
     # Weather Repository Management
-    def get_weather_service(self) -> WeatherOpenMeteoService:
-        """Get weather service instance."""
-        if 'weather_service' not in self._instances:
-            base_url = self.config.get('open_meteo_base_url', 'https://archive-api.open-meteo.com/v1/archive')
-            self._instances['weather_service'] = WeatherOpenMeteoService(base_url=base_url)
-        
-        return self._instances['weather_service']
 
     def get_file_repository_impl(self) -> FileRepository:
         """Get file repository implementation instance."""

@@ -26,12 +26,6 @@ class PredictionPresenter(PredictionPresenterOutputPort):
             "confidence": forecast.confidence,
         }
     
-    def format_forecast_list(self, forecast_list: List[Forecast]) -> Dict[str, Any]:
-        """Format a list of forecast entities to response format."""
-        return {
-            "forecasts": [self.format_forecast(forecast) for forecast in forecast_list],
-            "count": len(forecast_list),
-        }
     
     def format_prediction_dto(self, dto: PredictionResponseDTO) -> Dict[str, Any]:
         """Format prediction DTO to response format."""

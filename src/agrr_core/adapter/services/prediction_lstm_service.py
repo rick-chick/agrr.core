@@ -6,7 +6,6 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 try:
-    import tensorflow as tf
     from tensorflow.keras.models import Sequential
     from tensorflow.keras.layers import LSTM, Dense, Dropout
     from tensorflow.keras.optimizers import Adam
@@ -18,25 +17,25 @@ except ImportError:
     class Sequential:
         def __init__(self):
             pass
-        def add(self, layer):
+        def add(self, _layer):
             pass
-        def compile(self, **kwargs):
+        def compile(self, **_kwargs):
             pass
-        def fit(self, **kwargs):
+        def fit(self, **_kwargs):
             pass
         def predict(self, x):
             return np.array([[20.0] * 10])  # Mock prediction
     
     class LSTM:
-        def __init__(self, **kwargs):
+        def __init__(self, **_kwargs):
             pass
     
     class Dense:
-        def __init__(self, **kwargs):
+        def __init__(self, **_kwargs):
             pass
     
     class Dropout:
-        def __init__(self, **kwargs):
+        def __init__(self, **_kwargs):
             pass
     
     class MinMaxScaler:

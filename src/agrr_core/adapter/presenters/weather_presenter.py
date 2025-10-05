@@ -26,12 +26,6 @@ class WeatherPresenter(WeatherPresenterOutputPort):
             "wind_direction": weather_data.wind_direction,
         }
     
-    def format_weather_data_list(self, weather_data_list: List[WeatherData]) -> Dict[str, Any]:
-        """Format a list of weather data entities to response format."""
-        return {
-            "weather_data": [self.format_weather_data(data) for data in weather_data_list],
-            "count": len(weather_data_list),
-        }
     
     def format_weather_data_dto(self, dto: WeatherDataResponseDTO) -> Dict[str, Any]:
         """Format weather data DTO to response format."""

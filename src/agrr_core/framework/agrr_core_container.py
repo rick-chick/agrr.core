@@ -136,68 +136,12 @@ class AgrrCoreContainer:
             self._instances['prediction_presenter_output_port'] = PredictionPresenter()
         return self._instances['prediction_presenter_output_port']
     
-    def get_advanced_prediction_output_port(self) -> AdvancedPredictionOutputPort:
-        """Get advanced prediction output port instance."""
-        if 'advanced_prediction_output_port' not in self._instances:
-            from agrr_core.adapter.presenters.advanced_prediction_presenter import PredictionAdvancedPresenter
-            self._instances['advanced_prediction_output_port'] = PredictionAdvancedPresenter()
-        return self._instances['advanced_prediction_output_port']
     
-    def get_prediction_api_advanced_controller(self):
-        """Get prediction API advanced controller instance."""
-        if 'prediction_api_advanced_controller' not in self._instances:
-            from agrr_core.adapter.controllers.prediction_api_advanced_controller import PredictionAPIAdvancedController
-            
-            multi_metric_input_port = self.get_multi_metric_prediction_input_port()
-            model_evaluation_input_port = self.get_model_evaluation_input_port()
-            batch_prediction_input_port = self.get_batch_prediction_input_port()
-            model_management_input_port = self.get_model_management_input_port()
-            
-            self._instances['prediction_api_advanced_controller'] = PredictionAPIAdvancedController(
-                multi_metric_prediction_input_port=multi_metric_input_port,
-                model_evaluation_input_port=model_evaluation_input_port,
-                batch_prediction_input_port=batch_prediction_input_port,
-                model_management_input_port=model_management_input_port
-            )
-        return self._instances['prediction_api_advanced_controller']
     
     # Service Components
-    def get_integrated_prediction_service(self) -> PredictionIntegratedService:
-        """Get integrated prediction service instance."""
-        if 'integrated_prediction_service' not in self._instances:
-            self._instances['integrated_prediction_service'] = PredictionIntegratedService()
-        return self._instances['integrated_prediction_service']
     
     
     # Utility Methods
-    def get_external_data_repository(self) -> Optional[WeatherExternalRepository]:
-        """Get external data repository if available."""
-        weather_repository = self.get_weather_repository()
-        if isinstance(weather_repository, WeatherExternalRepository):
-            return weather_repository
-        return None
-    
-    def get_prediction_data_from_repository(self, location_key: str) -> Optional[list]:
-        """Get prediction data from repository if available."""
-        weather_repository = self.get_weather_repository()
-        if isinstance(weather_repository, WeatherExternalRepository):
-            return weather_repository.get_prediction_data(location_key)
-        elif isinstance(weather_repository, WeatherStorageRepository):
-            # Storage repositories might also have prediction data
-            return None
-        return None
-    
-    def inject_external_data(self, location_key: str, weather_data: list) -> None:
-        """Inject external weather data for testing or simulation."""
-        weather_repository = self.get_weather_repository()
-        if isinstance(weather_repository, WeatherExternalRepository):
-            weather_repository.inject_weather_data(location_key, weather_data)
-    
-    def clear_external_data(self, location_key: str) -> None:
-        """Clear injected external data."""
-        weather_repository = self.get_weather_repository()
-        if isinstance(weather_repository, WeatherExternalRepository):
-            weather_repository.clear_injected_data(location_key)
     
     # Application Entry Points
     async def run_cli(self, args: list = None) -> None:
@@ -205,13 +149,6 @@ class AgrrCoreContainer:
         controller = self.get_cli_controller()
         await controller.run(args)
     
-    def get_weather_cli_container(self):
-        """Get weather CLI container for backward compatibility."""
-        return WeatherCliContainer(self.config)
-    
-    def get_prediction_container(self):
-        """Get prediction container for backward compatibility."""
-        return PredictionContainer(self.config)
 
 
 # Backward Compatibility Classes

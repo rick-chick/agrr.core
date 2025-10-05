@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 try:
     from statsmodels.tsa.arima.model import ARIMA
     from statsmodels.tsa.stattools import adfuller
-    from statsmodels.tsa.seasonal import seasonal_decompose
     STATSMODELS_AVAILABLE = True
 except ImportError:
     STATSMODELS_AVAILABLE = False

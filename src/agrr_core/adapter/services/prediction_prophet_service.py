@@ -8,7 +8,7 @@ try:
 except ImportError:
     # Mock Prophet for testing when not installed
     class Prophet:
-        def __init__(self, **kwargs):
+        def __init__(self, **_kwargs):
             pass
         def fit(self, df):
             pass

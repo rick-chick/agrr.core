@@ -1,5 +1,5 @@
-"""Framework layer for CLI application."""
+"""Framework layer for agrr.core application."""
 
-from .container import CLIContainer
+from .agrr_core_container import AgrrCoreContainer, WeatherCliContainer, PredictionContainer
 
-__all__ = ["CLIContainer"]
+__all__ = ["AgrrCoreContainer", "WeatherCliContainer", "PredictionContainer"]

@@ -16,7 +16,6 @@ from .multi_metric_forecast_dto import MultiMetricForecastDTO
 from .advanced_prediction_response_dto import AdvancedPredictionResponseDTO
 from .model_performance_dto import ModelPerformanceDTO
 from .batch_prediction_response_dto import BatchPredictionResponseDTO
-from .visualization_data_dto import VisualizationDataDTO
 
 __all__ = [
     "WeatherDataRequestDTO",
@@ -35,5 +34,4 @@ __all__ = [
     "AdvancedPredictionResponseDTO",
     "ModelPerformanceDTO",
     "BatchPredictionResponseDTO",
-    "VisualizationDataDTO",
 ]

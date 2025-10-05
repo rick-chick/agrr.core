@@ -180,24 +180,6 @@ def mock_advanced_prediction_output_port():
     return port
 
 
-@pytest.fixture
-def mock_visualization_service():
-    """Mock visualization service."""
-    service = AsyncMock()
-    service.create_prediction_chart.return_value = {
-        'status': 'success',
-        'image_base64': 'base64_encoded_image_data'
-    }
-    service.create_trend_analysis_chart.return_value = {
-        'status': 'success',
-        'image_base64': 'base64_encoded_trend_data'
-    }
-    service.create_model_comparison_chart.return_value = {
-        'status': 'success',
-        'image_base64': 'base64_encoded_comparison_data'
-    }
-    service.create_visualization_data.return_value = MagicMock()
-    return service
 
 
 # Async test marker

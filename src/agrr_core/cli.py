@@ -4,7 +4,7 @@ import asyncio
 import sys
 from typing import Optional
 
-from agrr_core.framework.container import CLIContainer
+from agrr_core.framework.agrr_core_container import WeatherCliContainer
 
 
 def main() -> None:
@@ -14,7 +14,7 @@ def main() -> None:
         config = {
             'open_meteo_base_url': 'https://archive-api.open-meteo.com/v1/archive'
         }
-        container = CLIContainer(config)
+        container = WeatherCliContainer(config)
         
         # Get command line arguments (excluding script name)
         args = sys.argv[1:] if len(sys.argv) > 1 else None

@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 
-from agrr_core.framework.weather_cli_container import WeatherCliContainer
+from agrr_core.framework.agrr_core_container import WeatherCliContainer
 
 
 class TestWeatherCliContainer:

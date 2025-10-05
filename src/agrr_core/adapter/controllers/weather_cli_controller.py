@@ -7,16 +7,16 @@ from datetime import datetime, timedelta
 
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
 from agrr_core.usecase.dto.weather_data_request_dto import WeatherDataRequestDTO
-from agrr_core.adapter.presenters.weather_cli_presenter import CLIWeatherPresenter
+from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 
 
-class CLIWeatherController:
+class WeatherCLIController:
     """CLI controller for weather data operations."""
     
     def __init__(
         self, 
         fetch_weather_interactor: FetchWeatherDataInteractor,
-        cli_presenter: CLIWeatherPresenter
+        cli_presenter: WeatherCLIPresenter
     ):
         """Initialize CLI weather controller."""
         self.fetch_weather_interactor = fetch_weather_interactor

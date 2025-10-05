@@ -11,7 +11,7 @@ from agrr_core.usecase.dto.prediction_config_dto import (
 )
 
 
-class AdvancedPredictionController:
+class PredictionAPIAdvancedController:
     """Implementation of advanced prediction controller."""
     
     def __init__(self, interactor: AdvancedPredictWeatherInteractor):

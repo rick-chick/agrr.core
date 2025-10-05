@@ -43,23 +43,23 @@ def test_import_weather_interactors():
 def test_import_weather_repositories():
     """Test importing weather repositories."""
     from agrr_core.adapter import (
-        OpenMeteoWeatherRepository,
-        InMemoryWeatherRepository,
-        InMemoryPredictionRepository,
-        WeatherDataMapper,
+        WeatherAPIOpenMeteoRepository,
+        WeatherMemoryRepository,
+        PredictionStorageRepository,
+        WeatherMapper,
     )
     
-    assert OpenMeteoWeatherRepository is not None
-    assert InMemoryWeatherRepository is not None
-    assert InMemoryPredictionRepository is not None
-    assert WeatherDataMapper is not None
+    assert WeatherAPIOpenMeteoRepository is not None
+    assert WeatherMemoryRepository is not None
+    assert PredictionStorageRepository is not None
+    assert WeatherMapper is not None
 
 
 def test_import_weather_controller():
     """Test importing weather controller."""
-    from agrr_core.adapter.controllers.weather_api_controller import WeatherController
+    from agrr_core.adapter.controllers.weather_api_controller import WeatherAPIController
     
-    assert WeatherController is not None
+    assert WeatherAPIController is not None
 
 
 def test_import_dtos():

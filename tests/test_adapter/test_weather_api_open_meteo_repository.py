@@ -1,29 +1,29 @@
-"""Tests for OpenMeteoWeatherRepository."""
+"""Tests for WeatherAPIOpenMeteoRepository."""
 
 import pytest
 from unittest.mock import Mock, patch
 import requests
 from datetime import datetime
 
-from agrr_core.adapter.repositories.weather_api_open_meteo_repository import OpenMeteoWeatherRepository
+from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
 from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 
 
-class TestOpenMeteoWeatherRepository:
-    """Test OpenMeteoWeatherRepository."""
+class TestWeatherAPIOpenMeteoRepository:
+    """Test WeatherAPIOpenMeteoRepository."""
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.repository = OpenMeteoWeatherRepository()
+        self.repository = WeatherAPIOpenMeteoRepository()
     
     def test_init(self):
         """Test repository initialization."""
-        repo = OpenMeteoWeatherRepository()
+        repo = WeatherAPIOpenMeteoRepository()
         assert repo.base_url == "https://archive-api.open-meteo.com/v1/archive"
         
-        custom_repo = OpenMeteoWeatherRepository("https://custom-api.com")
+        custom_repo = WeatherAPIOpenMeteoRepository("https://custom-api.com")
         assert custom_repo.base_url == "https://custom-api.com"
     
     @patch('requests.get')

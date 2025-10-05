@@ -4,7 +4,7 @@ from typing import Dict, Any, List
 from agrr_core.entity.entities.prediction_entity import ModelType, PredictionModel, MetricType
 
 
-class ModelFactory:
+class PredictionModelFactoryService:
     """Factory for creating prediction model configurations."""
     
     @staticmethod
@@ -120,7 +120,7 @@ class ModelFactory:
     @staticmethod
     def get_model_by_type(model_type: ModelType) -> PredictionModel:
         """Get specific model configuration by type."""
-        models = ModelFactory.get_available_models()
+        models = PredictionModelFactoryService.get_available_models()
         for model in models:
             if model.model_type == model_type:
                 return model
@@ -129,7 +129,7 @@ class ModelFactory:
     @staticmethod
     def validate_config(model_type: ModelType, config: Dict[str, Any]) -> bool:
         """Validate model configuration."""
-        model = ModelFactory.get_model_by_type(model_type)
+        model = PredictionModelFactoryService.get_model_by_type(model_type)
         
         # Check required parameters
         for param, default_value in model.default_params.items():

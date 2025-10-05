@@ -32,7 +32,7 @@ from agrr_core.entity.exceptions.prediction_error import PredictionError
 from agrr_core.usecase.gateways.prediction_service_gateway import PredictionServiceGateway
 
 
-class ARIMAWeatherPredictionService(PredictionServiceGateway):
+class PredictionARIMAService(PredictionServiceGateway):
     """ARIMA-based implementation of weather prediction service."""
     
     def __init__(self):

@@ -7,7 +7,7 @@ from agrr_core.entity import WeatherData, Location
 from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 
 
-class InMemoryWeatherRepository(WeatherRepositoryGateway):
+class WeatherMemoryRepository(WeatherRepositoryGateway):
     """In-memory repository for weather data (useful for testing)."""
     
     def __init__(self):

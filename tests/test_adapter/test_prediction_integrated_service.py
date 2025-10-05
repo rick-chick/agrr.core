@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from agrr_core.entity import WeatherData, Forecast, Location
 from agrr_core.entity.entities.prediction_entity import ModelType
-from agrr_core.adapter.services.prediction_integrated_service import IntegratedPredictionService
+from agrr_core.adapter.services.prediction_integrated_service import PredictionIntegratedService
 from agrr_core.entity.exceptions.prediction_error import PredictionError
 
 
@@ -34,7 +34,7 @@ def sample_weather_data():
 @pytest.fixture
 def integrated_service():
     """Integrated prediction service instance."""
-    return IntegratedPredictionService()
+    return PredictionIntegratedService()
 
 
 @pytest.mark.asyncio

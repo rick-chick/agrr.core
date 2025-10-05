@@ -3,27 +3,27 @@
 import pytest
 from unittest.mock import Mock, AsyncMock
 
-from agrr_core.adapter.controllers.weather_api_controller import WeatherController
+from agrr_core.adapter.controllers.weather_api_controller import WeatherAPIController
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
 from agrr_core.usecase.interactors.weather_predict_interactor import PredictWeatherInteractor
-from agrr_core.adapter.repositories.weather_memory_repository import InMemoryWeatherRepository
-from agrr_core.adapter.repositories.prediction_storage_repository import InMemoryPredictionRepository
+from agrr_core.adapter.repositories.weather_memory_repository import WeatherMemoryRepository
+from agrr_core.adapter.repositories.prediction_storage_repository import PredictionStorageRepository
 from agrr_core.entity import WeatherData
 from datetime import datetime
 
 
-class TestWeatherControllerIntegration:
-    """Integration tests for WeatherController."""
+class TestWeatherAPIControllerIntegration:
+    """Integration tests for WeatherAPIController."""
     
     def setup_method(self):
         """Set up test fixtures."""
         # Use real repositories for integration testing
-        self.weather_repo = InMemoryWeatherRepository()
-        self.prediction_repo = InMemoryPredictionRepository()
+        self.weather_repo = WeatherMemoryRepository()
+        self.prediction_repo = PredictionStorageRepository()
         
         # Create real prediction service
-        from agrr_core.adapter.services.prediction_prophet_service import ProphetWeatherPredictionService
-        self.prediction_service = ProphetWeatherPredictionService()
+        from agrr_core.adapter.services.prediction_prophet_service import PredictionProphetService
+        self.prediction_service = PredictionProphetService()
         
         # Create presenters
         from agrr_core.adapter.presenters.weather_presenter import WeatherPresenter
@@ -36,7 +36,7 @@ class TestWeatherControllerIntegration:
         self.predict_interactor = PredictWeatherInteractor(self.weather_repo, self.prediction_repo, self.prediction_service, self.prediction_presenter)
         
         # Create controller
-        self.controller = WeatherController(self.fetch_interactor, self.predict_interactor)
+        self.controller = WeatherAPIController(self.fetch_interactor, self.predict_interactor)
     
     @pytest.mark.asyncio
     async def test_get_weather_data_integration(self):
@@ -201,13 +201,13 @@ class TestWeatherControllerIntegration:
     def test_controller_initialization(self):
         """Test controller initialization with different interactors."""
         # Test with different interactors
-        weather_repo2 = InMemoryWeatherRepository()
-        prediction_repo2 = InMemoryPredictionRepository()
+        weather_repo2 = WeatherMemoryRepository()
+        prediction_repo2 = PredictionStorageRepository()
         
         fetch_interactor2 = FetchWeatherDataInteractor(weather_repo2, self.weather_presenter)
         predict_interactor2 = PredictWeatherInteractor(weather_repo2, prediction_repo2, self.prediction_service, self.prediction_presenter)
         
-        controller2 = WeatherController(fetch_interactor2, predict_interactor2)
+        controller2 = WeatherAPIController(fetch_interactor2, predict_interactor2)
         
         # Should initialize without error
         assert controller2.fetch_weather_data_interactor == fetch_interactor2

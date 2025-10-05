@@ -6,7 +6,7 @@ from agrr_core.entity import Forecast
 from agrr_core.usecase.gateways.prediction_repository_gateway import PredictionRepositoryGateway
 
 
-class InMemoryPredictionRepository(PredictionRepositoryGateway):
+class PredictionStorageRepository(PredictionRepositoryGateway):
     """In-memory repository for weather predictions (useful for testing)."""
     
     def __init__(self):

@@ -23,7 +23,7 @@ from agrr_core.usecase.ports.output.weather_prediction_output_port import Weathe
 from agrr_core.usecase.gateways.prediction_service_gateway import PredictionServiceGateway
 
 
-class ProphetWeatherPredictionService(WeatherPredictionOutputPort, PredictionServiceGateway):
+class PredictionProphetService(WeatherPredictionOutputPort, PredictionServiceGateway):
     """Prophet-based implementation of weather prediction service."""
     
     async def predict_weather(

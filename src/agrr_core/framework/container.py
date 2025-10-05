@@ -3,11 +3,11 @@
 import asyncio
 from typing import Dict, Any, Optional
 
-from agrr_core.adapter.repositories.weather_api_open_meteo_repository import OpenMeteoWeatherRepository
-from agrr_core.adapter.repositories.weather_storage_repository import StorageWeatherRepository
-from agrr_core.adapter.repositories.weather_external_repository import ExternalDataWeatherRepository
-from agrr_core.adapter.presenters.weather_cli_presenter import CLIWeatherPresenter
-from agrr_core.adapter.controllers.weather_cli_controller import CLIWeatherController
+from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
+from agrr_core.adapter.repositories.weather_storage_repository import WeatherStorageRepository
+from agrr_core.adapter.repositories.weather_external_repository import WeatherExternalRepository
+from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
+from agrr_core.adapter.controllers.weather_cli_controller import WeatherCLIController
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
 from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 
@@ -27,24 +27,24 @@ class CLIContainer:
             
             if repository_type == 'storage':
                 storage_path = self.config.get('storage_path', 'data/weather')
-                self._instances['weather_repository'] = StorageWeatherRepository(storage_path=storage_path)
+                self._instances['weather_repository'] = WeatherStorageRepository(storage_path=storage_path)
             elif repository_type == 'external':
                 fallback_repo = None
                 if self.config.get('enable_fallback', False):
                     # Create fallback API repository
                     base_url = self.config.get('open_meteo_base_url', 'https://archive-api.open-meteo.com/v1/archive')
-                    fallback_repo = OpenMeteoWeatherRepository(base_url=base_url)
-                self._instances['weather_repository'] = ExternalDataWeatherRepository(fallback_repository=fallback_repo)
+                    fallback_repo = WeatherAPIOpenMeteoRepository(base_url=base_url)
+                self._instances['weather_repository'] = WeatherExternalRepository(fallback_repository=fallback_repo)
             else:  # Default to API
                 base_url = self.config.get('open_meteo_base_url', 'https://archive-api.open-meteo.com/v1/archive')
-                self._instances['weather_repository'] = OpenMeteoWeatherRepository(base_url=base_url)
+                self._instances['weather_repository'] = WeatherAPIOpenMeteoRepository(base_url=base_url)
         
         return self._instances['weather_repository']
     
-    def get_cli_presenter(self) -> CLIWeatherPresenter:
+    def get_cli_presenter(self) -> WeatherCLIPresenter:
         """Get CLI presenter instance."""
         if 'cli_presenter' not in self._instances:
-            self._instances['cli_presenter'] = CLIWeatherPresenter()
+            self._instances['cli_presenter'] = WeatherCLIPresenter()
         return self._instances['cli_presenter']
     
     def get_fetch_weather_interactor(self) -> FetchWeatherDataInteractor:
@@ -58,12 +58,12 @@ class CLIContainer:
             )
         return self._instances['fetch_weather_interactor']
     
-    def get_cli_controller(self) -> CLIWeatherController:
+    def get_cli_controller(self) -> WeatherCLIController:
         """Get CLI controller instance."""
         if 'cli_controller' not in self._instances:
             fetch_interactor = self.get_fetch_weather_interactor()
             cli_presenter = self.get_cli_presenter()
-            self._instances['cli_controller'] = CLIWeatherController(
+            self._instances['cli_controller'] = WeatherCLIController(
                 fetch_weather_interactor=fetch_interactor,
                 cli_presenter=cli_presenter
             )

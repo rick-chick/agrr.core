@@ -1,18 +1,18 @@
-"""Tests for InMemoryWeatherRepository."""
+"""Tests for WeatherMemoryRepository."""
 
 import pytest
 from datetime import datetime
 
-from agrr_core.adapter.repositories.weather_memory_repository import InMemoryWeatherRepository
+from agrr_core.adapter.repositories.weather_memory_repository import WeatherMemoryRepository
 from agrr_core.entity import WeatherData, Location
 
 
-class TestInMemoryWeatherRepository:
-    """Test InMemoryWeatherRepository."""
+class TestWeatherMemoryRepository:
+    """Test WeatherMemoryRepository."""
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.repository = InMemoryWeatherRepository()
+        self.repository = WeatherMemoryRepository()
     
     @pytest.mark.asyncio
     async def test_save_and_get_weather_data(self):

@@ -10,7 +10,7 @@ from agrr_core.usecase.dto.advanced_prediction_response_dto import (
 )
 
 
-class AdvancedPredictionPresenter(AdvancedPredictionOutputPort):
+class PredictionAdvancedPresenter(AdvancedPredictionOutputPort):
     """Implementation of advanced prediction presenter."""
     
     async def present_prediction_result(self, result: AdvancedPredictionResponseDTO) -> Dict[str, Any]:

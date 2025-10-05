@@ -5,19 +5,19 @@ import json
 from io import StringIO
 from datetime import datetime
 
-from agrr_core.adapter.presenters.weather_cli_presenter import CLIWeatherPresenter
+from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
 from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataListResponseDTO
 from agrr_core.usecase.dto.location_response_dto import LocationResponseDTO
 
 
-class TestCLIWeatherPresenter:
+class TestWeatherCLIPresenter:
     """Test cases for CLI weather presenter."""
     
     def setup_method(self):
         """Set up test fixtures."""
         self.output_stream = StringIO()
-        self.presenter = CLIWeatherPresenter(output_stream=self.output_stream)
+        self.presenter = WeatherCLIPresenter(output_stream=self.output_stream)
     
     def test_format_weather_data_dto(self):
         """Test formatting weather data DTO."""

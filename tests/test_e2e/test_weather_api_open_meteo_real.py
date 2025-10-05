@@ -7,7 +7,7 @@ They are marked with @pytest.mark.e2e and can be skipped in CI/CD if needed.
 import pytest
 from datetime import datetime, timedelta
 
-from agrr_core.adapter.repositories.weather_api_open_meteo_repository import OpenMeteoWeatherRepository
+from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
 from agrr_core.entity import Location, WeatherData
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 
@@ -18,7 +18,7 @@ class TestOpenMeteoAPIReal:
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.repository = OpenMeteoWeatherRepository()
+        self.repository = WeatherAPIOpenMeteoRepository()
         # Use historical dates that should always be available
         # Archive API supports data from 1940 to ~5 days ago
         end_date = datetime.now().date() - timedelta(days=10)

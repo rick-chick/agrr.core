@@ -10,7 +10,7 @@ from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherData
 from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 
 
-class OpenMeteoWeatherRepository(WeatherRepositoryGateway):
+class WeatherAPIOpenMeteoRepository(WeatherRepositoryGateway):
     """Repository for fetching weather data from Open-Meteo API."""
     
     def __init__(self, base_url: str = "https://archive-api.open-meteo.com/v1/archive"):

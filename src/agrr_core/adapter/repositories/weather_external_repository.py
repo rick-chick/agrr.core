@@ -8,7 +8,7 @@ from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherData
 from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 
 
-class ExternalDataWeatherRepository(WeatherRepositoryGateway):
+class WeatherExternalRepository(WeatherRepositoryGateway):
     """Repository that allows external data injection without API calls."""
     
     def __init__(self, fallback_repository: Optional[WeatherRepositoryGateway] = None):

@@ -3,16 +3,16 @@
 import pytest
 from datetime import datetime
 
-from agrr_core.adapter.repositories.prediction_storage_repository import InMemoryPredictionRepository
+from agrr_core.adapter.repositories.prediction_storage_repository import PredictionStorageRepository
 from agrr_core.entity import Forecast
 
 
-class TestInMemoryPredictionRepository:
+class TestPredictionStorageRepository:
     """Test InMemoryPredictionRepository."""
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.repository = InMemoryPredictionRepository()
+        self.repository = PredictionStorageRepository()
     
     @pytest.mark.asyncio
     async def test_save_and_get_forecast(self):

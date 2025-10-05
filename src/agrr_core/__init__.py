@@ -11,14 +11,14 @@ from .usecase import (
     PredictionRequestDTO,
 )
 from .adapter import (
-    OpenMeteoWeatherRepository,
-    InMemoryWeatherRepository,
-    InMemoryPredictionRepository,
-    WeatherDataMapper,
+    WeatherAPIOpenMeteoRepository,
+    WeatherMemoryRepository,
+    PredictionStorageRepository,
+    WeatherMapper,
     WeatherPresenter,
     PredictionPresenter,
 )
-from .adapter.controllers.weather_api_controller import WeatherController
+from .adapter.controllers.weather_api_controller import WeatherAPIController
 
 __version__ = "0.1.0"
 
@@ -37,12 +37,12 @@ __all__ = [
     "WeatherDataRequestDTO",
     "PredictionRequestDTO",
     # Adapters
-    "OpenMeteoWeatherRepository",
-    "InMemoryWeatherRepository",
-    "InMemoryPredictionRepository",
-    "WeatherDataMapper",
+    "WeatherAPIOpenMeteoRepository",
+    "WeatherMemoryRepository",
+    "PredictionStorageRepository",
+    "WeatherMapper",
     "WeatherPresenter",
     "PredictionPresenter",
     # Framework
-    "WeatherController",
+    "WeatherAPIController",
 ]

@@ -8,7 +8,7 @@ from agrr_core.usecase.dto.weather_data_request_dto import WeatherDataRequestDTO
 from agrr_core.usecase.dto.prediction_request_dto import PredictionRequestDTO
 
 
-class WeatherController:
+class WeatherAPIController:
     """Controller for weather-related operations."""
     
     def __init__(

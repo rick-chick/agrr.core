@@ -7,7 +7,7 @@ from agrr_core.entity import WeatherData
 from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
 
 
-class WeatherDataMapper:
+class WeatherMapper:
     """Mapper for weather data transformations."""
     
     @staticmethod
@@ -26,7 +26,7 @@ class WeatherDataMapper:
     @staticmethod
     def entities_to_dtos(weather_data_list: List[WeatherData]) -> List[WeatherDataResponseDTO]:
         """Convert list of WeatherData entities to DTOs."""
-        return [WeatherDataMapper.entity_to_dto(data) for data in weather_data_list]
+        return [WeatherMapper.entity_to_dto(data) for data in weather_data_list]
     
     @staticmethod
     def entities_to_dataframe(weather_data_list: List[WeatherData]) -> pd.DataFrame:

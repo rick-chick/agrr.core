@@ -4,8 +4,8 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime, timedelta
 
-from agrr_core.adapter.controllers.weather_cli_controller import CLIWeatherController
-from agrr_core.adapter.presenters.weather_cli_presenter import CLIWeatherPresenter
+from agrr_core.adapter.controllers.weather_cli_controller import WeatherCLIController
+from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
 
 
@@ -15,8 +15,8 @@ class TestCLIWeatherController:
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_interactor = AsyncMock(spec=FetchWeatherDataInteractor)
-        self.mock_presenter = MagicMock(spec=CLIWeatherPresenter)
-        self.controller = CLIWeatherController(
+        self.mock_presenter = MagicMock(spec=WeatherCLIPresenter)
+        self.controller = WeatherCLIController(
             fetch_weather_interactor=self.mock_interactor,
             cli_presenter=self.mock_presenter
         )

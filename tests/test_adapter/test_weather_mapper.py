@@ -4,13 +4,13 @@ import pytest
 import pandas as pd
 from datetime import datetime
 
-from agrr_core.adapter.mappers.weather_mapper import WeatherDataMapper
+from agrr_core.adapter.mappers.weather_mapper import WeatherMapper
 from agrr_core.entity import WeatherData
 from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
 
 
-class TestWeatherDataMapper:
-    """Test WeatherDataMapper."""
+class TestWeatherMapper:
+    """Test WeatherMapper."""
     
     def test_entity_to_dto(self):
         """Test converting WeatherData entity to DTO."""
@@ -23,7 +23,7 @@ class TestWeatherDataMapper:
             sunshine_duration=28800.0,
         )
         
-        dto = WeatherDataMapper.entity_to_dto(weather_data)
+        dto = WeatherMapper.entity_to_dto(weather_data)
         
         assert isinstance(dto, WeatherDataResponseDTO)
         assert dto.time == "2023-01-01T00:00:00"
@@ -45,7 +45,7 @@ class TestWeatherDataMapper:
             sunshine_duration=None,
         )
         
-        dto = WeatherDataMapper.entity_to_dto(weather_data)
+        dto = WeatherMapper.entity_to_dto(weather_data)
         
         assert dto.time == "2023-01-01T00:00:00"
         assert dto.temperature_2m_max is None
@@ -70,7 +70,7 @@ class TestWeatherDataMapper:
             ),
         ]
         
-        dtos = WeatherDataMapper.entities_to_dtos(weather_data_list)
+        dtos = WeatherMapper.entities_to_dtos(weather_data_list)
         
         assert len(dtos) == 2
         assert isinstance(dtos[0], WeatherDataResponseDTO)
@@ -104,7 +104,7 @@ class TestWeatherDataMapper:
             ),
         ]
         
-        df = WeatherDataMapper.entities_to_dataframe(weather_data_list)
+        df = WeatherMapper.entities_to_dataframe(weather_data_list)
         
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 2
@@ -136,7 +136,7 @@ class TestWeatherDataMapper:
             ),
         ]
         
-        df = WeatherDataMapper.entities_to_dataframe(weather_data_list)
+        df = WeatherMapper.entities_to_dataframe(weather_data_list)
         
         assert len(df) == 1
         assert pd.isna(df.iloc[0]['temperature_2m_max'])
@@ -156,7 +156,7 @@ class TestWeatherDataMapper:
             'sunshine_duration': [28800.0, 25200.0],
         })
         
-        entities = WeatherDataMapper.dataframe_to_entities(df)
+        entities = WeatherMapper.dataframe_to_entities(df)
         
         assert len(entities) == 2
         assert isinstance(entities[0], WeatherData)
@@ -182,7 +182,7 @@ class TestWeatherDataMapper:
             # Missing other columns
         })
         
-        entities = WeatherDataMapper.dataframe_to_entities(df)
+        entities = WeatherMapper.dataframe_to_entities(df)
         
         assert len(entities) == 1
         assert entities[0].time == datetime(2023, 1, 1)
@@ -203,7 +203,7 @@ class TestWeatherDataMapper:
             'sunshine_duration': [],
         })
         
-        entities = WeatherDataMapper.dataframe_to_entities(df)
+        entities = WeatherMapper.dataframe_to_entities(df)
         
         assert len(entities) == 0
     
@@ -211,7 +211,7 @@ class TestWeatherDataMapper:
         """Test converting empty entities list to DataFrame."""
         weather_data_list = []
         
-        df = WeatherDataMapper.entities_to_dataframe(weather_data_list)
+        df = WeatherMapper.entities_to_dataframe(weather_data_list)
         
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 0

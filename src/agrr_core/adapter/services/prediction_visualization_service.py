@@ -20,7 +20,7 @@ from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseD
 from agrr_core.usecase.dto.forecast_response_dto import ForecastResponseDTO
 
 
-class VisualizationService:
+class PredictionVisualizationService:
     """Service for creating weather prediction visualizations."""
     
     def __init__(self):

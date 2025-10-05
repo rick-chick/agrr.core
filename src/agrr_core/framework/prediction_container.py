@@ -7,7 +7,7 @@ from agrr_core.adapter.repositories.storage_weather_repository import StorageWea
 from agrr_core.adapter.repositories.external_data_weather_repository import ExternalDataWeatherRepository
 from agrr_core.adapter.services.integrated_prediction_service import IntegratedPredictionService
 from agrr_core.adapter.services.visualization_service import VisualizationService
-from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
+from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 from agrr_core.usecase.ports.input.advanced_prediction_input_port import AdvancedPredictionInputPort
 from agrr_core.usecase.ports.output.advanced_prediction_output_port import AdvancedPredictionOutputPort
 from agrr_core.usecase.ports.output.prediction_presenter_output_port import PredictionPresenterOutputPort
@@ -22,7 +22,7 @@ class PredictionContainer:
         self.config = config or {}
         self._instances = {}
     
-    def get_weather_repository(self) -> WeatherDataInputPort:
+    def get_weather_repository(self) -> WeatherRepositoryGateway:
         """Get weather repository instance."""
         if 'weather_repository' not in self._instances:
             repository_type = self.config.get('weather_repository_type', 'api')

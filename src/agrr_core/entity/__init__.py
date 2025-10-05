@@ -4,6 +4,10 @@ from .entities.weather_data import WeatherData
 from .entities.location import Location
 from .entities.date_range import DateRange
 from .entities.forecast import Forecast
+from .entities.model_type import ModelType
+from .entities.metric_type import MetricType
+from .entities.prediction_model import PredictionModel
+from .entities.model_performance import ModelPerformance
 from .exceptions.weather_error import WeatherError
 from .exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 from .exceptions.invalid_location_error import InvalidLocationError
@@ -16,6 +20,10 @@ __all__ = [
     "Location", 
     "DateRange",
     "Forecast",
+    "ModelType",
+    "MetricType",
+    "PredictionModel",
+    "ModelPerformance",
     "WeatherError",
     "WeatherDataNotFoundError",
     "InvalidLocationError",

@@ -7,38 +7,35 @@ from agrr_core.entity import Location, DateRange
 from agrr_core.entity.exceptions.invalid_location_error import InvalidLocationError
 from agrr_core.entity.exceptions.invalid_date_range_error import InvalidDateRangeError
 from agrr_core.entity.exceptions.prediction_error import PredictionError
-from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
+from agrr_core.usecase.gateways.weather_data_gateway import WeatherDataGateway
+from agrr_core.usecase.gateways.weather_data_repository_gateway import WeatherDataRepositoryGateway
+from agrr_core.usecase.gateways.prediction_service_gateway import PredictionServiceGateway
 from agrr_core.usecase.ports.input.advanced_prediction_input_port import AdvancedPredictionInputPort
-from agrr_core.usecase.ports.output.advanced_prediction_output_port import AdvancedPredictionOutputPort
 from agrr_core.usecase.ports.output.prediction_presenter_output_port import PredictionPresenterOutputPort
-from agrr_core.usecase.dto.prediction_config_dto import (
-    MultiMetricPredictionRequestDTO, 
-    ModelEvaluationRequestDTO,
-    BatchPredictionRequestDTO
-)
-from agrr_core.usecase.dto.advanced_prediction_response_dto import (
-    AdvancedPredictionResponseDTO,
-    ModelAccuracyDTO,
-    ModelPerformanceDTO,
-    BatchPredictionResponseDTO
-)
+from agrr_core.usecase.dto.multi_metric_prediction_request_dto import MultiMetricPredictionRequestDTO
+from agrr_core.usecase.dto.model_evaluation_request_dto import ModelEvaluationRequestDTO
+from agrr_core.usecase.dto.batch_prediction_request_dto import BatchPredictionRequestDTO
+from agrr_core.usecase.dto.advanced_prediction_response_dto import AdvancedPredictionResponseDTO
+from agrr_core.usecase.dto.model_accuracy_dto import ModelAccuracyDTO
+from agrr_core.usecase.dto.model_performance_dto import ModelPerformanceDTO
+from agrr_core.usecase.dto.batch_prediction_response_dto import BatchPredictionResponseDTO
 from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
 from agrr_core.usecase.dto.forecast_response_dto import ForecastResponseDTO
 
 
-class AdvancedPredictWeatherInteractor:
+class AdvancedPredictWeatherInteractor(AdvancedPredictionInputPort):
     """Advanced interactor for weather prediction with multiple models and metrics."""
     
     def __init__(
         self, 
-        weather_data_input_port: WeatherDataInputPort,
-        advanced_prediction_input_port: AdvancedPredictionInputPort,
-        advanced_prediction_output_port: AdvancedPredictionOutputPort,
+        weather_data_gateway: WeatherDataGateway,
+        weather_data_repository_gateway: WeatherDataRepositoryGateway,
+        prediction_service_gateway: PredictionServiceGateway,
         prediction_presenter_output_port: PredictionPresenterOutputPort
     ):
-        self.weather_data_input_port = weather_data_input_port
-        self.advanced_prediction_input_port = advanced_prediction_input_port
-        self.advanced_prediction_output_port = advanced_prediction_output_port
+        self.weather_data_gateway = weather_data_gateway
+        self.weather_data_repository_gateway = weather_data_repository_gateway
+        self.prediction_service_gateway = prediction_service_gateway
         self.prediction_presenter_output_port = prediction_presenter_output_port
     
     async def execute_multi_metric_prediction(self, request: MultiMetricPredictionRequestDTO) -> AdvancedPredictionResponseDTO:
@@ -51,7 +48,7 @@ class AdvancedPredictWeatherInteractor:
             date_range = DateRange(request.start_date, request.end_date)
             
             # Get historical weather data
-            historical_data_list, actual_location = await self.weather_data_input_port.get_weather_data_by_location_and_date_range(
+            historical_data_list, actual_location = await self.weather_data_gateway.get_weather_data_by_location_and_date_range(
                 location.latitude,
                 location.longitude,
                 date_range.start_date,
@@ -73,7 +70,7 @@ class AdvancedPredictWeatherInteractor:
             }
             
             # Use advanced prediction service to generate forecasts
-            forecasts_dict = await self.advanced_prediction_output_port.predict_multiple_metrics(
+            forecasts_dict = await self.prediction_service_gateway.predict_multiple_metrics(
                 historical_data_list, 
                 request.metrics,
                 model_config
@@ -96,7 +93,7 @@ class AdvancedPredictWeatherInteractor:
             for metric, forecasts in forecasts_dict.items():
                 all_forecasts.extend(forecasts)
             
-            await self.advanced_prediction_input_port.save_forecast_with_metadata(
+            await self.weather_data_repository_gateway.save_forecast_with_metadata(
                 all_forecasts, metadata
             )
             
@@ -155,14 +152,14 @@ class AdvancedPredictWeatherInteractor:
         """Execute model evaluation."""
         try:
             # Get test data
-            test_data, _ = await self.weather_data_input_port.get_weather_data_by_location_and_date_range(
+            test_data, _ = await self.weather_data_gateway.get_weather_data_by_location_and_date_range(
                 0.0, 0.0,  # Dummy location - should be passed in request
                 request.test_data_start_date,
                 request.test_data_end_date
             )
             
             # Get training data (before test period)
-            training_data, _ = await self.weather_data_input_port.get_weather_data_by_location_and_date_range(
+            training_data, _ = await self.weather_data_gateway.get_weather_data_by_location_and_date_range(
                 0.0, 0.0,  # Dummy location - should be passed in request
                 "2020-01-01",  # Should be calculated based on test start date
                 request.test_data_start_date
@@ -182,13 +179,13 @@ class AdvancedPredictWeatherInteractor:
             accuracy_results = {}
             for metric in request.metrics:
                 # Make predictions
-                forecasts_dict = await self.advanced_prediction_output_port.predict_multiple_metrics(
+                forecasts_dict = await self.prediction_service_gateway.predict_multiple_metrics(
                     training_data, [metric], model_config
                 )
                 
                 if metric in forecasts_dict:
                     # Evaluate accuracy
-                    accuracy = await self.advanced_prediction_output_port.evaluate_model_accuracy(
+                    accuracy = await self.prediction_service_gateway.evaluate_model_accuracy(
                         test_data, forecasts_dict[metric], metric
                     )
                     accuracy_results[metric] = accuracy
@@ -204,7 +201,7 @@ class AdvancedPredictWeatherInteractor:
                 'evaluation_date': datetime.now().isoformat()
             }
             
-            await self.advanced_prediction_input_port.save_model_evaluation(
+            await self.weather_data_repository_gateway.save_model_evaluation(
                 request.model_type, evaluation_results
             )
             
@@ -285,11 +282,12 @@ class AdvancedPredictWeatherInteractor:
     
     async def get_available_models(self) -> List[Dict[str, Any]]:
         """Get available prediction models."""
-        return await self.advanced_prediction_output_port.get_available_models()
+        models = await self.weather_data_repository_gateway.get_available_models()
+        return [{"name": model, "type": model} for model in models]
     
     async def get_model_info(self, model_type: str) -> Dict[str, Any]:
         """Get information about specific model."""
-        return await self.advanced_prediction_output_port.get_model_info(model_type)
+        return await self.prediction_service_gateway.get_model_info(model_type)
     
     async def compare_models(
         self,
@@ -299,9 +297,5 @@ class AdvancedPredictWeatherInteractor:
         model_configs: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Compare performance of different models."""
-        if hasattr(self.advanced_prediction_output_port, 'compare_models'):
-            return await self.advanced_prediction_output_port.compare_models(
-                historical_data, test_data, metrics, model_configs
-            )
-        else:
-            raise PredictionError("Model comparison not supported by current prediction service")
+        # This would need to be implemented in the prediction service gateway
+        raise PredictionError("Model comparison not yet implemented")

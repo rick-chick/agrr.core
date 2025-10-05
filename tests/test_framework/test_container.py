@@ -42,7 +42,7 @@ class TestCLIContainer:
         interactor = self.container.get_fetch_weather_interactor()
         
         assert interactor is not None
-        assert interactor.weather_data_input_port is not None
+        assert interactor.weather_repository_gateway is not None
         assert interactor.weather_presenter_output_port is not None
         
         # Test singleton behavior

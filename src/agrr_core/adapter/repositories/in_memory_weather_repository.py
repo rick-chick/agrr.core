@@ -4,10 +4,10 @@ from typing import List, Tuple
 from datetime import datetime
 
 from agrr_core.entity import WeatherData, Location
-from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
+from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 
 
-class InMemoryWeatherRepository(WeatherDataInputPort):
+class InMemoryWeatherRepository(WeatherRepositoryGateway):
     """In-memory repository for weather data (useful for testing)."""
     
     def __init__(self):

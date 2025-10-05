@@ -6,14 +6,14 @@ from datetime import datetime
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.entities.prediction_model import ModelType
 from agrr_core.entity.exceptions.prediction_error import PredictionError
-from agrr_core.usecase.ports.output.advanced_prediction_output_port import AdvancedPredictionOutputPort
+from agrr_core.usecase.gateways.prediction_service_gateway import PredictionServiceGateway
 from agrr_core.adapter.services.model_factory import ModelFactory
 from agrr_core.adapter.services.prophet_weather_prediction_service import ProphetWeatherPredictionService
 from agrr_core.adapter.services.lstm_weather_prediction_service import LSTMWeatherPredictionService
 from agrr_core.adapter.services.arima_weather_prediction_service import ARIMAWeatherPredictionService
 
 
-class IntegratedPredictionService(AdvancedPredictionOutputPort):
+class IntegratedPredictionService(PredictionServiceGateway):
     """Integrated service that manages multiple prediction models."""
     
     def __init__(self):

@@ -7,10 +7,10 @@ from datetime import datetime
 from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
-from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
+from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 
 
-class OpenMeteoWeatherRepository(WeatherDataInputPort):
+class OpenMeteoWeatherRepository(WeatherRepositoryGateway):
     """Repository for fetching weather data from Open-Meteo API."""
     
     def __init__(self, base_url: str = "https://archive-api.open-meteo.com/v1/archive"):

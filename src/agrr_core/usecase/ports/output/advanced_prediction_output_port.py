@@ -1,66 +1,37 @@
 """Advanced weather prediction output port interface."""
 
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any
+from typing import Dict, Any
 
-from agrr_core.entity import WeatherData, Forecast
+from agrr_core.usecase.dto.advanced_prediction_response_dto import AdvancedPredictionResponseDTO
+from agrr_core.usecase.dto.model_accuracy_dto import ModelAccuracyDTO
+from agrr_core.usecase.dto.batch_prediction_response_dto import BatchPredictionResponseDTO
 
 
 class AdvancedPredictionOutputPort(ABC):
-    """Interface for advanced weather prediction output operations."""
+    """Interface for advanced weather prediction presenter operations."""
     
     @abstractmethod
-    async def predict_multiple_metrics(
-        self, 
-        historical_data: List[WeatherData], 
-        metrics: List[str],
-        model_config: Dict[str, Any]
-    ) -> Dict[str, List[Forecast]]:
-        """Predict multiple weather metrics using specified model."""
+    async def present_prediction_result(self, result: AdvancedPredictionResponseDTO) -> Dict[str, Any]:
+        """Present prediction result in appropriate format."""
         pass
     
     @abstractmethod
-    async def evaluate_model_accuracy(
-        self,
-        test_data: List[WeatherData],
-        predictions: List[Forecast],
-        metric: str
-    ) -> Dict[str, float]:
-        """Evaluate model accuracy using test data."""
+    async def present_model_evaluation(self, evaluation: ModelAccuracyDTO) -> Dict[str, Any]:
+        """Present model evaluation result in appropriate format."""
         pass
     
     @abstractmethod
-    async def train_model(
-        self,
-        training_data: List[WeatherData],
-        model_config: Dict[str, Any],
-        metric: str
-    ) -> Dict[str, Any]:
-        """Train prediction model with given configuration."""
+    async def present_batch_prediction_result(self, result: BatchPredictionResponseDTO) -> Dict[str, Any]:
+        """Present batch prediction result in appropriate format."""
         pass
     
     @abstractmethod
-    async def get_model_info(self, model_type: str) -> Dict[str, Any]:
-        """Get information about specific model."""
+    async def present_model_list(self, models: list) -> Dict[str, Any]:
+        """Present list of available models."""
         pass
     
     @abstractmethod
-    async def predict_with_confidence_intervals(
-        self,
-        historical_data: List[WeatherData],
-        prediction_days: int,
-        confidence_level: float,
-        model_config: Dict[str, Any]
-    ) -> List[Forecast]:
-        """Predict with custom confidence intervals."""
-        pass
-    
-    @abstractmethod
-    async def batch_predict(
-        self,
-        historical_data_list: List[List[WeatherData]],
-        model_config: Dict[str, Any],
-        metrics: List[str]
-    ) -> List[Dict[str, List[Forecast]]]:
-        """Perform batch prediction for multiple datasets."""
+    async def present_model_info(self, model_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Present model information."""
         pass

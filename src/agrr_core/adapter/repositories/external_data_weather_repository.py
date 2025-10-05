@@ -5,13 +5,13 @@ from datetime import datetime
 
 from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
-from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
+from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 
 
-class ExternalDataWeatherRepository(WeatherDataInputPort):
+class ExternalDataWeatherRepository(WeatherRepositoryGateway):
     """Repository that allows external data injection without API calls."""
     
-    def __init__(self, fallback_repository: Optional[WeatherDataInputPort] = None):
+    def __init__(self, fallback_repository: Optional[WeatherRepositoryGateway] = None):
         self.fallback_repository = fallback_repository
         self._injected_data: Dict[str, List[WeatherData]] = {}
         self._location_metadata: Dict[str, Location] = {}

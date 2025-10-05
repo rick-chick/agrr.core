@@ -7,10 +7,10 @@ import os
 
 from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
-from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
+from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 
 
-class StorageWeatherRepository(WeatherDataInputPort):
+class StorageWeatherRepository(WeatherRepositoryGateway):
     """Repository for weather data stored in local storage."""
     
     def __init__(self, storage_path: str = "data/weather"):

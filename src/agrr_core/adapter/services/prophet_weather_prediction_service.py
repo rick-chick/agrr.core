@@ -20,10 +20,10 @@ except ImportError:
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.prediction_error import PredictionError
 from agrr_core.usecase.ports.output.weather_prediction_output_port import WeatherPredictionOutputPort
-from agrr_core.usecase.ports.output.advanced_prediction_output_port import AdvancedPredictionOutputPort
+from agrr_core.usecase.gateways.prediction_service_gateway import PredictionServiceGateway
 
 
-class ProphetWeatherPredictionService(WeatherPredictionOutputPort, AdvancedPredictionOutputPort):
+class ProphetWeatherPredictionService(WeatherPredictionOutputPort, PredictionServiceGateway):
     """Prophet-based implementation of weather prediction service."""
     
     async def predict_weather(

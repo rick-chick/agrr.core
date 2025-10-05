@@ -4,8 +4,9 @@ from agrr_core.entity import Location, DateRange
 from agrr_core.entity.exceptions.invalid_location_error import InvalidLocationError
 from agrr_core.entity.exceptions.invalid_date_range_error import InvalidDateRangeError
 from agrr_core.entity.exceptions.prediction_error import PredictionError
-from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
-from agrr_core.usecase.ports.input.weather_prediction_input_port import WeatherPredictionInputPort
+from agrr_core.usecase.ports.input.predict_weather_input_port import PredictWeatherInputPort
+from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
+from agrr_core.usecase.gateways.prediction_repository_gateway import PredictionRepositoryGateway
 from agrr_core.usecase.ports.output.weather_prediction_output_port import WeatherPredictionOutputPort
 from agrr_core.usecase.ports.output.prediction_presenter_output_port import PredictionPresenterOutputPort
 from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
@@ -14,18 +15,18 @@ from agrr_core.usecase.dto.prediction_response_dto import PredictionResponseDTO
 from agrr_core.usecase.dto.forecast_response_dto import ForecastResponseDTO
 
 
-class PredictWeatherInteractor:
+class PredictWeatherInteractor(PredictWeatherInputPort):
     """Interactor for weather prediction."""
     
     def __init__(
         self, 
-        weather_data_input_port: WeatherDataInputPort,
-        weather_prediction_input_port: WeatherPredictionInputPort,
+        weather_repository_gateway: WeatherRepositoryGateway,
+        prediction_repository_gateway: PredictionRepositoryGateway,
         weather_prediction_output_port: WeatherPredictionOutputPort,
         prediction_presenter_output_port: PredictionPresenterOutputPort
     ):
-        self.weather_data_input_port = weather_data_input_port
-        self.weather_prediction_input_port = weather_prediction_input_port
+        self.weather_repository_gateway = weather_repository_gateway
+        self.prediction_repository_gateway = prediction_repository_gateway
         self.weather_prediction_output_port = weather_prediction_output_port
         self.prediction_presenter_output_port = prediction_presenter_output_port
     
@@ -39,7 +40,7 @@ class PredictWeatherInteractor:
             date_range = DateRange(request.start_date, request.end_date)
             
             # Get historical weather data (returns tuple of data and location)
-            historical_data_list, actual_location = await self.weather_data_input_port.get_weather_data_by_location_and_date_range(
+            historical_data_list, actual_location = await self.weather_repository_gateway.get_weather_data_by_location_and_date_range(
                 location.latitude,
                 location.longitude,
                 date_range.start_date,
@@ -56,7 +57,7 @@ class PredictWeatherInteractor:
             )
             
             # Save forecasts
-            await self.weather_prediction_input_port.save_forecast(forecasts)
+            await self.prediction_repository_gateway.save_forecast(forecasts)
             
             # Convert historical data to response DTOs
             historical_response = []

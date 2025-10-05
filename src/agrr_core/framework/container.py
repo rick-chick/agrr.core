@@ -9,7 +9,7 @@ from agrr_core.adapter.repositories.external_data_weather_repository import Exte
 from agrr_core.adapter.presenters.cli_weather_presenter import CLIWeatherPresenter
 from agrr_core.adapter.controllers.cli_weather_controller import CLIWeatherController
 from agrr_core.usecase.interactors.fetch_weather_data_interactor import FetchWeatherDataInteractor
-from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
+from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 
 
 class CLIContainer:
@@ -20,7 +20,7 @@ class CLIContainer:
         self.config = config or {}
         self._instances = {}
     
-    def get_weather_repository(self) -> WeatherDataInputPort:
+    def get_weather_repository(self) -> WeatherRepositoryGateway:
         """Get weather repository instance."""
         if 'weather_repository' not in self._instances:
             repository_type = self.config.get('weather_repository_type', 'api')
@@ -53,7 +53,7 @@ class CLIContainer:
             weather_repository = self.get_weather_repository()
             cli_presenter = self.get_cli_presenter()
             self._instances['fetch_weather_interactor'] = FetchWeatherDataInteractor(
-                weather_data_input_port=weather_repository,
+                weather_repository_gateway=weather_repository,
                 weather_presenter_output_port=cli_presenter
             )
         return self._instances['fetch_weather_interactor']

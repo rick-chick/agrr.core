@@ -32,15 +32,11 @@ def test_import_weather_interactors():
     from agrr_core.usecase import (
         FetchWeatherDataInteractor,
         PredictWeatherInteractor,
-        WeatherDataInputPort,
-        WeatherPredictionInputPort,
         WeatherPredictionOutputPort,
     )
     
     assert FetchWeatherDataInteractor is not None
     assert PredictWeatherInteractor is not None
-    assert WeatherDataInputPort is not None
-    assert WeatherPredictionInputPort is not None
     assert WeatherPredictionOutputPort is not None
 
 
@@ -62,12 +58,8 @@ def test_import_weather_repositories():
 def test_import_weather_controller():
     """Test importing weather controller."""
     from agrr_core.adapter.controllers.weather_controller import WeatherController
-    from agrr_core.adapter.interfaces.weather_service_interface import WeatherServiceInterface
-    from agrr_core.adapter.interfaces.prediction_service_interface import PredictionServiceInterface
     
     assert WeatherController is not None
-    assert WeatherServiceInterface is not None
-    assert PredictionServiceInterface is not None
 
 
 def test_import_dtos():

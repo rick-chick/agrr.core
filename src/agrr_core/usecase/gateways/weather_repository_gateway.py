@@ -1,4 +1,4 @@
-"""Weather data input port interface."""
+"""Weather repository gateway interface for usecase layer."""
 
 from abc import ABC, abstractmethod
 from typing import List, Tuple
@@ -6,8 +6,8 @@ from typing import List, Tuple
 from agrr_core.entity import WeatherData, Location
 
 
-class WeatherDataInputPort(ABC):
-    """Interface for weather data input operations."""
+class WeatherRepositoryGateway(ABC):
+    """Gateway interface for weather data repository operations."""
     
     @abstractmethod
     async def save_weather_data(self, weather_data: List[WeatherData]) -> None:

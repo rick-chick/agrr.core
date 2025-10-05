@@ -29,10 +29,10 @@ except ImportError:
 
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.prediction_error import PredictionError
-from agrr_core.usecase.ports.output.advanced_prediction_output_port import AdvancedPredictionOutputPort
+from agrr_core.usecase.gateways.prediction_service_gateway import PredictionServiceGateway
 
 
-class ARIMAWeatherPredictionService(AdvancedPredictionOutputPort):
+class ARIMAWeatherPredictionService(PredictionServiceGateway):
     """ARIMA-based implementation of weather prediction service."""
     
     def __init__(self):

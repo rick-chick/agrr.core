@@ -51,10 +51,12 @@ src/agrr.core/entity/
 - **Interactor** - ユースケースの実装
   - CreateUserInteractor, UpdateUserInteractor, DeleteUserInteractor, GetUserInteractor
   - CreateTaskInteractor, AssignTaskInteractor, CompleteTaskInteractor
-- **Input Port** - 入力ポート（インターフェース）
+- **Input Port** - 入力ポート（Interactorのインターフェース）
   - UserInputPort, TaskInputPort, ProjectInputPort
-- **Output Port** - 出力ポート（Repository Interfaceの役割）
+- **Output Port** - 出力ポート（Presenterのインターフェース）
   - UserOutputPort, TaskOutputPort, NotificationOutputPort
+- **Gateway** - ゲートウェイインターフェース（外部システムとの接続）
+  - WeatherDataGateway, PredictionServiceGateway, UserRepositoryGateway
 - **DTO** - データ転送オブジェクト
   - CreateUserDTO, UpdateUserDTO, UserResponseDTO, CreateTaskDTO, TaskResponseDTO
 - **UseCase Exception** - ユースケース例外
@@ -65,8 +67,9 @@ src/agrr.core/entity/
 src/agrr.core/usecase/
 ├── interactors/       # ユースケースの実装
 ├── ports/            # 入力・出力ポート
-│   ├── input/        # 入力ポート
-│   └── output/       # 出力ポート（Repository Interface）
+│   ├── input/        # 入力ポート（Interactorのインターフェース）
+│   └── output/       # 出力ポート（Presenterのインターフェース）
+├── gateways/         # ゲートウェイインターフェース
 ├── dto/              # データ転送オブジェクト
 ├── exceptions/       # ユースケース例外
 └── __init__.py
@@ -76,14 +79,14 @@ src/agrr.core/usecase/
 **責任**: 外部システムとの接続とデータ変換
 
 #### 構成要素:
-- **Repository** - リポジトリの実装（Output Portの実装）
+- **Repository** - リポジトリの実装（Gatewayの実装）
   - SqlUserRepository, MongoUserRepository, InMemoryUserRepository, SqlTaskRepository
-- **Gateway** - 外部システムとのゲートウェイ
-  - EmailGateway, NotificationGateway, FileStorageGateway, ExternalApiGateway
-- **Presenter** - プレゼンター（出力の整形）
-  - UserPresenter, TaskPresenter, ErrorPresenter, JsonPresenter
-- **Controller** - コントローラー（入力の受け取り）
-  - UserController, TaskController, HealthController
+- **Gateway** - ゲートウェイの実装（UseCase層のGatewayインターフェースの実装）
+  - WeatherDataGatewayImpl, PredictionServiceGatewayImpl, UserRepositoryGatewayImpl
+- **Presenter** - プレゼンター（Output Portの実装）
+  - UserPresenter, TaskPresenter, ErrorPresenter, JsonPresenter, AdvancedPredictionPresenter
+- **Controller** - コントローラー（Input Portの実装）
+  - UserController, TaskController, HealthController, AdvancedPredictionController
 - **Mapper** - データマッパー
   - UserMapper, TaskMapper, EntityToDtoMapper, DtoToEntityMapper
 - **Adapter Exception** - アダプター例外
@@ -92,10 +95,11 @@ src/agrr.core/usecase/
 #### ディレクトリ構造:
 ```
 src/agrr.core/adapter/
-├── repositories/     # リポジトリ実装（Output Portの実装）
-├── gateways/         # 外部システムゲートウェイ
-├── presenters/       # プレゼンター
-├── controllers/      # コントローラー
+├── repositories/     # リポジトリ実装（Gatewayの実装）
+├── gateways/         # ゲートウェイ実装（UseCase層のGatewayインターフェースの実装）
+├── presenters/       # プレゼンター（Output Portの実装）
+├── controllers/      # コントローラー（Input Portの実装）
+├── services/         # サービス実装（Gatewayから呼び出される）
 ├── mappers/          # データマッパー
 ├── exceptions/       # アダプター例外
 └── __init__.py
@@ -133,13 +137,14 @@ src/agrr.core/framework/
 ## データフロー
 
 ### 標準的なフロー
-1. **入力**: Framework Layer → Adapter Layer (Controller) → UseCase Layer (Input Port)
+1. **入力**: Framework Layer → Adapter Layer (Controller) → UseCase Layer (Interactor)
 2. **処理**: UseCase Layer (Interactor) → Entity Layer (Entity)
-3. **出力**: UseCase Layer (Output Port) → Adapter Layer (Presenter) → Framework Layer
+3. **外部システムアクセス**: UseCase Layer (Interactor) → UseCase Layer (Gatewayインターフェース) → Adapter Layer (Gateway実装) → Adapter Layer (Service)
+4. **出力**: UseCase Layer (Interactor) → UseCase Layer (Output Port) → Adapter Layer (Presenter) → Framework Layer
 
 ### 依存関係の実現方法
 - **UseCase → Entity**: UseCase層がEntity層を直接使用
-- **Adapter → UseCase**: Adapter層がUseCase層のOutput Portを実装
+- **Adapter → UseCase**: Adapter層がUseCase層のGatewayインターフェース、Input Port、Output Portを実装
 - **Framework → Adapter**: Framework層がAdapter層のインターフェースを使用
 
 ### インターフェース分離の原則

@@ -4,8 +4,6 @@ import pytest
 from unittest.mock import Mock, AsyncMock
 
 from agrr_core.adapter.controllers.weather_controller import WeatherController
-from agrr_core.adapter.services.weather_service_impl import WeatherServiceImpl
-from agrr_core.adapter.services.prediction_service_impl import PredictionServiceImpl
 from agrr_core.usecase.interactors.fetch_weather_data_interactor import FetchWeatherDataInteractor
 from agrr_core.usecase.interactors.predict_weather_interactor import PredictWeatherInteractor
 from agrr_core.adapter.repositories.in_memory_weather_repository import InMemoryWeatherRepository

@@ -3,7 +3,8 @@
 from agrr_core.entity import Location, DateRange
 from agrr_core.entity.exceptions.invalid_location_error import InvalidLocationError
 from agrr_core.entity.exceptions.invalid_date_range_error import InvalidDateRangeError
-from agrr_core.usecase.ports.input.weather_data_input_port import WeatherDataInputPort
+from agrr_core.usecase.ports.input.fetch_weather_data_input_port import FetchWeatherDataInputPort
+from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 from agrr_core.usecase.ports.output.weather_presenter_output_port import WeatherPresenterOutputPort
 from agrr_core.usecase.dto.weather_data_request_dto import WeatherDataRequestDTO
 from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
@@ -11,15 +12,15 @@ from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataList
 from agrr_core.usecase.dto.location_response_dto import LocationResponseDTO
 
 
-class FetchWeatherDataInteractor:
+class FetchWeatherDataInteractor(FetchWeatherDataInputPort):
     """Interactor for fetching weather data."""
     
     def __init__(
         self, 
-        weather_data_input_port: WeatherDataInputPort,
+        weather_repository_gateway: WeatherRepositoryGateway,
         weather_presenter_output_port: WeatherPresenterOutputPort
     ):
-        self.weather_data_input_port = weather_data_input_port
+        self.weather_repository_gateway = weather_repository_gateway
         self.weather_presenter_output_port = weather_presenter_output_port
     
     async def execute(self, request: WeatherDataRequestDTO) -> None:
@@ -32,7 +33,7 @@ class FetchWeatherDataInteractor:
             date_range = DateRange(request.start_date, request.end_date)
             
             # Get weather data
-            weather_data_list, actual_location = await self.weather_data_input_port.get_weather_data_by_location_and_date_range(
+            weather_data_list, actual_location = await self.weather_repository_gateway.get_weather_data_by_location_and_date_range(
                 location.latitude,
                 location.longitude,
                 date_range.start_date,

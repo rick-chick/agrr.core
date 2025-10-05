@@ -2,8 +2,6 @@
 
 from .interactors.fetch_weather_data_interactor import FetchWeatherDataInteractor
 from .interactors.predict_weather_interactor import PredictWeatherInteractor
-from .ports.input.weather_data_input_port import WeatherDataInputPort
-from .ports.input.weather_prediction_input_port import WeatherPredictionInputPort
 from .ports.output.weather_prediction_output_port import WeatherPredictionOutputPort
 from .ports.output.weather_presenter_output_port import WeatherPresenterOutputPort
 from .ports.output.prediction_presenter_output_port import PredictionPresenterOutputPort
@@ -17,8 +15,6 @@ from .dto.forecast_response_dto import ForecastResponseDTO
 __all__ = [
     "FetchWeatherDataInteractor",
     "PredictWeatherInteractor",
-    "WeatherDataInputPort",
-    "WeatherPredictionInputPort",
     "WeatherPredictionOutputPort",
     "WeatherPresenterOutputPort",
     "PredictionPresenterOutputPort",

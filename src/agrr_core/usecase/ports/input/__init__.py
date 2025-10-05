@@ -1,9 +1,11 @@
 """Input ports package."""
 
-from .weather_data_input_port import WeatherDataInputPort
-from .weather_prediction_input_port import WeatherPredictionInputPort
+from .fetch_weather_data_input_port import FetchWeatherDataInputPort
+from .predict_weather_input_port import PredictWeatherInputPort
+from .advanced_prediction_input_port import AdvancedPredictionInputPort
 
 __all__ = [
-    "WeatherDataInputPort",
-    "WeatherPredictionInputPort",
+    "FetchWeatherDataInputPort",
+    "PredictWeatherInputPort",
+    "AdvancedPredictionInputPort"
 ]

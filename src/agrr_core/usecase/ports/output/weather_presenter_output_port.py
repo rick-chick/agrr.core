@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any
 
-from agrr_core.entity.entities.weather_data import WeatherData
+from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
 from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataListResponseDTO
 

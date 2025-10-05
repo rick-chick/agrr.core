@@ -1,6 +1,6 @@
 """Adapter services package."""
 
-from .prophet_weather_prediction_service import ProphetWeatherPredictionService
+from .prediction_prophet_service import ProphetWeatherPredictionService
 
 __all__ = [
     "ProphetWeatherPredictionService",

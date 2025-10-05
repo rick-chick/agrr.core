@@ -1,11 +1,17 @@
 """Input ports package."""
 
-from .fetch_weather_data_input_port import FetchWeatherDataInputPort
-from .predict_weather_input_port import PredictWeatherInputPort
-from .advanced_prediction_input_port import AdvancedPredictionInputPort
+from .weather_data_fetch_input_port import FetchWeatherDataInputPort
+from .weather_predict_input_port import PredictWeatherInputPort
+from .multi_metric_prediction_input_port import MultiMetricPredictionInputPort
+from .model_evaluation_input_port import ModelEvaluationInputPort
+from .batch_prediction_input_port import BatchPredictionInputPort
+from .model_management_input_port import ModelManagementInputPort
 
 __all__ = [
     "FetchWeatherDataInputPort",
     "PredictWeatherInputPort",
-    "AdvancedPredictionInputPort"
+    "MultiMetricPredictionInputPort",
+    "ModelEvaluationInputPort",
+    "BatchPredictionInputPort",
+    "ModelManagementInputPort"
 ]

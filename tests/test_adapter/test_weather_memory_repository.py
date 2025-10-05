@@ -3,7 +3,7 @@
 import pytest
 from datetime import datetime
 
-from agrr_core.adapter.repositories.in_memory_weather_repository import InMemoryWeatherRepository
+from agrr_core.adapter.repositories.weather_memory_repository import InMemoryWeatherRepository
 from agrr_core.entity import WeatherData, Location
 
 

@@ -2,7 +2,7 @@
 
 from typing import Dict, Any, List
 
-from agrr_core.entity.entities.forecast import Forecast
+from agrr_core.entity.entities.prediction_forecast_entity import Forecast
 from agrr_core.usecase.dto.prediction_response_dto import PredictionResponseDTO
 from agrr_core.usecase.ports.output.prediction_presenter_output_port import PredictionPresenterOutputPort
 

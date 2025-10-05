@@ -18,7 +18,7 @@ from .adapter import (
     WeatherPresenter,
     PredictionPresenter,
 )
-from .adapter.controllers.weather_controller import WeatherController
+from .adapter.controllers.weather_api_controller import WeatherController
 
 __version__ = "0.1.0"
 

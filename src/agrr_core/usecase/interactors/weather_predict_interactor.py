@@ -4,7 +4,7 @@ from agrr_core.entity import Location, DateRange
 from agrr_core.entity.exceptions.invalid_location_error import InvalidLocationError
 from agrr_core.entity.exceptions.invalid_date_range_error import InvalidDateRangeError
 from agrr_core.entity.exceptions.prediction_error import PredictionError
-from agrr_core.usecase.ports.input.predict_weather_input_port import PredictWeatherInputPort
+from agrr_core.usecase.ports.input.weather_predict_input_port import PredictWeatherInputPort
 from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 from agrr_core.usecase.gateways.prediction_repository_gateway import PredictionRepositoryGateway
 from agrr_core.usecase.ports.output.weather_prediction_output_port import WeatherPredictionOutputPort

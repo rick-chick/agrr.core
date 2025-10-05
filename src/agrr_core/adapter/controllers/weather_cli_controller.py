@@ -5,9 +5,9 @@ import asyncio
 from typing import Optional, Tuple
 from datetime import datetime, timedelta
 
-from agrr_core.usecase.interactors.fetch_weather_data_interactor import FetchWeatherDataInteractor
+from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
 from agrr_core.usecase.dto.weather_data_request_dto import WeatherDataRequestDTO
-from agrr_core.adapter.presenters.cli_weather_presenter import CLIWeatherPresenter
+from agrr_core.adapter.presenters.weather_cli_presenter import CLIWeatherPresenter
 
 
 class CLIWeatherController:

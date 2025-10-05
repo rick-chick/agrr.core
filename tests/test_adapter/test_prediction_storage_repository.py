@@ -3,7 +3,7 @@
 import pytest
 from datetime import datetime
 
-from agrr_core.adapter.repositories.prediction_repository import InMemoryPredictionRepository
+from agrr_core.adapter.repositories.prediction_storage_repository import InMemoryPredictionRepository
 from agrr_core.entity import Forecast
 
 

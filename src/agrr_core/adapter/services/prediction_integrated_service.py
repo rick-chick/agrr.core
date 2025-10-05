@@ -4,13 +4,13 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 from agrr_core.entity import WeatherData, Forecast
-from agrr_core.entity.entities.prediction_model import ModelType
+from agrr_core.entity.entities.prediction_entity import ModelType
 from agrr_core.entity.exceptions.prediction_error import PredictionError
 from agrr_core.usecase.gateways.prediction_service_gateway import PredictionServiceGateway
-from agrr_core.adapter.services.model_factory import ModelFactory
-from agrr_core.adapter.services.prophet_weather_prediction_service import ProphetWeatherPredictionService
-from agrr_core.adapter.services.lstm_weather_prediction_service import LSTMWeatherPredictionService
-from agrr_core.adapter.services.arima_weather_prediction_service import ARIMAWeatherPredictionService
+from agrr_core.adapter.services.prediction_model_factory_service import ModelFactory
+from agrr_core.adapter.services.prediction_prophet_service import ProphetWeatherPredictionService
+from agrr_core.adapter.services.prediction_lstm_service import LSTMWeatherPredictionService
+from agrr_core.adapter.services.prediction_arima_service import ARIMAWeatherPredictionService
 
 
 class IntegratedPredictionService(PredictionServiceGateway):

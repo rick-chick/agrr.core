@@ -3,12 +3,12 @@
 import asyncio
 from typing import Dict, Any, Optional
 
-from agrr_core.adapter.repositories.open_meteo_weather_repository import OpenMeteoWeatherRepository
-from agrr_core.adapter.repositories.storage_weather_repository import StorageWeatherRepository
-from agrr_core.adapter.repositories.external_data_weather_repository import ExternalDataWeatherRepository
-from agrr_core.adapter.presenters.cli_weather_presenter import CLIWeatherPresenter
-from agrr_core.adapter.controllers.cli_weather_controller import CLIWeatherController
-from agrr_core.usecase.interactors.fetch_weather_data_interactor import FetchWeatherDataInteractor
+from agrr_core.adapter.repositories.weather_api_open_meteo_repository import OpenMeteoWeatherRepository
+from agrr_core.adapter.repositories.weather_storage_repository import StorageWeatherRepository
+from agrr_core.adapter.repositories.weather_external_repository import ExternalDataWeatherRepository
+from agrr_core.adapter.presenters.weather_cli_presenter import CLIWeatherPresenter
+from agrr_core.adapter.controllers.weather_cli_controller import CLIWeatherController
+from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
 from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 
 

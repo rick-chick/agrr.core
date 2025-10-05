@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 from typing import Dict, Any, List
 
-from .model_type import ModelType
-from .metric_type import MetricType
+from .prediction_model_type_entity import ModelType
+from .prediction_metric_type_entity import MetricType
 
 
 @dataclass

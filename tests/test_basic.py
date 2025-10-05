@@ -57,7 +57,7 @@ def test_import_weather_repositories():
 
 def test_import_weather_controller():
     """Test importing weather controller."""
-    from agrr_core.adapter.controllers.weather_controller import WeatherController
+    from agrr_core.adapter.controllers.weather_api_controller import WeatherController
     
     assert WeatherController is not None
 

@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import AsyncMock, Mock
 from datetime import datetime
 
-from agrr_core.usecase.interactors.fetch_weather_data_interactor import FetchWeatherDataInteractor
+from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
 from agrr_core.usecase.dto.weather_data_request_dto import WeatherDataRequestDTO
 from agrr_core.entity import WeatherData
 from agrr_core.entity.exceptions.invalid_location_error import InvalidLocationError

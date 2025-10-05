@@ -3,9 +3,9 @@
 import pytest
 from unittest.mock import MagicMock, AsyncMock
 
-from agrr_core.usecase.interactors.fetch_weather_data_interactor import FetchWeatherDataInteractor
-from agrr_core.adapter.presenters.cli_weather_presenter import CLIWeatherPresenter
-from agrr_core.adapter.controllers.cli_weather_controller import CLIWeatherController
+from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
+from agrr_core.adapter.presenters.weather_cli_presenter import CLIWeatherPresenter
+from agrr_core.adapter.controllers.weather_cli_controller import CLIWeatherController
 
 
 @pytest.fixture

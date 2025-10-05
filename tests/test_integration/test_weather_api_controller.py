@@ -3,11 +3,11 @@
 import pytest
 from unittest.mock import Mock, AsyncMock
 
-from agrr_core.adapter.controllers.weather_controller import WeatherController
-from agrr_core.usecase.interactors.fetch_weather_data_interactor import FetchWeatherDataInteractor
-from agrr_core.usecase.interactors.predict_weather_interactor import PredictWeatherInteractor
-from agrr_core.adapter.repositories.in_memory_weather_repository import InMemoryWeatherRepository
-from agrr_core.adapter.repositories.prediction_repository import InMemoryPredictionRepository
+from agrr_core.adapter.controllers.weather_api_controller import WeatherController
+from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
+from agrr_core.usecase.interactors.weather_predict_interactor import PredictWeatherInteractor
+from agrr_core.adapter.repositories.weather_memory_repository import InMemoryWeatherRepository
+from agrr_core.adapter.repositories.prediction_storage_repository import InMemoryPredictionRepository
 from agrr_core.entity import WeatherData
 from datetime import datetime
 
@@ -22,7 +22,7 @@ class TestWeatherControllerIntegration:
         self.prediction_repo = InMemoryPredictionRepository()
         
         # Create real prediction service
-        from agrr_core.adapter.services.prophet_weather_prediction_service import ProphetWeatherPredictionService
+        from agrr_core.adapter.services.prediction_prophet_service import ProphetWeatherPredictionService
         self.prediction_service = ProphetWeatherPredictionService()
         
         # Create presenters

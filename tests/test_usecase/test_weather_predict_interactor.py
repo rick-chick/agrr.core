@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import AsyncMock, Mock
 from datetime import datetime
 
-from agrr_core.usecase.interactors.predict_weather_interactor import PredictWeatherInteractor
+from agrr_core.usecase.interactors.weather_predict_interactor import PredictWeatherInteractor
 from agrr_core.usecase.dto.prediction_request_dto import PredictionRequestDTO
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.invalid_location_error import InvalidLocationError

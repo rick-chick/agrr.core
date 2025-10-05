@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any
 
-from agrr_core.entity.entities.forecast import Forecast
+from agrr_core.entity.entities.prediction_forecast_entity import Forecast
 from agrr_core.usecase.dto.prediction_response_dto import PredictionResponseDTO
 
 

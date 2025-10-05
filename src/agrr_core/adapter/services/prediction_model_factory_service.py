@@ -1,7 +1,7 @@
 """Model factory for creating prediction models."""
 
 from typing import Dict, Any, List
-from agrr_core.entity.entities.prediction_model import ModelType, PredictionModel, MetricType
+from agrr_core.entity.entities.prediction_entity import ModelType, PredictionModel, MetricType
 
 
 class ModelFactory:

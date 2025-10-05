@@ -3,7 +3,7 @@
 from agrr_core.entity import Location, DateRange
 from agrr_core.entity.exceptions.invalid_location_error import InvalidLocationError
 from agrr_core.entity.exceptions.invalid_date_range_error import InvalidDateRangeError
-from agrr_core.usecase.ports.input.fetch_weather_data_input_port import FetchWeatherDataInputPort
+from agrr_core.usecase.ports.input.weather_data_fetch_input_port import FetchWeatherDataInputPort
 from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 from agrr_core.usecase.ports.output.weather_presenter_output_port import WeatherPresenterOutputPort
 from agrr_core.usecase.dto.weather_data_request_dto import WeatherDataRequestDTO

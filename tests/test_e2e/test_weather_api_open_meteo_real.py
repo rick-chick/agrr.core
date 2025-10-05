@@ -7,7 +7,7 @@ They are marked with @pytest.mark.e2e and can be skipped in CI/CD if needed.
 import pytest
 from datetime import datetime, timedelta
 
-from agrr_core.adapter.repositories.open_meteo_weather_repository import OpenMeteoWeatherRepository
+from agrr_core.adapter.repositories.weather_api_open_meteo_repository import OpenMeteoWeatherRepository
 from agrr_core.entity import Location, WeatherData
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 

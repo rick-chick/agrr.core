@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timedelta
 
 from agrr_core.entity import WeatherData, Forecast, Location
-from agrr_core.entity.entities.prediction_model import ModelType
-from agrr_core.adapter.services.integrated_prediction_service import IntegratedPredictionService
+from agrr_core.entity.entities.prediction_entity import ModelType
+from agrr_core.adapter.services.prediction_integrated_service import IntegratedPredictionService
 from agrr_core.entity.exceptions.prediction_error import PredictionError
 
 

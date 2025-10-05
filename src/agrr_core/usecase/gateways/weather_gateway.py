@@ -13,3 +13,19 @@ class WeatherGateway(ABC):
     async def get(self, source: str) -> List[WeatherData]:
         """Get weather data from source."""
         pass
+    
+    @abstractmethod
+    async def create(self, weather_data: List[WeatherData], destination: str) -> None:
+        """Create weather data at destination."""
+        pass
+    
+    @abstractmethod
+    async def get_by_location_and_date_range(
+        self,
+        latitude: float,
+        longitude: float,
+        start_date: str,
+        end_date: str
+    ) -> List[WeatherData]:
+        """Get weather data by location and date range."""
+        pass

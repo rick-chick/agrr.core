@@ -1,39 +1,29 @@
 """Open-Meteo weather repository implementation."""
 
-from typing import List, Tuple
-import requests
+from typing import List
 from datetime import datetime
 
 from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
-from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
+from agrr_core.adapter.interfaces.http_service_interface import HttpServiceInterface
 
 
-class WeatherAPIOpenMeteoRepository(WeatherRepositoryGateway):
+class WeatherAPIOpenMeteoRepository:
     """Repository for fetching weather data from Open-Meteo API."""
     
-    def __init__(self, base_url: str = "https://archive-api.open-meteo.com/v1/archive"):
-        self.base_url = base_url
+    def __init__(self, http_service: HttpServiceInterface):
+        self.http_service = http_service
     
-    async def save_weather_data(self, weather_data: List[WeatherData]) -> None:
-        """Save weather data (not implemented for API-based repository)."""
-        # This repository fetches data from API, so save operation is not applicable
-        pass
     
-    async def get_weather_data_by_location_and_date_range(
-        self, 
-        latitude: float, 
-        longitude: float, 
-        start_date: str, 
+    async def get_by_location_and_date_range(
+        self,
+        latitude: float,
+        longitude: float,
+        start_date: str,
         end_date: str
-    ) -> Tuple[List[WeatherData], Location]:
-        """Get weather data from Open-Meteo API.
-        
-        Returns:
-            Tuple of (weather_data_list, location) where location contains
-            the actual coordinates and metadata from the API response.
-        """
+    ) -> List[WeatherData]:
+        """Get weather data from Open-Meteo API."""
         try:
             params = {
                 "latitude": latitude,
@@ -50,10 +40,7 @@ class WeatherAPIOpenMeteoRepository(WeatherRepositoryGateway):
                 "timezone": "Asia/Tokyo"
             }
             
-            response = requests.get(self.base_url, params=params, timeout=30)
-            response.raise_for_status()
-            
-            data = response.json()
+            data = await self.http_service.get("", params)
             
             if "daily" not in data:
                 raise WeatherDataNotFoundError("No daily weather data found in API response")
@@ -81,12 +68,13 @@ class WeatherAPIOpenMeteoRepository(WeatherRepositoryGateway):
                 )
                 weather_data_list.append(weather_data)
             
-            return weather_data_list, location
+            return weather_data_list
             
-        except requests.RequestException as e:
-            raise WeatherAPIError(f"Failed to fetch weather data from API: {e}")
+        except WeatherAPIError:
+            raise
         except (KeyError, ValueError) as e:
             raise WeatherAPIError(f"Invalid API response format: {e}")
+    
     
     def _safe_get(self, data_list: List, index: int):
         """Safely get value from list, return None if index is out of bounds or value is None."""

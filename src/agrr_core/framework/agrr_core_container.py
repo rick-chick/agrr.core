@@ -4,16 +4,16 @@ import asyncio
 from typing import Dict, Any, Optional
 
 from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
-from agrr_core.adapter.repositories.weather_storage_repository import WeatherStorageRepository
-from agrr_core.adapter.repositories.weather_external_repository import WeatherExternalRepository
-from agrr_core.adapter.repositories.weather_memory_repository import WeatherMemoryRepository
+from agrr_core.framework.repositories.file_repository import FileRepository
+from agrr_core.framework.repositories.http_client import HttpClient
+from agrr_core.framework.services.weather_open_meteo_service import WeatherOpenMeteoService
+from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.adapter.controllers.weather_cli_controller import WeatherCLIController
 from agrr_core.adapter.controllers.weather_file_predict_cli_controller import WeatherFilePredictCLIController
 from agrr_core.adapter.services.prediction_integrated_service import PredictionIntegratedService
 from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
 from agrr_core.usecase.interactors.weather_predict_interactor import WeatherPredictInteractor
-from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
 from agrr_core.adapter.gateways.prediction_gateway_impl import PredictionGatewayImpl
 from agrr_core.adapter.services.prediction_arima_service import PredictionARIMAService
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
@@ -21,9 +21,9 @@ from agrr_core.usecase.interactors.prediction_multi_metric_interactor import Mul
 from agrr_core.usecase.interactors.prediction_evaluate_interactor import ModelEvaluationInteractor
 from agrr_core.usecase.interactors.prediction_batch_interactor import BatchPredictionInteractor
 from agrr_core.usecase.interactors.prediction_manage_interactor import ModelManagementInteractor
-from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
 from agrr_core.usecase.ports.output.advanced_prediction_output_port import AdvancedPredictionOutputPort
 from agrr_core.usecase.ports.output.prediction_presenter_output_port import PredictionPresenterOutputPort
+from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 
 
 class AgrrCoreContainer:
@@ -35,28 +35,42 @@ class AgrrCoreContainer:
         self._instances = {}
     
     # Weather Repository Management
-    def get_weather_repository(self) -> WeatherRepositoryGateway:
-        """Get weather repository instance."""
-        if 'weather_repository' not in self._instances:
-            repository_type = self.config.get('weather_repository_type', 'api')
-            
-            if repository_type == 'storage':
-                storage_path = self.config.get('storage_path', 'data/weather')
-                self._instances['weather_repository'] = WeatherStorageRepository(storage_path=storage_path)
-            elif repository_type == 'external':
-                fallback_repo = None
-                if self.config.get('enable_fallback', False):
-                    # Create fallback API repository
-                    base_url = self.config.get('open_meteo_base_url', 'https://archive-api.open-meteo.com/v1/archive')
-                    fallback_repo = WeatherAPIOpenMeteoRepository(base_url=base_url)
-                self._instances['weather_repository'] = WeatherExternalRepository(fallback_repository=fallback_repo)
-            elif repository_type == 'memory':
-                self._instances['weather_repository'] = WeatherMemoryRepository()
-            else:  # Default to API
-                base_url = self.config.get('open_meteo_base_url', 'https://archive-api.open-meteo.com/v1/archive')
-                self._instances['weather_repository'] = WeatherAPIOpenMeteoRepository(base_url=base_url)
+    def get_weather_service(self) -> WeatherOpenMeteoService:
+        """Get weather service instance."""
+        if 'weather_service' not in self._instances:
+            base_url = self.config.get('open_meteo_base_url', 'https://archive-api.open-meteo.com/v1/archive')
+            self._instances['weather_service'] = WeatherOpenMeteoService(base_url=base_url)
         
-        return self._instances['weather_repository']
+        return self._instances['weather_service']
+
+    def get_file_repository_impl(self) -> FileRepository:
+        """Get file repository implementation instance."""
+        if 'file_repository_impl' not in self._instances:
+            self._instances['file_repository_impl'] = FileRepository()
+        return self._instances['file_repository_impl']
+
+    def get_http_service_impl(self) -> HttpClient:
+        """Get HTTP service implementation instance."""
+        if 'http_service_impl' not in self._instances:
+            base_url = self.config.get('open_meteo_base_url', 'https://archive-api.open-meteo.com/v1/archive')
+            self._instances['http_service_impl'] = HttpClient(base_url=base_url)
+        return self._instances['http_service_impl']
+
+    def get_weather_repository(self) -> WeatherGateway:
+        """Get weather repository instance."""
+        return self.get_weather_gateway_impl()
+
+    def get_weather_gateway_impl(self) -> WeatherGatewayImpl:
+        """Get weather gateway instance."""
+        if 'weather_gateway' not in self._instances:
+            weather_file_repository = self.get_weather_file_repository()
+            weather_api_repository = self.get_weather_api_repository()
+            self._instances['weather_gateway'] = WeatherGatewayImpl(
+                weather_file_repository=weather_file_repository,
+                weather_api_repository=weather_api_repository
+            )
+        
+        return self._instances['weather_gateway']
     
     # CLI Components
     def get_cli_presenter(self) -> WeatherCLIPresenter:
@@ -68,10 +82,10 @@ class AgrrCoreContainer:
     def get_fetch_weather_interactor(self) -> FetchWeatherDataInteractor:
         """Get fetch weather interactor instance."""
         if 'fetch_weather_interactor' not in self._instances:
-            weather_repository = self.get_weather_repository()
+            weather_gateway = self.get_weather_gateway()
             cli_presenter = self.get_cli_presenter()
             self._instances['fetch_weather_interactor'] = FetchWeatherDataInteractor(
-                weather_repository_gateway=weather_repository,
+                weather_gateway=weather_gateway,
                 weather_presenter_output_port=cli_presenter
             )
         return self._instances['fetch_weather_interactor']
@@ -90,7 +104,8 @@ class AgrrCoreContainer:
     def get_weather_file_repository(self) -> WeatherFileRepository:
         """Get weather file repository instance."""
         if 'weather_file_repository' not in self._instances:
-            self._instances['weather_file_repository'] = WeatherFileRepository()
+            file_repository_impl = self.get_file_repository_impl()
+            self._instances['weather_file_repository'] = WeatherFileRepository(file_repository_impl)
         return self._instances['weather_file_repository']
     
     def get_prediction_arima_service(self) -> PredictionARIMAService:
@@ -99,12 +114,23 @@ class AgrrCoreContainer:
             self._instances['prediction_arima_service'] = PredictionARIMAService()
         return self._instances['prediction_arima_service']
     
-    def get_weather_gateway(self) -> WeatherGatewayImpl:
+    def get_weather_api_repository(self) -> WeatherAPIOpenMeteoRepository:
+        """Get weather API repository instance."""
+        if 'weather_api_repository' not in self._instances:
+            http_service_impl = self.get_http_service_impl()
+            self._instances['weather_api_repository'] = WeatherAPIOpenMeteoRepository(http_service_impl)
+        return self._instances['weather_api_repository']
+    
+    def get_weather_gateway(self) -> WeatherGateway:
         """Get weather gateway instance."""
         if 'weather_gateway' not in self._instances:
+            weather_service = self.get_weather_service()
             file_repository = self.get_weather_file_repository()
+            api_repository = self.get_weather_api_repository()
             self._instances['weather_gateway'] = WeatherGatewayImpl(
-                file_repository=file_repository
+                weather_service=weather_service,
+                file_repository=file_repository,
+                api_repository=api_repository
             )
         return self._instances['weather_gateway']
     
@@ -223,25 +249,9 @@ class WeatherCliContainer(AgrrCoreContainer):
     def __init__(self, config: Dict[str, Any] = None):
         super().__init__(config)
     
-    def get_weather_repository(self) -> WeatherRepositoryGateway:
+    def get_weather_repository(self) -> WeatherGateway:
         """Get weather repository instance with CLI defaults."""
-        if 'weather_repository' not in self._instances:
-            repository_type = self.config.get('weather_repository_type', 'api')
-            
-            if repository_type == 'storage':
-                storage_path = self.config.get('storage_path', 'data/weather')
-                self._instances['weather_repository'] = WeatherStorageRepository(storage_path=storage_path)
-            elif repository_type == 'external':
-                fallback_repo = None
-                if self.config.get('enable_fallback', False):
-                    base_url = self.config.get('open_meteo_base_url', 'https://archive-api.open-meteo.com/v1/archive')
-                    fallback_repo = WeatherAPIOpenMeteoRepository(base_url=base_url)
-                self._instances['weather_repository'] = WeatherExternalRepository(fallback_repository=fallback_repo)
-            else:  # Default to API
-                base_url = self.config.get('open_meteo_base_url', 'https://archive-api.open-meteo.com/v1/archive')
-                self._instances['weather_repository'] = WeatherAPIOpenMeteoRepository(base_url=base_url)
-        
-        return self._instances['weather_repository']
+        return self.get_weather_gateway_impl()
 
 
 class PredictionContainer(AgrrCoreContainer):
@@ -250,20 +260,6 @@ class PredictionContainer(AgrrCoreContainer):
     def __init__(self, config: Dict[str, Any] = None):
         super().__init__(config)
     
-    def get_weather_repository(self) -> WeatherRepositoryGateway:
+    def get_weather_repository(self) -> WeatherGateway:
         """Get weather repository instance with prediction defaults."""
-        if 'weather_repository' not in self._instances:
-            repository_type = self.config.get('weather_repository_type', 'memory')
-            
-            if repository_type == 'storage':
-                storage_path = self.config.get('storage_path', 'data/weather')
-                self._instances['weather_repository'] = WeatherStorageRepository(storage_path=storage_path)
-            elif repository_type == 'external':
-                fallback_repo = None
-                if self.config.get('enable_fallback', False):
-                    fallback_repo = WeatherMemoryRepository()
-                self._instances['weather_repository'] = WeatherExternalRepository(fallback_repository=fallback_repo)
-            else:  # Default to in-memory
-                self._instances['weather_repository'] = WeatherMemoryRepository()
-        
-        return self._instances['weather_repository']
+        return self.get_weather_gateway_impl()

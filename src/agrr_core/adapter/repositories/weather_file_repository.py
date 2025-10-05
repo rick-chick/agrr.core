@@ -1,37 +1,32 @@
 """Weather file repository for adapter layer."""
 
-import json
-import csv
 import pandas as pd
-from typing import List, Dict, Any, Union, Optional
+from typing import List, Dict, Any, Optional
 from datetime import datetime
-from pathlib import Path
 
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.file_error import FileError
+from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
 
 
 class WeatherFileRepository:
     """Repository for reading weather data from files and writing predictions to files."""
     
-    def __init__(self):
+    def __init__(self, file_repository: FileRepositoryInterface):
         """Initialize weather file repository."""
-        pass
+        self.file_repository = file_repository
     
     # ===== Reading Methods =====
     
     async def read_weather_data_from_file(self, file_path: str) -> List[WeatherData]:
         """Read weather data from JSON or CSV file."""
         try:
-            path = Path(file_path)
-            
-            if not path.exists():
+            if not self.file_repository.exists(file_path):
                 raise FileError(f"File not found: {file_path}")
             
-            if not path.is_file():
-                raise FileError(f"Path is not a file: {file_path}")
-            
             # Determine file format by extension
+            from pathlib import Path
+            path = Path(file_path)
             extension = path.suffix.lower()
             
             if extension == '.json':
@@ -49,8 +44,9 @@ class WeatherFileRepository:
     async def _read_json_file(self, file_path: str) -> List[WeatherData]:
         """Read weather data from JSON file."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                data = json.load(file)
+            content = await self.file_repository.read(file_path)
+            import json
+            data = json.loads(content)
             
             weather_data_list = []
             
@@ -76,16 +72,16 @@ class WeatherFileRepository:
             
             return weather_data_list
             
-        except json.JSONDecodeError as e:
-            raise FileError(f"Invalid JSON format in file {file_path}: {e}")
         except Exception as e:
             raise FileError(f"Failed to read JSON file {file_path}: {e}")
     
     async def _read_csv_file(self, file_path: str) -> List[WeatherData]:
         """Read weather data from CSV file."""
         try:
-            # Use pandas to read CSV for better handling of different formats
-            df = pd.read_csv(file_path)
+            content = await self.file_repository.read(file_path)
+            # Use pandas to read CSV from content
+            import io
+            df = pd.read_csv(io.StringIO(content))
             
             weather_data_list = []
             
@@ -98,10 +94,6 @@ class WeatherFileRepository:
             
             return weather_data_list
             
-        except pd.errors.EmptyDataError:
-            raise FileError(f"CSV file is empty: {file_path}")
-        except pd.errors.ParserError as e:
-            raise FileError(f"Failed to parse CSV file {file_path}: {e}")
         except Exception as e:
             raise FileError(f"Failed to read CSV file {file_path}: {e}")
     
@@ -166,6 +158,7 @@ class WeatherFileRepository:
     def validate_input_file_format(self, file_path: str) -> bool:
         """Validate if input file format is supported."""
         try:
+            from pathlib import Path
             path = Path(file_path)
             extension = path.suffix.lower()
             return extension in ['.json', '.csv']
@@ -175,9 +168,10 @@ class WeatherFileRepository:
     async def get_input_file_info(self, file_path: str) -> Dict[str, Any]:
         """Get information about the input weather data file."""
         try:
+            from pathlib import Path
             path = Path(file_path)
             
-            if not path.exists():
+            if not self.file_repository.exists(file_path):
                 raise FileError(f"File not found: {file_path}")
             
             file_info = {
@@ -218,13 +212,13 @@ class WeatherFileRepository:
     ) -> None:
         """Write predictions to file in specified format."""
         try:
-            path = Path(output_path)
-            
-            # Create parent directories if they don't exist
-            path.parent.mkdir(parents=True, exist_ok=True)
+            if not self.validate_output_path(output_path):
+                raise FileError(f"Invalid output path: {output_path}")
             
             # Determine format
             if format_type == 'auto':
+                from pathlib import Path
+                path = Path(output_path)
                 format_type = self._determine_output_format_from_extension(path.suffix)
             
             if format_type == 'json':
@@ -291,8 +285,9 @@ class WeatherFileRepository:
                 }
             
             # Write to file
-            with open(output_path, 'w', encoding='utf-8') as file:
-                json.dump(output_data, file, indent=2, ensure_ascii=False)
+            import json
+            json_content = json.dumps(output_data, indent=2, ensure_ascii=False)
+            await self.file_repository.write(json_content, output_path)
                 
         except Exception as e:
             raise FileError(f"Failed to write JSON file {output_path}: {e}")
@@ -323,7 +318,8 @@ class WeatherFileRepository:
             
             # Create DataFrame and write to CSV
             df = pd.DataFrame(predictions_data)
-            df.to_csv(output_path, index=False, encoding='utf-8')
+            csv_content = df.to_csv(index=False, encoding='utf-8')
+            await self.file_repository.write(csv_content, output_path)
             
             # Add metadata as comment if requested
             if include_metadata:
@@ -334,23 +330,20 @@ class WeatherFileRepository:
                     'total_predictions': len(predictions_data)
                 }
                 
-                # Write metadata as comment at the top of the file
-                with open(output_path, 'r', encoding='utf-8') as file:
-                    content = file.read()
-                
+                # Read current content and prepend metadata
+                content = await self.file_repository.read(output_path)
                 metadata_header = '\n'.join([f'# {k}: {v}' for k, v in metadata.items()])
+                new_content = f"{metadata_header}\n{content}"
                 
-                with open(output_path, 'w', encoding='utf-8') as file:
-                    file.write(f"{metadata_header}\n{content}")
+                await self.file_repository.write(new_content, output_path)
                 
         except Exception as e:
             raise FileError(f"Failed to write CSV file {output_path}: {e}")
     
-    
-    
     def validate_output_path(self, output_path: str) -> bool:
         """Validate if output path is writable."""
         try:
+            from pathlib import Path
             path = Path(output_path)
             
             # Check if directory exists or can be created
@@ -370,6 +363,5 @@ class WeatherFileRepository:
                 return False
             
             return True
-            
         except Exception:
             return False

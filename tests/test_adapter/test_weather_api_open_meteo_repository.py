@@ -50,7 +50,7 @@ class TestWeatherAPIOpenMeteoRepository:
         mock_get.return_value = mock_response
         
         # Test
-        weather_data_list, location = await self.repository.get_weather_data_by_location_and_date_range(
+        weather_data_list = await self.repository.get_by_location_and_date_range(
             35.7, 139.7, "2023-01-01", "2023-01-02"
         )
         
@@ -66,12 +66,8 @@ class TestWeatherAPIOpenMeteoRepository:
         assert weather_data_list[1].temperature_2m_max == 26.0
         assert weather_data_list[1].sunshine_hours == 7.0
         
-        # Assertions for location
-        assert isinstance(location, Location)
-        assert location.latitude == 35.6762
-        assert location.longitude == 139.6911
-        assert location.elevation == 37.0
-        assert location.timezone == "Asia/Tokyo"
+        # Location information is embedded in WeatherData entities
+        # No separate location object is returned
         
         # Verify API call
         mock_get.assert_called_once()
@@ -103,7 +99,7 @@ class TestWeatherAPIOpenMeteoRepository:
         mock_get.return_value = mock_response
         
         # Test
-        weather_data_list, location = await self.repository.get_weather_data_by_location_and_date_range(
+        weather_data_list = await self.repository.get_by_location_and_date_range(
             35.7, 139.7, "2023-01-01", "2023-01-01"
         )
         
@@ -113,7 +109,7 @@ class TestWeatherAPIOpenMeteoRepository:
         assert weather_data_list[0].temperature_2m_min == 15.0
         assert weather_data_list[0].sunshine_duration is None
         assert weather_data_list[0].sunshine_hours is None
-        assert isinstance(location, Location)
+        # Location information is embedded in WeatherData entities
     
     @patch('requests.get')
     @pytest.mark.asyncio
@@ -123,7 +119,7 @@ class TestWeatherAPIOpenMeteoRepository:
         mock_get.side_effect = requests.RequestException("API Error")
         
         with pytest.raises(WeatherAPIError, match="Failed to fetch weather data"):
-            await self.repository.get_weather_data_by_location_and_date_range(
+            await self.repository.get_by_location_and_date_range(
                 35.7, 139.7, "2023-01-01", "2023-01-01"
             )
     
@@ -138,7 +134,7 @@ class TestWeatherAPIOpenMeteoRepository:
         mock_get.return_value = mock_response
         
         with pytest.raises(WeatherDataNotFoundError, match="No daily weather data found"):
-            await self.repository.get_weather_data_by_location_and_date_range(
+            await self.repository.get_by_location_and_date_range(
                 35.7, 139.7, "2023-01-01", "2023-01-01"
             )
     
@@ -158,7 +154,7 @@ class TestWeatherAPIOpenMeteoRepository:
         mock_get.return_value = mock_response
         
         with pytest.raises(WeatherAPIError, match="Invalid API response format"):
-            await self.repository.get_weather_data_by_location_and_date_range(
+            await self.repository.get_by_location_and_date_range(
                 35.7, 139.7, "2023-01-01", "2023-01-01"
             )
     

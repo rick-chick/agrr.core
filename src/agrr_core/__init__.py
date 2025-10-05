@@ -12,7 +12,6 @@ from .usecase import (
 )
 from .adapter import (
     WeatherAPIOpenMeteoRepository,
-    WeatherMemoryRepository,
     PredictionStorageRepository,
     WeatherMapper,
     WeatherPresenter,
@@ -37,7 +36,6 @@ __all__ = [
     "PredictionRequestDTO",
     # Adapters
     "WeatherAPIOpenMeteoRepository",
-    "WeatherMemoryRepository",
     "PredictionStorageRepository",
     "WeatherMapper",
     "WeatherPresenter",

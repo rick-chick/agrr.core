@@ -5,7 +5,7 @@ from typing import List
 from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.entity.entities.prediction_forecast_entity import Forecast
 from agrr_core.usecase.gateways.prediction_gateway import PredictionGateway
-from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
+from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
 from agrr_core.adapter.services.prediction_arima_service import PredictionARIMAService
 
 
@@ -14,7 +14,7 @@ class PredictionGatewayImpl(PredictionGateway):
     
     def __init__(
         self, 
-        file_repository: WeatherFileRepository,
+        file_repository: FileRepositoryInterface,
         prediction_service: PredictionARIMAService
     ):
         """Initialize prediction gateway."""

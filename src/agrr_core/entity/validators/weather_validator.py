@@ -1,5 +1,7 @@
 """Weather data validation utilities."""
 
+import re
+from datetime import datetime
 from typing import List
 from agrr_core.entity.entities.weather_entity import WeatherData
 
@@ -43,3 +45,39 @@ class WeatherValidator:
                 return False
         
         return True
+    
+    @staticmethod
+    def validate_coordinates(latitude: float, longitude: float) -> bool:
+        """Validate location coordinates."""
+        # Check latitude range (-90 to 90)
+        if not (-90 <= latitude <= 90):
+            return False
+        
+        # Check longitude range (-180 to 180)
+        if not (-180 <= longitude <= 180):
+            return False
+        
+        return True
+    
+    @staticmethod
+    def validate_date_range(start_date: str, end_date: str) -> bool:
+        """Validate date range format and logic."""
+        if not start_date or not end_date:
+            return False
+        
+        # Check ISO date format (YYYY-MM-DD)
+        date_pattern = r'^\d{4}-\d{2}-\d{2}$'
+        if not (re.match(date_pattern, start_date) and re.match(date_pattern, end_date)):
+            return False
+        
+        try:
+            start_dt = datetime.fromisoformat(start_date)
+            end_dt = datetime.fromisoformat(end_date)
+            
+            # Check if start date is before end date
+            if start_dt >= end_dt:
+                return False
+            
+            return True
+        except ValueError:
+            return False

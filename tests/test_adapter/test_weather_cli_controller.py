@@ -110,14 +110,14 @@ class TestCLIWeatherController:
             timezone="Asia/Tokyo"
         )
         
-        self.mock_repository.get_weather_data_by_location_and_date_range.return_value = (
-            mock_weather_data, mock_location
-        )
+        self.mock_repository.get_by_location_and_date_range.return_value = [
+            mock_weather_data
+        ]
         
         await self.controller.handle_weather_command(args)
         
         # Verify repository was called
-        self.mock_repository.get_weather_data_by_location_and_date_range.assert_called_once()
+        self.mock_repository.get_by_location_and_date_range.assert_called_once()
         
         # Verify presenter methods were called
         self.mock_presenter.display_success_message.assert_called()
@@ -141,14 +141,14 @@ class TestCLIWeatherController:
             longitude=139.6503
         )
         
-        self.mock_repository.get_weather_data_by_location_and_date_range.return_value = (
-            mock_weather_data, mock_location
-        )
+        self.mock_repository.get_by_location_and_date_range.return_value = [
+            mock_weather_data
+        ]
         
         await self.controller.handle_weather_command(args)
         
         # Verify repository was called with correct dates
-        call_args = self.mock_repository.get_weather_data_by_location_and_date_range.call_args[0]
+        call_args = self.mock_repository.get_by_location_and_date_range.call_args[0]
         assert call_args[0] == 35.6762
         assert call_args[1] == 139.6503
         assert call_args[2] == "2024-01-01"
@@ -172,14 +172,14 @@ class TestCLIWeatherController:
             longitude=139.6503
         )
         
-        self.mock_repository.get_weather_data_by_location_and_date_range.return_value = (
-            mock_weather_data, mock_location
-        )
+        self.mock_repository.get_by_location_and_date_range.return_value = [
+            mock_weather_data
+        ]
         
         await self.controller.handle_weather_command(args)
         
         # Verify repository was called
-        self.mock_repository.get_weather_data_by_location_and_date_range.assert_called_once()
+        self.mock_repository.get_by_location_and_date_range.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_handle_weather_command_with_end_date_only(self):
@@ -199,14 +199,14 @@ class TestCLIWeatherController:
             longitude=139.6503
         )
         
-        self.mock_repository.get_weather_data_by_location_and_date_range.return_value = (
-            mock_weather_data, mock_location
-        )
+        self.mock_repository.get_by_location_and_date_range.return_value = [
+            mock_weather_data
+        ]
         
         await self.controller.handle_weather_command(args)
         
         # Verify repository was called
-        self.mock_repository.get_weather_data_by_location_and_date_range.assert_called_once()
+        self.mock_repository.get_by_location_and_date_range.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_handle_weather_command_success_json_output(self):
@@ -237,14 +237,14 @@ class TestCLIWeatherController:
             timezone="Asia/Tokyo"
         )
         
-        self.mock_repository.get_weather_data_by_location_and_date_range.return_value = (
-            mock_weather_data, mock_location
-        )
+        self.mock_repository.get_by_location_and_date_range.return_value = [
+            mock_weather_data
+        ]
         
         await self.controller.handle_weather_command(args)
         
         # Verify repository was called
-        self.mock_repository.get_weather_data_by_location_and_date_range.assert_called_once()
+        self.mock_repository.get_by_location_and_date_range.assert_called_once()
         
         # Verify JSON presenter was called
         self.mock_presenter.display_weather_data_json.assert_called()
@@ -267,14 +267,14 @@ class TestCLIWeatherController:
             longitude=139.6503
         )
         
-        self.mock_repository.get_weather_data_by_location_and_date_range.return_value = (
-            mock_weather_data, mock_location
-        )
+        self.mock_repository.get_by_location_and_date_range.return_value = [
+            mock_weather_data
+        ]
         
         await self.controller.handle_weather_command(args)
         
         # Verify repository was called
-        self.mock_repository.get_weather_data_by_location_and_date_range.assert_called_once()
+        self.mock_repository.get_by_location_and_date_range.assert_called_once()
         
         # Verify JSON presenter was called for empty data
         self.mock_presenter.display_weather_data_json.assert_called()
@@ -299,14 +299,14 @@ class TestCLIWeatherController:
             timezone="Asia/Tokyo"
         )
         
-        self.mock_repository.get_weather_data_by_location_and_date_range.return_value = (
-            mock_weather_data, mock_location
-        )
+        self.mock_repository.get_by_location_and_date_range.return_value = [
+            mock_weather_data
+        ]
         
         await self.controller.handle_weather_command(args)
         
         # Verify repository was called
-        self.mock_repository.get_weather_data_by_location_and_date_range.assert_called_once()
+        self.mock_repository.get_by_location_and_date_range.assert_called_once()
         
         # For empty data with json=False, the success message should be displayed
         self.mock_presenter.display_success_message.assert_called()
@@ -323,12 +323,12 @@ class TestCLIWeatherController:
         args.json = False
         
         # Mock repository to raise exception
-        self.mock_repository.get_weather_data_by_location_and_date_range.side_effect = Exception("API Error")
+        self.mock_repository.get_by_location_and_date_range.side_effect = Exception("API Error")
         
         await self.controller.handle_weather_command(args)
         
         # Verify repository was called
-        self.mock_repository.get_weather_data_by_location_and_date_range.assert_called_once()
+        self.mock_repository.get_by_location_and_date_range.assert_called_once()
         
         # Verify error presenter was called
         self.mock_presenter.display_error.assert_called()
@@ -345,12 +345,12 @@ class TestCLIWeatherController:
         args.json = True
         
         # Mock repository to raise exception
-        self.mock_repository.get_weather_data_by_location_and_date_range.side_effect = Exception("API Error")
+        self.mock_repository.get_by_location_and_date_range.side_effect = Exception("API Error")
         
         await self.controller.handle_weather_command(args)
         
         # Verify repository was called
-        self.mock_repository.get_weather_data_by_location_and_date_range.assert_called_once()
+        self.mock_repository.get_by_location_and_date_range.assert_called_once()
         
         # Verify error presenter was called with JSON flag
         self.mock_presenter.display_error.assert_called()
@@ -371,7 +371,7 @@ class TestCLIWeatherController:
         await self.controller.handle_weather_command(args)
         
         # Verify repository was NOT called due to validation error
-        self.mock_repository.get_weather_data_by_location_and_date_range.assert_not_called()
+        self.mock_repository.get_by_location_and_date_range.assert_not_called()
         
         # Verify error presenter was called
         self.mock_presenter.display_error.assert_called()
@@ -390,7 +390,7 @@ class TestCLIWeatherController:
         await self.controller.handle_weather_command(args)
         
         # Verify repository was NOT called due to validation error
-        self.mock_repository.get_weather_data_by_location_and_date_range.assert_not_called()
+        self.mock_repository.get_by_location_and_date_range.assert_not_called()
         
         # Verify error presenter was called with JSON flag
         self.mock_presenter.display_error.assert_called()
@@ -416,11 +416,11 @@ class TestCLIWeatherController:
             longitude=139.6503
         )
         
-        self.mock_repository.get_weather_data_by_location_and_date_range.return_value = (
-            mock_weather_data, mock_location
-        )
+        self.mock_repository.get_by_location_and_date_range.return_value = [
+            mock_weather_data
+        ]
         
         await self.controller.run(args)
         
         # Verify repository was called
-        self.mock_repository.get_weather_data_by_location_and_date_range.assert_called_once()
+        self.mock_repository.get_by_location_and_date_range.assert_called_once()

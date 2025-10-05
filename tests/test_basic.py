@@ -44,13 +44,11 @@ def test_import_weather_repositories():
     """Test importing weather repositories."""
     from agrr_core.adapter import (
         WeatherAPIOpenMeteoRepository,
-        WeatherMemoryRepository,
         PredictionStorageRepository,
         WeatherMapper,
     )
     
     assert WeatherAPIOpenMeteoRepository is not None
-    assert WeatherMemoryRepository is not None
     assert PredictionStorageRepository is not None
     assert WeatherMapper is not None
 

@@ -15,9 +15,9 @@ class TestFetchWeatherDataInteractor:
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.mock_weather_input_port = AsyncMock()
+        self.mock_weather_gateway = AsyncMock()
         self.mock_weather_presenter_output_port = Mock()
-        self.interactor = FetchWeatherDataInteractor(self.mock_weather_input_port, self.mock_weather_presenter_output_port)
+        self.interactor = FetchWeatherDataInteractor(self.mock_weather_gateway, self.mock_weather_presenter_output_port)
     
     @pytest.mark.asyncio
     async def test_execute_success(self):
@@ -42,10 +42,8 @@ class TestFetchWeatherDataInteractor:
             ),
         ]
         
-        # Mock return value should be tuple (weather_data, location)
-        from agrr_core.entity import Location
-        mock_location = Location(latitude=35.7, longitude=139.7, elevation=37.0, timezone="Asia/Tokyo")
-        self.mock_weather_input_port.get_weather_data_by_location_and_date_range.return_value = (mock_weather_data, mock_location)
+        # Mock return value should be list of weather data
+        self.mock_weather_gateway.get_by_location_and_date_range.return_value = mock_weather_data
         
         # Setup presenter mock return values
         self.mock_weather_presenter_output_port.format_weather_data_list_dto.return_value = {"data": [], "total_count": 2}
@@ -70,7 +68,7 @@ class TestFetchWeatherDataInteractor:
         self.mock_weather_presenter_output_port.format_success.assert_called_once()
         
         # Verify mock was called correctly
-        self.mock_weather_input_port.get_weather_data_by_location_and_date_range.assert_called_once_with(
+        self.mock_weather_gateway.get_by_location_and_date_range.assert_called_once_with(
             35.7, 139.7, "2023-01-01", "2023-01-02"
         )
     
@@ -94,7 +92,7 @@ class TestFetchWeatherDataInteractor:
         assert "Invalid request parameters" in result["error"]["message"]
         
         # Verify mock was not called
-        self.mock_weather_input_port.get_weather_data_by_location_and_date_range.assert_not_called()
+        self.mock_weather_gateway.get_by_location_and_date_range.assert_not_called()
         self.mock_weather_presenter_output_port.format_error.assert_called_once()
     
     @pytest.mark.asyncio
@@ -117,15 +115,13 @@ class TestFetchWeatherDataInteractor:
         assert "Invalid request parameters" in result["error"]["message"]
         
         # Verify mock was not called
-        self.mock_weather_input_port.get_weather_data_by_location_and_date_range.assert_not_called()
+        self.mock_weather_gateway.get_by_location_and_date_range.assert_not_called()
         self.mock_weather_presenter_output_port.format_error.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_execute_empty_result(self):
         """Test execution with empty weather data."""
-        from agrr_core.entity import Location
-        mock_location = Location(latitude=35.7, longitude=139.7)
-        self.mock_weather_input_port.get_weather_data_by_location_and_date_range.return_value = ([], mock_location)
+        self.mock_weather_gateway.get_by_location_and_date_range.return_value = []
         
         request = WeatherDataRequestDTO(
             latitude=35.7,

@@ -151,7 +151,7 @@ Examples:
                 )
             
             # Get weather data from repository
-            weather_data_list, location = await self.weather_repository.get_weather_data_by_location_and_date_range(
+            weather_data_list = await self.weather_repository.get_by_location_and_date_range(
                 latitude, longitude, start_date, end_date
             )
             
@@ -162,10 +162,10 @@ Examples:
                     'data': weather_data_list,
                     'total_count': len(weather_data_list),
                     'location': {
-                        'latitude': location.latitude,
-                        'longitude': location.longitude,
-                        'elevation': location.elevation,
-                        'timezone': location.timezone
+                        'latitude': latitude,
+                        'longitude': longitude,
+                        'elevation': None,
+                        'timezone': None
                     }
                 }
             }

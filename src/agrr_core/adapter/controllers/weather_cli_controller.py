@@ -5,8 +5,7 @@ import asyncio
 from typing import Optional, Tuple
 from datetime import datetime, timedelta
 
-from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
-from agrr_core.usecase.dto.weather_data_request_dto import WeatherDataRequestDTO
+from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 
 
@@ -15,11 +14,11 @@ class WeatherCLIController:
     
     def __init__(
         self, 
-        fetch_weather_interactor: FetchWeatherDataInteractor,
+        weather_repository: WeatherAPIOpenMeteoRepository,
         cli_presenter: WeatherCLIPresenter
     ):
         """Initialize CLI weather controller."""
-        self.fetch_weather_interactor = fetch_weather_interactor
+        self.weather_repository = weather_repository
         self.cli_presenter = cli_presenter
     
     def create_argument_parser(self) -> argparse.ArgumentParser:
@@ -142,15 +141,7 @@ Examples:
             else:
                 start_date, end_date = self.calculate_date_range(args.days)
             
-            # Create request DTO
-            request = WeatherDataRequestDTO(
-                latitude=latitude,
-                longitude=longitude,
-                start_date=start_date,
-                end_date=end_date
-            )
-            
-            # Execute use case
+            # Execute repository directly
             json_output = getattr(args, 'json', False)
             
             if not json_output:
@@ -159,7 +150,25 @@ Examples:
                     f"from {start_date} to {end_date}..."
                 )
             
-            result = await self.fetch_weather_interactor.execute(request)
+            # Get weather data from repository
+            weather_data_list, location = await self.weather_repository.get_weather_data_by_location_and_date_range(
+                latitude, longitude, start_date, end_date
+            )
+            
+            # Convert to result format expected by presenter
+            result = {
+                'success': True,
+                'data': {
+                    'data': weather_data_list,
+                    'total_count': len(weather_data_list),
+                    'location': {
+                        'latitude': location.latitude,
+                        'longitude': location.longitude,
+                        'elevation': location.elevation,
+                        'timezone': location.timezone
+                    }
+                }
+            }
             
             # Display results
             if result.get('success', False):

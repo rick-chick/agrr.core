@@ -61,10 +61,10 @@ class CLIContainer:
     def get_cli_controller(self) -> WeatherCLIController:
         """Get CLI controller instance."""
         if 'cli_controller' not in self._instances:
-            fetch_interactor = self.get_fetch_weather_interactor()
+            weather_repository = self.get_weather_repository()
             cli_presenter = self.get_cli_presenter()
             self._instances['cli_controller'] = WeatherCLIController(
-                fetch_weather_interactor=fetch_interactor,
+                weather_repository=weather_repository,
                 cli_presenter=cli_presenter
             )
         return self._instances['cli_controller']

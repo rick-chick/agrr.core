@@ -180,6 +180,38 @@ def mock_advanced_prediction_output_port():
     return port
 
 
+@pytest.fixture
+def mock_http_service():
+    """Mock HTTP service for testing."""
+    service = AsyncMock()
+    service.get.return_value = {
+        'latitude': 35.6762,
+        'longitude': 139.6503,
+        'elevation': 10.0,
+        'timezone': 'Asia/Tokyo',
+        'daily': {
+            'time': ['2024-01-01', '2024-01-02'],
+            'temperature_2m_max': [25.0, 26.0],
+            'temperature_2m_min': [15.0, 16.0],
+            'temperature_2m_mean': [20.0, 21.0],
+            'precipitation_sum': [5.0, 3.0],
+            'sunshine_duration': [28800.0, 30000.0]
+        }
+    }
+    return service
+
+
+@pytest.fixture
+def mock_file_repository():
+    """Mock file repository for testing."""
+    repository = AsyncMock()
+    repository.exists.return_value = True
+    repository.read.return_value = '{"data": [{"time": "2024-01-01", "temperature_2m_max": 25.0}]}'
+    repository.write.return_value = None
+    repository.delete.return_value = None
+    return repository
+
+
 
 
 # Async test marker

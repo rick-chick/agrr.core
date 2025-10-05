@@ -16,23 +16,34 @@ class TestWeatherAPIOpenMeteoRepository:
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.repository = WeatherAPIOpenMeteoRepository()
+        # Create mock HTTP service
+        from unittest.mock import AsyncMock
+        self.mock_http_service = AsyncMock()
+        self.mock_http_service.get.return_value = {
+            'latitude': 35.6762,
+            'longitude': 139.6503,
+            'elevation': 10.0,
+            'timezone': 'Asia/Tokyo',
+            'daily': {
+                'time': ['2024-01-01', '2024-01-02'],
+                'temperature_2m_max': [25.0, 26.0],
+                'temperature_2m_min': [15.0, 16.0],
+                'temperature_2m_mean': [20.0, 21.0],
+                'precipitation_sum': [5.0, 3.0],
+                'sunshine_duration': [28800.0, 30000.0]
+            }
+        }
+        self.repository = WeatherAPIOpenMeteoRepository(self.mock_http_service)
     
     def test_init(self):
         """Test repository initialization."""
-        repo = WeatherAPIOpenMeteoRepository()
-        assert repo.base_url == "https://archive-api.open-meteo.com/v1/archive"
-        
-        custom_repo = WeatherAPIOpenMeteoRepository("https://custom-api.com")
-        assert custom_repo.base_url == "https://custom-api.com"
+        assert self.repository.http_service == self.mock_http_service
     
-    @patch('requests.get')
     @pytest.mark.asyncio
-    async def test_get_weather_data_success(self, mock_get):
+    async def test_get_weather_data_success(self):
         """Test successful weather data retrieval."""
-        # Mock API response
-        mock_response = Mock()
-        mock_response.json.return_value = {
+        # Mock HTTP service response
+        mock_response = {
             "latitude": 35.6762,
             "longitude": 139.6911,
             "elevation": 37.0,
@@ -46,8 +57,7 @@ class TestWeatherAPIOpenMeteoRepository:
                 "sunshine_duration": [28800.0, 25200.0],
             }
         }
-        mock_response.raise_for_status.return_value = None
-        mock_get.return_value = mock_response
+        self.mock_http_service.get.return_value = mock_response
         
         # Test
         weather_data_list = await self.repository.get_by_location_and_date_range(
@@ -70,20 +80,16 @@ class TestWeatherAPIOpenMeteoRepository:
         # No separate location object is returned
         
         # Verify API call
-        mock_get.assert_called_once()
-        call_args = mock_get.call_args
-        assert "latitude" in call_args[1]["params"]
-        assert "longitude" in call_args[1]["params"]
-        assert call_args[1]["params"]["latitude"] == 35.7
-        assert call_args[1]["params"]["longitude"] == 139.7
+        self.mock_http_service.get.assert_called_once()
+        call_args = self.mock_http_service.get.call_args
+        assert call_args[0][1]["latitude"] == 35.7
+        assert call_args[0][1]["longitude"] == 139.7
     
-    @patch('requests.get')
     @pytest.mark.asyncio
-    async def test_get_weather_data_with_none_values(self, mock_get):
+    async def test_get_weather_data_with_none_values(self):
         """Test weather data retrieval with None values."""
         # Mock API response with None values
-        mock_response = Mock()
-        mock_response.json.return_value = {
+        mock_response = {
             "latitude": 35.7,
             "longitude": 139.7,
             "daily": {
@@ -95,8 +101,7 @@ class TestWeatherAPIOpenMeteoRepository:
                 "sunshine_duration": [None],
             }
         }
-        mock_response.raise_for_status.return_value = None
-        mock_get.return_value = mock_response
+        self.mock_http_service.get.return_value = mock_response
         
         # Test
         weather_data_list = await self.repository.get_by_location_and_date_range(
@@ -111,47 +116,41 @@ class TestWeatherAPIOpenMeteoRepository:
         assert weather_data_list[0].sunshine_hours is None
         # Location information is embedded in WeatherData entities
     
-    @patch('requests.get')
     @pytest.mark.asyncio
-    async def test_get_weather_data_api_error(self, mock_get):
+    async def test_get_weather_data_api_error(self):
         """Test API error handling."""
         # Mock API error
-        mock_get.side_effect = requests.RequestException("API Error")
+        from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
+        self.mock_http_service.get.side_effect = WeatherAPIError("API Error")
         
-        with pytest.raises(WeatherAPIError, match="Failed to fetch weather data"):
+        with pytest.raises(WeatherAPIError, match="API Error"):
             await self.repository.get_by_location_and_date_range(
                 35.7, 139.7, "2023-01-01", "2023-01-01"
             )
     
-    @patch('requests.get')
     @pytest.mark.asyncio
-    async def test_get_weather_data_invalid_response(self, mock_get):
+    async def test_get_weather_data_invalid_response(self):
         """Test invalid API response handling."""
         # Mock invalid response
-        mock_response = Mock()
-        mock_response.json.return_value = {"invalid": "response"}
-        mock_response.raise_for_status.return_value = None
-        mock_get.return_value = mock_response
+        mock_response = {"invalid": "response"}
+        self.mock_http_service.get.return_value = mock_response
         
         with pytest.raises(WeatherDataNotFoundError, match="No daily weather data found"):
             await self.repository.get_by_location_and_date_range(
                 35.7, 139.7, "2023-01-01", "2023-01-01"
             )
     
-    @patch('requests.get')
     @pytest.mark.asyncio
-    async def test_get_weather_data_malformed_response(self, mock_get):
+    async def test_get_weather_data_malformed_response(self):
         """Test malformed API response handling."""
         # Mock malformed response
-        mock_response = Mock()
-        mock_response.json.return_value = {
+        mock_response = {
             "daily": {
                 "time": ["2023-01-01"],
                 # Missing required fields
             }
         }
-        mock_response.raise_for_status.return_value = None
-        mock_get.return_value = mock_response
+        self.mock_http_service.get.return_value = mock_response
         
         with pytest.raises(WeatherAPIError, match="Invalid API response format"):
             await self.repository.get_by_location_and_date_range(

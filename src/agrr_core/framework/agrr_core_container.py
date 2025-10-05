@@ -124,13 +124,11 @@ class AgrrCoreContainer:
     def get_weather_gateway(self) -> WeatherGateway:
         """Get weather gateway instance."""
         if 'weather_gateway' not in self._instances:
-            weather_service = self.get_weather_service()
-            file_repository = self.get_weather_file_repository()
-            api_repository = self.get_weather_api_repository()
+            weather_file_repository = self.get_weather_file_repository()
+            weather_api_repository = self.get_weather_api_repository()
             self._instances['weather_gateway'] = WeatherGatewayImpl(
-                weather_service=weather_service,
-                file_repository=file_repository,
-                api_repository=api_repository
+                weather_file_repository=weather_file_repository,
+                weather_api_repository=weather_api_repository
             )
         return self._instances['weather_gateway']
     

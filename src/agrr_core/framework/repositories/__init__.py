@@ -1,5 +1,5 @@
 """Framework repositories."""
 
-from .weather_file_repository import WeatherFileRepository
+from .file_repository import FileRepository
 
-__all__ = ['WeatherFileRepository']
+__all__ = ['FileRepository']

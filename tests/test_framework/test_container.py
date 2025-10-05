@@ -21,7 +21,8 @@ class TestWeatherCliContainer:
         repo = self.container.get_weather_repository()
         
         assert repo is not None
-        assert repo.base_url == 'https://test-api.open-meteo.com/v1/archive'
+        assert hasattr(repo, 'weather_file_repository')
+        assert hasattr(repo, 'weather_api_repository')
         
         # Test singleton behavior
         repo2 = self.container.get_weather_repository()
@@ -79,4 +80,6 @@ class TestWeatherCliContainer:
         
         # Should use default config
         repo = container.get_weather_repository()
-        assert repo.base_url == 'https://archive-api.open-meteo.com/v1/archive'
+        assert repo is not None
+        assert hasattr(repo, 'weather_file_repository')
+        assert hasattr(repo, 'weather_api_repository')

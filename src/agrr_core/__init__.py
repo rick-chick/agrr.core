@@ -3,7 +3,7 @@
 from .entity import WeatherData, Location, DateRange, Forecast
 from .usecase import (
     FetchWeatherDataInteractor,
-    PredictWeatherInteractor,
+    WeatherPredictInteractor,
     WeatherPredictionOutputPort,
     WeatherPresenterOutputPort,
     PredictionPresenterOutputPort,
@@ -29,7 +29,7 @@ __all__ = [
     "Forecast",
     # Use cases
     "FetchWeatherDataInteractor",
-    "PredictWeatherInteractor",
+    "WeatherPredictInteractor",
     "WeatherPredictionOutputPort",
     "WeatherPresenterOutputPort",
     "PredictionPresenterOutputPort",

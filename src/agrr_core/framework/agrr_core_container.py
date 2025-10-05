@@ -9,7 +9,13 @@ from agrr_core.adapter.repositories.weather_external_repository import WeatherEx
 from agrr_core.adapter.repositories.weather_memory_repository import WeatherMemoryRepository
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.adapter.controllers.weather_cli_controller import WeatherCLIController
+from agrr_core.adapter.controllers.weather_file_predict_cli_controller import WeatherFilePredictCLIController
 from agrr_core.adapter.services.prediction_integrated_service import PredictionIntegratedService
+from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
+from agrr_core.usecase.interactors.weather_predict_interactor import WeatherPredictInteractor
+from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
+from agrr_core.adapter.gateways.prediction_gateway_impl import PredictionGatewayImpl
+from agrr_core.adapter.services.prediction_arima_service import PredictionARIMAService
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
 from agrr_core.usecase.interactors.prediction_multi_metric_interactor import MultiMetricPredictionInteractor
 from agrr_core.usecase.interactors.prediction_evaluate_interactor import ModelEvaluationInteractor
@@ -81,6 +87,60 @@ class AgrrCoreContainer:
             )
         return self._instances['cli_controller']
     
+    def get_weather_file_repository(self) -> WeatherFileRepository:
+        """Get weather file repository instance."""
+        if 'weather_file_repository' not in self._instances:
+            self._instances['weather_file_repository'] = WeatherFileRepository()
+        return self._instances['weather_file_repository']
+    
+    def get_prediction_arima_service(self) -> PredictionARIMAService:
+        """Get ARIMA prediction service instance."""
+        if 'prediction_arima_service' not in self._instances:
+            self._instances['prediction_arima_service'] = PredictionARIMAService()
+        return self._instances['prediction_arima_service']
+    
+    def get_weather_gateway(self) -> WeatherGatewayImpl:
+        """Get weather gateway instance."""
+        if 'weather_gateway' not in self._instances:
+            file_repository = self.get_weather_file_repository()
+            self._instances['weather_gateway'] = WeatherGatewayImpl(
+                file_repository=file_repository
+            )
+        return self._instances['weather_gateway']
+    
+    def get_prediction_gateway(self) -> PredictionGatewayImpl:
+        """Get prediction gateway instance."""
+        if 'prediction_gateway' not in self._instances:
+            file_repository = self.get_weather_file_repository()
+            prediction_service = self.get_prediction_arima_service()
+            self._instances['prediction_gateway'] = PredictionGatewayImpl(
+                file_repository=file_repository,
+                prediction_service=prediction_service
+            )
+        return self._instances['prediction_gateway']
+    
+    def get_weather_predict_interactor(self) -> WeatherPredictInteractor:
+        """Get weather prediction interactor instance."""
+        if 'weather_predict_interactor' not in self._instances:
+            weather_gateway = self.get_weather_gateway()
+            prediction_gateway = self.get_prediction_gateway()
+            self._instances['weather_predict_interactor'] = WeatherPredictInteractor(
+                weather_gateway=weather_gateway,
+                prediction_gateway=prediction_gateway
+            )
+        return self._instances['weather_predict_interactor']
+    
+    def get_file_predict_cli_controller(self) -> WeatherFilePredictCLIController:
+        """Get file-based prediction CLI controller instance."""
+        if 'file_predict_cli_controller' not in self._instances:
+            predict_interactor = self.get_weather_predict_interactor()
+            cli_presenter = self.get_cli_presenter()
+            self._instances['file_predict_cli_controller'] = WeatherFilePredictCLIController(
+                predict_interactor=predict_interactor,
+                cli_presenter=cli_presenter
+            )
+        return self._instances['file_predict_cli_controller']
+    
     # Prediction Components
     def get_multi_metric_prediction_input_port(self) -> MultiMetricPredictionInteractor:
         """Get multi-metric prediction input port instance."""
@@ -147,6 +207,11 @@ class AgrrCoreContainer:
     async def run_cli(self, args: list = None) -> None:
         """Run CLI application with dependency injection."""
         controller = self.get_cli_controller()
+        await controller.run(args)
+    
+    async def run_prediction_cli(self, args: list = None) -> None:
+        """Run file-based prediction CLI application with dependency injection."""
+        controller = self.get_file_predict_cli_controller()
         await controller.run(args)
     
 

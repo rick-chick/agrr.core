@@ -1,106 +1,69 @@
-"""Predict weather interactor."""
+"""Use case interactor for weather prediction from data."""
 
-from agrr_core.entity import Location, DateRange
-from agrr_core.entity.exceptions.invalid_location_error import InvalidLocationError
-from agrr_core.entity.exceptions.invalid_date_range_error import InvalidDateRangeError
-from agrr_core.entity.exceptions.prediction_error import PredictionError
-from agrr_core.usecase.ports.input.weather_predict_input_port import PredictWeatherInputPort
-from agrr_core.usecase.gateways.weather_repository_gateway import WeatherRepositoryGateway
-from agrr_core.usecase.gateways.prediction_repository_gateway import PredictionRepositoryGateway
-from agrr_core.usecase.ports.output.weather_prediction_output_port import WeatherPredictionOutputPort
-from agrr_core.usecase.ports.output.prediction_presenter_output_port import PredictionPresenterOutputPort
-from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
-from agrr_core.usecase.dto.prediction_request_dto import PredictionRequestDTO
-from agrr_core.usecase.dto.prediction_response_dto import PredictionResponseDTO
-from agrr_core.usecase.dto.forecast_response_dto import ForecastResponseDTO
+from typing import List
+from agrr_core.entity.entities.weather_entity import WeatherData
+from agrr_core.entity.entities.prediction_forecast_entity import Forecast
+from agrr_core.entity.validators.weather_validator import WeatherValidator
+from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
+from agrr_core.usecase.gateways.prediction_gateway import PredictionGateway
 
 
-class PredictWeatherInteractor(PredictWeatherInputPort):
-    """Interactor for weather prediction."""
+class WeatherPredictInteractor:
+    """Use case interactor for weather prediction from data."""
     
     def __init__(
-        self, 
-        weather_repository_gateway: WeatherRepositoryGateway,
-        prediction_repository_gateway: PredictionRepositoryGateway,
-        weather_prediction_output_port: WeatherPredictionOutputPort,
-        prediction_presenter_output_port: PredictionPresenterOutputPort
+        self,
+        weather_gateway: WeatherGateway,
+        prediction_gateway: PredictionGateway
     ):
-        self.weather_repository_gateway = weather_repository_gateway
-        self.prediction_repository_gateway = prediction_repository_gateway
-        self.weather_prediction_output_port = weather_prediction_output_port
-        self.prediction_presenter_output_port = prediction_presenter_output_port
+        """Initialize weather prediction from data interactor."""
+        self.weather_gateway = weather_gateway
+        self.prediction_gateway = prediction_gateway
     
-    async def execute(self, request: PredictionRequestDTO) -> None:
-        """Execute weather prediction."""
-        try:
-            # Validate location
-            location = Location(request.latitude, request.longitude)
+    async def execute(
+        self,
+        input_source: str,
+        output_destination: str,
+        prediction_days: int
+    ) -> List[Forecast]:
+        """
+        Execute weather prediction from data.
+        
+        Args:
+            input_source: Input data source (file path, database connection, etc.)
+            output_destination: Output destination (file path, database, etc.)
+            prediction_days: Number of days to predict
             
-            # Validate date range
-            date_range = DateRange(request.start_date, request.end_date)
+        Returns:
+            List of forecast predictions
             
-            # Get historical weather data (returns tuple of data and location)
-            historical_data_list, actual_location = await self.weather_repository_gateway.get_weather_data_by_location_and_date_range(
-                location.latitude,
-                location.longitude,
-                date_range.start_date,
-                date_range.end_date
-            )
-            
-            if not historical_data_list:
-                raise PredictionError("No historical data available for prediction")
-            
-            # Use prediction service to generate forecasts
-            forecasts = await self.weather_prediction_output_port.predict_weather(
-                historical_data_list, 
-                request.prediction_days
-            )
-            
-            # Save forecasts
-            await self.prediction_repository_gateway.save_forecast(forecasts)
-            
-            # Convert historical data to response DTOs
-            historical_response = []
-            for weather_data in historical_data_list:
-                response_dto = WeatherDataResponseDTO(
-                    time=weather_data.time.isoformat(),
-                    temperature_2m_max=weather_data.temperature_2m_max,
-                    temperature_2m_min=weather_data.temperature_2m_min,
-                    temperature_2m_mean=weather_data.temperature_2m_mean,
-                    precipitation_sum=weather_data.precipitation_sum,
-                    sunshine_duration=weather_data.sunshine_duration,
-                    sunshine_hours=weather_data.sunshine_hours,
-                )
-                historical_response.append(response_dto)
-            
-            # Convert forecasts to response DTOs
-            forecast_response = []
-            for forecast in forecasts:
-                forecast_dto = ForecastResponseDTO(
-                    date=forecast.date.isoformat(),
-                    predicted_value=forecast.predicted_value,
-                    confidence_lower=forecast.confidence_lower,
-                    confidence_upper=forecast.confidence_upper
-                )
-                forecast_response.append(forecast_dto)
-            
-            response_dto = PredictionResponseDTO(
-                historical_data=historical_response,
-                forecast=forecast_response,
-                model_metrics={
-                    'training_data_points': len(historical_data_list),
-                    'prediction_days': request.prediction_days,
-                    'model_type': 'Prophet'
-                }
-            )
-            
-            # Use presenter to format response
-            formatted_response = self.prediction_presenter_output_port.format_prediction_dto(response_dto)
-            return self.prediction_presenter_output_port.format_success(formatted_response)
-            
-        except (ValueError, InvalidLocationError, InvalidDateRangeError) as e:
-            error_response = self.prediction_presenter_output_port.format_error(f"Invalid request parameters: {e}")
-            return error_response
-        except Exception as e:
-            error_response = self.prediction_presenter_output_port.format_error(f"Prediction failed: {e}")
-            return error_response
+        Raises:
+            ValueError: If validation fails
+            FileError: If operations fail
+        """
+        # Validate input data source
+        if not WeatherValidator.validate_source_format(input_source):
+            raise ValueError("Invalid input data source format")
+        
+        # Validate output destination
+        if not WeatherValidator.validate_destination_format(output_destination):
+            raise ValueError("Invalid output destination format")
+        
+        # Get weather data
+        historical_data = await self.weather_gateway.get(input_source)
+        
+        # Validate weather data quality
+        if not WeatherValidator.validate_weather_data(historical_data):
+            raise ValueError(f"Insufficient data for prediction. Found {len(historical_data)} records, need at least 30")
+        
+        # Generate predictions
+        predictions = await self.prediction_gateway.predict(
+            historical_data, 
+            'temperature', 
+            {'prediction_days': prediction_days}
+        )
+        
+        # Create predictions
+        await self.prediction_gateway.create(predictions, output_destination)
+        
+        return predictions

@@ -19,8 +19,13 @@ def main() -> None:
         # Get command line arguments (excluding script name)
         args = sys.argv[1:] if len(sys.argv) > 1 else None
         
-        # Run CLI application
-        asyncio.run(container.run_cli(args))
+        # Check if this is a prediction command
+        if args and args[0] == 'predict-file':
+            # Run file-based prediction CLI
+            asyncio.run(container.run_prediction_cli(args))
+        else:
+            # Run standard weather CLI
+            asyncio.run(container.run_cli(args))
         
     except KeyboardInterrupt:
         print("\n\nOperation cancelled by user.")

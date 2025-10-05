@@ -6,6 +6,7 @@ from .invalid_location_error import InvalidLocationError
 from .invalid_date_range_error import InvalidDateRangeError
 from .weather_api_error import WeatherAPIError
 from .prediction_error import PredictionError
+from .file_error import FileError
 
 __all__ = [
     "WeatherError",
@@ -14,4 +15,5 @@ __all__ = [
     "InvalidDateRangeError",
     "WeatherAPIError",
     "PredictionError",
+    "FileError",
 ]

@@ -31,12 +31,12 @@ def test_import_weather_interactors():
     """Test importing weather interactors."""
     from agrr_core.usecase import (
         FetchWeatherDataInteractor,
-        PredictWeatherInteractor,
+        WeatherPredictInteractor,
         WeatherPredictionOutputPort,
     )
     
     assert FetchWeatherDataInteractor is not None
-    assert PredictWeatherInteractor is not None
+    assert WeatherPredictInteractor is not None
     assert WeatherPredictionOutputPort is not None
 
 

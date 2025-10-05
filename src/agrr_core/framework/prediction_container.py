@@ -2,7 +2,7 @@
 
 from typing import Dict, Any, Optional
 
-from agrr_core.adapter.repositories.weather_api_open_meteo_repository import OpenMeteoWeatherRepository
+from agrr_core.adapter.repositories.weather_memory_repository import InMemoryWeatherRepository
 from agrr_core.adapter.repositories.weather_storage_repository import StorageWeatherRepository
 from agrr_core.adapter.repositories.weather_external_repository import ExternalDataWeatherRepository
 from agrr_core.adapter.services.prediction_integrated_service import IntegratedPredictionService
@@ -33,13 +33,11 @@ class PredictionContainer:
             elif repository_type == 'external':
                 fallback_repo = None
                 if self.config.get('enable_fallback', False):
-                    # Create fallback API repository
-                    base_url = self.config.get('open_meteo_base_url', 'https://archive-api.open-meteo.com/v1/archive')
-                    fallback_repo = OpenMeteoWeatherRepository(base_url=base_url)
+                    # Create fallback in-memory repository
+                    fallback_repo = InMemoryWeatherRepository()
                 self._instances['weather_repository'] = ExternalDataWeatherRepository(fallback_repository=fallback_repo)
-            else:  # Default to API
-                base_url = self.config.get('open_meteo_base_url', 'https://archive-api.open-meteo.com/v1/archive')
-                self._instances['weather_repository'] = OpenMeteoWeatherRepository(base_url=base_url)
+            else:  # Default to in-memory
+                self._instances['weather_repository'] = InMemoryWeatherRepository()
         
         return self._instances['weather_repository']
     

@@ -18,13 +18,15 @@ class TestWeatherFileRepository:
     
     def setup_method(self):
         """Set up test fixtures."""
-        # Create mock file repository
-        from unittest.mock import AsyncMock
-        self.mock_file_repository = AsyncMock()
+        # Create mock file repository with proper sync/async method handling
+        from unittest.mock import MagicMock, AsyncMock
+        self.mock_file_repository = MagicMock()
+        # Configure synchronous methods
         self.mock_file_repository.exists.return_value = True
-        self.mock_file_repository.read.return_value = '{"data": [{"time": "2024-01-01", "temperature_2m_max": 25.0}]}'
-        self.mock_file_repository.write.return_value = None
-        self.mock_file_repository.delete.return_value = None
+        # Configure asynchronous methods
+        self.mock_file_repository.read = AsyncMock(return_value='{"data": [{"time": "2024-01-01", "temperature_2m_max": 25.0}]}')
+        self.mock_file_repository.write = AsyncMock(return_value=None)
+        self.mock_file_repository.delete = AsyncMock(return_value=None)
         self.repository = WeatherFileRepository(self.mock_file_repository)
     
     # ===== Input Validation Tests =====
@@ -542,6 +544,10 @@ class TestWeatherFileRepository:
     @pytest.mark.asyncio
     async def test_get_input_file_info_not_found(self):
         """Test getting file information for non-existent file."""
+        # Mock file repository to return False for exists (synchronous call)
+        from unittest.mock import Mock
+        self.mock_file_repository.exists = Mock(return_value=False)
+        
         with pytest.raises(FileError, match="Failed to get file info"):
             await self.repository.get_input_file_info("/nonexistent/file.json")
     

@@ -15,6 +15,8 @@ class WeatherData:
     temperature_2m_mean: Optional[float] = None
     precipitation_sum: Optional[float] = None
     sunshine_duration: Optional[float] = None
+    wind_speed_10m: Optional[float] = None
+    weather_code: Optional[int] = None
     
     @property
     def sunshine_hours(self) -> Optional[float]:

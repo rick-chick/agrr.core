@@ -18,7 +18,9 @@ class TestWeatherData:
             temperature_2m_min=15.0,
             temperature_2m_mean=20.0,
             precipitation_sum=5.0,
-            sunshine_duration=28800.0  # 8 hours in seconds
+            sunshine_duration=28800.0,  # 8 hours in seconds
+            wind_speed_10m=5.5,
+            weather_code=0
         )
         
         assert weather_data.time == time
@@ -27,6 +29,8 @@ class TestWeatherData:
         assert weather_data.temperature_2m_mean == 20.0
         assert weather_data.precipitation_sum == 5.0
         assert weather_data.sunshine_duration == 28800.0
+        assert weather_data.wind_speed_10m == 5.5
+        assert weather_data.weather_code == 0
     
     def test_sunshine_hours_property(self):
         """Test sunshine_hours computed property."""
@@ -57,3 +61,5 @@ class TestWeatherData:
         assert weather_data.temperature_2m_mean is None
         assert weather_data.precipitation_sum is None
         assert weather_data.sunshine_duration is None
+        assert weather_data.wind_speed_10m is None
+        assert weather_data.weather_code is None

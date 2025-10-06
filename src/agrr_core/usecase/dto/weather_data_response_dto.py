@@ -15,3 +15,5 @@ class WeatherDataResponseDTO:
     precipitation_sum: Optional[float] = None
     sunshine_duration: Optional[float] = None
     sunshine_hours: Optional[float] = None
+    wind_speed_10m: Optional[float] = None
+    weather_code: Optional[int] = None

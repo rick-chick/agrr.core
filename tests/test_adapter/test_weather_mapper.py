@@ -21,6 +21,8 @@ class TestWeatherMapper:
             temperature_2m_mean=20.0,
             precipitation_sum=5.0,
             sunshine_duration=28800.0,
+            wind_speed_10m=5.5,
+            weather_code=0,
         )
         
         dto = WeatherMapper.entity_to_dto(weather_data)
@@ -33,6 +35,8 @@ class TestWeatherMapper:
         assert dto.precipitation_sum == 5.0
         assert dto.sunshine_duration == 28800.0
         assert dto.sunshine_hours == 8.0
+        assert dto.wind_speed_10m == 5.5
+        assert dto.weather_code == 0
     
     def test_entity_to_dto_with_none_values(self):
         """Test converting WeatherData entity with None values to DTO."""
@@ -43,6 +47,8 @@ class TestWeatherMapper:
             temperature_2m_mean=20.0,
             precipitation_sum=None,
             sunshine_duration=None,
+            wind_speed_10m=None,
+            weather_code=None,
         )
         
         dto = WeatherMapper.entity_to_dto(weather_data)
@@ -54,5 +60,7 @@ class TestWeatherMapper:
         assert dto.precipitation_sum is None
         assert dto.sunshine_duration is None
         assert dto.sunshine_hours is None
+        assert dto.wind_speed_10m is None
+        assert dto.weather_code is None
     
     

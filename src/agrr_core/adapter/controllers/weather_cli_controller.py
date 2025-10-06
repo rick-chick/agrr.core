@@ -159,11 +159,12 @@ Examples:
             # Execute interactor
             json_output = getattr(args, 'json', False)
             
-            if not json_output:
-                self.cli_presenter.display_success_message(
-                    f"Fetching weather data for location ({latitude}, {longitude}) "
-                    f"from {start_date} to {end_date}..."
-                )
+            # Remove debug message - it should not be displayed in CLI output
+            # if not json_output:
+            #     self.cli_presenter.display_success_message(
+            #         f"Fetching weather data for location ({latitude}, {longitude}) "
+            #         f"from {start_date} to {end_date}..."
+            #     )
             
             # Execute interactor
             result = await self.weather_interactor.execute(request)
@@ -192,7 +193,9 @@ Examples:
                                 temperature_2m_mean=item.get('temperature_2m_mean'),
                                 precipitation_sum=item.get('precipitation_sum'),
                                 sunshine_duration=item.get('sunshine_duration'),
-                                sunshine_hours=item.get('sunshine_hours')
+                                sunshine_hours=item.get('sunshine_hours'),
+                                wind_speed_10m=item.get('wind_speed_10m'),
+                                weather_code=item.get('weather_code')
                             )
                             dto_list.append(dto)
                         else:

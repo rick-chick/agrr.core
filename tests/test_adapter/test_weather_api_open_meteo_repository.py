@@ -30,7 +30,9 @@ class TestWeatherAPIOpenMeteoRepository:
                 'temperature_2m_min': [15.0, 16.0],
                 'temperature_2m_mean': [20.0, 21.0],
                 'precipitation_sum': [5.0, 3.0],
-                'sunshine_duration': [28800.0, 30000.0]
+                'sunshine_duration': [28800.0, 30000.0],
+                'wind_speed_10m_max': [5.5, 6.2],
+                'weather_code': [0, 1]
             }
         }
         self.repository = WeatherAPIOpenMeteoRepository(self.mock_http_service)
@@ -55,6 +57,8 @@ class TestWeatherAPIOpenMeteoRepository:
                 "temperature_2m_mean": [20.0, 21.0],
                 "precipitation_sum": [5.0, 3.0],
                 "sunshine_duration": [28800.0, 25200.0],
+                "wind_speed_10m_max": [5.5, 6.2],
+                "weather_code": [0, 1]
             }
         }
         self.mock_http_service.get.return_value = mock_response
@@ -71,10 +75,14 @@ class TestWeatherAPIOpenMeteoRepository:
         assert weather_data_list[0].temperature_2m_max == 25.0
         assert weather_data_list[0].temperature_2m_mean == 20.0
         assert weather_data_list[0].sunshine_hours == 8.0
+        assert weather_data_list[0].wind_speed_10m == 5.5
+        assert weather_data_list[0].weather_code == 0
         
         assert weather_data_list[1].time == datetime(2023, 1, 2)
         assert weather_data_list[1].temperature_2m_max == 26.0
         assert weather_data_list[1].sunshine_hours == 7.0
+        assert weather_data_list[1].wind_speed_10m == 6.2
+        assert weather_data_list[1].weather_code == 1
         
         # Location information is embedded in WeatherData entities
         # No separate location object is returned
@@ -99,6 +107,8 @@ class TestWeatherAPIOpenMeteoRepository:
                 "temperature_2m_mean": [20.0],
                 "precipitation_sum": [5.0],
                 "sunshine_duration": [None],
+                "wind_speed_10m_max": [None],
+                "weather_code": [None],
             }
         }
         self.mock_http_service.get.return_value = mock_response
@@ -114,6 +124,8 @@ class TestWeatherAPIOpenMeteoRepository:
         assert weather_data_list[0].temperature_2m_min == 15.0
         assert weather_data_list[0].sunshine_duration is None
         assert weather_data_list[0].sunshine_hours is None
+        assert weather_data_list[0].wind_speed_10m is None
+        assert weather_data_list[0].weather_code is None
         # Location information is embedded in WeatherData entities
     
     @pytest.mark.asyncio

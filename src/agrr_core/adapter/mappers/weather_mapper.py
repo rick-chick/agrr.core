@@ -21,5 +21,7 @@ class WeatherMapper:
             precipitation_sum=weather_data.precipitation_sum,
             sunshine_duration=weather_data.sunshine_duration,
             sunshine_hours=weather_data.sunshine_hours,
+            wind_speed_10m=weather_data.wind_speed_10m,
+            weather_code=weather_data.weather_code,
         )
     

@@ -35,7 +35,9 @@ class WeatherAPIOpenMeteoRepository:
                     "temperature_2m_min", 
                     "temperature_2m_mean",
                     "precipitation_sum",
-                    "sunshine_duration"
+                    "sunshine_duration",
+                    "wind_speed_10m_max",
+                    "weather_code"
                 ]),
                 "timezone": "Asia/Tokyo"
             }
@@ -65,6 +67,8 @@ class WeatherAPIOpenMeteoRepository:
                     temperature_2m_mean=self._safe_get(daily_data["temperature_2m_mean"], i),
                     precipitation_sum=self._safe_get(daily_data["precipitation_sum"], i),
                     sunshine_duration=self._safe_get(daily_data["sunshine_duration"], i),
+                    wind_speed_10m=self._safe_get(daily_data["wind_speed_10m_max"], i),
+                    weather_code=self._safe_get(daily_data["weather_code"], i),
                 )
                 weather_data_list.append(weather_data)
             

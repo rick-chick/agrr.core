@@ -43,6 +43,8 @@ class WeatherCLIPresenter(WeatherPresenterOutputPort):
             "precipitation_sum": dto.precipitation_sum,
             "sunshine_duration": dto.sunshine_duration,
             "sunshine_hours": dto.sunshine_hours,
+            "wind_speed_10m": dto.wind_speed_10m,
+            "weather_code": dto.weather_code,
         }
     
     def format_weather_data_list_dto(self, dto: WeatherDataListResponseDTO) -> Dict[str, Any]:
@@ -104,7 +106,7 @@ class WeatherCLIPresenter(WeatherPresenterOutputPort):
         self.output_stream.write("\n")
         
         # Table header
-        header = f"{'Date':<12} {'Max Temp':<10} {'Min Temp':<10} {'Avg Temp':<10} {'Precip':<8} {'Sunshine':<10}"
+        header = f"{'Date':<12} {'Max Temp':<10} {'Min Temp':<10} {'Avg Temp':<10} {'Precip':<8} {'Sunshine':<10} {'Wind Speed':<12} {'Weather':<8}"
         self.output_stream.write(header + "\n")
         self.output_stream.write("-" * len(header) + "\n")
         
@@ -116,8 +118,10 @@ class WeatherCLIPresenter(WeatherPresenterOutputPort):
             avg_temp = self._format_temperature(item.temperature_2m_mean)
             precip = self._format_precipitation(item.precipitation_sum)
             sunshine = self._format_sunshine(item.sunshine_hours)
+            wind_speed = self._format_wind_speed(item.wind_speed_10m)
+            weather_code = self._format_weather_code(item.weather_code)
             
-            row = f"{date_str:<12} {max_temp:<10} {min_temp:<10} {avg_temp:<10} {precip:<8} {sunshine:<10}"
+            row = f"{date_str:<12} {max_temp:<10} {min_temp:<10} {avg_temp:<10} {precip:<8} {sunshine:<10} {wind_speed:<12} {weather_code:<8}"
             self.output_stream.write(row + "\n")
         
         self.output_stream.write("\n" + "="*80 + "\n")
@@ -180,3 +184,15 @@ class WeatherCLIPresenter(WeatherPresenterOutputPort):
         if sunshine is None:
             return "N/A"
         return f"{sunshine:.1f}h"
+    
+    def _format_wind_speed(self, wind_speed: float) -> str:
+        """Format wind speed for display."""
+        if wind_speed is None:
+            return "N/A"
+        return f"{wind_speed:.1f}km/h"
+    
+    def _format_weather_code(self, weather_code: int) -> str:
+        """Format weather code for display."""
+        if weather_code is None:
+            return "N/A"
+        return str(weather_code)

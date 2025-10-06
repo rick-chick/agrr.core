@@ -10,3 +10,6 @@ statsmodels>=0.13.0
 # Optional dependencies (install separately if needed)
 # prophet>=1.1.0  # Commented out due to Windows path length issues
 
+# LLM (optional)
+openai>=1.50.0
+

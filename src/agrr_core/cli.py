@@ -5,6 +5,10 @@ import sys
 from typing import Optional
 
 from agrr_core.framework.agrr_core_container import WeatherCliContainer
+from agrr_core.adapter.gateways.crop_requirement_gateway_impl import CropRequirementGatewayImpl
+from agrr_core.adapter.presenters.crop_requirement_craft_presenter import CropRequirementCraftPresenter
+from agrr_core.adapter.controllers.crop_cli_craft_controller import CropCliCraftController
+from agrr_core.framework.services.llm_client_impl import FrameworkLLMClient
 
 
 def main() -> None:
@@ -19,10 +23,17 @@ def main() -> None:
         # Get command line arguments (excluding script name)
         args = sys.argv[1:] if len(sys.argv) > 1 else None
         
-        # Check if this is a prediction command
+        # Check subcommands
         if args and args[0] == 'predict-file':
             # Run file-based prediction CLI
             asyncio.run(container.run_prediction_cli(args))
+        elif args and args[0] == 'crop':
+            # Run crop requirement craft CLI (direct wiring per project rules)
+            llm_client = FrameworkLLMClient()
+            gateway = CropRequirementGatewayImpl(llm_client=llm_client)
+            presenter = CropRequirementCraftPresenter()
+            controller = CropCliCraftController(gateway=gateway, presenter=presenter)
+            asyncio.run(controller.run(args))
         else:
             # Run standard weather CLI
             asyncio.run(container.run_cli(args))

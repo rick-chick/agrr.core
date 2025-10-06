@@ -5,6 +5,17 @@ from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime, timedelta
 
 from agrr_core.entity import WeatherData, Forecast, Location
+from agrr_core.entity import (
+    Crop,
+    GrowthStage,
+    TemperatureProfile,
+    SunshineProfile,
+    ThermalRequirement,
+    StageRequirement,
+)
+from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
+    CropRequirementAggregate,
+)
 
 
 @pytest.fixture
@@ -124,6 +135,47 @@ def mock_prediction_repository():
     repository.get_forecast_by_date_range.return_value = sample_forecast_list()
     repository.clear.return_value = None
     return repository
+
+
+# ==== Crop requirement crafting (LLM-backed) fixtures ====
+
+@pytest.fixture
+def sample_crop_requirement_aggregate() -> CropRequirementAggregate:
+    """Build a simple aggregate for testing crafting use case."""
+    crop = Crop(crop_id="tomato", name="Tomato")
+    stage = GrowthStage(name="Vegetative", order=1)
+    temp = TemperatureProfile(
+        base_temperature=10.0,
+        optimal_min=20.0,
+        optimal_max=26.0,
+        low_stress_threshold=12.0,
+        high_stress_threshold=32.0,
+        frost_threshold=0.0,
+        sterility_risk_threshold=None,
+    )
+    sun = SunshineProfile(minimum_sunshine_hours=3.0, target_sunshine_hours=6.0)
+    thermal = ThermalRequirement(required_gdd=400.0)
+    sr = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
+    return CropRequirementAggregate(crop=crop, stage_requirements=[sr])
+
+
+@pytest.fixture
+def mock_crop_requirement_gateway(sample_crop_requirement_aggregate):
+    gateway = AsyncMock()
+    gateway.craft.return_value = sample_crop_requirement_aggregate
+    return gateway
+
+
+@pytest.fixture
+def mock_crop_requirement_output_port():
+    port = MagicMock()
+    port.format_success.side_effect = lambda data: {"success": True, "data": data}
+    port.format_error.side_effect = lambda msg, error_code="CROP_REQUIREMENT_ERROR": {
+        "success": False,
+        "error": msg,
+        "code": error_code,
+    }
+    return port
 
 
 @pytest.fixture

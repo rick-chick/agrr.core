@@ -8,6 +8,14 @@ from .entities.prediction_model_type_entity import ModelType
 from .entities.prediction_metric_type_entity import MetricType
 from .entities.prediction_entity import PredictionModel
 from .entities.prediction_model_performance_entity import ModelPerformance
+from .entities.temperature_profile_entity import TemperatureProfile
+from .entities.sunshine_profile_entity import SunshineProfile
+from .entities.thermal_requirement_entity import ThermalRequirement
+from .entities.growth_stage_entity import GrowthStage
+from .entities.stage_requirement_entity import StageRequirement
+from .entities.assessment_result_entity import AssessmentResult
+from .entities.crop_entity import Crop
+from .entities.crop_requirement_aggregate_entity import CropRequirementAggregate
 from .exceptions.weather_error import WeatherError
 from .exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 from .exceptions.invalid_location_error import InvalidLocationError
@@ -24,6 +32,14 @@ __all__ = [
     "MetricType",
     "PredictionModel",
     "ModelPerformance",
+    "TemperatureProfile",
+    "SunshineProfile",
+    "ThermalRequirement",
+    "GrowthStage",
+    "StageRequirement",
+    "AssessmentResult",
+    "Crop",
+    "CropRequirementAggregate",
     "WeatherError",
     "WeatherDataNotFoundError",
     "InvalidLocationError",

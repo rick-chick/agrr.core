@@ -5,21 +5,28 @@ import asyncio
 from typing import Optional, Tuple
 from datetime import datetime, timedelta
 
-from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
+from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
+from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
+from agrr_core.usecase.dto.weather_data_request_dto import WeatherDataRequestDTO
 
 
-class WeatherCLIController:
-    """CLI controller for weather data operations."""
+class WeatherCliFetchController:
+    """CLI controller for weather data fetch operations."""
     
     def __init__(
         self, 
-        weather_repository: WeatherAPIOpenMeteoRepository,
+        weather_gateway: WeatherGatewayImpl,
         cli_presenter: WeatherCLIPresenter
     ):
         """Initialize CLI weather controller."""
-        self.weather_repository = weather_repository
+        self.weather_gateway = weather_gateway
         self.cli_presenter = cli_presenter
+        # Interactorをインスタンス化
+        self.weather_interactor = FetchWeatherDataInteractor(
+            weather_gateway=self.weather_gateway,
+            weather_presenter_output_port=self.cli_presenter
+        )
     
     def create_argument_parser(self) -> argparse.ArgumentParser:
         """Create argument parser for CLI commands."""
@@ -141,7 +148,15 @@ Examples:
             else:
                 start_date, end_date = self.calculate_date_range(args.days)
             
-            # Execute repository directly
+            # Create request DTO
+            request = WeatherDataRequestDTO(
+                latitude=latitude,
+                longitude=longitude,
+                start_date=start_date,
+                end_date=end_date
+            )
+            
+            # Execute interactor
             json_output = getattr(args, 'json', False)
             
             if not json_output:
@@ -150,27 +165,10 @@ Examples:
                     f"from {start_date} to {end_date}..."
                 )
             
-            # Get weather data from repository
-            weather_data_list = await self.weather_repository.get_by_location_and_date_range(
-                latitude, longitude, start_date, end_date
-            )
+            # Execute interactor
+            result = await self.weather_interactor.execute(request)
             
-            # Convert to result format expected by presenter
-            result = {
-                'success': True,
-                'data': {
-                    'data': weather_data_list,
-                    'total_count': len(weather_data_list),
-                    'location': {
-                        'latitude': latitude,
-                        'longitude': longitude,
-                        'elevation': None,
-                        'timezone': None
-                    }
-                }
-            }
-            
-            # Display results
+            # Display results based on interactor response
             if result.get('success', False):
                 data = result.get('data', {})
                 weather_data_list = data.get('data', [])

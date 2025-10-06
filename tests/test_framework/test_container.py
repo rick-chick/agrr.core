@@ -55,7 +55,7 @@ class TestWeatherCliContainer:
         controller = self.container.get_cli_controller()
         
         assert controller is not None
-        assert controller.weather_repository is not None
+        assert controller.weather_gateway is not None
         assert controller.cli_presenter is not None
         
         # Test singleton behavior

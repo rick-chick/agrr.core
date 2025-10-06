@@ -7,18 +7,25 @@ from datetime import datetime, timedelta
 
 from agrr_core.usecase.interactors.weather_predict_interactor import WeatherPredictInteractor
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
+from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
+from agrr_core.usecase.gateways.prediction_gateway import PredictionGateway
 
 
-class WeatherFilePredictCLIController:
+class WeatherCliPredictController:
     """CLI controller for weather file-based prediction operations."""
     
     def __init__(
         self, 
-        predict_interactor: WeatherPredictInteractor,
+        weather_gateway: WeatherGateway,
+        prediction_gateway: PredictionGateway,
         cli_presenter: WeatherCLIPresenter
     ):
         """Initialize CLI weather file prediction controller."""
-        self.predict_interactor = predict_interactor
+        # Instantiate interactor directly with injected dependencies
+        self.predict_interactor = WeatherPredictInteractor(
+            weather_gateway=weather_gateway,
+            prediction_gateway=prediction_gateway
+        )
         self.cli_presenter = cli_presenter
     
     def create_argument_parser(self) -> argparse.ArgumentParser:

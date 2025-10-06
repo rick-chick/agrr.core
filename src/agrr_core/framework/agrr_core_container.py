@@ -8,8 +8,8 @@ from agrr_core.framework.repositories.file_repository import FileRepository
 from agrr_core.framework.repositories.http_client import HttpClient
 from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
-from agrr_core.adapter.controllers.weather_cli_controller import WeatherCLIController
-from agrr_core.adapter.controllers.weather_file_predict_cli_controller import WeatherFilePredictCLIController
+from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
+from agrr_core.adapter.controllers.weather_cli_predict_controller import WeatherCliPredictController
 from agrr_core.adapter.services.prediction_integrated_service import PredictionIntegratedService
 from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
 from agrr_core.usecase.interactors.weather_predict_interactor import WeatherPredictInteractor
@@ -82,13 +82,13 @@ class AgrrCoreContainer:
             )
         return self._instances['fetch_weather_interactor']
     
-    def get_cli_controller(self) -> WeatherCLIController:
+    def get_cli_controller(self) -> WeatherCliFetchController:
         """Get CLI controller instance."""
         if 'cli_controller' not in self._instances:
-            weather_repository = self.get_weather_repository()
+            weather_gateway = self.get_weather_gateway()
             cli_presenter = self.get_cli_presenter()
-            self._instances['cli_controller'] = WeatherCLIController(
-                weather_repository=weather_repository,
+            self._instances['cli_controller'] = WeatherCliFetchController(
+                weather_gateway=weather_gateway,
                 cli_presenter=cli_presenter
             )
         return self._instances['cli_controller']
@@ -146,13 +146,15 @@ class AgrrCoreContainer:
             )
         return self._instances['weather_predict_interactor']
     
-    def get_file_predict_cli_controller(self) -> WeatherFilePredictCLIController:
+    def get_file_predict_cli_controller(self) -> WeatherCliPredictController:
         """Get file-based prediction CLI controller instance."""
         if 'file_predict_cli_controller' not in self._instances:
-            predict_interactor = self.get_weather_predict_interactor()
+            weather_gateway = self.get_weather_gateway()
+            prediction_gateway = self.get_prediction_gateway()
             cli_presenter = self.get_cli_presenter()
-            self._instances['file_predict_cli_controller'] = WeatherFilePredictCLIController(
-                predict_interactor=predict_interactor,
+            self._instances['file_predict_cli_controller'] = WeatherCliPredictController(
+                weather_gateway=weather_gateway,
+                prediction_gateway=prediction_gateway,
                 cli_presenter=cli_presenter
             )
         return self._instances['file_predict_cli_controller']

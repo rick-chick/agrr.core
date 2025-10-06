@@ -83,3 +83,36 @@ class TestWeatherCliContainer:
         assert repo is not None
         assert hasattr(repo, 'weather_file_repository')
         assert hasattr(repo, 'weather_api_repository')
+    
+    def test_get_time_series_service(self):
+        """Test getting time series service instance."""
+        service = self.container.get_time_series_service()
+        
+        assert service is not None
+        assert hasattr(service, 'create_model')
+        assert hasattr(service, 'check_stationarity')
+        assert hasattr(service, 'make_stationary')
+        
+        # Test singleton behavior
+        service2 = self.container.get_time_series_service()
+        assert service is service2
+    
+    def test_get_prediction_arima_service(self):
+        """Test getting ARIMA prediction service instance."""
+        service = self.container.get_prediction_arima_service()
+        
+        assert service is not None
+        assert hasattr(service, 'time_series_service')
+        assert hasattr(service, 'predict_multiple_metrics')
+        assert hasattr(service, '_predict_single_metric')
+        
+        # Test singleton behavior
+        service2 = self.container.get_prediction_arima_service()
+        assert service is service2
+    
+    def test_get_prediction_arima_service_dependency_injection(self):
+        """Test that prediction service gets time series service injected."""
+        service = self.container.get_prediction_arima_service()
+        time_series_service = self.container.get_time_series_service()
+        
+        assert service.time_series_service is time_series_service

@@ -1,7 +1,7 @@
 """Adapter services package."""
 
-from .prediction_prophet_service import PredictionProphetService
+from .prediction_arima_service import PredictionARIMAService
 
 __all__ = [
-    "PredictionProphetService",
+    "PredictionARIMAService",
 ]

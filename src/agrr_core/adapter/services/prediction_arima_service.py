@@ -2,40 +2,20 @@
 
 from typing import List, Dict, Any
 import numpy as np
-import pandas as pd
 from datetime import datetime, timedelta
-
-try:
-    from statsmodels.tsa.arima.model import ARIMA
-    from statsmodels.tsa.stattools import adfuller
-    STATSMODELS_AVAILABLE = True
-except ImportError:
-    STATSMODELS_AVAILABLE = False
-    # Mock classes for testing when statsmodels is not installed
-    class ARIMA:
-        def __init__(self, data, order=None, seasonal_order=None):
-            self.data = data
-        def fit(self):
-            return self
-        def forecast(self, steps):
-            return np.array([20.0] * steps)
-        def get_forecast(self, steps):
-            class Forecast:
-                def __init__(self, steps):
-                    self.predicted_mean = np.array([20.0] * steps)
-                    self.conf_int = np.array([[18.0, 23.0]] * steps)
-            return Forecast(steps)
 
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.prediction_error import PredictionError
 from agrr_core.usecase.gateways.prediction_service_gateway import PredictionServiceGateway
+from agrr_core.adapter.interfaces.time_series_interface import TimeSeriesInterface
 
 
 class PredictionARIMAService(PredictionServiceGateway):
     """ARIMA-based implementation of weather prediction service."""
     
-    def __init__(self):
-        self.models: Dict[str, ARIMA] = {}
+    def __init__(self, time_series_service: TimeSeriesInterface):
+        """Initialize prediction service with time series interface."""
+        self.time_series_service = time_series_service
     
     async def predict_multiple_metrics(
         self, 
@@ -44,9 +24,6 @@ class PredictionARIMAService(PredictionServiceGateway):
         model_config: Dict[str, Any]
     ) -> Dict[str, List[Forecast]]:
         """Predict multiple weather metrics using ARIMA model."""
-        if not STATSMODELS_AVAILABLE:
-            raise PredictionError("Statsmodels is not available. Please install statsmodels.")
-        
         results = {}
         
         for metric in metrics:
@@ -72,33 +49,26 @@ class PredictionARIMAService(PredictionServiceGateway):
             raise PredictionError(f"Insufficient data for {metric}. Need at least 30 data points.")
         
         # Check stationarity
-        if not self._is_stationary(data):
-            data = self._make_stationary(data)
+        if not self.time_series_service.check_stationarity(data):
+            data = self.time_series_service.make_stationary(data)
         
         # Fit ARIMA model
         order = model_config.get('order', (1, 1, 1))
         seasonal_order = model_config.get('seasonal_order', (1, 1, 1, 12))
         
         try:
-            model = ARIMA(data, order=order, seasonal_order=seasonal_order)
+            model = self.time_series_service.create_model(data, order, seasonal_order)
             fitted_model = model.fit()
         except Exception as e:
             # Try simpler model if complex one fails
             order = (1, 1, 0)
-            model = ARIMA(data, order=order)
+            model = self.time_series_service.create_model(data, order)
             fitted_model = model.fit()
         
         # Make predictions
         prediction_days = model_config.get('prediction_days', 30)
         
-        try:
-            forecast_result = fitted_model.get_forecast(steps=prediction_days)
-            predictions = forecast_result.predicted_mean
-            confidence_intervals = forecast_result.conf_int()
-        except:
-            # Fallback to simple forecast
-            predictions = fitted_model.forecast(steps=prediction_days)
-            confidence_intervals = None
+        predictions, confidence_intervals = fitted_model.get_forecast_with_intervals(prediction_days)
         
         # Create forecast entities
         forecasts = []
@@ -111,8 +81,14 @@ class PredictionARIMAService(PredictionServiceGateway):
             confidence_upper = None
             
             if confidence_intervals is not None and i < len(confidence_intervals):
-                confidence_lower = confidence_intervals.iloc[i, 0]
-                confidence_upper = confidence_intervals.iloc[i, 1]
+                # Handle both pandas DataFrame and numpy array cases
+                if hasattr(confidence_intervals, 'iloc'):
+                    confidence_lower = confidence_intervals.iloc[i, 0]
+                    confidence_upper = confidence_intervals.iloc[i, 1]
+                else:
+                    # numpy array case
+                    confidence_lower = confidence_intervals[i, 0]
+                    confidence_upper = confidence_intervals[i, 1]
             
             forecast = Forecast(
                 date=forecast_date,
@@ -140,23 +116,6 @@ class PredictionARIMAService(PredictionServiceGateway):
         
         return data
     
-    def _is_stationary(self, data: List[float]) -> bool:
-        """Check if data is stationary using Augmented Dickey-Fuller test."""
-        try:
-            if not STATSMODELS_AVAILABLE:
-                return False
-            
-            result = adfuller(data)
-            # If p-value is less than 0.05, data is stationary
-            return result[1] < 0.05
-        except:
-            return False
-    
-    def _make_stationary(self, data: List[float]) -> List[float]:
-        """Make data stationary by differencing."""
-        # Simple first difference
-        diff_data = [data[i] - data[i-1] for i in range(1, len(data))]
-        return diff_data
     
     async def evaluate_model_accuracy(
         self,

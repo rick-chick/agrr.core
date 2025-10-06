@@ -10,11 +10,12 @@ from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
 from agrr_core.adapter.controllers.weather_cli_predict_controller import WeatherCliPredictController
-from agrr_core.adapter.services.prediction_integrated_service import PredictionIntegratedService
 from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
 from agrr_core.usecase.interactors.weather_predict_interactor import WeatherPredictInteractor
 from agrr_core.adapter.gateways.prediction_gateway_impl import PredictionGatewayImpl
 from agrr_core.adapter.services.prediction_arima_service import PredictionARIMAService
+from agrr_core.adapter.interfaces.time_series_interface import TimeSeriesInterface
+from agrr_core.framework.services.time_series_arima_service import TimeSeriesARIMAService
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
 from agrr_core.usecase.interactors.prediction_multi_metric_interactor import MultiMetricPredictionInteractor
 from agrr_core.usecase.interactors.prediction_evaluate_interactor import ModelEvaluationInteractor
@@ -100,10 +101,17 @@ class AgrrCoreContainer:
             self._instances['weather_file_repository'] = WeatherFileRepository(file_repository_impl)
         return self._instances['weather_file_repository']
     
+    def get_time_series_service(self) -> TimeSeriesInterface:
+        """Get time series service instance."""
+        if 'time_series_service' not in self._instances:
+            self._instances['time_series_service'] = TimeSeriesARIMAService()
+        return self._instances['time_series_service']
+    
     def get_prediction_arima_service(self) -> PredictionARIMAService:
         """Get ARIMA prediction service instance."""
         if 'prediction_arima_service' not in self._instances:
-            self._instances['prediction_arima_service'] = PredictionARIMAService()
+            time_series_service = self.get_time_series_service()
+            self._instances['prediction_arima_service'] = PredictionARIMAService(time_series_service)
         return self._instances['prediction_arima_service']
     
     def get_weather_api_repository(self) -> WeatherAPIOpenMeteoRepository:

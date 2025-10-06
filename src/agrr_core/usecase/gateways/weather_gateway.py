@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from agrr_core.entity.entities.weather_entity import WeatherData
+from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 
 
 class WeatherGateway(ABC):
@@ -26,6 +27,6 @@ class WeatherGateway(ABC):
         longitude: float,
         start_date: str,
         end_date: str
-    ) -> List[WeatherData]:
+    ) -> WeatherDataWithLocationDTO:
         """Get weather data by location and date range."""
         pass

@@ -6,7 +6,8 @@ from datetime import datetime
 
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
 from agrr_core.usecase.dto.weather_data_request_dto import WeatherDataRequestDTO
-from agrr_core.entity import WeatherData
+from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
+from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.invalid_location_error import InvalidLocationError
 
 
@@ -42,8 +43,13 @@ class TestFetchWeatherDataInteractor:
             ),
         ]
         
-        # Mock return value should be list of weather data
-        self.mock_weather_gateway.get_by_location_and_date_range.return_value = mock_weather_data
+        # Mock return value should be WeatherDataWithLocationDTO
+        mock_location = Location(latitude=35.7, longitude=139.7, elevation=37.0, timezone="Asia/Tokyo")
+        mock_weather_data_with_location = WeatherDataWithLocationDTO(
+            weather_data_list=mock_weather_data,
+            location=mock_location
+        )
+        self.mock_weather_gateway.get_by_location_and_date_range.return_value = mock_weather_data_with_location
         
         # Setup presenter mock return values
         self.mock_weather_presenter_output_port.format_weather_data_list_dto.return_value = {"data": [], "total_count": 2}
@@ -121,7 +127,12 @@ class TestFetchWeatherDataInteractor:
     @pytest.mark.asyncio
     async def test_execute_empty_result(self):
         """Test execution with empty weather data."""
-        self.mock_weather_gateway.get_by_location_and_date_range.return_value = []
+        mock_location = Location(latitude=35.7, longitude=139.7, elevation=37.0, timezone="Asia/Tokyo")
+        mock_weather_data_with_location = WeatherDataWithLocationDTO(
+            weather_data_list=[],
+            location=mock_location
+        )
+        self.mock_weather_gateway.get_by_location_and_date_range.return_value = mock_weather_data_with_location
         
         request = WeatherDataRequestDTO(
             latitude=35.7,

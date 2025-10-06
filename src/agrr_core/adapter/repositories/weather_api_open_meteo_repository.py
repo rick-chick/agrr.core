@@ -7,6 +7,7 @@ from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 from agrr_core.adapter.interfaces.http_service_interface import HttpServiceInterface
+from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 
 
 class WeatherAPIOpenMeteoRepository:
@@ -22,7 +23,7 @@ class WeatherAPIOpenMeteoRepository:
         longitude: float,
         start_date: str,
         end_date: str
-    ) -> List[WeatherData]:
+    ) -> WeatherDataWithLocationDTO:
         """Get weather data from Open-Meteo API."""
         try:
             params = {
@@ -72,7 +73,10 @@ class WeatherAPIOpenMeteoRepository:
                 )
                 weather_data_list.append(weather_data)
             
-            return weather_data_list
+            return WeatherDataWithLocationDTO(
+                weather_data_list=weather_data_list,
+                location=location
+            )
             
         except WeatherAPIError:
             raise

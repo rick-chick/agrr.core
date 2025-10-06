@@ -4,6 +4,7 @@ from typing import List
 
 from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
+from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
 from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
 
@@ -34,7 +35,7 @@ class WeatherGatewayImpl(WeatherGateway):
         longitude: float,
         start_date: str,
         end_date: str
-    ) -> List[WeatherData]:
+    ) -> WeatherDataWithLocationDTO:
         """Get weather data by location and date range."""
         return await self.weather_api_repository.get_by_location_and_date_range(
             latitude, longitude, start_date, end_date

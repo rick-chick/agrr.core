@@ -291,6 +291,79 @@ def mock_http_service():
     return service
 
 
+# ==== Growth progress calculation fixtures ====
+
+@pytest.fixture
+def mock_growth_progress_crop_requirement_gateway():
+    """Mock CropRequirementGateway for growth progress tests."""
+    from agrr_core.entity.entities.crop_entity import Crop
+    from agrr_core.entity.entities.growth_stage_entity import GrowthStage
+    from agrr_core.entity.entities.temperature_profile_entity import TemperatureProfile
+    from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
+    from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
+    from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
+    from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
+        CropRequirementAggregate,
+    )
+    
+    gateway = AsyncMock()
+    
+    # Default mock aggregate
+    crop = Crop(crop_id="rice", name="Rice", variety="Koshihikari")
+    stage = GrowthStage(name="Vegetative", order=1)
+    temp = TemperatureProfile(
+        base_temperature=10.0,
+        optimal_min=20.0,
+        optimal_max=30.0,
+        low_stress_threshold=15.0,
+        high_stress_threshold=35.0,
+        frost_threshold=0.0,
+    )
+    sun = SunshineProfile(minimum_sunshine_hours=4.0, target_sunshine_hours=8.0)
+    thermal = ThermalRequirement(required_gdd=500.0)
+    sr = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
+    aggregate = CropRequirementAggregate(crop=crop, stage_requirements=[sr])
+    
+    gateway.craft.return_value = aggregate
+    return gateway
+
+
+@pytest.fixture
+def mock_growth_progress_weather_gateway():
+    """Mock WeatherGateway for growth progress tests."""
+    from agrr_core.entity.entities.weather_entity import WeatherData
+    from datetime import datetime
+    
+    gateway = AsyncMock()
+    
+    # Default mock weather data
+    weather_data = [
+        WeatherData(
+            time=datetime(2024, 5, 1),
+            temperature_2m_mean=25.0,
+            temperature_2m_max=30.0,
+            temperature_2m_min=20.0,
+        ),
+        WeatherData(
+            time=datetime(2024, 5, 2),
+            temperature_2m_mean=25.0,
+            temperature_2m_max=30.0,
+            temperature_2m_min=20.0,
+        ),
+    ]
+    
+    gateway.get.return_value = weather_data
+    return gateway
+
+
+@pytest.fixture
+def mock_growth_progress_presenter():
+    """Mock GrowthProgressCalculateOutputPort for tests."""
+    presenter = MagicMock()
+    presenter.present = MagicMock()
+    return presenter
+
+
 @pytest.fixture
 def mock_file_repository():
     """Mock file repository for testing."""

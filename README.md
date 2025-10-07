@@ -36,6 +36,7 @@ pip install -e .
 agrr --help
 agrr weather --location 35.6762,139.6503 --days 7
 agrr crop --query "トマト"
+agrr progress --crop rice --variety Koshihikari --start-date 2024-05-01 --weather-file weather_data.json
 ```
 
 ### Distribution
@@ -97,6 +98,8 @@ agrr crop --query "トマト"
 
 ### CLI Usage
 
+#### Weather Data Fetching
+
 Get weather data from the command line:
 
 ```bash
@@ -119,6 +122,86 @@ agrr weather --location 40.7128,-74.0060 --days 5 --json
 
 # Short options
 agrr weather -l 35.6762,139.6503 -d 7 --json
+```
+
+#### Growth Progress Calculation
+
+Calculate daily growth progress based on GDD (Growing Degree Days) from weather data file:
+
+```bash
+# Calculate growth progress for rice (Koshihikari variety)
+agrr progress --crop rice --variety Koshihikari --start-date 2024-05-01 --weather-file weather_data.json
+
+# With short options
+agrr progress -c tomato -v Aiko -s 2024-06-01 -w weather_data.csv
+
+# JSON output
+agrr progress -c rice -s 2024-05-01 -w weather_data.json --format json
+
+# Table output (default)
+agrr progress -c rice -s 2024-05-01 -w weather_data.json --format table
+```
+
+**Weather data file format (JSON):**
+```json
+{
+  "data": [
+    {
+      "time": "2024-05-01T00:00:00",
+      "temperature_2m_mean": 20.5,
+      "temperature_2m_max": 25.0,
+      "temperature_2m_min": 15.0
+    },
+    ...
+  ]
+}
+```
+
+**Weather data file format (CSV):**
+```csv
+time,temperature_2m_mean,temperature_2m_max,temperature_2m_min
+2024-05-01T00:00:00,20.5,25.0,15.0
+2024-05-02T00:00:00,21.0,26.0,16.0
+...
+```
+
+**Table output example:**
+```
+=== Growth Progress for Rice ===
+Variety: Koshihikari
+Start Date: 2024-05-01
+Total Records: 100
+
+Date         Stage                GDD       Progress  Complete
+-----------------------------------------------------------------
+2024-05-01   Vegetative           15.0       1.5%     No
+2024-05-02   Vegetative           30.0       3.0%     No
+2024-05-03   Vegetative           45.5       4.6%     No
+...
+2024-08-08   Maturity            1000.0     100.0%    Yes
+
+Final Progress: 100.0%
+Total GDD Accumulated: 1000.0 / 1000.0
+```
+
+**JSON output example:**
+```json
+{
+  "crop_name": "Rice",
+  "variety": "Koshihikari",
+  "start_date": "2024-05-01T00:00:00",
+  "progress_records": [
+    {
+      "date": "2024-05-01T00:00:00",
+      "cumulative_gdd": 15.0,
+      "total_required_gdd": 1000.0,
+      "growth_percentage": 1.5,
+      "stage_name": "Vegetative",
+      "is_complete": false
+    },
+    ...
+  ]
+}
 ```
 
 #### Output Formats
@@ -169,6 +252,7 @@ Date         Max Temp   Min Temp   Avg Temp   Precip   Sunshine
 
 - 🌤️ **Weather Data Fetching**: Get historical weather data from Open-Meteo API
 - 🔮 **Weather Prediction**: Predict future weather using Prophet time series model
+- 🌱 **Growth Progress Calculation**: Calculate daily growth progress based on GDD (Growing Degree Days)
 - 🏗️ **Clean Architecture**: Implemented following clean architecture principles
 - 📊 **Data Processing**: Convert and process weather data using pandas
 - 💻 **CLI Support**: Command-line interface with table and JSON output formats

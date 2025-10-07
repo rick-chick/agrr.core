@@ -14,15 +14,24 @@ class WeatherGatewayImpl(WeatherGateway):
 
     def __init__(
         self, 
-        weather_file_repository: WeatherFileRepository,
-        weather_api_repository: WeatherAPIOpenMeteoRepository
+        weather_file_repository: WeatherFileRepository = None,
+        weather_api_repository: WeatherAPIOpenMeteoRepository = None
     ):
         """Initialize weather gateway."""
         self.weather_file_repository = weather_file_repository
         self.weather_api_repository = weather_api_repository
 
     async def get(self, source: str) -> List[WeatherData]:
-        """Get weather data from source."""
+        """Get weather data from source.
+        
+        Args:
+            source: Data source identifier (e.g., file path)
+            
+        Returns:
+            List of WeatherData entities
+        """
+        if self.weather_file_repository is None:
+            raise ValueError("WeatherFileRepository not initialized")
         return await self.weather_file_repository.read_weather_data_from_file(source)
 
     async def create(self, weather_data: List[WeatherData], destination: str) -> None:

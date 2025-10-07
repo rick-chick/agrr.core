@@ -37,6 +37,7 @@ agrr --help
 agrr weather --location 35.6762,139.6503 --days 7
 agrr crop --query "トマト"
 agrr progress --crop rice --variety Koshihikari --start-date 2024-05-01 --weather-file weather_data.json
+agrr optimize-period optimize --crop rice --variety Koshihikari --start-dates "2024-04-01,2024-04-15,2024-05-01" --weather-file weather_data.json --daily-cost 5000
 ```
 
 ### Distribution
@@ -203,6 +204,88 @@ Total GDD Accumulated: 1000.0 / 1000.0
   ]
 }
 ```
+
+### 4. Optimal Growth Period Calculation
+
+Calculate the optimal growth start date that minimizes total costs based on daily fixed costs.
+
+#### Basic Usage
+
+```bash
+# Calculate optimal growth period with multiple candidate start dates
+agrr optimize-period optimize \
+  --crop rice \
+  --variety Koshihikari \
+  --start-dates "2024-04-01,2024-04-15,2024-05-01" \
+  --weather-file weather_data.json \
+  --daily-cost 5000
+
+# With different output format
+agrr optimize-period optimize \
+  --crop tomato \
+  --start-dates "2024-04-01,2024-04-15" \
+  --weather-file weather_data.json \
+  --daily-cost 3000 \
+  --format json
+```
+
+#### Table Output Example
+
+```
+=== Optimal Growth Period Analysis ===
+Crop: Rice (Koshihikari)
+Daily Fixed Cost: ¥5,000
+
+Optimal Solution:
+  Start Date: 2024-05-01
+  Completion Date: 2024-08-18
+  Growth Days: 109 days
+  Total Cost: ¥545,000
+
+All Candidates:
+Start Date      Completion      Days   Total Cost      Status
+------------------------------------------------------------------
+2024-04-01      2024-08-25       146   ¥730,000
+2024-04-15      2024-08-20       127   ¥635,000
+2024-05-01      2024-08-18       109   ¥545,000       ← OPTIMAL
+```
+
+#### JSON Output Example
+
+```json
+{
+  "crop_name": "Rice",
+  "variety": "Koshihikari",
+  "optimal_start_date": "2024-05-01T00:00:00",
+  "completion_date": "2024-08-18T00:00:00",
+  "growth_days": 109,
+  "total_cost": 545000.0,
+  "daily_fixed_cost": 5000.0,
+  "candidates": [
+    {
+      "start_date": "2024-04-01T00:00:00",
+      "completion_date": "2024-08-25T00:00:00",
+      "growth_days": 146,
+      "total_cost": 730000.0,
+      "is_optimal": false
+    },
+    {
+      "start_date": "2024-05-01T00:00:00",
+      "completion_date": "2024-08-18T00:00:00",
+      "growth_days": 109,
+      "total_cost": 545000.0,
+      "is_optimal": true
+    }
+  ]
+}
+```
+
+#### Features
+
+- **Cost Optimization**: Finds the start date with minimum total cost
+- **Multiple Candidates**: Compare multiple possible start dates
+- **Completion Detection**: Automatically detects when growth reaches 100%
+- **Fixed Cost Analysis**: Calculates total cost based on daily fixed costs (e.g., greenhouse management, labor)
 
 #### Output Formats
 

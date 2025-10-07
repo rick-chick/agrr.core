@@ -1,0 +1,129 @@
+{
+  "crop": {
+    "crop_id": "tomato",
+    "name": "Tomato",
+    "variety": null
+  },
+  "stages": [
+    {
+      "name": "Germination",
+      "order": 1,
+      "temperature": {
+        "base_temperature": 10.0,
+        "optimal_min": 25.0,
+        "optimal_max": 30.0,
+        "low_stress_threshold": 15.0,
+        "high_stress_threshold": 35.0,
+        "frost_threshold": 5.0,
+        "sterility_risk_threshold": null
+      },
+      "sunshine": {
+        "minimum_sunshine_hours": 4.0,
+        "target_sunshine_hours": 8.0
+      },
+      "thermal": {
+        "required_gdd": 100.0
+      }
+    },
+    {
+      "name": "Seedling",
+      "order": 2,
+      "temperature": {
+        "base_temperature": 10.0,
+        "optimal_min": 20.0,
+        "optimal_max": 25.0,
+        "low_stress_threshold": 8.0,
+        "high_stress_threshold": 30.0,
+        "frost_threshold": 0.0,
+        "sterility_risk_threshold": null
+      },
+      "sunshine": {
+        "minimum_sunshine_hours": 3.0,
+        "target_sunshine_hours": 6.0
+      },
+      "thermal": {
+        "required_gdd": 300.0
+      }
+    },
+    {
+      "name": "Vegetative",
+      "order": 3,
+      "temperature": {
+        "base_temperature": 10.0,
+        "optimal_min": 20.0,
+        "optimal_max": 25.0,
+        "low_stress_threshold": 10.0,
+        "high_stress_threshold": 30.0,
+        "frost_threshold": 0.0,
+        "sterility_risk_threshold": null
+      },
+      "sunshine": {
+        "minimum_sunshine_hours": 4.0,
+        "target_sunshine_hours": 8.0
+      },
+      "thermal": {
+        "required_gdd": 600.0
+      }
+    },
+    {
+      "name": "Flowering",
+      "order": 4,
+      "temperature": {
+        "base_temperature": 10.0,
+        "optimal_min": 18.0,
+        "optimal_max": 24.0,
+        "low_stress_threshold": 10.0,
+        "high_stress_threshold": 30.0,
+        "frost_threshold": 0.0,
+        "sterility_risk_threshold": 35.0
+      },
+      "sunshine": {
+        "minimum_sunshine_hours": 4.0,
+        "target_sunshine_hours": 8.0
+      },
+      "thermal": {
+        "required_gdd": 210.0
+      }
+    },
+    {
+      "name": "Fruit_Development",
+      "order": 5,
+      "temperature": {
+        "base_temperature": 10.0,
+        "optimal_min": 24.0,
+        "optimal_max": 26.0,
+        "low_stress_threshold": 13.0,
+        "high_stress_threshold": 30.0,
+        "frost_threshold": 0.0,
+        "sterility_risk_threshold": 35.0
+      },
+      "sunshine": {
+        "minimum_sunshine_hours": 5.0,
+        "target_sunshine_hours": 9.0
+      },
+      "thermal": {
+        "required_gdd": 1000.0
+      }
+    },
+    {
+      "name": "Ripening",
+      "order": 6,
+      "temperature": {
+        "base_temperature": 10.0,
+        "optimal_min": 18.0,
+        "optimal_max": 26.0,
+        "low_stress_threshold": 10.0,
+        "high_stress_threshold": 30.0,
+        "frost_threshold": 0.0,
+        "sterility_risk_threshold": 35.0
+      },
+      "sunshine": {
+        "minimum_sunshine_hours": 5.0,
+        "target_sunshine_hours": 9.0
+      },
+      "thermal": {
+        "required_gdd": 420.0
+      }
+    }
+  ]
+}

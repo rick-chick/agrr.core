@@ -12,4 +12,5 @@ statsmodels>=0.13.0
 
 # LLM (optional)
 openai>=1.50.0
+python-dotenv>=1.0.0
 

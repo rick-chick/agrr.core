@@ -146,3 +146,6 @@ coverage.xml
 # OS
 .DS_Store
 Thumbs.db
+
+# Sample weather data files
+sample_weather_data*.json

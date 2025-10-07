@@ -46,18 +46,69 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
         crop, stage_requirements = await self._infer_with_llm(crop_query)
         return CropRequirementAggregate(crop=crop, stage_requirements=stage_requirements)
 
-    async def _infer_with_llm(self, crop_query: str) -> Tuple[Crop, List[StageRequirement]]:
-        # Use the new 3-step flow if LLM client is available
+    async def extract_crop_variety(self, crop_query: str) -> Dict[str, Any]:
+        """Step 1: Extract crop name and variety from user input."""
         if self.llm_client is not None:
-            if hasattr(self.llm_client, 'execute_crop_requirement_flow'):
-                flow_result = await self.llm_client.execute_crop_requirement_flow(crop_query)
-                if flow_result.get("flow_status") == "completed":
-                    return self._parse_flow_result(flow_result)
-                else:
-                    raise RuntimeError(f"3-step flow failed: {flow_result.get('error', 'Unknown error')}")
+            if hasattr(self.llm_client, 'step1_crop_variety_selection'):
+                result = await self.llm_client.step1_crop_variety_selection(crop_query)
+                return result.get("data", {})
             else:
-                raise RuntimeError("LLM client does not support the required 3-step flow")
+                raise RuntimeError("LLM client does not support step1_crop_variety_selection")
+        
+        # Fallback
+        return {"crop_name": crop_query, "variety": "default"}
 
+    async def define_growth_stages(self, crop_name: str, variety: str) -> Dict[str, Any]:
+        """Step 2: Define growth stages for the crop variety."""
+        if self.llm_client is not None:
+            if hasattr(self.llm_client, 'step2_growth_stage_definition'):
+                result = await self.llm_client.step2_growth_stage_definition(crop_name, variety)
+                return result.get("data", {})
+            else:
+                raise RuntimeError("LLM client does not support step2_growth_stage_definition")
+        
+        # Fallback
+        return {
+            "crop_info": {"name": crop_name, "variety": variety},
+            "management_stages": [{"stage_name": "Default", "management_focus": "", "management_boundary": ""}]
+        }
+
+    async def research_stage_requirements(self, crop_name: str, variety: str, 
+                                         stage_name: str, stage_description: str) -> Dict[str, Any]:
+        """Step 3: Research variety-specific requirements for a specific stage."""
+        if self.llm_client is not None:
+            if hasattr(self.llm_client, 'step3_variety_specific_research'):
+                result = await self.llm_client.step3_variety_specific_research(
+                    crop_name, variety, stage_name, stage_description
+                )
+                return result.get("data", {})
+            else:
+                raise RuntimeError("LLM client does not support step3_variety_specific_research")
+        
+        # Fallback
+        return {
+            "stage_name": stage_name,
+            "temperature": {
+                "base_temperature": 10.0,
+                "optimal_min": 20.0,
+                "optimal_max": 26.0,
+                "low_stress_threshold": 12.0,
+                "high_stress_threshold": 32.0,
+                "frost_threshold": 0.0,
+                "sterility_risk_threshold": 35.0
+            },
+            "sunshine": {
+                "minimum_sunshine_hours": 3.0,
+                "target_sunshine_hours": 6.0
+            },
+            "thermal": {
+                "required_gdd": 400.0
+            }
+        }
+
+    async def _infer_with_llm(self, crop_query: str) -> Tuple[Crop, List[StageRequirement]]:
+        # Deprecated: This method is now replaced by the 3-step methods above
+        # Kept for backward compatibility
         # Stubbed thresholds: keep aligned with entity docstrings
         name = crop_query if crop_query else "Unknown"
         crop = Crop(crop_id=name.lower(), name=name)
@@ -99,7 +150,7 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
         - Step 3: name, temperature_requirements, sunlight_requirements, accumulated_temperature
         
         Args:
-            flow_result: Result from execute_crop_requirement_flow
+            flow_result: Result containing crop_info and stages data
             
         Returns:
             Tuple of Crop and list of StageRequirement entities

@@ -14,8 +14,8 @@
 
 **例**:
 ```
-入力: "トマト アイコ"
-出力: {"crop_name": "トマト", "variety": "アイコ"}
+入力: "作物名 品種名"
+出力: {"crop_name": "作物名", "variety": "品種名"}
 ```
 
 ### Step 2: 成長ステージ定義
@@ -28,8 +28,8 @@
 ```json
 {
   "crop_info": {
-    "name": "トマト",
-    "variety": "アイコ"
+    "name": "作物名",
+    "variety": "品種名"
   },
   "growth_stages": [
     {
@@ -61,23 +61,25 @@
   "stage_name": "播種～育苗完了",
   "order": 1,
   "temperature": {
-    "base_temperature": 10.0,
-    "optimal_min": 20.0,
-    "optimal_max": 25.0,
-    "low_stress_threshold": 8.0,
-    "high_stress_threshold": 30.0,
+    "base_temperature": 0.0,
+    "optimal_min": 0.0,
+    "optimal_max": 0.0,
+    "low_stress_threshold": 0.0,
+    "high_stress_threshold": 0.0,
     "frost_threshold": 0.0,
     "sterility_risk_threshold": null
   },
   "sunshine": {
-    "minimum_sunshine_hours": 3.0,
-    "target_sunshine_hours": 6.0
+    "minimum_sunshine_hours": 0.0,
+    "target_sunshine_hours": 0.0
   },
   "thermal": {
-    "required_gdd": 300.0
+    "required_gdd": 0.0
   }
 }
 ```
+
+**注意**: 上記の0.0は書式を示すプレースホルダーです。実際の値は学術的根拠に基づいて設定してください。
 
 ## データフロー
 

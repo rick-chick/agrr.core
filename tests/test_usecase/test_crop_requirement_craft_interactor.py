@@ -21,7 +21,7 @@ async def test_craft_success(mock_crop_requirement_gateway, mock_crop_requiremen
 
     assert result["success"] is True
     data = result["data"]
-    assert data["crop_id"] == "tomato"
+    assert data["crop_id"] == "tomato_default"
     assert data["crop_name"] == "Tomato"
     assert isinstance(data["stages"], list)
     assert data["stages"][0]["name"] == "Vegetative"
@@ -45,8 +45,8 @@ async def test_craft_empty_query_returns_error(mock_crop_requirement_gateway, mo
 @pytest.mark.asyncio
 @pytest.mark.unit
 async def test_craft_gateway_exception_returns_error(mock_crop_requirement_gateway, mock_crop_requirement_output_port):
-    # Configure gateway to raise
-    mock_crop_requirement_gateway.craft.side_effect = RuntimeError("llm error")
+    # Configure gateway to raise on any step
+    mock_crop_requirement_gateway.extract_crop_variety.side_effect = RuntimeError("llm error")
 
     interactor = CropRequirementCraftInteractor(
         gateway=mock_crop_requirement_gateway,

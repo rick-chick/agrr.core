@@ -2,10 +2,13 @@
 
 Implements the `LLMClient` contract using OpenAI API with proper environment variable management.
 
-Also implements the 3-step crop requirement research flow:
+Provides the 3-step crop requirement research methods:
 1. Step 1: Crop variety selection
 2. Step 2: Growth stage definition
 3. Step 3: Variety-specific requirement research and structuring
+
+Note: The orchestration of these steps is handled by the UseCase layer (Interactor),
+not by this Framework layer component.
 """
 
 import os
@@ -295,80 +298,3 @@ class FrameworkLLMClient(LLMClient):
         result = await self.struct(query, structure, instruction)
         debug_print(f"Step 3 result for {stage_name}: {result['data']}")
         return result
-
-    async def execute_crop_requirement_flow(self, crop_query: str) -> Dict[str, Any]:
-        """Execute the complete 3-step crop requirement research flow.
-        
-        Args:
-            crop_query: User input containing crop and variety information
-            
-        Returns:
-            Dict containing the complete crop requirement data
-        """
-        try:
-            # Step 1: Extract crop and variety
-            step1_result = await self.step1_crop_variety_selection(crop_query)
-            crop_info = step1_result["data"]
-            crop_name = crop_info.get("crop_name", "Unknown")
-            variety = crop_info.get("variety", "default")
-            
-            # Step 2: Define growth stages
-            step2_result = await self.step2_growth_stage_definition(crop_name, variety)
-            growth_stages_data = step2_result["data"]
-            # Handle various field names from Step 2
-            growth_stages = (
-                growth_stages_data.get("management_stages") or
-                growth_stages_data.get("管理ステージ構成") or
-                growth_stages_data.get("管理ステージ") or
-                growth_stages_data.get("growth_stages") or
-                []
-            )
-            debug_print(f"Growth stages from Step 2: {growth_stages}")
-            
-            # Step 3: Research requirements for each stage
-            stage_requirements = []
-            for i, stage in enumerate(growth_stages):
-                # Handle different response structures from Step 2
-                stage_name = (
-                    stage.get("stage_name") or
-                    stage.get("ステージ名") or
-                    stage.get("stage") or
-                    "Unknown Stage"
-                )
-                stage_description = (
-                    stage.get("description") or
-                    stage.get("management_focus") or
-                    stage.get("管理の重点") or
-                    stage.get("management_transition_point") or
-                    stage.get("管理転換点") or
-                    stage.get("start_condition") or
-                    ""
-                )
-                debug_print(f"Processing stage {i+1}: {stage_name} - {stage_description}")
-                
-                step3_result = await self.step3_variety_specific_research(
-                    crop_name, variety, stage_name, stage_description
-                )
-                stage_requirement = step3_result["data"]
-                stage_requirements.append(stage_requirement)
-            
-            # Combine results
-            return {
-                "crop_info": {
-                    "name": crop_name,
-                    "variety": variety
-                },
-                "stages": stage_requirements,
-                "flow_status": "completed"
-            }
-            
-        except Exception as e:
-            return {
-                "crop_info": {
-                    "name": "Unknown",
-                    "variety": "default"
-                },
-                "stages": [],
-                "flow_status": "failed",
-                "error": str(e)
-            }

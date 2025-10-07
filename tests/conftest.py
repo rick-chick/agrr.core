@@ -142,7 +142,7 @@ def mock_prediction_repository():
 @pytest.fixture
 def sample_crop_requirement_aggregate() -> CropRequirementAggregate:
     """Build a simple aggregate for testing crafting use case."""
-    crop = Crop(crop_id="tomato", name="Tomato")
+    crop = Crop(crop_id="tomato_default", name="Tomato", variety="default")
     stage = GrowthStage(name="Vegetative", order=1)
     temp = TemperatureProfile(
         base_temperature=10.0,
@@ -163,6 +163,44 @@ def sample_crop_requirement_aggregate() -> CropRequirementAggregate:
 def mock_crop_requirement_gateway(sample_crop_requirement_aggregate):
     gateway = AsyncMock()
     gateway.craft.return_value = sample_crop_requirement_aggregate
+    
+    # Mock 3-step methods
+    gateway.extract_crop_variety.return_value = {
+        "crop_name": "Tomato",
+        "variety": "default"
+    }
+    gateway.define_growth_stages.return_value = {
+        "crop_info": {
+            "name": "Tomato",
+            "variety": "default"
+        },
+        "management_stages": [
+            {
+                "stage_name": "Vegetative",
+                "management_focus": "Growth establishment",
+                "management_boundary": "First flower appearance"
+            }
+        ]
+    }
+    gateway.research_stage_requirements.return_value = {
+        "stage_name": "Vegetative",
+        "temperature": {
+            "base_temperature": 10.0,
+            "optimal_min": 20.0,
+            "optimal_max": 26.0,
+            "low_stress_threshold": 12.0,
+            "high_stress_threshold": 32.0,
+            "frost_threshold": 0.0,
+            "sterility_risk_threshold": 35.0
+        },
+        "sunshine": {
+            "minimum_sunshine_hours": 3.0,
+            "target_sunshine_hours": 6.0
+        },
+        "thermal": {
+            "required_gdd": 400.0
+        }
+    }
     return gateway
 
 

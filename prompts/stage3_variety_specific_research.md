@@ -16,13 +16,19 @@
 ### 調査項目
 以下の項目について品種の育成背景、遺伝的特性、栽培特性を学術論文や品種登録情報から詳細に調査してください：
 
+**【重要な調査方針】**
+- **生育開始温度（base_temperature）の決定**: 
+  - 複数の文献を必ず参照し、報告されている値の中で**最も低い値**を採用すること
+  - 「安全側」の高めの値ではなく、生理学的実証データを優先すること
+  - GDD計算の精度を高めるため、より厳密な下限値が必要
+
 #### 1. 温度要件
 - **最適温度範囲**: 昼間/夜間の最適温度
-- **基準温度（base_temperature）**: 生育が可能な最低限界温度
-  - 定義：この温度以下では成長が停止する
-  - GDD計算の基準として使用される
+- **生育開始温度（base_temperature）**: 生育が開始される最低温度（生育ゼロ点）
+  - 定義：この温度以下では生育が進まない（有効積算温度がゼロ）
+  - GDD（生育度日）計算の基準点として使用される
 - **低温ストレス閾値**: 生育阻害を受ける最低温度
-  - 定義：基準温度より高いが、生育に悪影響が出始める温度
+  - 定義：生育開始温度より高いが、生育に悪影響が出始める温度
 - **高温ストレス閾値**: 生育阻害を受ける最高温度
   - 定義：生育に悪影響が出始める高温側の温度
 - **霜害リスク温度**: 霜害を受ける危険温度
@@ -35,9 +41,10 @@
 - **目標日照時間**: 最適な生育のための目標日照時間（時間）
 
 #### 3. 積算温度
-- **必要積算温度（GDD）**: 日平均気温から基準温度を引いた値の累積（°C・日）
-  - 計算式：GDD = Σ(日平均気温 - 基準温度)
+- **必要積算温度（GDD）**: 日平均気温から生育開始温度を引いた値の累積（°C・日）
+  - 計算式：GDD = Σ(日平均気温 - base_temperature)
   - 説明：各ステージに必要な熱エネルギーの総量
+  - 注意：日平均気温がbase_temperature以下の場合は0とする
 
 ### 出力形式（JSON）
 以下のJSON形式で出力してください：
@@ -46,35 +53,37 @@
 {
   "stage_name": "{ステージ名}",
   "temperature": {
-    "base_temperature": {基準温度},
-    "optimal_min": {最適最低温度},
-    "optimal_max": {最適最高温度},
-    "low_stress_threshold": {低温ストレス閾値},
-    "high_stress_threshold": {高温ストレス閾値},
-    "frost_threshold": {霜害リスク閾値},
-    "sterility_risk_threshold": {不稔リスク閾値（該当する場合のみ）}
+    "base_temperature": 0.0,
+    "optimal_min": 0.0,
+    "optimal_max": 0.0,
+    "low_stress_threshold": 0.0,
+    "high_stress_threshold": 0.0,
+    "frost_threshold": 0.0,
+    "sterility_risk_threshold": null
   },
   "sunshine": {
-    "minimum_sunshine_hours": {最低日照時間},
-    "target_sunshine_hours": {目標日照時間}
+    "minimum_sunshine_hours": 0.0,
+    "target_sunshine_hours": 0.0
   },
   "thermal": {
-    "required_gdd": {必要積算温度}
+    "required_gdd": 0.0
   }
 }
 ```
 
+**注意**: 上記の0.0は書式を示すためのプレースホルダーです。実際には、以下の手順で値を設定してください：
+1. 学術論文や品種登録情報から各項目の実際の値を調査
+2. 品種の遺伝的特性や栽培特性に基づいて適切な数値を設定
+3. 不明な項目はnullを使用
+
 ### 日照時間設定指針（一般的な野菜作物の基準）
 - **高要求（果菜類）**: minimum=4h, target=8h
-  - 対象：トマト、キュウリ、ナス、ピーマン等
   - 根拠：光合成による果実肥大に多くの光エネルギーが必要
   
 - **中要求（葉菜類）**: minimum=3h, target=6h
-  - 対象：レタス、キャベツ、ホウレンソウ等
   - 根拠：葉の成長には中程度の光エネルギーが必要
   
 - **低要求（根菜類）**: minimum=2h, target=4h
-  - 対象：ニンジン、ダイコン、ゴボウ等
   - 根拠：地下部の成長が主で、光要求は比較的低い
 
 ### 注意事項
@@ -82,6 +91,9 @@
 - 品種の育成背景、遺伝的特性、栽培特性を学術論文や品種登録情報から詳細に調査
 - 地域や栽培方式は考慮しない
 - 学術的な根拠に基づいて推定値を設定
+- **生育開始温度（base_temperature）**: 複数の文献値がある場合は、最も低い値を採用すること
+  - 理由：GDD計算では最も厳密な下限値を使用する必要があるため
+  - 複数の報告値がある場合は、最小値を選択すること
 - 開花・結実期のステージでは高温障害の閾値を必ず設定し、その他の特殊要件も明記
 - 積算温度は品種の遺伝的特性として調査
 - 有効なJSON形式で出力し、数値は小数点以下1桁まで
@@ -91,80 +103,82 @@
 
 ## 使用例
 
-### 例1: トマト アイコ - 播種～育苗完了ステージ
+### 例1: 作物A 品種X - 第1ステージ
 ```
-【播種～育苗完了ステージの詳細要件調査・構造化】
+【第1ステージの詳細要件調査・構造化】
 
-対象: トマト アイコ
+対象: 作物A 品種X
 
 以下のステージについて詳細要件を調査し、JSON形式で出力してください：
 
 ### 対象ステージ
-- **ステージ名**: 播種～育苗完了
-- **特徴**: 発芽から本葉5-6枚まで、定植適期
+- **ステージ名**: 第1ステージ
+- **特徴**: （ステージの特徴）
 
 [上記テンプレート内容]
 ```
 
-### 例2: レタス サニーレタス - 播種～収穫適期ステージ
+### 例2: 作物B 品種Y - 第2ステージ
 ```
-【播種～収穫適期ステージの詳細要件調査・構造化】
+【第2ステージの詳細要件調査・構造化】
 
-対象: レタス サニーレタス
+対象: 作物B 品種Y
 
 以下のステージについて詳細要件を調査し、JSON形式で出力してください：
 
 ### 対象ステージ
-- **ステージ名**: 播種～収穫適期
-- **特徴**: 発芽から葉数増加、収穫適期まで
+- **ステージ名**: 第2ステージ
+- **特徴**: （ステージの特徴）
 
 [上記テンプレート内容]
 ```
 
 ## 期待される出力例
 
-### 例1: トマト アイコ - 播種～育苗完了ステージ
+### 例1: 第1ステージ
 ```json
 {
-  "stage_name": "播種～育苗完了",
+  "stage_name": "第1ステージ",
   "temperature": {
-    "base_temperature": 10.0,
-    "optimal_min": 20.0,
-    "optimal_max": 25.0,
-    "low_stress_threshold": 8.0,
-    "high_stress_threshold": 30.0,
+    "base_temperature": 0.0,
+    "optimal_min": 0.0,
+    "optimal_max": 0.0,
+    "low_stress_threshold": 0.0,
+    "high_stress_threshold": 0.0,
     "frost_threshold": 0.0,
     "sterility_risk_threshold": null
   },
   "sunshine": {
-    "minimum_sunshine_hours": 4.0,
-    "target_sunshine_hours": 8.0
+    "minimum_sunshine_hours": 0.0,
+    "target_sunshine_hours": 0.0
   },
   "thermal": {
-    "required_gdd": 300.0
+    "required_gdd": 0.0
   }
 }
 ```
 
-### 例2: レタス サニーレタス - 播種～収穫適期ステージ
+### 例2: 第2ステージ
 ```json
 {
-  "stage_name": "播種～収穫適期",
+  "stage_name": "第2ステージ",
   "temperature": {
-    "base_temperature": 5.0,
-    "optimal_min": 18.0,
-    "optimal_max": 22.0,
+    "base_temperature": 0.0,
+    "optimal_min": 0.0,
+    "optimal_max": 0.0,
     "low_stress_threshold": 0.0,
-    "high_stress_threshold": 25.0,
-    "frost_threshold": -2.0,
+    "high_stress_threshold": 0.0,
+    "frost_threshold": 0.0,
     "sterility_risk_threshold": null
   },
   "sunshine": {
-    "minimum_sunshine_hours": 3.0,
-    "target_sunshine_hours": 6.0
+    "minimum_sunshine_hours": 0.0,
+    "target_sunshine_hours": 0.0
   },
   "thermal": {
-    "required_gdd": 600.0
+    "required_gdd": 0.0
   }
 }
 ```
+
+**重要**: 上記の0.0はJSON形式の例示であり、実際の値ではありません。各項目について学術論文や品種登録情報から実際の値を調査し、適切な数値を設定してください。

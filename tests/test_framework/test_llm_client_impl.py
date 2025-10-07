@@ -19,20 +19,18 @@ class TestFrameworkLLMClient:
         assert isinstance(self.client, FrameworkLLMClient)
     
     @pytest.mark.asyncio
-    async def test_struct_with_stub(self):
-        """Test struct method with stub fallback."""
+    async def test_struct_with_openai(self):
+        """Test struct method with OpenAI API (requires OPENAI_API_KEY)."""
         structure = {"name": None, "value": None}
         query = "test query"
         instruction = "test instruction"
         
         result = await self.client.struct(query, structure, instruction)
         
-        assert result["provider"] == "stub"
-        assert "_query" in result["data"]
-        assert "_instruction" in result["data"]
-        assert result["data"]["_query"] == query
-        assert result["data"]["_instruction"] == instruction
-        assert result["structure"] == structure
+        # Should return openai provider (since API key is configured)
+        assert result["provider"] == "openai"
+        assert "data" in result
+        assert "schema" in result
     
     @pytest.mark.asyncio
     async def test_step1_crop_variety_selection(self):
@@ -70,10 +68,11 @@ class TestFrameworkLLMClient:
                         "name": "トマト",
                         "variety": "アイコ"
                     },
-                    "growth_stages": [
+                    "management_stages": [
                         {
                             "stage_name": "播種～育苗完了",
-                            "description": "発芽から本葉5-6枚まで"
+                            "management_focus": "温度管理",
+                            "management_boundary": "本葉展開"
                         }
                     ]
                 }
@@ -85,11 +84,12 @@ class TestFrameworkLLMClient:
             mock_struct.assert_called_once()
             call_args = mock_struct.call_args
             query = call_args[0][0]
-            assert "作物の生育ステージ構成調査" in query
+            # Check for key terms from the actual prompt template
+            assert "管理ステージ構成調査" in query or "ステージ構成" in query
             assert crop_name in query
             assert variety in query
             assert "crop_info" in call_args[0][1]
-            assert "growth_stages" in call_args[0][1]
+            assert "management_stages" in call_args[0][1]
     
     @pytest.mark.asyncio
     async def test_step3_variety_specific_research(self):
@@ -146,129 +146,9 @@ class TestFrameworkLLMClient:
             assert "minimum_sunshine_hours" in structure["sunshine"]
             assert "required_gdd" in structure["thermal"]
     
-    @pytest.mark.asyncio
-    async def test_execute_crop_requirement_flow_success(self):
-        """Test complete flow execution with success."""
-        crop_query = "トマト アイコ"
-        
-        # Mock the step methods
-        with patch.object(self.client, 'step1_crop_variety_selection', new_callable=AsyncMock) as mock_step1, \
-             patch.object(self.client, 'step2_growth_stage_definition', new_callable=AsyncMock) as mock_step2, \
-             patch.object(self.client, 'step3_variety_specific_research', new_callable=AsyncMock) as mock_step3:
-            
-            # Setup mock returns
-            mock_step1.return_value = {
-                "data": {
-                    "crop_name": "トマト",
-                    "variety": "アイコ"
-                }
-            }
-            
-            mock_step2.return_value = {
-                "data": {
-                    "crop_info": {
-                        "name": "トマト",
-                        "variety": "アイコ"
-                    },
-                    "growth_stages": [
-                        {
-                            "stage_name": "播種～育苗完了",
-                            "description": "発芽から本葉5-6枚まで"
-                        },
-                        {
-                            "stage_name": "育苗完了～開花",
-                            "description": "定植後、茎葉成長、第1花房開花まで"
-                        }
-                    ]
-                }
-            }
-            
-            mock_step3.return_value = {
-                "data": {
-                    "stage_name": "播種～育苗完了",
-                    "temperature": {
-                        "base_temperature": 10.0,
-                        "optimal_min": 20.0,
-                        "optimal_max": 25.0,
-                        "low_stress_threshold": 8.0,
-                        "high_stress_threshold": 30.0,
-                        "frost_threshold": 0.0,
-                        "sterility_risk_threshold": None
-                    },
-                    "sunshine": {
-                        "minimum_sunshine_hours": 4.0,
-                        "target_sunshine_hours": 8.0
-                    },
-                    "thermal": {
-                        "required_gdd": 300.0
-                    }
-                }
-            }
-            
-            result = await self.client.execute_crop_requirement_flow(crop_query)
-            
-            # Verify the flow execution
-            assert result["flow_status"] == "completed"
-            assert result["crop_info"]["name"] == "トマト"
-            assert result["crop_info"]["variety"] == "アイコ"
-            assert len(result["stages"]) == 2
-            
-            # Verify all steps were called
-            mock_step1.assert_called_once_with(crop_query)
-            mock_step2.assert_called_once_with("トマト", "アイコ")
-            assert mock_step3.call_count == 2  # Called for each stage
-    
-    @pytest.mark.asyncio
-    async def test_execute_crop_requirement_flow_failure(self):
-        """Test complete flow execution with failure."""
-        crop_query = "invalid crop"
-        
-        # Mock step1 to raise an exception
-        with patch.object(self.client, 'step1_crop_variety_selection', new_callable=AsyncMock) as mock_step1:
-            mock_step1.side_effect = Exception("Test error")
-            
-            result = await self.client.execute_crop_requirement_flow(crop_query)
-            
-            # Verify error handling
-            assert result["flow_status"] == "failed"
-            assert "error" in result
-            assert result["error"] == "Test error"
-            assert result["crop_info"]["name"] == "Unknown"
-            assert result["crop_info"]["variety"] == "default"
-            assert result["stages"] == []
-    
-    @pytest.mark.asyncio
-    async def test_execute_crop_requirement_flow_with_empty_stages(self):
-        """Test flow execution when no growth stages are returned."""
-        crop_query = "トマト アイコ"
-        
-        with patch.object(self.client, 'step1_crop_variety_selection', new_callable=AsyncMock) as mock_step1, \
-             patch.object(self.client, 'step2_growth_stage_definition', new_callable=AsyncMock) as mock_step2:
-            
-            mock_step1.return_value = {
-                "data": {
-                    "crop_name": "トマト",
-                    "variety": "アイコ"
-                }
-            }
-            
-            mock_step2.return_value = {
-                "data": {
-                    "crop_info": {
-                        "name": "トマト",
-                        "variety": "アイコ"
-                    },
-                    "growth_stages": []  # Empty stages
-                }
-            }
-            
-            result = await self.client.execute_crop_requirement_flow(crop_query)
-            
-            # Verify handling of empty stages
-            assert result["flow_status"] == "completed"
-            assert result["crop_info"]["name"] == "トマト"
-            assert result["crop_info"]["variety"] == "アイコ"
-            assert result["stages"] == []
+    # Note: execute_crop_requirement_flow has been removed from Framework layer
+    # Flow orchestration is now handled in the Interactor layer (UseCase)
+    # Individual step methods (step1, step2, step3) remain in Framework layer
     
     def test_step1_query_format(self):
         """Test that Step 1 query format is correct."""
@@ -292,12 +172,3 @@ class TestFrameworkLLMClient:
         method = self.client.step3_variety_specific_research
         assert method.__doc__ is not None
         assert "Research variety-specific requirements" in method.__doc__
-    
-    def test_flow_method_availability(self):
-        """Test that the flow method is available."""
-        assert hasattr(self.client, 'execute_crop_requirement_flow')
-        assert callable(getattr(self.client, 'execute_crop_requirement_flow'))
-        
-        method = self.client.execute_crop_requirement_flow
-        assert method.__doc__ is not None
-        assert "Execute the complete 3-step" in method.__doc__

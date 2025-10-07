@@ -38,18 +38,45 @@ agrr weather --location 35.6762,139.6503 --days 7
 agrr crop --query "トマト"
 ```
 
-**Note**: For true standalone deployment, use Docker:
+### Distribution
 
-```bash
-# Build Docker image
-docker build -t agrr .
+**配布方法 (Distribution Methods):**
 
-# Run agrr in container
-docker run --rm agrr weather --location 35.6762,139.6503 --days 7
-docker run --rm agrr crop --query "トマト"
-```
+1. **Wheelパッケージ配布** (推奨)
+   ```bash
+   # ビルド
+   python3 -m build
+   
+   # 配布
+   # dist/agrr_core-0.1.0-py3-none-any.whl をユーザーに配布
+   
+   # インストール
+   pip install agrr_core-0.1.0-py3-none-any.whl
+   agrr --help
+   ```
 
-For local development, pip install is recommended as it works consistently across platforms.
+2. **PyPI公開** (最も簡単)
+   ```bash
+   # PyPIにアップロード後
+   pip install agrr-core
+   agrr --help
+   ```
+
+3. **Docker** (真のスタンドアロン)
+   ```bash
+   # Build Docker image
+   docker build -t agrr .
+   
+   # Run
+   docker run --rm agrr weather --location 35.6762,139.6503 --days 7
+   docker run --rm agrr crop --query "トマト"
+   ```
+
+4. **GitHubから直接インストール**
+   ```bash
+   pip install git+https://github.com/yourusername/agrr.core.git
+   agrr --help
+   ```
 
 ## Quick Start
 

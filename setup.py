@@ -39,4 +39,9 @@ setup(
             "mypy",
         ],
     },
+    entry_points={
+        "console_scripts": [
+            "agrr=agrr_core.cli:main",
+        ],
+    },
 )

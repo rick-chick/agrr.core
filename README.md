@@ -24,6 +24,23 @@ cd agrr.core
 pip install -e ".[dev]"
 ```
 
+### Building standalone executable
+
+Build a standalone executable binary using zipapp:
+
+```bash
+# Install the package first
+pip install -e .
+
+# Build the executable
+python3 build_binary.py
+
+# The executable will be created at dist/agrr
+./dist/agrr --help
+```
+
+The built binary is a compressed Python zipapp that can be distributed and run on any system with Python 3.8+ and the required dependencies installed.
+
 ## Quick Start
 
 ### CLI Usage
@@ -31,17 +48,25 @@ pip install -e ".[dev]"
 Get weather data from the command line:
 
 ```bash
-# Get weather for Tokyo for the last 7 days (table format)
+# Using the agrr command (after pip install -e .)
+agrr weather --location 35.6762,139.6503 --days 7
+agrr crop --query "トマト"
+agrr predict-file --input weather.json --output predictions.json
+
+# Or using the standalone binary
+./dist/agrr weather --location 35.6762,139.6503 --days 7
+
+# Or using Python module
 python -m agrr_core.cli weather --location 35.6762,139.6503 --days 7
 
 # Get weather for specific date range
-python -m agrr_core.cli weather --location 35.6762,139.6503 --start-date 2024-01-01 --end-date 2024-01-07
+agrr weather --location 35.6762,139.6503 --start-date 2024-01-01 --end-date 2024-01-07
 
 # Get weather for New York with JSON output
-python -m agrr_core.cli weather --location 40.7128,-74.0060 --days 5 --json
+agrr weather --location 40.7128,-74.0060 --days 5 --json
 
 # Short options
-python -m agrr_core.cli weather -l 35.6762,139.6503 -d 7 --json
+agrr weather -l 35.6762,139.6503 -d 7 --json
 ```
 
 #### Output Formats

@@ -30,3 +30,12 @@ class WeatherGateway(ABC):
     ) -> WeatherDataWithLocationDTO:
         """Get weather data by location and date range."""
         pass
+    
+    @abstractmethod
+    async def get_forecast(
+        self,
+        latitude: float,
+        longitude: float
+    ) -> WeatherDataWithLocationDTO:
+        """Get 16-day weather forecast starting from tomorrow."""
+        pass

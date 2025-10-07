@@ -48,6 +48,13 @@ class AgrrCoreContainer:
             base_url = self.config.get('open_meteo_base_url', 'https://archive-api.open-meteo.com/v1/archive')
             self._instances['http_service_impl'] = HttpClient(base_url=base_url)
         return self._instances['http_service_impl']
+    
+    def get_forecast_http_service_impl(self) -> HttpClient:
+        """Get forecast HTTP service implementation instance."""
+        if 'forecast_http_service_impl' not in self._instances:
+            base_url = self.config.get('open_meteo_forecast_base_url', 'https://api.open-meteo.com/v1/forecast')
+            self._instances['forecast_http_service_impl'] = HttpClient(base_url=base_url)
+        return self._instances['forecast_http_service_impl']
 
     def get_weather_repository(self) -> WeatherGateway:
         """Get weather repository instance."""
@@ -118,7 +125,11 @@ class AgrrCoreContainer:
         """Get weather API repository instance."""
         if 'weather_api_repository' not in self._instances:
             http_service_impl = self.get_http_service_impl()
-            self._instances['weather_api_repository'] = WeatherAPIOpenMeteoRepository(http_service_impl)
+            forecast_http_service_impl = self.get_forecast_http_service_impl()
+            self._instances['weather_api_repository'] = WeatherAPIOpenMeteoRepository(
+                http_service_impl, 
+                forecast_http_service_impl
+            )
         return self._instances['weather_api_repository']
     
     def get_weather_gateway(self) -> WeatherGateway:

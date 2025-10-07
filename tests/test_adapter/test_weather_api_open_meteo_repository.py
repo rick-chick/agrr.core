@@ -181,3 +181,61 @@ class TestWeatherAPIOpenMeteoRepository:
         
         # Test with empty data
         assert self.repository._safe_get([], 0) is None
+    
+    @pytest.mark.asyncio
+    async def test_get_forecast_success(self):
+        """Test successful 16-day forecast retrieval."""
+        # Mock forecast response (tomorrow to 16 days ahead)
+        from datetime import date, timedelta
+        
+        tomorrow = date.today() + timedelta(days=1)
+        forecast_dates = [(tomorrow + timedelta(days=i)).isoformat() for i in range(16)]
+        
+        mock_response = {
+            "latitude": 35.6762,
+            "longitude": 139.6911,
+            "elevation": 37.0,
+            "timezone": "Asia/Tokyo",
+            "daily": {
+                "time": forecast_dates,
+                "temperature_2m_max": [25.0 + i * 0.5 for i in range(16)],
+                "temperature_2m_min": [15.0 + i * 0.3 for i in range(16)],
+                "temperature_2m_mean": [20.0 + i * 0.4 for i in range(16)],
+                "precipitation_sum": [5.0 - i * 0.2 for i in range(16)],
+                "sunshine_duration": [28800.0 + i * 100 for i in range(16)],
+                "wind_speed_10m_max": [5.5 + i * 0.1 for i in range(16)],
+                "weather_code": [i % 4 for i in range(16)]
+            }
+        }
+        self.mock_http_service.get.return_value = mock_response
+        
+        # Test
+        result = await self.repository.get_forecast(35.7, 139.7)
+        
+        # Assertions
+        assert len(result.weather_data_list) == 16
+        assert result.location.latitude == 35.6762
+        assert result.location.longitude == 139.6911
+        assert result.location.elevation == 37.0
+        assert result.location.timezone == "Asia/Tokyo"
+        
+        # Verify first day
+        first_day = result.weather_data_list[0]
+        assert first_day.temperature_2m_max == 25.0
+        assert first_day.temperature_2m_min == 15.0
+        
+        # Verify API call parameters
+        self.mock_http_service.get.assert_called_once()
+        call_args = self.mock_http_service.get.call_args[0][1]
+        assert call_args["latitude"] == 35.7
+        assert call_args["longitude"] == 139.7
+        assert call_args["forecast_days"] == 16
+    
+    @pytest.mark.asyncio
+    async def test_get_forecast_api_error(self):
+        """Test forecast API error handling."""
+        from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
+        self.mock_http_service.get.side_effect = WeatherAPIError("Forecast API Error")
+        
+        with pytest.raises(WeatherAPIError, match="Forecast API Error"):
+            await self.repository.get_forecast(35.7, 139.7)

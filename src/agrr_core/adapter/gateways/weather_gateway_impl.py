@@ -40,3 +40,11 @@ class WeatherGatewayImpl(WeatherGateway):
         return await self.weather_api_repository.get_by_location_and_date_range(
             latitude, longitude, start_date, end_date
         )
+    
+    async def get_forecast(
+        self,
+        latitude: float,
+        longitude: float
+    ) -> WeatherDataWithLocationDTO:
+        """Get 16-day weather forecast starting from tomorrow."""
+        return await self.weather_api_repository.get_forecast(latitude, longitude)

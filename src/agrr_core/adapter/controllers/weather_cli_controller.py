@@ -8,7 +8,9 @@ from datetime import datetime, timedelta
 from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
+from agrr_core.usecase.interactors.weather_get_forecast_interactor import WeatherGetForecastInteractor
 from agrr_core.usecase.dto.weather_data_request_dto import WeatherDataRequestDTO
+from agrr_core.usecase.dto.weather_forecast_request_dto import WeatherForecastRequestDTO
 
 
 class WeatherCliFetchController:
@@ -24,6 +26,10 @@ class WeatherCliFetchController:
         self.cli_presenter = cli_presenter
         # Interactorをインスタンス化
         self.weather_interactor = FetchWeatherDataInteractor(
+            weather_gateway=self.weather_gateway,
+            weather_presenter_output_port=self.cli_presenter
+        )
+        self.forecast_interactor = WeatherGetForecastInteractor(
             weather_gateway=self.weather_gateway,
             weather_presenter_output_port=self.cli_presenter
         )
@@ -79,6 +85,23 @@ Examples:
         
         # Output format
         weather_parser.add_argument(
+            '--json',
+            action='store_true',
+            help='Output in JSON format'
+        )
+        
+        # Forecast command (16-day forecast from tomorrow)
+        forecast_parser = subparsers.add_parser('forecast', help='Get 16-day weather forecast starting from tomorrow')
+        
+        # Location argument (required)
+        forecast_parser.add_argument(
+            '--location', '-l',
+            required=True,
+            help='Location coordinates as "latitude,longitude" (e.g., "35.6762,139.6503" for Tokyo)'
+        )
+        
+        # Output format
+        forecast_parser.add_argument(
             '--json',
             action='store_true',
             help='Output in JSON format'
@@ -259,6 +282,114 @@ Examples:
             json_output = getattr(args, 'json', False)
             self.cli_presenter.display_error(f"Unexpected error: {e}", "INTERNAL_ERROR", json_output=json_output)
     
+    async def handle_forecast_command(self, args) -> None:
+        """Handle forecast command execution."""
+        try:
+            # Parse location
+            latitude, longitude = self.parse_location(args.location)
+            
+            # Create request DTO
+            request = WeatherForecastRequestDTO(
+                latitude=latitude,
+                longitude=longitude
+            )
+            
+            # Execute interactor
+            json_output = getattr(args, 'json', False)
+            
+            # Execute interactor
+            result = await self.forecast_interactor.execute(request)
+            
+            # Display results based on interactor response
+            if result.get('success', False):
+                data = result.get('data', {})
+                weather_data_list = data.get('data', [])
+                total_count = data.get('total_count', 0)
+                location_data = data.get('location')
+                
+                if total_count > 0:
+                    # Create WeatherDataListResponseDTO for display
+                    from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataListResponseDTO
+                    from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
+                    from agrr_core.usecase.dto.location_response_dto import LocationResponseDTO
+                    
+                    # Convert dict data to DTOs
+                    dto_list = []
+                    for item in weather_data_list:
+                        if isinstance(item, dict):
+                            dto = WeatherDataResponseDTO(
+                                time=item.get('time', ''),
+                                temperature_2m_max=item.get('temperature_2m_max'),
+                                temperature_2m_min=item.get('temperature_2m_min'),
+                                temperature_2m_mean=item.get('temperature_2m_mean'),
+                                precipitation_sum=item.get('precipitation_sum'),
+                                sunshine_duration=item.get('sunshine_duration'),
+                                sunshine_hours=item.get('sunshine_hours'),
+                                wind_speed_10m=item.get('wind_speed_10m'),
+                                weather_code=item.get('weather_code')
+                            )
+                            dto_list.append(dto)
+                        else:
+                            dto_list.append(item)
+                    
+                    # Convert location data to DTO if available
+                    location_dto = None
+                    if location_data:
+                        location_dto = LocationResponseDTO(
+                            latitude=location_data.get('latitude'),
+                            longitude=location_data.get('longitude'),
+                            elevation=location_data.get('elevation'),
+                            timezone=location_data.get('timezone')
+                        )
+                    
+                    weather_list_dto = WeatherDataListResponseDTO(
+                        data=dto_list,
+                        total_count=total_count,
+                        location=location_dto
+                    )
+                    
+                    # Display in appropriate format
+                    if json_output:
+                        self.cli_presenter.display_weather_data_json(weather_list_dto)
+                    else:
+                        self.cli_presenter.display_weather_data(weather_list_dto)
+                else:
+                    if json_output:
+                        # Empty result as JSON
+                        from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataListResponseDTO
+                        from agrr_core.usecase.dto.location_response_dto import LocationResponseDTO
+                        
+                        # Include location even for empty results
+                        location_dto = None
+                        if location_data:
+                            location_dto = LocationResponseDTO(
+                                latitude=location_data.get('latitude'),
+                                longitude=location_data.get('longitude'),
+                                elevation=location_data.get('elevation'),
+                                timezone=location_data.get('timezone')
+                            )
+                        
+                        empty_dto = WeatherDataListResponseDTO(
+                            data=[], 
+                            total_count=0,
+                            location=location_dto
+                        )
+                        self.cli_presenter.display_weather_data_json(empty_dto)
+                    else:
+                        self.cli_presenter.display_success_message("No forecast data available for the specified location.")
+            else:
+                error_info = result.get('error', {})
+                error_message = error_info.get('message', 'Unknown error occurred')
+                error_code = error_info.get('code', 'UNKNOWN_ERROR')
+                self.cli_presenter.display_error(error_message, error_code, json_output=json_output)
+                
+        except ValueError as e:
+            json_output = getattr(args, 'json', False)
+            self.cli_presenter.display_error(str(e), "VALIDATION_ERROR", json_output=json_output)
+        except Exception as e:
+            json_output = getattr(args, 'json', False)
+            self.cli_presenter.display_error(f"Unexpected error: {e}", "INTERNAL_ERROR", json_output=json_output)
+    
     async def run(self, args: Optional[list] = None) -> None:
         """Run CLI application with given arguments."""
         parser = self.create_argument_parser()
@@ -270,5 +401,7 @@ Examples:
         
         if parsed_args.command == 'weather':
             await self.handle_weather_command(parsed_args)
+        elif parsed_args.command == 'forecast':
+            await self.handle_forecast_command(parsed_args)
         else:
             parser.print_help()

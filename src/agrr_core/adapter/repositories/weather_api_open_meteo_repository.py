@@ -13,8 +13,9 @@ from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWith
 class WeatherAPIOpenMeteoRepository:
     """Repository for fetching weather data from Open-Meteo API."""
     
-    def __init__(self, http_service: HttpServiceInterface):
+    def __init__(self, http_service: HttpServiceInterface, forecast_http_service: HttpServiceInterface = None):
         self.http_service = http_service
+        self.forecast_http_service = forecast_http_service or http_service
     
     
     async def get_by_location_and_date_range(
@@ -90,3 +91,73 @@ class WeatherAPIOpenMeteoRepository:
             return data_list[index] if data_list and index < len(data_list) else None
         except (IndexError, TypeError):
             return None
+    
+    
+    async def get_forecast(
+        self,
+        latitude: float,
+        longitude: float
+    ) -> WeatherDataWithLocationDTO:
+        """Get 16-day weather forecast starting from tomorrow."""
+        try:
+            from datetime import date, timedelta
+            
+            # Calculate tomorrow and 16 days ahead
+            tomorrow = date.today() + timedelta(days=1)
+            end_date = tomorrow + timedelta(days=15)  # 16 days total including tomorrow
+            
+            params = {
+                "latitude": latitude,
+                "longitude": longitude,
+                "forecast_days": 16,
+                "daily": ",".join([
+                    "temperature_2m_max",
+                    "temperature_2m_min", 
+                    "temperature_2m_mean",
+                    "precipitation_sum",
+                    "sunshine_duration",
+                    "wind_speed_10m_max",
+                    "weather_code"
+                ]),
+                "timezone": "Asia/Tokyo"
+            }
+            
+            data = await self.forecast_http_service.get("", params)
+            
+            if "daily" not in data:
+                raise WeatherDataNotFoundError("No daily weather data found in API response")
+            
+            # Extract location information from API response
+            location = Location(
+                latitude=data.get("latitude", latitude),
+                longitude=data.get("longitude", longitude),
+                elevation=data.get("elevation"),
+                timezone=data.get("timezone")
+            )
+            
+            # Convert API response to WeatherData entities
+            weather_data_list = []
+            daily_data = data["daily"]
+            
+            for i, time_str in enumerate(daily_data["time"]):
+                weather_data = WeatherData(
+                    time=datetime.fromisoformat(time_str),
+                    temperature_2m_max=self._safe_get(daily_data["temperature_2m_max"], i),
+                    temperature_2m_min=self._safe_get(daily_data["temperature_2m_min"], i),
+                    temperature_2m_mean=self._safe_get(daily_data["temperature_2m_mean"], i),
+                    precipitation_sum=self._safe_get(daily_data["precipitation_sum"], i),
+                    sunshine_duration=self._safe_get(daily_data["sunshine_duration"], i),
+                    wind_speed_10m=self._safe_get(daily_data["wind_speed_10m_max"], i),
+                    weather_code=self._safe_get(daily_data["weather_code"], i),
+                )
+                weather_data_list.append(weather_data)
+            
+            return WeatherDataWithLocationDTO(
+                weather_data_list=weather_data_list,
+                location=location
+            )
+            
+        except WeatherAPIError:
+            raise
+        except (KeyError, ValueError) as e:
+            raise WeatherAPIError(f"Invalid API response format: {e}")

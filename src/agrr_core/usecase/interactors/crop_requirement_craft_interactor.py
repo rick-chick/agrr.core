@@ -53,6 +53,7 @@ class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
             
             # Handle various field names from Step 2
             growth_stages = (
+                growth_stages_data.get("growth_periods") or
                 growth_stages_data.get("management_stages") or
                 growth_stages_data.get("管理ステージ構成") or
                 growth_stages_data.get("管理ステージ") or
@@ -67,12 +68,14 @@ class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
             for i, stage in enumerate(growth_stages):
                 # Handle different response structures from Step 2
                 stage_name = (
+                    stage.get("period_name") or
                     stage.get("stage_name") or
                     stage.get("ステージ名") or
                     stage.get("stage") or
                     "Unknown Stage"
                 )
                 stage_description = (
+                    stage.get("period_description") or
                     stage.get("description") or
                     stage.get("management_focus") or
                     stage.get("管理の重点") or

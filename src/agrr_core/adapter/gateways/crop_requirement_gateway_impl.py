@@ -43,7 +43,57 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
 
     async def craft(self, request: CropRequirementCraftRequestDTO) -> CropRequirementAggregate:
         crop_query = (request.crop_query or "").strip()
-        crop, stage_requirements = await self._infer_with_llm(crop_query)
+        
+        # Step 1: Extract crop and variety
+        step1_result = await self.extract_crop_variety(crop_query)
+        crop_name = step1_result.get("crop_name", crop_query)
+        variety = step1_result.get("variety", "default")
+        
+        # Step 2: Define growth periods
+        step2_result = await self.define_growth_stages(crop_name, variety)
+        growth_periods = step2_result.get("growth_periods", [])
+        
+        # Step 3: Research requirements for each period
+        stage_requirements = []
+        for period in growth_periods:
+            period_name = period.get("period_name", "Unknown")
+            period_desc = period.get("period_description", "")
+            order = period.get("order", len(stage_requirements) + 1)
+            
+            step3_result = await self.research_stage_requirements(
+                crop_name, variety, period_name, period_desc
+            )
+            
+            # Parse step3 result into entities
+            temp_data = step3_result.get("temperature", {})
+            temp = TemperatureProfile(
+                base_temperature=temp_data.get("base_temperature", 10.0),
+                optimal_min=temp_data.get("optimal_min", 20.0),
+                optimal_max=temp_data.get("optimal_max", 26.0),
+                low_stress_threshold=temp_data.get("low_stress_threshold", 12.0),
+                high_stress_threshold=temp_data.get("high_stress_threshold", 32.0),
+                frost_threshold=temp_data.get("frost_threshold", 0.0),
+                sterility_risk_threshold=temp_data.get("sterility_risk_threshold"),
+            )
+            
+            sun_data = step3_result.get("sunshine", {})
+            sun = SunshineProfile(
+                minimum_sunshine_hours=sun_data.get("minimum_sunshine_hours", 3.0),
+                target_sunshine_hours=sun_data.get("target_sunshine_hours", 6.0)
+            )
+            
+            thermal_data = step3_result.get("thermal", {})
+            thermal = ThermalRequirement(
+                required_gdd=thermal_data.get("required_gdd", 400.0)
+            )
+            
+            stage = GrowthStage(name=period_name, order=order)
+            sr = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
+            stage_requirements.append(sr)
+        
+        # Create crop entity
+        crop = Crop(crop_id=f"{crop_name}_{variety}", name=crop_name)
+        
         return CropRequirementAggregate(crop=crop, stage_requirements=stage_requirements)
 
     async def extract_crop_variety(self, crop_query: str) -> Dict[str, Any]:
@@ -70,7 +120,7 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
         # Fallback
         return {
             "crop_info": {"name": crop_name, "variety": variety},
-            "management_stages": [{"stage_name": "Default", "management_focus": "", "management_boundary": ""}]
+            "growth_periods": [{"period_name": "Default", "order": 1, "period_description": ""}]
         }
 
     async def research_stage_requirements(self, crop_name: str, variety: str, 
@@ -87,7 +137,6 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
         
         # Fallback
         return {
-            "stage_name": stage_name,
             "temperature": {
                 "base_temperature": 10.0,
                 "optimal_min": 20.0,

@@ -232,11 +232,11 @@ class FrameworkLLMClient(LLMClient):
                 "name": None,
                 "variety": None
             },
-            "management_stages": [
+            "growth_periods": [
                 {
-                    "stage_name": None,
-                    "management_focus": None,
-                    "management_boundary": None
+                    "period_name": None,
+                    "order": None,
+                    "period_description": None
                 }
             ]
         }
@@ -265,18 +265,17 @@ class FrameworkLLMClient(LLMClient):
         query_template = extract_prompt_section(prompt_content, "プロンプトテンプレート")
         
         # Replace placeholders
-        query = query_template.replace("{作物名}", crop_name).replace("{品種名}", variety).replace("{ステージ名}", stage_name).replace("{具体的な特徴}", stage_description)
+        query = query_template.replace("{作物名}", crop_name).replace("{品種名}", variety).replace("{期間名}", stage_name).replace("{具体的な特徴}", stage_description)
         
         # Extract instruction sections
         investigation_items = extract_prompt_section(prompt_content, "調査項目")
-        sunshine_guide = extract_prompt_section(prompt_content, "日照時間設定指針")
+        sunshine_guide = extract_prompt_section(prompt_content, "日照時間設定の調査方針")
         notes = extract_prompt_section(prompt_content, "注意事項")
         
         # Combine instruction sections
         instruction = f"{investigation_items}\n\n{sunshine_guide}\n\n{notes}"
         
         structure = {
-            "stage_name": None,
             "temperature": {
                 "base_temperature": None,
                 "optimal_min": None,

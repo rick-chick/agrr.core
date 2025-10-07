@@ -24,22 +24,32 @@ cd agrr.core
 pip install -e ".[dev]"
 ```
 
-### Building standalone executable
+### Using as a command-line tool
 
-Build a standalone executable binary using zipapp:
+After installation, `agrr` command is available system-wide:
 
 ```bash
-# Install the package first
+# Install the package
 pip install -e .
 
-# Build the executable
-python3 build_binary.py
-
-# The executable will be created at dist/agrr
-./dist/agrr --help
+# Now you can use 'agrr' command anywhere
+agrr --help
+agrr weather --location 35.6762,139.6503 --days 7
+agrr crop --query "トマト"
 ```
 
-The built binary is a compressed Python zipapp that can be distributed and run on any system with Python 3.8+ and the required dependencies installed.
+**Note**: For true standalone deployment, use Docker:
+
+```bash
+# Build Docker image
+docker build -t agrr .
+
+# Run agrr in container
+docker run --rm agrr weather --location 35.6762,139.6503 --days 7
+docker run --rm agrr crop --query "トマト"
+```
+
+For local development, pip install is recommended as it works consistently across platforms.
 
 ## Quick Start
 

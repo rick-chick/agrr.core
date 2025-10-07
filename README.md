@@ -42,7 +42,20 @@ agrr crop --query "トマト"
 
 **配布方法 (Distribution Methods):**
 
-1. **Wheelパッケージ配布** (推奨)
+1. **ネイティブバイナリ配布** ⭐️ Python環境不要
+   ```bash
+   # ビルド
+   ./build_standalone.sh
+   
+   # 配布
+   # dist/agrr (113MB) をユーザーに配布
+   
+   # 実行（Python不要）
+   chmod +x agrr
+   ./agrr --help
+   ```
+
+2. **Wheelパッケージ配布** - Python環境が必要
    ```bash
    # ビルド
    python3 -m build
@@ -55,14 +68,14 @@ agrr crop --query "トマト"
    agrr --help
    ```
 
-2. **PyPI公開** (最も簡単)
+3. **PyPI公開** (最も簡単)
    ```bash
    # PyPIにアップロード後
    pip install agrr-core
    agrr --help
    ```
 
-3. **Docker** (真のスタンドアロン)
+4. **Docker** (コンテナ配布)
    ```bash
    # Build Docker image
    docker build -t agrr .
@@ -72,11 +85,13 @@ agrr crop --query "トマト"
    docker run --rm agrr crop --query "トマト"
    ```
 
-4. **GitHubから直接インストール**
+5. **GitHubから直接インストール**
    ```bash
    pip install git+https://github.com/yourusername/agrr.core.git
    agrr --help
    ```
+
+詳細は[DISTRIBUTION.md](DISTRIBUTION.md)を参照してください。
 
 ## Quick Start
 

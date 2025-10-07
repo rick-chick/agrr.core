@@ -27,25 +27,40 @@ pip install agrr_core-0.1.0-py3-none-any.whl
 agrr --help
 ```
 
-## 2. ネイティブバイナリ（PyInstaller）⚠️ **環境依存が強い**
+## 2. ネイティブバイナリ（PyInstaller）✅ **動作確認済み**
 
-### 制約
-- ❌ libpython-dev が必要（システムパッケージ）
-- ❌ ビルド環境とターゲット環境のOS/アーキテクチャが一致必要
-- ❌ ファイルサイズが大きい（100MB+）
-- ❌ C拡張（numpy, pandas, scipy）のバンドルが複雑
+### メリット
+- ✅ Python環境不要で実行可能
+- ✅ numpy、pandas、scipyなどのC拡張を完全バンドル
+- ✅ 単一ファイルで配布可能
 
-### ビルド方法（Linux）
+### デメリット
+- ⚠️ ファイルサイズが大きい（113MB）
+- ⚠️ ビルド環境とターゲット環境のOS/アーキテクチャが一致必要
+- ⚠️ Python 3.8が必要（3.12はlibpython-devが必要）
+
+### ビルド方法（Linux/WSL）
 ```bash
-# システムライブラリをインストール（要sudo）
-sudo apt install libpython3.12-dev python3.12-dev
-
-# ビルド
+# Python 3.8が必要
 ./build_standalone.sh
+
+# 出力
+# dist/agrr (113MB) - 真のネイティブELFバイナリ
 ```
 
-### 問題
-WSL環境ではlibpythonのインストールに制限がある場合があります。
+### 動作確認
+```bash
+./dist/agrr --help
+./dist/agrr crop --query "トマト"
+```
+
+### 配布
+```bash
+# バイナリファイルをそのまま配布
+# ユーザーはPython環境不要で実行可能
+chmod +x agrr
+./agrr --help
+```
 
 ## 3. Docker 🐳 **真のスタンドアロン**
 

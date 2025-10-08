@@ -37,11 +37,17 @@ from agrr_core.usecase.dto.growth_progress_calculate_request_dto import (
 )
 from agrr_core.usecase.gateways.crop_requirement_gateway import CropRequirementGateway
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
+from agrr_core.usecase.gateways.optimization_result_gateway import (
+    OptimizationResultGateway,
+)
 from agrr_core.usecase.interactors.growth_progress_calculate_interactor import (
     GrowthProgressCalculateInteractor,
 )
 from agrr_core.usecase.ports.input.growth_period_optimize_input_port import (
     GrowthPeriodOptimizeInputPort,
+)
+from agrr_core.entity.entities.optimization_intermediate_result_entity import (
+    OptimizationIntermediateResult,
 )
 
 
@@ -52,9 +58,11 @@ class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
         self,
         crop_requirement_gateway: CropRequirementGateway,
         weather_gateway: WeatherGateway,
+        optimization_result_gateway: OptimizationResultGateway = None,
     ):
         self.crop_requirement_gateway = crop_requirement_gateway
         self.weather_gateway = weather_gateway
+        self.optimization_result_gateway = optimization_result_gateway
         
         # Use existing growth progress calculator
         self.growth_progress_interactor = GrowthProgressCalculateInteractor(
@@ -180,6 +188,7 @@ class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
         window_end_idx = 0
         
         results = []
+        gdd_per_candidate = []  # Track accumulated GDD for each candidate
         
         # Find first completion
         while window_end_idx < len(sorted_dates) and accumulated_gdd < total_required_gdd:
@@ -206,6 +215,7 @@ class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
                     total_cost=total_cost,
                     is_optimal=False
                 ))
+                gdd_per_candidate.append(accumulated_gdd)
             else:
                 # Exceeds deadline
                 results.append(CandidateResultDTO(
@@ -215,6 +225,7 @@ class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
                     total_cost=None,
                     is_optimal=False
                 ))
+                gdd_per_candidate.append(accumulated_gdd)
         
         # Slide window: move start date forward one day at a time
         while current_start < request.evaluation_period_end:
@@ -249,12 +260,32 @@ class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
                         total_cost=total_cost,
                         is_optimal=False
                     ))
+                    gdd_per_candidate.append(accumulated_gdd)
                 else:
                     # Completion exceeds deadline - stop here
                     break
             else:
                 # Cannot complete within available weather data
                 break
+        
+        # Save intermediate results if gateway is available
+        if self.optimization_result_gateway:
+            intermediate_results = []
+            for idx, candidate in enumerate(results):
+                intermediate_result = OptimizationIntermediateResult(
+                    start_date=candidate.start_date,
+                    completion_date=candidate.completion_date,
+                    growth_days=candidate.growth_days,
+                    accumulated_gdd=gdd_per_candidate[idx] if idx < len(gdd_per_candidate) else 0.0,
+                    total_cost=candidate.total_cost,
+                    is_optimal=candidate.is_optimal,
+                    base_temperature=base_temp,
+                )
+                intermediate_results.append(intermediate_result)
+            
+            # Generate optimization ID from request parameters
+            optimization_id = f"{request.crop_id}_{request.variety or 'default'}_{request.evaluation_period_start.date()}_{request.evaluation_period_end.date()}"
+            await self.optimization_result_gateway.save(optimization_id, intermediate_results)
         
         return results
 

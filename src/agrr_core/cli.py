@@ -7,6 +7,7 @@ from typing import Optional
 from agrr_core.framework.agrr_core_container import WeatherCliContainer
 from agrr_core.adapter.gateways.crop_requirement_gateway_impl import CropRequirementGatewayImpl
 from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
+from agrr_core.adapter.gateways.optimization_result_gateway_impl import OptimizationResultGatewayImpl
 from agrr_core.adapter.presenters.crop_requirement_craft_presenter import CropRequirementCraftPresenter
 from agrr_core.adapter.controllers.crop_cli_craft_controller import CropCliCraftController
 from agrr_core.adapter.controllers.growth_progress_cli_controller import GrowthProgressCliController
@@ -14,6 +15,7 @@ from agrr_core.adapter.controllers.growth_period_optimize_cli_controller import 
 from agrr_core.framework.services.llm_client_impl import FrameworkLLMClient
 from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
 from agrr_core.framework.repositories.file_repository import FileRepository
+from agrr_core.framework.repositories.inmemory_optimization_result_repository import InMemoryOptimizationResultRepository
 
 
 def main() -> None:
@@ -74,6 +76,12 @@ def main() -> None:
                 file_repository=file_repository
             )
             
+            # Setup optimization result storage (in-memory)
+            optimization_result_repository = InMemoryOptimizationResultRepository()
+            optimization_result_gateway = OptimizationResultGatewayImpl(
+                repository=optimization_result_repository
+            )
+            
             # Setup presenter
             from agrr_core.adapter.presenters.growth_period_optimize_cli_presenter import GrowthPeriodOptimizeCliPresenter
             presenter = GrowthPeriodOptimizeCliPresenter(output_format="table")
@@ -82,6 +90,7 @@ def main() -> None:
                 crop_requirement_gateway=crop_requirement_gateway,
                 weather_gateway=weather_gateway,
                 presenter=presenter,
+                optimization_result_gateway=optimization_result_gateway,
             )
             asyncio.run(controller.run(args[1:]))
         else:

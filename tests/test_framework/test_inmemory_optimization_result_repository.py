@@ -9,6 +9,9 @@ from agrr_core.framework.repositories.inmemory_optimization_result_repository im
 from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
+from agrr_core.entity.entities.optimization_schedule_entity import (
+    OptimizationSchedule,
+)
 
 
 @pytest.mark.asyncio
@@ -36,9 +39,12 @@ class TestInMemoryOptimizationResultRepository:
         
         retrieved = await repository.get(optimization_id)
         assert retrieved is not None
-        assert len(retrieved) == 1
-        assert retrieved[0].start_date == datetime(2024, 4, 1)
-        assert retrieved[0].accumulated_gdd == 1500.0
+        assert isinstance(retrieved, OptimizationSchedule)
+        assert retrieved.schedule_id == optimization_id
+        assert len(retrieved.selected_results) == 1
+        assert retrieved.selected_results[0].start_date == datetime(2024, 4, 1)
+        assert retrieved.total_cost is None  # No total_cost for intermediate results
+        assert retrieved.selected_results[0].accumulated_gdd == 1500.0
 
     async def test_get_nonexistent(self):
         """Test retrieving non-existent optimization results."""
@@ -80,8 +86,16 @@ class TestInMemoryOptimizationResultRepository:
         
         all_results = await repository.get_all()
         assert len(all_results) == 2
-        assert ("opt_1", results1) in all_results
-        assert ("opt_2", results2) in all_results
+        assert all(isinstance(r, OptimizationSchedule) for r in all_results)
+        
+        # Check that both IDs exist
+        schedule_ids = [r.schedule_id for r in all_results]
+        assert "opt_1" in schedule_ids
+        assert "opt_2" in schedule_ids
+        
+        # Check results content
+        opt1_result = next(r for r in all_results if r.schedule_id == "opt_1")
+        assert opt1_result.selected_results == results1
 
     async def test_delete_existing(self):
         """Test deleting existing optimization results."""
@@ -184,5 +198,6 @@ class TestInMemoryOptimizationResultRepository:
         await repository.save(optimization_id, results2)
         
         retrieved = await repository.get(optimization_id)
-        assert retrieved == results2
+        assert retrieved is not None
+        assert retrieved.selected_results == results2
 

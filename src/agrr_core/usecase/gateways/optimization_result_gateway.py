@@ -12,6 +12,9 @@ from datetime import datetime
 from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
+from agrr_core.entity.entities.optimization_schedule_entity import (
+    OptimizationSchedule,
+)
 
 
 class OptimizationResultGateway(ABC):
@@ -21,13 +24,15 @@ class OptimizationResultGateway(ABC):
     async def save(
         self, 
         optimization_id: str,
-        results: List[OptimizationIntermediateResult]
+        results: List[OptimizationIntermediateResult],
+        total_cost: Optional[float] = None
     ) -> None:
         """Save optimization intermediate results.
         
         Args:
             optimization_id: Unique identifier for this optimization run
             results: List of intermediate results to save
+            total_cost: Optional total cost metadata (used for schedules)
         """
         pass
 
@@ -35,23 +40,27 @@ class OptimizationResultGateway(ABC):
     async def get(
         self, 
         optimization_id: str
-    ) -> Optional[List[OptimizationIntermediateResult]]:
-        """Retrieve optimization intermediate results by ID.
+    ) -> Optional[OptimizationSchedule]:
+        """Retrieve optimization results by ID.
+        
+        Returns a unified OptimizationSchedule entity that can represent:
+        - Intermediate results (total_cost = None)
+        - Scheduled results (total_cost = float)
         
         Args:
             optimization_id: Unique identifier for the optimization run
             
         Returns:
-            List of intermediate results, or None if not found
+            OptimizationSchedule entity, or None if not found
         """
         pass
 
     @abstractmethod
-    async def get_all(self) -> List[Tuple[str, List[OptimizationIntermediateResult]]]:
+    async def get_all(self) -> List[OptimizationSchedule]:
         """Retrieve all stored optimization results.
         
         Returns:
-            List of tuples (optimization_id, results)
+            List of OptimizationSchedule entities (includes both intermediate results and schedules)
         """
         pass
 
@@ -69,6 +78,14 @@ class OptimizationResultGateway(ABC):
 
     @abstractmethod
     async def clear(self) -> None:
-        """Clear all stored optimization results."""
+        """Clear all stored optimization results (both intermediate results and schedules)."""
+        pass
+
+    @abstractmethod
+    async def clear_schedules(self) -> None:
+        """Clear only scheduled results (where total_cost is not None).
+        
+        Preserves intermediate optimization results without total_cost.
+        """
         pass
 

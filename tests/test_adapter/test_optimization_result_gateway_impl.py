@@ -10,6 +10,9 @@ from agrr_core.adapter.gateways.optimization_result_gateway_impl import (
 from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
+from agrr_core.entity.entities.optimization_schedule_entity import (
+    OptimizationSchedule,
+)
 
 
 @pytest.mark.asyncio
@@ -36,54 +39,67 @@ class TestOptimizationResultGatewayImpl:
         optimization_id = "test_opt"
         await gateway.save(optimization_id, results)
         
-        mock_repository.save.assert_called_once_with(optimization_id, results)
+        mock_repository.save.assert_called_once_with(optimization_id, results, None)
 
     async def test_get(self):
         """Test retrieving optimization results through gateway."""
         mock_repository = AsyncMock()
-        expected_results = [
-            OptimizationIntermediateResult(
-                start_date=datetime(2024, 4, 1),
-                completion_date=datetime(2024, 7, 15),
-                growth_days=106,
-                accumulated_gdd=1500.0,
-                total_cost=530000.0,
-                is_optimal=True,
-                base_temperature=10.0,
-            )
-        ]
-        mock_repository.get.return_value = expected_results
+        expected_schedule = OptimizationSchedule(
+            schedule_id="test_opt",
+            selected_results=[
+                OptimizationIntermediateResult(
+                    start_date=datetime(2024, 4, 1),
+                    completion_date=datetime(2024, 7, 15),
+                    growth_days=106,
+                    accumulated_gdd=1500.0,
+                    total_cost=530000.0,
+                    is_optimal=True,
+                    base_temperature=10.0,
+                )
+            ],
+            total_cost=None
+        )
+        mock_repository.get.return_value = expected_schedule
         
         gateway = OptimizationResultGatewayImpl(mock_repository)
         
         optimization_id = "test_opt"
-        results = await gateway.get(optimization_id)
+        result = await gateway.get(optimization_id)
         
         mock_repository.get.assert_called_once_with(optimization_id)
-        assert results == expected_results
+        assert result == expected_schedule
+        assert isinstance(result, OptimizationSchedule)
 
     async def test_get_all(self):
         """Test retrieving all optimization results through gateway."""
         mock_repository = AsyncMock()
         expected_all = [
-            ("opt_1", [OptimizationIntermediateResult(
-                start_date=datetime(2024, 4, 1),
-                completion_date=datetime(2024, 7, 15),
-                growth_days=106,
-                accumulated_gdd=1500.0,
-                total_cost=530000.0,
-                is_optimal=True,
-                base_temperature=10.0,
-            )]),
-            ("opt_2", [OptimizationIntermediateResult(
-                start_date=datetime(2024, 5, 1),
-                completion_date=datetime(2024, 8, 15),
-                growth_days=107,
-                accumulated_gdd=1600.0,
-                total_cost=535000.0,
-                is_optimal=False,
-                base_temperature=10.0,
-            )])
+            OptimizationSchedule(
+                schedule_id="opt_1",
+                selected_results=[OptimizationIntermediateResult(
+                    start_date=datetime(2024, 4, 1),
+                    completion_date=datetime(2024, 7, 15),
+                    growth_days=106,
+                    accumulated_gdd=1500.0,
+                    total_cost=530000.0,
+                    is_optimal=True,
+                    base_temperature=10.0,
+                )],
+                total_cost=None
+            ),
+            OptimizationSchedule(
+                schedule_id="opt_2",
+                selected_results=[OptimizationIntermediateResult(
+                    start_date=datetime(2024, 5, 1),
+                    completion_date=datetime(2024, 8, 15),
+                    growth_days=107,
+                    accumulated_gdd=1600.0,
+                    total_cost=535000.0,
+                    is_optimal=False,
+                    base_temperature=10.0,
+                )],
+                total_cost=1600.0
+            )
         ]
         mock_repository.get_all.return_value = expected_all
         
@@ -93,6 +109,7 @@ class TestOptimizationResultGatewayImpl:
         
         mock_repository.get_all.assert_called_once()
         assert all_results == expected_all
+        assert all(isinstance(r, OptimizationSchedule) for r in all_results)
 
     async def test_delete(self):
         """Test deleting optimization results through gateway."""

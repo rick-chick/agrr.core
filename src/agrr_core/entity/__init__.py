@@ -16,6 +16,8 @@ from .entities.stage_requirement_entity import StageRequirement
 from .entities.assessment_result_entity import AssessmentResult
 from .entities.crop_entity import Crop
 from .entities.crop_requirement_aggregate_entity import CropRequirementAggregate
+from .entities.optimization_intermediate_result_entity import OptimizationIntermediateResult
+from .entities.optimization_schedule_entity import OptimizationSchedule
 from .exceptions.weather_error import WeatherError
 from .exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 from .exceptions.invalid_location_error import InvalidLocationError
@@ -40,6 +42,8 @@ __all__ = [
     "AssessmentResult",
     "Crop",
     "CropRequirementAggregate",
+    "OptimizationIntermediateResult",
+    "OptimizationSchedule",
     "WeatherError",
     "WeatherDataNotFoundError",
     "InvalidLocationError",

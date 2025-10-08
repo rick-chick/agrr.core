@@ -1,0 +1,170 @@
+"""Test for optimization schedule gateway implementation.
+
+Tests the gateway implementation that bridges UseCase and Framework layers
+for schedule storage operations.
+"""
+
+import pytest
+from datetime import datetime
+
+from agrr_core.entity.entities.optimization_intermediate_result_entity import (
+    OptimizationIntermediateResult,
+)
+from agrr_core.entity.entities.optimization_schedule_entity import (
+    OptimizationSchedule,
+)
+from agrr_core.adapter.gateways.optimization_result_gateway_impl import (
+    OptimizationResultGatewayImpl,
+)
+from agrr_core.framework.repositories.inmemory_optimization_result_repository import (
+    InMemoryOptimizationResultRepository,
+)
+
+
+class TestOptimizationScheduleGatewayImpl:
+    """Test suite for optimization schedule gateway implementation."""
+
+    @pytest.mark.asyncio
+    async def test_save_and_get_schedule(self):
+        """Test saving and retrieving a schedule through gateway."""
+        repository = InMemoryOptimizationResultRepository()
+        gateway = OptimizationResultGatewayImpl(repository)
+        
+        # Create test results
+        results = [
+            OptimizationIntermediateResult(
+                start_date=datetime(2025, 1, 1),
+                completion_date=datetime(2025, 1, 10),
+                growth_days=10,
+                accumulated_gdd=100.0,
+                total_cost=1000.0,
+                is_optimal=False,
+                base_temperature=10.0,
+            ),
+            OptimizationIntermediateResult(
+                start_date=datetime(2025, 1, 11),
+                completion_date=datetime(2025, 1, 20),
+                growth_days=10,
+                accumulated_gdd=100.0,
+                total_cost=800.0,
+                is_optimal=False,
+                base_temperature=10.0,
+            ),
+        ]
+        
+        # Save schedule through gateway using save()
+        await gateway.save("schedule_001", results, 1800.0)
+        
+        # Retrieve schedule through gateway using get()
+        retrieved = await gateway.get("schedule_001")
+        
+        assert retrieved is not None
+        assert isinstance(retrieved, OptimizationSchedule)
+        assert retrieved.schedule_id == "schedule_001"
+        assert len(retrieved.selected_results) == 2
+        assert retrieved.total_cost == 1800.0
+
+    @pytest.mark.asyncio
+    async def test_get_all_schedules(self):
+        """Test retrieving all schedules through gateway."""
+        repository = InMemoryOptimizationResultRepository()
+        gateway = OptimizationResultGatewayImpl(repository)
+        
+        # Create test results
+        results1 = [
+            OptimizationIntermediateResult(
+                start_date=datetime(2025, 1, 1),
+                completion_date=datetime(2025, 1, 10),
+                growth_days=10,
+                accumulated_gdd=100.0,
+                total_cost=1000.0,
+                is_optimal=False,
+                base_temperature=10.0,
+            ),
+        ]
+        
+        results2 = [
+            OptimizationIntermediateResult(
+                start_date=datetime(2025, 2, 1),
+                completion_date=datetime(2025, 2, 10),
+                growth_days=10,
+                accumulated_gdd=100.0,
+                total_cost=900.0,
+                is_optimal=False,
+                base_temperature=10.0,
+            ),
+        ]
+        
+        # Save schedules using save()
+        await gateway.save("schedule_001", results1, 1000.0)
+        await gateway.save("schedule_002", results2, 900.0)
+        
+        # Retrieve all (includes schedules and intermediate results)
+        all_results = await gateway.get_all()
+        all_schedules = [r for r in all_results if r.is_schedule]
+        
+        assert len(all_schedules) == 2
+        assert all(isinstance(s, OptimizationSchedule) for s in all_schedules)
+        schedule_ids = [s.schedule_id for s in all_schedules]
+        assert "schedule_001" in schedule_ids
+        assert "schedule_002" in schedule_ids
+
+    @pytest.mark.asyncio
+    async def test_delete_schedule(self):
+        """Test deleting a schedule through gateway."""
+        repository = InMemoryOptimizationResultRepository()
+        gateway = OptimizationResultGatewayImpl(repository)
+        
+        # Create and save test result
+        results = [
+            OptimizationIntermediateResult(
+                start_date=datetime(2025, 1, 1),
+                completion_date=datetime(2025, 1, 10),
+                growth_days=10,
+                accumulated_gdd=100.0,
+                total_cost=1000.0,
+                is_optimal=False,
+                base_temperature=10.0,
+            ),
+        ]
+        
+        await gateway.save("schedule_001", results, 1000.0)
+        
+        # Delete schedule using delete()
+        deleted = await gateway.delete("schedule_001")
+        
+        assert deleted is True
+        
+        # Verify it's gone
+        retrieved = await gateway.get("schedule_001")
+        assert retrieved is None
+
+    @pytest.mark.asyncio
+    async def test_clear_schedules(self):
+        """Test clearing all schedules through gateway."""
+        repository = InMemoryOptimizationResultRepository()
+        gateway = OptimizationResultGatewayImpl(repository)
+        
+        # Create and save test results
+        results = [
+            OptimizationIntermediateResult(
+                start_date=datetime(2025, 1, 1),
+                completion_date=datetime(2025, 1, 10),
+                growth_days=10,
+                accumulated_gdd=100.0,
+                total_cost=1000.0,
+                is_optimal=False,
+                base_temperature=10.0,
+            ),
+        ]
+        
+        await gateway.save("schedule_001", results, 1000.0)
+        await gateway.save("schedule_002", results, 1000.0)
+        
+        # Clear all schedules
+        await gateway.clear_schedules()
+        
+        # Verify they're all gone
+        all_results = await gateway.get_all()
+        all_schedules = [r for r in all_results if r.is_schedule]
+        assert len(all_schedules) == 0

@@ -74,7 +74,8 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
         subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
         optimize_parser = subparsers.add_parser(
-            "optimize", help="Calculate optimal growth period"
+            "optimize", 
+            help="Find optimal start date that minimizes cost while meeting completion deadline"
         )
         optimize_parser.add_argument(
             "--crop",
@@ -88,16 +89,28 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
             help='Variety/cultivar (e.g., "Koshihikari")',
         )
         optimize_parser.add_argument(
-            "--start-dates",
+            "--evaluation-start",
             "-s",
             required=True,
-            help='Comma-separated candidate start dates in YYYY-MM-DD format (e.g., "2024-04-01,2024-04-15,2024-05-01")',
+            help='Earliest possible start date in YYYY-MM-DD format (e.g., "2024-04-01")',
+        )
+        optimize_parser.add_argument(
+            "--evaluation-end",
+            "-e",
+            required=True,
+            help='Completion deadline in YYYY-MM-DD format - cultivation must finish by this date (e.g., "2024-06-30")',
         )
         optimize_parser.add_argument(
             "--weather-file",
             "-w",
             required=True,
             help='Path to weather data file (JSON or CSV)',
+        )
+        optimize_parser.add_argument(
+            "--crop-requirement-file",
+            "-r",
+            required=False,
+            help='Path to crop requirement file (JSON). If not provided, will use LLM to generate requirements.',
         )
         optimize_parser.add_argument(
             "--daily-cost",
@@ -116,34 +129,37 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
 
         return parser
 
-    def _parse_start_dates(self, dates_str: str) -> List[datetime]:
-        """Parse comma-separated date strings into datetime objects.
+    def _parse_date(self, date_str: str) -> datetime:
+        """Parse date string into datetime object.
         
         Args:
-            dates_str: Comma-separated dates (e.g., "2024-04-01,2024-04-15")
+            date_str: Date string (e.g., "2024-04-01")
             
         Returns:
-            List of datetime objects
+            datetime object
             
         Raises:
             ValueError: If date format is invalid
         """
-        dates = []
-        for date_str in dates_str.split(','):
-            date_str = date_str.strip()
-            try:
-                dates.append(datetime.strptime(date_str, "%Y-%m-%d"))
-            except ValueError:
-                raise ValueError(
-                    f'Invalid date format: "{date_str}". Use YYYY-MM-DD (e.g., "2024-04-01")'
-                )
-        return dates
+        try:
+            return datetime.strptime(date_str, "%Y-%m-%d")
+        except ValueError:
+            raise ValueError(
+                f'Invalid date format: "{date_str}". Use YYYY-MM-DD (e.g., "2024-04-01")'
+            )
 
     async def handle_optimize_command(self, args) -> None:
-        """Handle the optimize calculation command."""
-        # Parse start dates
+        """Handle the optimize calculation command.
+        
+        Finds the optimal cultivation start date that:
+        - Starts on or after evaluation_start
+        - Completes by evaluation_end (deadline)
+        - Minimizes total cost
+        """
+        # Parse evaluation period dates
         try:
-            candidate_start_dates = self._parse_start_dates(args.start_dates)
+            evaluation_start = self._parse_date(args.evaluation_start)
+            evaluation_end = self._parse_date(args.evaluation_end)
         except ValueError as e:
             print(f'Error: {str(e)}')
             return
@@ -155,9 +171,11 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
         request = OptimalGrowthPeriodRequestDTO(
             crop_id=args.crop,
             variety=args.variety,
-            candidate_start_dates=candidate_start_dates,
+            evaluation_period_start=evaluation_start,
+            evaluation_period_end=evaluation_end,
             weather_data_file=args.weather_file,
             daily_fixed_cost=args.daily_cost,
+            crop_requirement_file=getattr(args, 'crop_requirement_file', None),
         )
 
         # Execute use case

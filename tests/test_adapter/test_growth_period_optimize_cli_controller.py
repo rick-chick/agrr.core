@@ -45,7 +45,8 @@ class TestGrowthPeriodOptimizeCliController:
         request = OptimalGrowthPeriodRequestDTO(
             crop_id="rice",
             variety="Koshihikari",
-            candidate_start_dates=[datetime(2024, 4, 1), datetime(2024, 4, 15)],
+            evaluation_period_start=datetime(2024, 4, 1),
+            evaluation_period_end=datetime(2024, 4, 30),
             weather_data_file="weather.json",
             daily_fixed_cost=1000.0,
         )
@@ -88,7 +89,8 @@ class TestGrowthPeriodOptimizeCliController:
         args = Mock()
         args.crop = "rice"
         args.variety = "Koshihikari"
-        args.start_dates = "2024-04-01,2024-04-15"
+        args.evaluation_start = "2024-04-01"
+        args.evaluation_end = "2024-04-30"
         args.weather_file = "weather.json"
         args.daily_cost = 1000.0
         args.format = "table"
@@ -131,7 +133,8 @@ class TestGrowthPeriodOptimizeCliController:
         args = Mock()
         args.crop = "rice"
         args.variety = None
-        args.start_dates = "2024-04-01,invalid-date,2024-05-01"
+        args.evaluation_start = "invalid-date"
+        args.evaluation_end = "2024-05-01"
         args.weather_file = "weather.json"
         args.daily_cost = 500.0
         args.format = "table"
@@ -145,32 +148,20 @@ class TestGrowthPeriodOptimizeCliController:
         assert 'Use YYYY-MM-DD' in captured.out
 
     @pytest.mark.asyncio
-    async def test_parse_start_dates_success(self):
-        """Test successful parsing of start dates."""
-        dates_str = "2024-04-01,2024-04-15,2024-05-01"
-        dates = self.controller._parse_start_dates(dates_str)
+    async def test_parse_date_success(self):
+        """Test successful parsing of date."""
+        date_str = "2024-04-01"
+        date = self.controller._parse_date(date_str)
         
-        assert len(dates) == 3
-        assert dates[0] == datetime(2024, 4, 1)
-        assert dates[1] == datetime(2024, 4, 15)
-        assert dates[2] == datetime(2024, 5, 1)
+        assert date == datetime(2024, 4, 1)
 
     @pytest.mark.asyncio
-    async def test_parse_start_dates_with_spaces(self):
-        """Test parsing dates with spaces."""
-        dates_str = "2024-04-01 , 2024-04-15 , 2024-05-01"
-        dates = self.controller._parse_start_dates(dates_str)
-        
-        assert len(dates) == 3
-        assert dates[0] == datetime(2024, 4, 1)
-
-    @pytest.mark.asyncio
-    async def test_parse_start_dates_invalid(self):
-        """Test parsing invalid dates raises ValueError."""
-        dates_str = "2024-04-01,not-a-date"
+    async def test_parse_date_invalid(self):
+        """Test parsing invalid date raises ValueError."""
+        date_str = "not-a-date"
         
         with pytest.raises(ValueError, match="Invalid date format"):
-            self.controller._parse_start_dates(dates_str)
+            self.controller._parse_date(date_str)
 
     def test_create_argument_parser(self):
         """Test argument parser creation."""
@@ -181,7 +172,8 @@ class TestGrowthPeriodOptimizeCliController:
             "optimize",
             "--crop", "rice",
             "--variety", "Koshihikari",
-            "--start-dates", "2024-04-01,2024-04-15",
+            "--evaluation-start", "2024-04-01",
+            "--evaluation-end", "2024-04-30",
             "--weather-file", "weather.json",
             "--daily-cost", "1000",
             "--format", "table",
@@ -190,7 +182,8 @@ class TestGrowthPeriodOptimizeCliController:
         assert args.command == "optimize"
         assert args.crop == "rice"
         assert args.variety == "Koshihikari"
-        assert args.start_dates == "2024-04-01,2024-04-15"
+        assert args.evaluation_start == "2024-04-01"
+        assert args.evaluation_end == "2024-04-30"
         assert args.weather_file == "weather.json"
         assert args.daily_cost == 1000.0
         assert args.format == "table"
@@ -205,7 +198,8 @@ class TestGrowthPeriodOptimizeCliController:
         await self.controller.run([
             "optimize",
             "--crop", "rice",
-            "--start-dates", "2024-04-01",
+            "--evaluation-start", "2024-04-01",
+            "--evaluation-end", "2024-04-30",
             "--weather-file", "weather.json",
             "--daily-cost", "1000",
         ])

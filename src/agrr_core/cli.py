@@ -62,12 +62,17 @@ def main() -> None:
         elif args and args[0] == 'optimize-period':
             # Run optimal growth period calculation CLI
             llm_client = FrameworkLLMClient()
-            crop_requirement_gateway = CropRequirementGatewayImpl(llm_client=llm_client)
             
-            # Setup file-based weather repository
+            # Setup file-based repositories
             file_repository = FileRepository()
             weather_file_repository = WeatherFileRepository(file_repository=file_repository)
             weather_gateway = WeatherGatewayImpl(weather_file_repository=weather_file_repository)
+            
+            # Create crop requirement gateway with both LLM and file repository
+            crop_requirement_gateway = CropRequirementGatewayImpl(
+                llm_client=llm_client,
+                file_repository=file_repository
+            )
             
             # Setup presenter
             from agrr_core.adapter.presenters.growth_period_optimize_cli_presenter import GrowthPeriodOptimizeCliPresenter

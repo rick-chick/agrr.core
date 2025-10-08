@@ -33,13 +33,18 @@ from agrr_core.adapter.utils.llm_struct_schema import (
 class CropRequirementGatewayImpl(CropRequirementGateway):
     """Gateway that uses an injected LLM client to craft requirements (if present)."""
 
-    def __init__(self, llm_client: Optional[LLMClient] = None):
-        """Initialize with an optional LLM client (DI).
+    def __init__(self, llm_client: Optional[LLMClient] = None, file_repository=None):
+        """Initialize with an optional LLM client (DI) and file repository.
 
         The client is expected to expose an async `generate(prompt: str) -> str`-like
         API. We do not enforce a strict protocol here to avoid tight coupling.
+        
+        Args:
+            llm_client: Optional LLM client for generating requirements
+            file_repository: Optional file repository for loading requirements from files
         """
         self.llm_client = llm_client
+        self.file_repository = file_repository
 
     async def craft(self, request: CropRequirementCraftRequestDTO) -> CropRequirementAggregate:
         crop_query = (request.crop_query or "").strip()
@@ -303,5 +308,88 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
             stage_requirements.append(sr)
         
         return crop, stage_requirements
+    
+    async def get(self, file_path: str) -> CropRequirementAggregate:
+        """Load crop requirements from JSON file using file repository.
+        
+        Args:
+            file_path: Path to crop requirement JSON file
+            
+        Returns:
+            CropRequirementAggregate loaded from file
+            
+        Expected JSON format:
+        {
+            "crop": {"crop_id": "rice", "name": "Rice", "variety": "Koshihikari"},
+            "stage_requirements": [
+                {
+                    "stage": {"name": "Growth", "order": 1},
+                    "temperature": {
+                        "base_temperature": 10.0,
+                        "optimal_min": 20.0,
+                        "optimal_max": 30.0,
+                        "low_stress_threshold": 15.0,
+                        "high_stress_threshold": 35.0,
+                        "frost_threshold": 0.0
+                    },
+                    "thermal": {"required_gdd": 500.0}
+                }
+            ]
+        }
+        """
+        if not self.file_repository:
+            raise ValueError("File repository not provided. Cannot load from file.")
+        
+        # Read file using repository
+        content = await self.file_repository.read(file_path)
+        
+        # Parse JSON
+        import json
+        data = json.loads(content)
+        
+        # Parse crop info
+        crop_data = data['crop']
+        crop = Crop(
+            crop_id=crop_data['crop_id'],
+            name=crop_data['name'],
+            variety=crop_data.get('variety')
+        )
+        
+        # Parse stage requirements
+        stage_requirements = []
+        for stage_req_data in data['stage_requirements']:
+            stage = GrowthStage(
+                name=stage_req_data['stage']['name'],
+                order=stage_req_data['stage']['order']
+            )
+            
+            temp_data = stage_req_data['temperature']
+            temperature = TemperatureProfile(
+                base_temperature=temp_data['base_temperature'],
+                optimal_min=temp_data['optimal_min'],
+                optimal_max=temp_data['optimal_max'],
+                low_stress_threshold=temp_data['low_stress_threshold'],
+                high_stress_threshold=temp_data['high_stress_threshold'],
+                frost_threshold=temp_data['frost_threshold']
+            )
+            
+            sunshine = SunshineProfile()  # Use defaults
+            
+            thermal = ThermalRequirement(
+                required_gdd=stage_req_data['thermal']['required_gdd']
+            )
+            
+            stage_req = StageRequirement(
+                stage=stage,
+                temperature=temperature,
+                sunshine=sunshine,
+                thermal=thermal
+            )
+            stage_requirements.append(stage_req)
+        
+        return CropRequirementAggregate(
+            crop=crop,
+            stage_requirements=stage_requirements
+        )
 
 

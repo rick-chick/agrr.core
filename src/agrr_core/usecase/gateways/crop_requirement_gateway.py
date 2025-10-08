@@ -59,5 +59,17 @@ class CropRequirementGateway(ABC):
             Dict containing detailed requirements for the stage
         """
         pass
+    
+    @abstractmethod
+    async def get(self, file_path: str) -> CropRequirementAggregate:
+        """Load crop requirements from file.
+        
+        Args:
+            file_path: Path to crop requirement JSON file
+            
+        Returns:
+            CropRequirementAggregate loaded from file
+        """
+        pass
 
 

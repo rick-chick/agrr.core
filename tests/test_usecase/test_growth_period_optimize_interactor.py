@@ -95,13 +95,15 @@ class TestGrowthPeriodOptimizeInteractor:
         self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
         self.mock_weather_gateway.get.return_value = weather_data
 
-        # Request with 2 candidate dates and daily cost of 1000
-        # Both candidates will take 10 days (same weather) so same cost
-        # First candidate should be optimal (earliest start date with minimum cost)
+        # Request: Start between April 1-5, must complete by April 15 (completion deadline)
+        # All candidates need 10 days (100 GDD / 10 GDD per day)
+        # April 1 start -> completes April 10 (✓ within deadline)
+        # April 5 start -> completes April 14 (✓ within deadline) - shortest period
         request = OptimalGrowthPeriodRequestDTO(
             crop_id="rice",
             variety="Koshihikari",
-            candidate_start_dates=[datetime(2024, 4, 1), datetime(2024, 4, 5)],
+            evaluation_period_start=datetime(2024, 4, 1),
+            evaluation_period_end=datetime(2024, 4, 15),  # Completion deadline
             weather_data_file="weather_data.json",
             daily_fixed_cost=1000.0,
         )
@@ -114,34 +116,20 @@ class TestGrowthPeriodOptimizeInteractor:
         assert response.daily_fixed_cost == 1000.0
         
         # April 5 is optimal (6 days * 1000 = 6000) vs April 1 (10 days * 1000 = 10000)
-        # Both reach 100% on April 10, but April 5 starts later so fewer days
+        # April 5 starts latest so has shortest growth period
         assert response.optimal_start_date == datetime(2024, 4, 5)
-        assert response.completion_date == datetime(2024, 4, 10)
-        assert response.growth_days == 6
-        assert response.total_cost == 6000.0
+        assert response.completion_date == datetime(2024, 4, 14)
+        assert response.growth_days == 10
+        assert response.total_cost == 10000.0
 
-        # Check candidates
-        assert len(response.candidates) == 2
-        
-        # First candidate (April 1): 10 days
-        candidate1 = response.candidates[0]
-        assert candidate1.start_date == datetime(2024, 4, 1)
-        assert candidate1.completion_date == datetime(2024, 4, 10)
-        assert candidate1.growth_days == 10
-        assert candidate1.total_cost == 10000.0
-        assert candidate1.is_optimal is False
-
-        # Second candidate (April 5): 6 days (optimal - lower cost)
-        candidate2 = response.candidates[1]
-        assert candidate2.start_date == datetime(2024, 4, 5)
-        assert candidate2.completion_date == datetime(2024, 4, 10)
-        assert candidate2.growth_days == 6
-        assert candidate2.total_cost == 6000.0
-        assert candidate2.is_optimal is True
+        # Check that system evaluated dates within start range that can meet deadline
+        # April 1-5 all complete by April 15, but April 6+ would complete after April 15
+        valid_candidates = [c for c in response.candidates if c.total_cost is not None]
+        assert len(valid_candidates) == 5
 
     @pytest.mark.asyncio
     async def test_execute_handles_incomplete_growth(self):
-        """Test handling when growth doesn't reach 100% for some candidates."""
+        """Test handling when growth doesn't reach 100% for any candidate in evaluation period."""
         # Setup mock crop requirements (total 1000 GDD - high requirement)
         crop = Crop(crop_id="rice", name="Rice")
         stage = GrowthStage(name="Growth", order=1)
@@ -179,10 +167,12 @@ class TestGrowthPeriodOptimizeInteractor:
         self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
         self.mock_weather_gateway.get.return_value = weather_data
 
+        # Evaluation period with only 1 day
         request = OptimalGrowthPeriodRequestDTO(
             crop_id="rice",
             variety=None,
-            candidate_start_dates=[datetime(2024, 4, 1)],
+            evaluation_period_start=datetime(2024, 4, 1),
+            evaluation_period_end=datetime(2024, 4, 1),
             weather_data_file="weather_data.json",
             daily_fixed_cost=1000.0,
         )
@@ -192,8 +182,8 @@ class TestGrowthPeriodOptimizeInteractor:
             await self.interactor.execute(request)
 
     @pytest.mark.asyncio
-    async def test_execute_with_single_candidate(self):
-        """Test with a single candidate date."""
+    async def test_execute_with_single_day_evaluation_period(self):
+        """Test with evaluation period of just one day."""
         # Setup simple scenario
         crop = Crop(crop_id="tomato", name="Tomato")
         stage = GrowthStage(name="Growth", order=1)
@@ -229,10 +219,13 @@ class TestGrowthPeriodOptimizeInteractor:
         self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
         self.mock_weather_gateway.get.return_value = weather_data
 
+        # Start on May 1, must complete by May 5 (deadline)
+        # Needs 50 GDD, gets 15 GDD/day -> 4 days needed -> completes May 4 (✓)
         request = OptimalGrowthPeriodRequestDTO(
             crop_id="tomato",
             variety=None,
-            candidate_start_dates=[datetime(2024, 5, 1)],
+            evaluation_period_start=datetime(2024, 5, 1),
+            evaluation_period_end=datetime(2024, 5, 5),  # Completion deadline
             weather_data_file="weather_data.json",
             daily_fixed_cost=500.0,
         )
@@ -241,8 +234,148 @@ class TestGrowthPeriodOptimizeInteractor:
 
         # Single candidate is automatically optimal
         assert response.optimal_start_date == datetime(2024, 5, 1)
+        assert response.completion_date == datetime(2024, 5, 4)
         assert response.growth_days == 4  # 15 GDD/day * 4 = 60 GDD (> 50)
         assert response.total_cost == 2000.0  # 4 days * 500
-        assert len(response.candidates) == 1
-        assert response.candidates[0].is_optimal is True
+        valid_candidates = [c for c in response.candidates if c.total_cost is not None]
+        assert len(valid_candidates) == 1
+        assert valid_candidates[0].is_optimal is True
+
+    @pytest.mark.asyncio
+    async def test_execute_with_completion_deadline_filters_late_candidates(self):
+        """Test that candidates exceeding completion deadline are filtered out."""
+        # Setup crop requirements (total 100 GDD)
+        crop = Crop(crop_id="rice", name="Rice", variety="Koshihikari")
+        stage = GrowthStage(name="Growth", order=1)
+
+        temp_profile = TemperatureProfile(
+            base_temperature=10.0,
+            optimal_min=20.0,
+            optimal_max=30.0,
+            low_stress_threshold=15.0,
+            high_stress_threshold=35.0,
+            frost_threshold=0.0,
+        )
+        sunshine_profile = SunshineProfile()
+
+        stage_req = StageRequirement(
+            stage=stage,
+            temperature=temp_profile,
+            sunshine=sunshine_profile,
+            thermal=ThermalRequirement(required_gdd=100.0),
+        )
+
+        crop_requirement = CropRequirementAggregate(
+            crop=crop, stage_requirements=[stage_req]
+        )
+
+        # Weather data: 10 GDD/day, so 10 days needed from any start date
+        weather_data = [
+            WeatherData(time=datetime(2024, 4, 1), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 2), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 3), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 4), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 5), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 6), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 7), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 8), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 9), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 10), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 11), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 12), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 13), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 14), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 15), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+        ]
+
+        self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
+        self.mock_weather_gateway.get.return_value = weather_data
+
+        # Evaluation period: April 1-3 as start date candidates
+        # Completion deadline: April 13
+        # April 1 start -> completes April 10 (✓ 10 days)
+        # April 2 start -> completes April 11 (✓ 10 days)
+        # April 3 start -> completes April 12 (✓ 10 days)
+        # April 4+ start -> would complete April 13+ (✗ exceeds deadline on April 13)
+        request = OptimalGrowthPeriodRequestDTO(
+            crop_id="rice",
+            variety="Koshihikari",
+            evaluation_period_start=datetime(2024, 4, 1),
+            evaluation_period_end=datetime(2024, 4, 12),  # Completion deadline
+            weather_data_file="weather_data.json",
+            daily_fixed_cost=1000.0,
+        )
+
+        response = await self.interactor.execute(request)
+
+        # All candidates complete by deadline, so it just picks min cost
+        # All have same cost (10 days), so picks earliest start date
+        assert response.optimal_start_date == datetime(2024, 4, 1)
+        assert response.completion_date == datetime(2024, 4, 10)
+        assert response.growth_days == 10
+        assert response.total_cost == 10000.0
+
+        # Check that valid candidates (within deadline) were evaluated
+        valid_candidates = [c for c in response.candidates if c.total_cost is not None]
+        assert len(valid_candidates) == 3  # April 1, 2, 3 all complete by April 12
+
+    @pytest.mark.asyncio
+    async def test_execute_raises_error_when_no_candidate_meets_deadline(self):
+        """Test error message when all candidates exceed completion deadline."""
+        # Setup crop requirements (total 100 GDD - takes 10 days)
+        crop = Crop(crop_id="rice", name="Rice")
+        stage = GrowthStage(name="Growth", order=1)
+
+        temp_profile = TemperatureProfile(
+            base_temperature=10.0,
+            optimal_min=20.0,
+            optimal_max=30.0,
+            low_stress_threshold=15.0,
+            high_stress_threshold=35.0,
+            frost_threshold=0.0,
+        )
+        sunshine_profile = SunshineProfile()
+
+        stage_req = StageRequirement(
+            stage=stage,
+            temperature=temp_profile,
+            sunshine=sunshine_profile,
+            thermal=ThermalRequirement(required_gdd=100.0),
+        )
+
+        crop_requirement = CropRequirementAggregate(
+            crop=crop, stage_requirements=[stage_req]
+        )
+
+        # Weather data: 10 GDD/day
+        weather_data = [
+            WeatherData(time=datetime(2024, 4, 1), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 2), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 3), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 4), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 5), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 6), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 7), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 8), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 9), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 10), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+        ]
+
+        self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
+        self.mock_weather_gateway.get.return_value = weather_data
+
+        # Start on April 1, needs 10 days -> completes April 10
+        # But deadline is April 8 -> Cannot meet deadline
+        request = OptimalGrowthPeriodRequestDTO(
+            crop_id="rice",
+            variety=None,
+            evaluation_period_start=datetime(2024, 4, 1),
+            evaluation_period_end=datetime(2024, 4, 8),  # Unrealistic deadline (too early)
+            weather_data_file="weather_data.json",
+            daily_fixed_cost=1000.0,
+        )
+
+        # Should raise error with helpful message about deadline
+        with pytest.raises(ValueError, match="No candidate can complete by the deadline"):
+            await self.interactor.execute(request)
 

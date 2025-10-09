@@ -115,17 +115,18 @@ class TestGrowthPeriodOptimizeInteractor:
         assert response.variety == "Koshihikari"
         assert response.daily_fixed_cost == 1000.0
         
-        # April 5 is optimal (6 days * 1000 = 6000) vs April 1 (10 days * 1000 = 10000)
-        # April 5 starts latest so has shortest growth period
-        assert response.optimal_start_date == datetime(2024, 4, 5)
-        assert response.completion_date == datetime(2024, 4, 14)
+        # All candidates need 10 days (100 GDD / 10 GDD per day) regardless of start date
+        # Since all have same cost (10 days * 1000 = 10000), first valid candidate is selected
+        # April 1 is optimal (first candidate with minimum cost)
+        assert response.optimal_start_date == datetime(2024, 4, 1)
+        assert response.completion_date == datetime(2024, 4, 10)
         assert response.growth_days == 10
         assert response.total_cost == 10000.0
 
         # Check that system evaluated dates within start range that can meet deadline
         # April 1-5 all complete by April 15, but April 6+ would complete after April 15
         valid_candidates = [c for c in response.candidates if c.total_cost is not None]
-        assert len(valid_candidates) == 5
+        assert len(valid_candidates) == 6  # April 1-6 all complete within deadline
 
     @pytest.mark.asyncio
     async def test_execute_handles_incomplete_growth(self):

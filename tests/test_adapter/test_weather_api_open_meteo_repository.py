@@ -64,9 +64,16 @@ class TestWeatherAPIOpenMeteoRepository:
         self.mock_http_service.get.return_value = mock_response
         
         # Test
-        weather_data_list = await self.repository.get_by_location_and_date_range(
+        result = await self.repository.get_by_location_and_date_range(
             35.7, 139.7, "2023-01-01", "2023-01-02"
         )
+        
+        # Assertions for WeatherDataWithLocationDTO structure
+        assert hasattr(result, 'weather_data_list')
+        assert hasattr(result, 'location')
+        
+        weather_data_list = result.weather_data_list
+        location = result.location
         
         # Assertions for weather data
         assert len(weather_data_list) == 2
@@ -84,8 +91,12 @@ class TestWeatherAPIOpenMeteoRepository:
         assert weather_data_list[1].wind_speed_10m == 6.2
         assert weather_data_list[1].weather_code == 1
         
-        # Location information is embedded in WeatherData entities
-        # No separate location object is returned
+        # Assertions for location information
+        assert isinstance(location, Location)
+        assert location.latitude == 35.6762
+        assert location.longitude == 139.6911
+        assert location.elevation == 37.0
+        assert location.timezone == "Asia/Tokyo"
         
         # Verify API call
         self.mock_http_service.get.assert_called_once()
@@ -114,9 +125,12 @@ class TestWeatherAPIOpenMeteoRepository:
         self.mock_http_service.get.return_value = mock_response
         
         # Test
-        weather_data_list = await self.repository.get_by_location_and_date_range(
+        result = await self.repository.get_by_location_and_date_range(
             35.7, 139.7, "2023-01-01", "2023-01-01"
         )
+        
+        # Extract weather data from DTO
+        weather_data_list = result.weather_data_list
         
         # Assertions
         assert len(weather_data_list) == 1
@@ -126,7 +140,7 @@ class TestWeatherAPIOpenMeteoRepository:
         assert weather_data_list[0].sunshine_hours is None
         assert weather_data_list[0].wind_speed_10m is None
         assert weather_data_list[0].weather_code is None
-        # Location information is embedded in WeatherData entities
+        # Location information is available in result.location
     
     @pytest.mark.asyncio
     async def test_get_weather_data_api_error(self):

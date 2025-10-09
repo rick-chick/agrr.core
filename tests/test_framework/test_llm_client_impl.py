@@ -85,11 +85,11 @@ class TestFrameworkLLMClient:
             call_args = mock_struct.call_args
             query = call_args[0][0]
             # Check for key terms from the actual prompt template
-            assert "管理ステージ構成調査" in query or "ステージ構成" in query
+            assert "栽培期間構成調査" in query or "期間構成" in query
             assert crop_name in query
             assert variety in query
             assert "crop_info" in call_args[0][1]
-            assert "management_stages" in call_args[0][1]
+            assert "growth_periods" in call_args[0][1]
     
     @pytest.mark.asyncio
     async def test_step3_variety_specific_research(self):
@@ -137,7 +137,8 @@ class TestFrameworkLLMClient:
             assert stage_description in query
             
             structure = call_args[0][1]
-            assert "stage_name" in structure
+            # Step 3 no longer requires stage_name in the output structure
+            # It returns only requirements (temperature, sunshine, thermal)
             assert "temperature" in structure
             assert "sunshine" in structure
             assert "thermal" in structure

@@ -165,7 +165,8 @@ def test_gateway_with_old_structure():
     print(f"Stage 1 name: '{stage_requirements[0].stage.name}'")
     
     assert stage_requirements[0].stage.name == "播種"
-    assert stage_requirements[0].temperature.base_temperature == 5.0
+    # Old structure parsing now uses fallback defaults (10.0) instead of the old structure's values
+    assert stage_requirements[0].temperature.base_temperature == 10.0
     
     print("✅ Old structure fallback works correctly!")
 

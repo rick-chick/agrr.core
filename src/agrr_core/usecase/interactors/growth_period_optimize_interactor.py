@@ -40,6 +40,7 @@ from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.optimization_result_gateway import (
     OptimizationResultGateway,
 )
+from agrr_core.usecase.gateways.field_gateway import FieldGateway
 from agrr_core.usecase.interactors.growth_progress_calculate_interactor import (
     GrowthProgressCalculateInteractor,
 )
@@ -58,10 +59,12 @@ class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
         self,
         crop_requirement_gateway: CropRequirementGateway,
         weather_gateway: WeatherGateway,
+        field_gateway: Optional[FieldGateway] = None,
         optimization_result_gateway: OptimizationResultGateway = None,
     ):
         self.crop_requirement_gateway = crop_requirement_gateway
         self.weather_gateway = weather_gateway
+        self.field_gateway = field_gateway
         self.optimization_result_gateway = optimization_result_gateway
         
         # Use existing growth progress calculator
@@ -84,8 +87,11 @@ class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
         Raises:
             ValueError: If no candidate reaches 100% growth completion
         """
+        # Resolve daily_fixed_cost from field_id if provided
+        daily_fixed_cost = await self._resolve_daily_fixed_cost(request)
+        
         # Use efficient sliding window algorithm
-        candidates = await self._evaluate_candidates_efficient(request)
+        candidates = await self._evaluate_candidates_efficient(request, daily_fixed_cost)
         
         # Find optimal candidate (minimum cost, excluding failures and deadline violations)
         valid_candidates = [c for c in candidates if c.total_cost is not None]
@@ -126,12 +132,39 @@ class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
             completion_date=optimal_candidate.completion_date,
             growth_days=optimal_candidate.growth_days,
             total_cost=optimal_candidate.total_cost,
-            daily_fixed_cost=request.daily_fixed_cost,
+            daily_fixed_cost=daily_fixed_cost,
             candidates=candidates,
         )
 
+    async def _resolve_daily_fixed_cost(self, request: OptimalGrowthPeriodRequestDTO) -> float:
+        """Resolve daily fixed cost from field_id or direct value.
+        
+        Args:
+            request: Request DTO
+            
+        Returns:
+            Daily fixed cost value
+            
+        Raises:
+            ValueError: If field_id is specified but field not found or field_gateway not available
+        """
+        if request.field_id:
+            if not self.field_gateway:
+                raise ValueError(
+                    f"field_id '{request.field_id}' specified but field_gateway is not available"
+                )
+            
+            field = await self.field_gateway.get(request.field_id)
+            if not field:
+                raise ValueError(f"Field not found: {request.field_id}")
+            
+            return field.daily_fixed_cost
+        else:
+            # Use directly provided daily_fixed_cost
+            return request.daily_fixed_cost
+
     async def _evaluate_candidates_efficient(
-        self, request: OptimalGrowthPeriodRequestDTO
+        self, request: OptimalGrowthPeriodRequestDTO, daily_fixed_cost: float
     ) -> List[CandidateResultDTO]:
         """Evaluate candidates using efficient sliding window algorithm.
         
@@ -207,7 +240,7 @@ class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
             completion_date = datetime.combine(sorted_dates[window_end_idx - 1], datetime.min.time())
             if completion_date <= request.evaluation_period_end:
                 growth_days = (completion_date - current_start).days + 1
-                total_cost = growth_days * request.daily_fixed_cost
+                total_cost = growth_days * daily_fixed_cost
                 results.append(CandidateResultDTO(
                     start_date=current_start,
                     completion_date=completion_date,
@@ -252,7 +285,7 @@ class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
                 completion_date = datetime.combine(sorted_dates[window_end_idx - 1], datetime.min.time())
                 if completion_date <= request.evaluation_period_end:
                     growth_days = (completion_date - current_start).days + 1
-                    total_cost = growth_days * request.daily_fixed_cost
+                    total_cost = growth_days * daily_fixed_cost
                     results.append(CandidateResultDTO(
                         start_date=current_start,
                         completion_date=completion_date,

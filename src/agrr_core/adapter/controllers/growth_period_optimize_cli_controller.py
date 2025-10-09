@@ -10,6 +10,7 @@ from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.optimization_result_gateway import (
     OptimizationResultGateway,
 )
+from agrr_core.usecase.gateways.field_gateway import FieldGateway
 from agrr_core.usecase.ports.input.growth_period_optimize_input_port import (
     GrowthPeriodOptimizeInputPort,
 )
@@ -35,6 +36,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
         crop_requirement_gateway: CropRequirementGateway,
         weather_gateway: WeatherGateway,
         presenter: GrowthPeriodOptimizeOutputPort,
+        field_gateway: Optional[FieldGateway] = None,
         optimization_result_gateway: Optional[OptimizationResultGateway] = None,
     ) -> None:
         """Initialize with injected dependencies.
@@ -43,17 +45,20 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
             crop_requirement_gateway: Gateway for crop requirement operations
             weather_gateway: Gateway for weather data operations
             presenter: Presenter for output formatting
+            field_gateway: Optional gateway for field data operations
             optimization_result_gateway: Optional gateway for saving optimization results
         """
         self.crop_requirement_gateway = crop_requirement_gateway
         self.weather_gateway = weather_gateway
         self.presenter = presenter
+        self.field_gateway = field_gateway
         self.optimization_result_gateway = optimization_result_gateway
         
         # Instantiate interactor inside controller
         self.interactor = GrowthPeriodOptimizeInteractor(
             crop_requirement_gateway=self.crop_requirement_gateway,
             weather_gateway=self.weather_gateway,
+            field_gateway=self.field_gateway,
             optimization_result_gateway=self.optimization_result_gateway,
         )
 
@@ -120,15 +125,19 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
             help='Path to crop requirement file (JSON). If not provided, will use LLM to generate requirements.',
         )
         optimize_parser.add_argument(
+            "--field",
+            "-f",
+            help='Field ID (圃場ID) to use for cost calculation',
+        )
+        optimize_parser.add_argument(
             "--daily-cost",
             "-d",
             type=float,
-            required=True,
-            help='Daily fixed cost (e.g., 5000 for ¥5,000/day)',
+            help='Daily fixed cost (e.g., 5000 for ¥5,000/day). Used if --field is not specified.',
         )
         optimize_parser.add_argument(
             "--format",
-            "-f",
+            "-fmt",
             choices=["table", "json"],
             default="table",
             help="Output format (default: table)",
@@ -146,7 +155,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
         )
         list_parser.add_argument(
             "--format",
-            "-f",
+            "-fmt",
             choices=["table", "json"],
             default="table",
             help="Output format (default: table)",
@@ -163,7 +172,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
         )
         show_parser.add_argument(
             "--format",
-            "-f",
+            "-fmt",
             choices=["table", "json"],
             default="table",
             help="Output format (default: table)",
@@ -214,6 +223,11 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
         # Update presenter format
         self.presenter.output_format = args.format
 
+        # Validate that either field or daily_cost is provided
+        if not args.field and args.daily_cost is None:
+            print('Error: Either --field or --daily-cost must be provided')
+            return
+        
         # Create request DTO
         request = OptimalGrowthPeriodRequestDTO(
             crop_id=args.crop,
@@ -221,6 +235,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
             evaluation_period_start=evaluation_start,
             evaluation_period_end=evaluation_end,
             weather_data_file=args.weather_file,
+            field_id=args.field,
             daily_fixed_cost=args.daily_cost,
             crop_requirement_file=getattr(args, 'crop_requirement_file', None),
         )

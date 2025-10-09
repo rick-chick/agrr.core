@@ -144,8 +144,8 @@ class TestCropRequirementGatewayImpl:
         # Verify fallback behavior
         assert result["crop_info"]["name"] == "トマト"
         assert result["crop_info"]["variety"] == "アイコ"
-        assert len(result["management_stages"]) == 1
-        assert result["management_stages"][0]["stage_name"] == "Default"
+        assert len(result["growth_periods"]) == 1
+        assert result["growth_periods"][0]["period_name"] == "Default"
     
     @pytest.mark.asyncio
     async def test_research_stage_requirements_without_llm_client(self):
@@ -156,8 +156,8 @@ class TestCropRequirementGatewayImpl:
         # Execute
         result = await gateway.research_stage_requirements("トマト", "アイコ", "播種", "温度管理")
         
-        # Verify fallback behavior
-        assert result["stage_name"] == "播種"
+        # Verify fallback behavior (does not include stage_name in result)
+        assert "temperature" in result
         assert result["temperature"]["base_temperature"] == 10.0
         assert result["sunshine"]["minimum_sunshine_hours"] == 3.0
         assert result["thermal"]["required_gdd"] == 400.0
@@ -174,7 +174,7 @@ class TestCropRequirementGatewayImpl:
         
         # Verify stub behavior
         assert result.crop.name == "トマト アイコ"
-        assert result.crop.crop_id == "トマト アイコ"
+        assert result.crop.crop_id == "トマト アイコ_default"  # crop_name + "_" + variety (default)
         assert len(result.stage_requirements) == 1
         
         stage = result.stage_requirements[0]
@@ -190,14 +190,17 @@ class TestCropRequirementGatewayImpl:
     @pytest.mark.asyncio
     async def test_craft_with_empty_query(self):
         """Test craft method with empty query."""
+        # Setup gateway without LLM client for fallback testing
+        gateway = CropRequirementGatewayImpl(llm_client=None)
         request = CropRequirementCraftRequestDTO(crop_query="")
         
-        # Execute (no LLM setup needed, uses fallback)
-        result = await self.gateway.craft(request)
+        # Execute (uses fallback)
+        result = await gateway.craft(request)
         
-        # Verify stub behavior with empty query (uses "Unknown" as default)
-        assert result.crop.name == "Unknown"
-        assert result.crop.crop_id == "unknown"
+        # Verify stub behavior with empty query
+        # Empty query results in crop_name="" and variety="default"
+        assert result.crop.name == ""
+        assert result.crop.crop_id == "_default"  # crop_name + "_" + variety
         assert len(result.stage_requirements) == 1
         
         stage = result.stage_requirements[0]

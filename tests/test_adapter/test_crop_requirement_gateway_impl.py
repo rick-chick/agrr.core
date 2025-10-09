@@ -174,7 +174,8 @@ class TestCropRequirementGatewayImpl:
         
         # Verify stub behavior
         assert result.crop.name == "トマト アイコ"
-        assert result.crop.crop_id == "トマト アイコ_default"  # crop_name + "_" + variety (default)
+        assert result.crop.crop_id == "トマト アイコ".lower()  # crop_name (lowercase)
+        assert result.crop.variety is None  # "default" is converted to None
         assert len(result.stage_requirements) == 1
         
         stage = result.stage_requirements[0]
@@ -200,7 +201,8 @@ class TestCropRequirementGatewayImpl:
         # Verify stub behavior with empty query
         # Empty query results in crop_name="" and variety="default"
         assert result.crop.name == ""
-        assert result.crop.crop_id == "_default"  # crop_name + "_" + variety
+        assert result.crop.crop_id == ""  # crop_name (lowercase, empty)
+        assert result.crop.variety is None  # "default" is converted to None
         assert len(result.stage_requirements) == 1
         
         stage = result.stage_requirements[0]
@@ -226,7 +228,8 @@ class TestCropRequirementGatewayImpl:
         # Verify crop
         assert isinstance(crop, Crop)
         assert crop.name == "トマト"
-        assert crop.crop_id == "トマト_アイコ"
+        assert crop.crop_id == "トマト".lower()
+        assert crop.variety == "アイコ"
         
         # Verify stage requirements
         assert len(stage_requirements) == 1
@@ -275,7 +278,8 @@ class TestCropRequirementGatewayImpl:
         
         # Verify crop
         assert crop.name == "レタス"
-        assert crop.crop_id == "レタス_サニーレタス"
+        assert crop.crop_id == "レタス".lower()
+        assert crop.variety == "サニーレタス"
         
         # Verify stage requirements with defaults
         assert len(stage_requirements) == 1
@@ -306,7 +310,8 @@ class TestCropRequirementGatewayImpl:
         
         # Verify crop
         assert crop.name == "トマト"
-        assert crop.crop_id == "トマト_アイコ"
+        assert crop.crop_id == "トマト".lower()
+        assert crop.variety == "アイコ"
         
         # Verify empty stage requirements
         assert len(stage_requirements) == 0
@@ -328,5 +333,6 @@ class TestCropRequirementGatewayImpl:
         
         # Should use defaults for missing crop info
         assert crop.name == "Unknown"
-        assert crop.crop_id == "unknown_default"
+        assert crop.crop_id == "unknown"
+        assert crop.variety is None  # "default" is converted to None
         assert len(stage_requirements) == 1

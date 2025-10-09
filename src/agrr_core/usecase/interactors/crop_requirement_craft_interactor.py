@@ -62,7 +62,11 @@ class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
             )
 
             # Step 3: Research requirements for each stage and build entities
-            crop = Crop(crop_id=f"{crop_name.lower()}_{variety.lower()}", name=crop_name, variety=variety)
+            crop = Crop(
+                crop_id=crop_name.lower(),
+                name=crop_name,
+                variety=variety if variety and variety != "default" else None
+            )
             stage_requirements = []
             
             for i, stage in enumerate(growth_stages):

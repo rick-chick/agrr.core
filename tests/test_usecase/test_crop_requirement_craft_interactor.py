@@ -21,8 +21,9 @@ async def test_craft_success(mock_crop_requirement_gateway, mock_crop_requiremen
 
     assert result["success"] is True
     data = result["data"]
-    assert data["crop_id"] == "tomato_default"
+    assert data["crop_id"] == "tomato"
     assert data["crop_name"] == "Tomato"
+    assert data["variety"] is None  # "default" is converted to None
     assert isinstance(data["stages"], list)
     assert data["stages"][0]["name"] == "Vegetative"
 

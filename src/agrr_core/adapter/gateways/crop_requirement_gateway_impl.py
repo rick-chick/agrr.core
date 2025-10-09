@@ -97,7 +97,11 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
             stage_requirements.append(sr)
         
         # Create crop entity
-        crop = Crop(crop_id=f"{crop_name}_{variety}", name=crop_name)
+        crop = Crop(
+            crop_id=crop_name.lower(),
+            name=crop_name,
+            variety=variety if variety and variety != "default" else None
+        )
         
         return CropRequirementAggregate(crop=crop, stage_requirements=stage_requirements)
 
@@ -165,7 +169,7 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
         # Kept for backward compatibility
         # Stubbed thresholds: keep aligned with entity docstrings
         name = crop_query if crop_query else "Unknown"
-        crop = Crop(crop_id=name.lower(), name=name)
+        crop = Crop(crop_id=name.lower(), name=name, variety=None)
         stage = GrowthStage(name="Default", order=1)
         temp = TemperatureProfile(
             base_temperature=10.0,
@@ -214,7 +218,11 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
         variety = crop_info.get("variety", "default")
         
         # Create crop entity
-        crop = Crop(crop_id=f"{crop_name.lower()}_{variety.lower()}", name=crop_name)
+        crop = Crop(
+            crop_id=crop_name.lower(),
+            name=crop_name,
+            variety=variety if variety and variety != "default" else None
+        )
         
         # Parse stage requirements
         stage_requirements = []

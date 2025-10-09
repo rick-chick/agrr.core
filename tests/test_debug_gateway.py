@@ -95,7 +95,8 @@ def test_gateway_parse_flow_result():
     # Assertions
     assert isinstance(crop, Crop)
     assert crop.name == "かぶ"
-    assert crop.crop_id == "かぶ_default"
+    assert crop.crop_id == "かぶ"
+    assert crop.variety is None  # "default" is converted to None
     
     assert len(stage_requirements) == 2
     

@@ -43,10 +43,19 @@ def load_prompt_template(filename: str) -> str:
     Returns:
         Content of the prompt file
     """
-    # Get the project root (assuming this file is in src/agrr_core/framework/services/)
-    current_file = Path(__file__)
-    project_root = current_file.parent.parent.parent.parent.parent
-    prompt_path = project_root / "prompts" / filename
+    import sys
+    
+    # Check if running as PyInstaller bundle
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        # Running as PyInstaller bundle
+        base_path = Path(sys._MEIPASS)  # type: ignore
+        prompt_path = base_path / "prompts" / filename
+    else:
+        # Running in normal Python environment
+        # Get the project root (assuming this file is in src/agrr_core/framework/services/)
+        current_file = Path(__file__)
+        project_root = current_file.parent.parent.parent.parent.parent
+        prompt_path = project_root / "prompts" / filename
     
     try:
         with open(prompt_path, 'r', encoding='utf-8') as f:

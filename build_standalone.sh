@@ -16,7 +16,7 @@ echo "Step 1: Installing PyInstaller for Python 3.8..."
 python3.8 -m pip install pyinstaller --upgrade --quiet
 
 echo "Step 2: Cleaning previous builds..."
-rm -rf build dist *.spec
+rm -rf build dist
 
 echo "Step 3: Building with PyInstaller (Python 3.8)..."
 python3.8 -m PyInstaller \
@@ -26,6 +26,7 @@ python3.8 -m PyInstaller \
     --clean \
     --noconfirm \
     --collect-all agrr_core \
+    --add-data "prompts:prompts" \
     --paths src \
     src/agrr_core/cli.py
 

@@ -336,3 +336,134 @@ class TestCropRequirementGatewayImpl:
         assert crop.crop_id == "unknown"
         assert crop.variety is None  # "default" is converted to None
         assert len(stage_requirements) == 1
+    
+    @pytest.mark.asyncio
+    async def test_load_from_file_with_revenue_per_area(self):
+        """Test loading crop requirement from JSON file with revenue_per_area field."""
+        # Create a test JSON file with revenue_per_area
+        import tempfile
+        import json
+        
+        test_data = {
+            "crop": {
+                "crop_id": "rice",
+                "name": "Rice",
+                "area_per_unit": 0.25,
+                "variety": "Koshihikari",
+                "revenue_per_area": 50000.0
+            },
+            "stage_requirements": [
+                {
+                    "stage": {"name": "Growth", "order": 1},
+                    "temperature": {
+                        "base_temperature": 10.0,
+                        "optimal_min": 20.0,
+                        "optimal_max": 25.0,
+                        "low_stress_threshold": 15.0,
+                        "high_stress_threshold": 30.0,
+                        "frost_threshold": 5.0
+                    },
+                    "sunshine": {
+                        "min_hours_per_day": 8.0,
+                        "optimal_hours_per_day": 10.0
+                    },
+                    "thermal": {
+                        "required_gdd": 100.0
+                    }
+                }
+            ]
+        }
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(test_data, f)
+            temp_file_path = f.name
+        
+        try:
+            # Create a mock file repository
+            mock_file_repo = Mock()
+            mock_file_repo.read = AsyncMock(return_value=json.dumps(test_data))
+            
+            # Create gateway with file repository
+            gateway = CropRequirementGatewayImpl(llm_client=None, file_repository=mock_file_repo)
+            
+            # Load from file
+            result = await gateway.get(temp_file_path)
+            
+            # Verify crop with revenue_per_area
+            assert result.crop.crop_id == "rice"
+            assert result.crop.name == "Rice"
+            assert result.crop.area_per_unit == 0.25
+            assert result.crop.variety == "Koshihikari"
+            assert result.crop.revenue_per_area == 50000.0
+            
+            # Verify stage requirements
+            assert len(result.stage_requirements) == 1
+        finally:
+            # Clean up
+            import os
+            os.unlink(temp_file_path)
+    
+    @pytest.mark.asyncio
+    async def test_load_from_file_without_revenue_per_area(self):
+        """Test loading crop requirement from JSON file without revenue_per_area field (backward compatibility)."""
+        # Create a test JSON file without revenue_per_area
+        import tempfile
+        import json
+        
+        test_data = {
+            "crop": {
+                "crop_id": "tomato",
+                "name": "Tomato",
+                "area_per_unit": 0.5,
+                "variety": "Cherry"
+            },
+            "stage_requirements": [
+                {
+                    "stage": {"name": "Growth", "order": 1},
+                    "temperature": {
+                        "base_temperature": 10.0,
+                        "optimal_min": 20.0,
+                        "optimal_max": 28.0,
+                        "low_stress_threshold": 15.0,
+                        "high_stress_threshold": 35.0,
+                        "frost_threshold": 2.0
+                    },
+                    "sunshine": {
+                        "min_hours_per_day": 6.0,
+                        "optimal_hours_per_day": 8.0
+                    },
+                    "thermal": {
+                        "required_gdd": 150.0
+                    }
+                }
+            ]
+        }
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(test_data, f)
+            temp_file_path = f.name
+        
+        try:
+            # Create a mock file repository
+            mock_file_repo = Mock()
+            mock_file_repo.read = AsyncMock(return_value=json.dumps(test_data))
+            
+            # Create gateway with file repository
+            gateway = CropRequirementGatewayImpl(llm_client=None, file_repository=mock_file_repo)
+            
+            # Load from file
+            result = await gateway.get(temp_file_path)
+            
+            # Verify crop without revenue_per_area (should be None)
+            assert result.crop.crop_id == "tomato"
+            assert result.crop.name == "Tomato"
+            assert result.crop.area_per_unit == 0.5
+            assert result.crop.variety == "Cherry"
+            assert result.crop.revenue_per_area is None
+            
+            # Verify stage requirements
+            assert len(result.stage_requirements) == 1
+        finally:
+            # Clean up
+            import os
+            os.unlink(temp_file_path)

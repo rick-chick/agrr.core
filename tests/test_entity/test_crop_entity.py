@@ -104,5 +104,91 @@ class TestCrop:
 
         assert crop1 != crop2
 
+    def test_create_crop_with_revenue_per_area(self):
+        """Test creating a crop with revenue per area."""
+        crop = Crop(
+            crop_id="rice",
+            name="Rice",
+            area_per_unit=0.25,
+            variety="Koshihikari",
+            revenue_per_area=50000.0,  # 50,000 yen per m²
+        )
+
+        assert crop.crop_id == "rice"
+        assert crop.name == "Rice"
+        assert crop.area_per_unit == 0.25
+        assert crop.variety == "Koshihikari"
+        assert crop.revenue_per_area == 50000.0
+
+    def test_create_crop_without_revenue_per_area(self):
+        """Test creating a crop without revenue per area defaults to None."""
+        crop = Crop(
+            crop_id="tomato",
+            name="Tomato",
+            area_per_unit=0.5,
+        )
+
+        assert crop.crop_id == "tomato"
+        assert crop.name == "Tomato"
+        assert crop.area_per_unit == 0.5
+        assert crop.variety is None
+        assert crop.revenue_per_area is None
+
+    def test_crop_with_zero_revenue_per_area(self):
+        """Test creating a crop with zero revenue per area."""
+        crop = Crop(
+            crop_id="test",
+            name="Test Crop",
+            area_per_unit=1.0,
+            revenue_per_area=0.0,
+        )
+
+        assert crop.revenue_per_area == 0.0
+
+    def test_crop_with_negative_revenue_per_area(self):
+        """Test creating a crop with negative revenue per area (loss)."""
+        crop = Crop(
+            crop_id="test",
+            name="Test Crop",
+            area_per_unit=1.0,
+            revenue_per_area=-1000.0,
+        )
+
+        assert crop.revenue_per_area == -1000.0
+
+    def test_crop_equality_with_revenue_per_area(self):
+        """Test that crops with same revenue_per_area are equal."""
+        crop1 = Crop(
+            crop_id="rice",
+            name="Rice",
+            area_per_unit=0.25,
+            revenue_per_area=50000.0,
+        )
+        crop2 = Crop(
+            crop_id="rice",
+            name="Rice",
+            area_per_unit=0.25,
+            revenue_per_area=50000.0,
+        )
+
+        assert crop1 == crop2
+
+    def test_crop_inequality_with_different_revenue_per_area(self):
+        """Test that crops with different revenue_per_area are not equal."""
+        crop1 = Crop(
+            crop_id="rice",
+            name="Rice",
+            area_per_unit=0.25,
+            revenue_per_area=50000.0,
+        )
+        crop2 = Crop(
+            crop_id="rice",
+            name="Rice",
+            area_per_unit=0.25,
+            revenue_per_area=60000.0,
+        )
+
+        assert crop1 != crop2
+
 
 

@@ -9,6 +9,7 @@ Fields
 - name: Human-readable crop name (e.g., "Rice")
 - area_per_unit: Area occupied per unit of crop in square meters (m²)
 - variety: Optional variety/cultivar label (e.g., "Koshihikari")
+- revenue_per_area: Optional revenue per square meter (e.g., yen/m²)
 """
 
 from dataclasses import dataclass
@@ -17,11 +18,12 @@ from typing import Optional
 
 @dataclass(frozen=True)
 class Crop:
-    """Represents a crop with optional variety information."""
+    """Represents a crop with optional variety and revenue information."""
 
     crop_id: str
     name: str
     area_per_unit: float
     variety: Optional[str] = None
+    revenue_per_area: Optional[float] = None
 
 

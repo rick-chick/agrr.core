@@ -34,7 +34,7 @@ class TestOptimizationResultSaving:
         mock_optimization_result_gateway = AsyncMock()
 
         # Setup crop requirements (total 100 GDD)
-        crop = Crop(crop_id="rice", name="Rice", variety="Koshihikari")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
         stage = GrowthStage(name="Growth", order=1)
 
         temp_profile = TemperatureProfile(
@@ -121,7 +121,7 @@ class TestOptimizationResultSaving:
         mock_weather_gateway = AsyncMock()
 
         # Setup crop requirements (total 100 GDD)
-        crop = Crop(crop_id="rice", name="Rice", variety="Koshihikari")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
         stage = GrowthStage(name="Growth", order=1)
 
         temp_profile = TemperatureProfile(
@@ -191,7 +191,7 @@ class TestOptimizationResultSaving:
         mock_optimization_result_gateway = AsyncMock()
 
         # Setup crop requirements (total 100 GDD)
-        crop = Crop(crop_id="rice", name="Rice", variety="Koshihikari")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
         stage = GrowthStage(name="Growth", order=1)
 
         temp_profile = TemperatureProfile(

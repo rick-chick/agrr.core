@@ -14,7 +14,7 @@ class TestGrowthProgressTimeline:
 
     def test_create_timeline(self):
         """Test creating a valid GrowthProgressTimeline."""
-        crop = Crop(crop_id="rice", name="Rice", variety="Koshihikari")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
         stage = GrowthStage(name="Vegetative", order=1)
         
         progress1 = GrowthProgress(
@@ -48,7 +48,7 @@ class TestGrowthProgressTimeline:
 
     def test_get_final_progress(self):
         """Test getting the final progress record."""
-        crop = Crop(crop_id="rice", name="Rice")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25)
         stage = GrowthStage(name="Maturity", order=5)
         
         progress_final = GrowthProgress(
@@ -72,7 +72,7 @@ class TestGrowthProgressTimeline:
 
     def test_is_harvest_ready_true(self):
         """Test is_harvest_ready returns True when complete."""
-        crop = Crop(crop_id="rice", name="Rice")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25)
         stage = GrowthStage(name="Maturity", order=5)
         
         progress = GrowthProgress(
@@ -94,7 +94,7 @@ class TestGrowthProgressTimeline:
 
     def test_is_harvest_ready_false(self):
         """Test is_harvest_ready returns False when not complete."""
-        crop = Crop(crop_id="rice", name="Rice")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25)
         stage = GrowthStage(name="Vegetative", order=1)
         
         progress = GrowthProgress(
@@ -116,7 +116,7 @@ class TestGrowthProgressTimeline:
 
     def test_get_final_progress_empty_list(self):
         """Test get_final_progress raises ValueError when list is empty."""
-        crop = Crop(crop_id="rice", name="Rice")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25)
         timeline = GrowthProgressTimeline(
             crop=crop,
             start_date=datetime(2024, 5, 1),
@@ -128,7 +128,7 @@ class TestGrowthProgressTimeline:
 
     def test_is_harvest_ready_empty_list(self):
         """Test is_harvest_ready returns False when list is empty."""
-        crop = Crop(crop_id="rice", name="Rice")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25)
         timeline = GrowthProgressTimeline(
             crop=crop,
             start_date=datetime(2024, 5, 1),

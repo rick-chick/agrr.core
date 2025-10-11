@@ -100,6 +100,7 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
         crop = Crop(
             crop_id=crop_name.lower(),
             name=crop_name,
+            area_per_unit=0.25,  # Default area per unit in m²
             variety=variety if variety and variety != "default" else None
         )
         
@@ -169,7 +170,7 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
         # Kept for backward compatibility
         # Stubbed thresholds: keep aligned with entity docstrings
         name = crop_query if crop_query else "Unknown"
-        crop = Crop(crop_id=name.lower(), name=name, variety=None)
+        crop = Crop(crop_id=name.lower(), name=name, area_per_unit=0.25, variety=None)
         stage = GrowthStage(name="Default", order=1)
         temp = TemperatureProfile(
             base_temperature=10.0,
@@ -221,6 +222,7 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
         crop = Crop(
             crop_id=crop_name.lower(),
             name=crop_name,
+            area_per_unit=0.25,  # Default area per unit in m²
             variety=variety if variety and variety != "default" else None
         )
         
@@ -360,6 +362,7 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
         crop = Crop(
             crop_id=crop_data['crop_id'],
             name=crop_data['name'],
+            area_per_unit=crop_data.get('area_per_unit', 0.25),  # Default 0.25 m² if not specified
             variety=crop_data.get('variety')
         )
         

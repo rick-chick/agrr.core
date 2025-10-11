@@ -142,7 +142,7 @@ def mock_prediction_repository():
 @pytest.fixture
 def sample_crop_requirement_aggregate() -> CropRequirementAggregate:
     """Build a simple aggregate for testing crafting use case."""
-    crop = Crop(crop_id="tomato", name="Tomato", variety=None)  # No specific variety
+    crop = Crop(crop_id="tomato", name="Tomato", area_per_unit=0.5, variety=None)  # No specific variety
     stage = GrowthStage(name="Vegetative", order=1)
     temp = TemperatureProfile(
         base_temperature=10.0,
@@ -309,7 +309,7 @@ def mock_growth_progress_crop_requirement_gateway():
     gateway = AsyncMock()
     
     # Default mock aggregate
-    crop = Crop(crop_id="rice", name="Rice", variety="Koshihikari")
+    crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
     stage = GrowthStage(name="Vegetative", order=1)
     temp = TemperatureProfile(
         base_temperature=10.0,

@@ -37,7 +37,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
         mock_presenter.output_format = "table"
 
         # Setup crop requirements
-        crop = Crop(crop_id="rice", name="Rice", variety="Koshihikari")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
         stage = GrowthStage(name="Growth", order=1)
 
         temp_profile = TemperatureProfile(
@@ -110,7 +110,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
         mock_presenter.output_format = "table"
 
         # Setup crop requirements
-        crop = Crop(crop_id="rice", name="Rice", variety="Koshihikari")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
         stage = GrowthStage(name="Growth", order=1)
 
         temp_profile = TemperatureProfile(

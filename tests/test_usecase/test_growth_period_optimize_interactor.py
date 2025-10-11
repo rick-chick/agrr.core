@@ -42,7 +42,7 @@ class TestGrowthPeriodOptimizeInteractor:
     async def test_execute_finds_optimal_period(self):
         """Test that the interactor finds the optimal growth period with minimum cost."""
         # Setup mock crop requirements (total 100 GDD)
-        crop = Crop(crop_id="rice", name="Rice", variety="Koshihikari")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
         stage = GrowthStage(name="Growth", order=1)
 
         temp_profile = TemperatureProfile(
@@ -132,7 +132,7 @@ class TestGrowthPeriodOptimizeInteractor:
     async def test_execute_handles_incomplete_growth(self):
         """Test handling when growth doesn't reach 100% for any candidate in evaluation period."""
         # Setup mock crop requirements (total 1000 GDD - high requirement)
-        crop = Crop(crop_id="rice", name="Rice")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25)
         stage = GrowthStage(name="Growth", order=1)
 
         temp_profile = TemperatureProfile(
@@ -186,7 +186,7 @@ class TestGrowthPeriodOptimizeInteractor:
     async def test_execute_with_single_day_evaluation_period(self):
         """Test with evaluation period of just one day."""
         # Setup simple scenario
-        crop = Crop(crop_id="tomato", name="Tomato")
+        crop = Crop(crop_id="tomato", name="Tomato", area_per_unit=0.5)
         stage = GrowthStage(name="Growth", order=1)
 
         temp_profile = TemperatureProfile(
@@ -246,7 +246,7 @@ class TestGrowthPeriodOptimizeInteractor:
     async def test_execute_with_completion_deadline_filters_late_candidates(self):
         """Test that candidates exceeding completion deadline are filtered out."""
         # Setup crop requirements (total 100 GDD)
-        crop = Crop(crop_id="rice", name="Rice", variety="Koshihikari")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
         stage = GrowthStage(name="Growth", order=1)
 
         temp_profile = TemperatureProfile(
@@ -324,7 +324,7 @@ class TestGrowthPeriodOptimizeInteractor:
     async def test_execute_raises_error_when_no_candidate_meets_deadline(self):
         """Test error message when all candidates exceed completion deadline."""
         # Setup crop requirements (total 100 GDD - takes 10 days)
-        crop = Crop(crop_id="rice", name="Rice")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25)
         stage = GrowthStage(name="Growth", order=1)
 
         temp_profile = TemperatureProfile(

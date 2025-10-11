@@ -65,6 +65,7 @@ class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
             crop = Crop(
                 crop_id=crop_name.lower(),
                 name=crop_name,
+                area_per_unit=0.25,  # Default area per unit in m²
                 variety=variety if variety and variety != "default" else None
             )
             stage_requirements = []

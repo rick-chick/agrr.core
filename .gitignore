@@ -149,3 +149,6 @@ Thumbs.db
 
 # Sample weather data files
 sample_weather_data*.json
+
+# Test data directory
+test_data/

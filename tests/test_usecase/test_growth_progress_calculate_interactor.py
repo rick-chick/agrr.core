@@ -44,7 +44,7 @@ class TestGrowthProgressCalculateInteractor:
     async def test_execute_success(self):
         """Test successful growth progress calculation."""
         # Setup mock crop requirements
-        crop = Crop(crop_id="rice", name="Rice", variety="Koshihikari")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
         stage1 = GrowthStage(name="Vegetative", order=1)
         stage2 = GrowthStage(name="Maturity", order=2)
 
@@ -136,7 +136,7 @@ class TestGrowthProgressCalculateInteractor:
     async def test_execute_completes_at_100_percent(self):
         """Test that growth caps at 100%."""
         # Setup mock crop requirements with small GDD requirement
-        crop = Crop(crop_id="rice", name="Rice")
+        crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25)
         stage = GrowthStage(name="Test", order=1)
 
         temp_profile = TemperatureProfile(

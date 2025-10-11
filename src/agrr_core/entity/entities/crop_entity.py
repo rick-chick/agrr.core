@@ -7,6 +7,7 @@ no thresholds; thresholds live in the requirement/profile entities.
 Fields
 - crop_id: Stable string identifier (e.g., "rice", "tomato")
 - name: Human-readable crop name (e.g., "Rice")
+- area_per_unit: Area occupied per unit of crop in square meters (m²)
 - variety: Optional variety/cultivar label (e.g., "Koshihikari")
 """
 
@@ -20,6 +21,7 @@ class Crop:
 
     crop_id: str
     name: str
+    area_per_unit: float
     variety: Optional[str] = None
 
 

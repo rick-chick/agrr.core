@@ -297,3 +297,46 @@ class FrameworkLLMClient(LLMClient):
         result = await self.struct(query, structure, instruction)
         debug_print(f"Step 3 result for {stage_name}: {result['data']}")
         return result
+
+    async def extract_crop_economics(self, crop_name: str, variety: str) -> Dict[str, Any]:
+        """Extract crop economic information (area per unit and revenue per area).
+        
+        This is a separate LLM call independent from growth stage information.
+        
+        Args:
+            crop_name: Name of the crop
+            variety: Variety name
+            
+        Returns:
+            Dict containing area_per_unit and revenue_per_area
+        """
+        query = f"""作物: {crop_name}
+品種: {variety}
+
+この作物・品種について、以下の経済情報を調査してください：
+1. area_per_unit: 1単位あたりの栽培面積（㎡）
+   - 例: トマトの場合、1株あたり何㎡必要か
+   - 標準的な栽培密度から計算してください
+2. revenue_per_area: 1㎡あたりの収益（円/㎡）
+   - 例: 平均的な市場価格と収量から計算した㎡あたりの収益
+   - 一般的な露地栽培または施設栽培での標準値を使用してください
+
+数値のみを返してください（説明文は不要）。"""
+
+        structure = {
+            "area_per_unit": None,  # m² per unit
+            "revenue_per_area": None  # yen per m²
+        }
+        
+        instruction = """
+        作物・品種の経済情報を調査し、JSON形式で返してください。
+        - area_per_unit: 1単位（1株、1本など）あたりの栽培面積（㎡）
+        - revenue_per_area: 1㎡あたりの収益（円/㎡）
+        
+        信頼できる農業資料や標準的な栽培データに基づいて数値を算出してください。
+        数値は小数点以下も含めて正確に記載してください。
+        """
+        
+        result = await self.struct(query, structure, instruction)
+        debug_print(f"Crop economics result: {result['data']}")
+        return result

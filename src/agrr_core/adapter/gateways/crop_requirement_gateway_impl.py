@@ -165,6 +165,31 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
             }
         }
 
+    async def extract_crop_economics(self, crop_name: str, variety: str) -> Dict[str, Any]:
+        """Extract crop economic information (area per unit and revenue per area).
+        
+        This is a separate LLM call independent from growth stage information.
+        
+        Args:
+            crop_name: Name of the crop
+            variety: Variety name
+            
+        Returns:
+            Dict containing area_per_unit and revenue_per_area
+        """
+        if self.llm_client is not None:
+            if hasattr(self.llm_client, 'extract_crop_economics'):
+                result = await self.llm_client.extract_crop_economics(crop_name, variety)
+                return result.get("data", {})
+            else:
+                raise RuntimeError("LLM client does not support extract_crop_economics")
+        
+        # Fallback
+        return {
+            "area_per_unit": 0.25,  # Default 0.25 m² per unit
+            "revenue_per_area": None  # No revenue data by default
+        }
+
     async def _infer_with_llm(self, crop_query: str) -> Tuple[Crop, List[StageRequirement]]:
         # Deprecated: This method is now replaced by the 3-step methods above
         # Kept for backward compatibility

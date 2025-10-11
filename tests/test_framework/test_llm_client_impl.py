@@ -173,3 +173,32 @@ class TestFrameworkLLMClient:
         method = self.client.step3_variety_specific_research
         assert method.__doc__ is not None
         assert "Research variety-specific requirements" in method.__doc__
+    
+    @pytest.mark.asyncio
+    async def test_extract_crop_economics(self):
+        """Test extracting crop economic information (area_per_unit and revenue_per_area)."""
+        crop_name = "トマト"
+        variety = "アイコ"
+        
+        with patch.object(self.client, 'struct', new_callable=AsyncMock) as mock_struct:
+            mock_struct.return_value = {
+                "data": {
+                    "area_per_unit": 0.5,
+                    "revenue_per_area": 3000.0
+                }
+            }
+            
+            result = await self.client.extract_crop_economics(crop_name, variety)
+            
+            # Verify struct was called with correct parameters
+            mock_struct.assert_called_once()
+            call_args = mock_struct.call_args
+            query = call_args[0][0]
+            assert crop_name in query
+            assert variety in query
+            assert "area_per_unit" in call_args[0][1]
+            assert "revenue_per_area" in call_args[0][1]
+            
+            # Verify result structure
+            assert result["data"]["area_per_unit"] == 0.5
+            assert result["data"]["revenue_per_area"] == 3000.0

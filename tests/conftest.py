@@ -201,6 +201,10 @@ def mock_crop_requirement_gateway(sample_crop_requirement_aggregate):
             "required_gdd": 400.0
         }
     }
+    gateway.extract_crop_economics.return_value = {
+        "area_per_unit": 0.5,
+        "revenue_per_area": 2000.0
+    }
     return gateway
 
 

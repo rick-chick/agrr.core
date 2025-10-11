@@ -61,12 +61,18 @@ class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
                 []
             )
 
+            # Extract crop economic information (separate LLM call)
+            crop_economics = await self.gateway.extract_crop_economics(crop_name, variety)
+            area_per_unit = crop_economics.get("area_per_unit", 0.25)
+            revenue_per_area = crop_economics.get("revenue_per_area")
+
             # Step 3: Research requirements for each stage and build entities
             crop = Crop(
                 crop_id=crop_name.lower(),
                 name=crop_name,
-                area_per_unit=0.25,  # Default area per unit in m²
-                variety=variety if variety and variety != "default" else None
+                area_per_unit=area_per_unit,
+                variety=variety if variety and variety != "default" else None,
+                revenue_per_area=revenue_per_area
             )
             stage_requirements = []
             
@@ -135,6 +141,8 @@ class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
                 "crop_id": aggregate.crop.crop_id,
                 "crop_name": aggregate.crop.name,
                 "variety": aggregate.crop.variety,
+                "area_per_unit": aggregate.crop.area_per_unit,
+                "revenue_per_area": aggregate.crop.revenue_per_area,
                 "stages": [
                     {
                         "name": sr.stage.name,

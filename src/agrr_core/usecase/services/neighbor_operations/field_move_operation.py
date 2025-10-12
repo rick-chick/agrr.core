@@ -81,9 +81,9 @@ class FieldMoveOperation(NeighborOperation):
                     continue
                 
                 # Create moved allocation with target field's optimal period
-                moved_alloc = self._candidate_to_allocation_with_quantity(
+                moved_alloc = self._candidate_to_allocation_with_area(
                     best_candidate,
-                    quantity=alloc.quantity
+                    area_used=alloc.area_used
                 )
                 
                 neighbor = solution.copy()
@@ -92,20 +92,19 @@ class FieldMoveOperation(NeighborOperation):
         
         return neighbors
     
-    def _candidate_to_allocation_with_quantity(
+    def _candidate_to_allocation_with_area(
         self,
         candidate: Any,
-        quantity: float,
+        area_used: float,
     ) -> CropAllocation:
-        """Convert candidate to allocation with specified quantity."""
+        """Convert candidate to allocation with specified area."""
         import uuid
         
-        area_used = quantity * candidate.crop.area_per_unit
         cost = candidate.cost
         
         revenue = None
         if candidate.crop.revenue_per_area is not None:
-            revenue = quantity * candidate.crop.revenue_per_area * candidate.crop.area_per_unit
+            revenue = area_used * candidate.crop.revenue_per_area
         
         profit = (revenue - cost) if revenue is not None else None
         
@@ -113,7 +112,7 @@ class FieldMoveOperation(NeighborOperation):
             allocation_id=str(uuid.uuid4()),
             field=candidate.field,
             crop=candidate.crop,
-            quantity=quantity,
+            area_used=area_used,
             start_date=candidate.start_date,
             completion_date=candidate.completion_date,
             growth_days=candidate.growth_days,
@@ -121,6 +120,5 @@ class FieldMoveOperation(NeighborOperation):
             total_cost=cost,
             expected_revenue=revenue,
             profit=profit,
-            area_used=area_used,
         )
 

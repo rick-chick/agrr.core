@@ -1,7 +1,7 @@
 """Crop allocation entity.
 
 Represents a single allocation decision: which crop to plant, in which field,
-when to start, and how much to produce.
+when to start, and how much area to use.
 
 This is a core entity for multi-field, multi-crop optimization.
 
@@ -9,15 +9,14 @@ Fields:
 - allocation_id: Unique identifier for this allocation
 - field: Field entity where the crop is allocated
 - crop: Crop entity to be planted
-- quantity: Number of units to produce (e.g., number of plants)
+- area_used: Field area used by this allocation (m²)
 - start_date: Cultivation start date
 - completion_date: Date when cultivation completes (harvest date)
 - growth_days: Number of days from start to completion
 - accumulated_gdd: Total accumulated growing degree days
 - total_cost: Total cost for this allocation (growth_days × field.daily_fixed_cost)
-- expected_revenue: Expected revenue from this allocation (quantity × crop.revenue_per_area × crop.area_per_unit)
+- expected_revenue: Expected revenue from this allocation (area_used × crop.revenue_per_area)
 - profit: Expected profit (expected_revenue - total_cost)
-- area_used: Field area used by this allocation (quantity × crop.area_per_unit)
 """
 
 from dataclasses import dataclass
@@ -30,12 +29,12 @@ from agrr_core.entity.entities.crop_entity import Crop
 
 @dataclass(frozen=True)
 class CropAllocation:
-    """Represents allocation of a specific crop to a specific field with timing and quantity."""
+    """Represents allocation of a specific crop to a specific field with timing and area."""
 
     allocation_id: str
     field: Field
     crop: Crop
-    quantity: float
+    area_used: float
     start_date: datetime
     completion_date: datetime
     growth_days: int
@@ -43,12 +42,11 @@ class CropAllocation:
     total_cost: float
     expected_revenue: Optional[float] = None
     profit: Optional[float] = None
-    area_used: float = 0.0
 
     def __post_init__(self):
         """Validate allocation invariants."""
-        if self.quantity <= 0:
-            raise ValueError(f"quantity must be positive, got {self.quantity}")
+        if self.area_used <= 0:
+            raise ValueError(f"area_used must be positive, got {self.area_used}")
         
         if self.growth_days < 0:
             raise ValueError(f"growth_days must be non-negative, got {self.growth_days}")
@@ -63,9 +61,6 @@ class CropAllocation:
             raise ValueError(
                 f"completion_date ({self.completion_date}) must be after or equal to start_date ({self.start_date})"
             )
-        
-        if self.area_used < 0:
-            raise ValueError(f"area_used must be non-negative, got {self.area_used}")
         
         # Area check: ensure allocated area doesn't exceed field area
         if self.area_used > self.field.area:

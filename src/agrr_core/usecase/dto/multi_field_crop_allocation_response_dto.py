@@ -37,7 +37,7 @@ class MultiFieldCropAllocationResponseDTO:
             "profit_rate_percent": result.profit_rate * 100,
             "average_field_utilization_percent": result.average_field_utilization,
             "crop_diversity": result.crop_diversity,
-            "crop_quantities": result.crop_quantities,
+            "crop_areas": result.crop_areas,
         }
 
     def to_dict(self) -> Dict[str, Any]:
@@ -53,7 +53,7 @@ class MultiFieldCropAllocationResponseDTO:
                 "total_cost": result.total_cost,
                 "total_revenue": result.total_revenue,
                 "total_profit": result.total_profit,
-                "crop_quantities": result.crop_quantities,
+                "crop_areas": result.crop_areas,
                 "field_schedules": [
                     {
                         "field_id": schedule.field.field_id,

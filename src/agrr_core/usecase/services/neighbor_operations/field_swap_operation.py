@@ -14,7 +14,7 @@ class FieldSwapOperation(NeighborOperation):
     
     Strategy:
     - Select two allocations from different fields
-    - Swap their fields while adjusting quantities to maintain area equivalence
+    - Swap their fields while keeping areas
     - Check capacity constraints
     """
     
@@ -53,10 +53,9 @@ class FieldSwapOperation(NeighborOperation):
         alloc_b: CropAllocation,
         solution: List[CropAllocation],
     ) -> Optional[Tuple[CropAllocation, CropAllocation]]:
-        """Swap two allocations between fields with area-equivalent quantity adjustment.
+        """Swap two allocations between fields keeping their areas.
         
-        When swapping crops between fields, adjust quantities to maintain equivalent
-        area usage based on each crop's area_per_unit.
+        When swapping crops between fields, keep their area usage.
         
         Args:
             alloc_a: First allocation
@@ -66,20 +65,9 @@ class FieldSwapOperation(NeighborOperation):
         Returns:
             Tuple of (new_alloc_a, new_alloc_b) if swap is valid, None otherwise
         """
-        # Calculate area-equivalent quantities
-        area_a = alloc_a.quantity * alloc_a.crop.area_per_unit
-        area_b = alloc_b.quantity * alloc_b.crop.area_per_unit
-        
-        # Check if area_per_unit is valid
-        if alloc_a.crop.area_per_unit <= 0 or alloc_b.crop.area_per_unit <= 0:
-            return None
-        
-        # Calculate new quantities to maintain equivalent area usage
-        new_quantity_a = area_b / alloc_a.crop.area_per_unit
-        new_quantity_b = area_a / alloc_b.crop.area_per_unit
-        
-        new_area_a_in_field_b = new_quantity_a * alloc_a.crop.area_per_unit
-        new_area_b_in_field_a = new_quantity_b * alloc_b.crop.area_per_unit
+        # Get areas from allocations
+        area_a = alloc_a.area_used
+        area_b = alloc_b.area_used
         
         # Calculate used area in each field (excluding the allocations being swapped)
         used_area_in_field_a = sum(
@@ -100,10 +88,10 @@ class FieldSwapOperation(NeighborOperation):
         available_in_field_a = alloc_a.field.area - used_area_in_field_a
         available_in_field_b = alloc_b.field.area - used_area_in_field_b
         
-        if new_area_b_in_field_a > available_in_field_a:
+        if area_b > available_in_field_a:
             return None
         
-        if new_area_a_in_field_b > available_in_field_b:
+        if area_a > available_in_field_b:
             return None
         
         # Calculate new costs and revenues
@@ -112,11 +100,11 @@ class FieldSwapOperation(NeighborOperation):
         
         revenue_a_in_field_b = None
         if alloc_a.crop.revenue_per_area is not None:
-            revenue_a_in_field_b = new_quantity_a * alloc_a.crop.revenue_per_area * alloc_a.crop.area_per_unit
+            revenue_a_in_field_b = area_a * alloc_a.crop.revenue_per_area
         
         revenue_b_in_field_a = None
         if alloc_b.crop.revenue_per_area is not None:
-            revenue_b_in_field_a = new_quantity_b * alloc_b.crop.revenue_per_area * alloc_b.crop.area_per_unit
+            revenue_b_in_field_a = area_b * alloc_b.crop.revenue_per_area
         
         # Calculate profits
         profit_a_in_field_b = (revenue_a_in_field_b - cost_a_in_field_b) if revenue_a_in_field_b is not None else None
@@ -127,7 +115,7 @@ class FieldSwapOperation(NeighborOperation):
             allocation_id=str(uuid.uuid4()),
             field=alloc_b.field,
             crop=alloc_a.crop,
-            quantity=new_quantity_a,
+            area_used=area_a,
             start_date=alloc_a.start_date,
             completion_date=alloc_a.completion_date,
             growth_days=alloc_a.growth_days,
@@ -135,14 +123,13 @@ class FieldSwapOperation(NeighborOperation):
             total_cost=cost_a_in_field_b,
             expected_revenue=revenue_a_in_field_b,
             profit=profit_a_in_field_b,
-            area_used=new_area_a_in_field_b,
         )
         
         new_alloc_b = CropAllocation(
             allocation_id=str(uuid.uuid4()),
             field=alloc_a.field,
             crop=alloc_b.crop,
-            quantity=new_quantity_b,
+            area_used=area_b,
             start_date=alloc_b.start_date,
             completion_date=alloc_b.completion_date,
             growth_days=alloc_b.growth_days,
@@ -150,7 +137,6 @@ class FieldSwapOperation(NeighborOperation):
             total_cost=cost_b_in_field_a,
             expected_revenue=revenue_b_in_field_a,
             profit=profit_b_in_field_a,
-            area_used=new_area_b_in_field_a,
         )
         
         return (new_alloc_a, new_alloc_b)

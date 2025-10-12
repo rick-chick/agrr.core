@@ -21,14 +21,15 @@ from typing import List, Dict, Any, Optional
 class CropRequirementSpec:
     """Specification for a single crop's requirements.
     
-    Note: max_quantity is now defined in Crop entity (not here) as it represents
+    Note: Areas are specified in square meters (m²).
+    max_revenue is defined in Crop entity (not here) as it represents
     business constraints (market demand, contracts) that are inherent to the crop.
     """
     
     crop_id: str
     variety: Optional[str] = None
-    min_quantity: Optional[float] = None
-    target_quantity: Optional[float] = None
+    min_area: Optional[float] = None
+    target_area: Optional[float] = None
     crop_requirement_file: Optional[str] = None  # Path to pre-generated requirement file
 
 
@@ -71,18 +72,18 @@ class MultiFieldCropAllocationRequestDTO:
         
         # Validate crop requirements
         for crop_req in self.crop_requirements:
-            if crop_req.min_quantity is not None and crop_req.min_quantity < 0:
-                raise ValueError(f"min_quantity must be non-negative for {crop_req.crop_id}")
+            if crop_req.min_area is not None and crop_req.min_area < 0:
+                raise ValueError(f"min_area must be non-negative for {crop_req.crop_id}")
             
-            if crop_req.target_quantity is not None and crop_req.target_quantity < 0:
-                raise ValueError(f"target_quantity must be non-negative for {crop_req.crop_id}")
+            if crop_req.target_area is not None and crop_req.target_area < 0:
+                raise ValueError(f"target_area must be non-negative for {crop_req.crop_id}")
             
-            # Validate quantity ordering
-            if (crop_req.min_quantity is not None and 
-                crop_req.target_quantity is not None and 
-                crop_req.min_quantity > crop_req.target_quantity):
+            # Validate area ordering
+            if (crop_req.min_area is not None and 
+                crop_req.target_area is not None and 
+                crop_req.min_area > crop_req.target_area):
                 raise ValueError(
-                    f"min_quantity ({crop_req.min_quantity}) must be <= "
-                    f"target_quantity ({crop_req.target_quantity}) for {crop_req.crop_id}"
+                    f"min_area ({crop_req.min_area}) must be <= "
+                    f"target_area ({crop_req.target_area}) for {crop_req.crop_id}"
                 )
 

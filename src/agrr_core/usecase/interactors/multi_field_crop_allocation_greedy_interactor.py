@@ -46,6 +46,8 @@ from agrr_core.usecase.dto.growth_period_optimize_request_dto import OptimalGrow
 from agrr_core.usecase.services.neighbor_generator_service import NeighborGeneratorService
 from agrr_core.usecase.interactors.base_optimizer import BaseOptimizer
 from agrr_core.entity.value_objects.optimization_objective import OptimizationMetrics
+from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
+from agrr_core.usecase.services.interaction_rule_service import InteractionRuleService
 
 
 @dataclass
@@ -62,8 +64,9 @@ class AllocationCandidate:
     completion_date: datetime
     growth_days: int
     accumulated_gdd: float
-    quantity: float  # Allocated quantity
-    area_used: float
+    area_used: float  # Allocated area (m²)
+    previous_crop: Optional[Crop] = None  # Previous crop for continuous cultivation check
+    interaction_impact: float = 1.0  # Impact from interaction rules
     
     def get_metrics(self) -> OptimizationMetrics:
         """Get optimization metrics with raw calculation parameters (implements Optimizable protocol).
@@ -71,14 +74,24 @@ class AllocationCandidate:
         Returns OptimizationMetrics with all raw data needed for calculation.
         The actual cost/revenue/profit calculations happen inside OptimizationMetrics.
         
+        Applies interaction_impact to revenue_per_area for continuous cultivation effects.
+        
         Returns:
             OptimizationMetrics containing raw parameters for calculation
         """
+        # Apply interaction impact to revenue
+        adjusted_revenue_per_area = None
+        if self.crop.revenue_per_area is not None:
+            adjusted_revenue_per_area = self.crop.revenue_per_area * self.interaction_impact
+        
+        adjusted_max_revenue = None
+        if self.crop.max_revenue is not None:
+            adjusted_max_revenue = self.crop.max_revenue * self.interaction_impact
+        
         return OptimizationMetrics(
-            quantity=self.quantity,
-            area_per_unit=self.crop.area_per_unit,
-            revenue_per_area=self.crop.revenue_per_area,
-            max_revenue=self.crop.max_revenue,
+            area_used=self.area_used,
+            revenue_per_area=adjusted_revenue_per_area,
+            max_revenue=adjusted_max_revenue,
             growth_days=self.growth_days,
             daily_fixed_cost=self.field.daily_fixed_cost,
         )
@@ -122,6 +135,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         crop_requirement_gateway: CropRequirementGateway,
         weather_gateway: WeatherGateway,
         config: Optional[OptimizationConfig] = None,
+        interaction_rules: Optional[List[InteractionRule]] = None,
     ):
         super().__init__()  # Initialize BaseOptimizer
         self.field_gateway = field_gateway
@@ -137,6 +151,11 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         
         # Create neighbor generator service (Phase 1 refactoring)
         self.neighbor_generator = NeighborGeneratorService(self.config)
+        
+        # Create interaction rule service (for continuous cultivation impact)
+        self.interaction_rule_service = InteractionRuleService(
+            rules=interaction_rules or []
+        )
 
     async def execute(
         self,
@@ -217,7 +236,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         request: MultiFieldCropAllocationRequestDTO,
         config: Optional[OptimizationConfig] = None,
     ) -> List[AllocationCandidate]:
-        """Generate allocation candidates for all field × crop × quantity combinations.
+        """Generate allocation candidates for all field × crop × area combinations.
         
         For each field and crop, use the existing GrowthPeriodOptimizeInteractor
         to find all viable cultivation periods (DP-optimized).
@@ -248,13 +267,12 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 )
                 crop = crop_requirement.crop
                 
-                # Calculate maximum quantity that can fit in the field (field capacity constraint)
-                field_capacity = field.area / crop.area_per_unit if crop.area_per_unit > 0 else 0
+                # Calculate maximum area that can fit in the field
+                field_max_area = field.area
                 
-                # Generate candidates for each quantity level
-                for quantity_level in cfg.quantity_levels:
-                    quantity = field_capacity * quantity_level
-                    area_used = quantity * crop.area_per_unit
+                # Generate candidates for each area level
+                for area_level in cfg.quantity_levels:  # Note: will rename this to area_levels later
+                    area_used = field_max_area * area_level
                     
                     # Use top N period candidates from DP results
                     for candidate_period in optimization_result.candidates[:cfg.top_period_candidates]:
@@ -269,7 +287,6 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                             completion_date=candidate_period.completion_date,
                             growth_days=candidate_period.growth_days,
                             accumulated_gdd=0.0,  # Will be filled if needed
-                            quantity=quantity,
                             area_used=area_used,
                         )
                         
@@ -288,9 +305,9 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                             # Filter 3: Minimum absolute profit (for profit maximization)
                             if request.optimization_objective == "maximize_profit":
                                 if candidate.profit is not None and candidate.profit < 0:
-                                    # Only keep profitable candidates unless min quantity required
+                                    # Only keep profitable candidates unless min area required
                                     crop_req = next((r for r in request.crop_requirements if r.crop_id == crop.crop_id), None)
-                                    if not (crop_req and crop_req.min_quantity and crop_req.min_quantity > 0):
+                                    if not (crop_req and crop_req.min_area and crop_req.min_area > 0):
                                         continue
                         
                         candidates.append(candidate)
@@ -367,13 +384,12 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         )
         crop = crop_requirement.crop
         
-        # Generate quantity×period candidates
+        # Generate area×period candidates
         candidates = []
-        field_capacity = field.area / crop.area_per_unit if crop.area_per_unit > 0 else 0
+        field_max_area = field.area
         
-        for quantity_level in config.quantity_levels:
-            quantity = field_capacity * quantity_level
-            area_used = quantity * crop.area_per_unit
+        for area_level in config.quantity_levels:  # Note: will rename this to area_levels later
+            area_used = field_max_area * area_level
             
             for candidate_period in optimization_result.candidates[:config.top_period_candidates]:
                 if candidate_period.completion_date is None:
@@ -387,7 +403,6 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                     completion_date=candidate_period.completion_date,
                     growth_days=candidate_period.growth_days,
                     accumulated_gdd=0.0,
-                    quantity=quantity,
                     area_used=area_used,
                 )
                 
@@ -400,7 +415,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                             continue
                     if request.optimization_objective == "maximize_profit" and candidate.profit is not None and candidate.profit < 0:
                         crop_req = next((r for r in request.crop_requirements if r.crop_id == crop.crop_id), None)
-                        if not (crop_req and crop_req.min_quantity and crop_req.min_quantity > 0):
+                        if not (crop_req and crop_req.min_area and crop_req.min_area > 0):
                             continue
                 
                 candidates.append(candidate)
@@ -433,6 +448,81 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         
         return filtered_candidates
 
+    def _get_previous_crop(
+        self,
+        field_id: str,
+        start_date: datetime,
+        field_schedules: Dict[str, List[CropAllocation]]
+    ) -> Optional[Crop]:
+        """Get the previous crop in the same field before the given start date.
+        
+        Args:
+            field_id: Field ID to check
+            start_date: Start date of current allocation
+            field_schedules: Current field schedules
+            
+        Returns:
+            Previous crop if exists, None otherwise
+        """
+        if field_id not in field_schedules:
+            return None
+        
+        # Find the most recent allocation that completes before start_date
+        previous_allocations = [
+            alloc for alloc in field_schedules[field_id]
+            if alloc.completion_date <= start_date
+        ]
+        
+        if not previous_allocations:
+            return None
+        
+        # Get the most recent one
+        most_recent = max(previous_allocations, key=lambda a: a.completion_date)
+        return most_recent.crop
+    
+    def _apply_interaction_rules(
+        self,
+        candidate: AllocationCandidate,
+        field_schedules: Dict[str, List[CropAllocation]]
+    ) -> AllocationCandidate:
+        """Apply interaction rules to a candidate.
+        
+        Calculates continuous cultivation impact based on previous crop
+        and updates candidate's interaction_impact.
+        
+        Args:
+            candidate: Allocation candidate to evaluate
+            field_schedules: Current field schedules
+            
+        Returns:
+            Updated candidate with interaction_impact applied
+        """
+        # Get previous crop
+        previous_crop = self._get_previous_crop(
+            field_id=candidate.field.field_id,
+            start_date=candidate.start_date,
+            field_schedules=field_schedules
+        )
+        
+        # Calculate continuous cultivation impact
+        impact = self.interaction_rule_service.get_continuous_cultivation_impact(
+            current_crop=candidate.crop,
+            previous_crop=previous_crop
+        )
+        
+        # Create new candidate with updated impact
+        return AllocationCandidate(
+            field=candidate.field,
+            crop=candidate.crop,
+            start_date=candidate.start_date,
+            completion_date=candidate.completion_date,
+            growth_days=candidate.growth_days,
+            accumulated_gdd=candidate.accumulated_gdd,
+            area_used=candidate.area_used,
+            previous_crop=previous_crop,
+            interaction_impact=impact
+        )
+    
     def _greedy_allocation(
         self,
         candidates: List[AllocationCandidate],
@@ -444,47 +534,51 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         Strategy: Sort candidates by profit (using unified objective) and select
         greedily while respecting constraints.
         
+        Applies interaction rules (continuous cultivation) to adjust revenue.
+        
         Note: optimization_objective parameter is kept for backward compatibility
         but the actual optimization uses the unified objective (profit maximization).
         """
-        # Sort candidates using BaseOptimizer (unified objective)
-        # This automatically uses profit for sorting
-        sorted_candidates = self.sort_candidates(candidates, reverse=True)
-        
         # Track allocated resources
         field_schedules: Dict[str, List[CropAllocation]] = {}  # field_id -> allocations
-        crop_quantities: Dict[str, float] = {spec.crop_id: 0.0 for spec in crop_requirements}
-        crop_targets: Dict[str, Optional[float]] = {spec.crop_id: spec.target_quantity for spec in crop_requirements}
+        crop_areas: Dict[str, float] = {spec.crop_id: 0.0 for spec in crop_requirements}
+        crop_targets: Dict[str, Optional[float]] = {spec.crop_id: spec.target_area for spec in crop_requirements}
         
-        # Greedily select allocations
+        # Sort candidates using BaseOptimizer (unified objective)
+        sorted_candidates = self.sort_candidates(candidates, reverse=True)
+        
+        # Greedily select allocations with dynamic interaction rule evaluation
         allocations = []
         
         for candidate in sorted_candidates:
+            # Apply interaction rules dynamically based on current field schedules
+            updated_candidate = self._apply_interaction_rules(candidate, field_schedules)
+            
             # Check if we should consider this candidate
-            crop_id = candidate.crop.crop_id
+            crop_id = updated_candidate.crop.crop_id
             if crop_targets.get(crop_id) is not None:
-                if crop_quantities[crop_id] >= crop_targets[crop_id]:
+                if crop_areas[crop_id] >= crop_targets[crop_id]:
                     continue  # Target already met
             
             # Check time overlap with existing allocations in the same field
-            field_id = candidate.field.field_id
+            field_id = updated_candidate.field.field_id
             if field_id not in field_schedules:
                 field_schedules[field_id] = []
             
             has_overlap = False
             for existing in field_schedules[field_id]:
-                if self._time_overlaps(candidate, existing):
+                if self._time_overlaps(updated_candidate, existing):
                     has_overlap = True
                     break
             
             if has_overlap:
                 continue  # Cannot allocate due to time conflict
             
-            # Create allocation
-            allocation = self._candidate_to_allocation(candidate)
+            # Create allocation (using updated candidate with interaction impact)
+            allocation = self._candidate_to_allocation(updated_candidate)
             allocations.append(allocation)
             field_schedules[field_id].append(allocation)
-            crop_quantities[crop_id] += allocation.quantity
+            crop_areas[crop_id] += allocation.area_used
         
         return allocations
 
@@ -590,7 +684,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             allocation_id=str(uuid.uuid4()),
             field=candidate.field,
             crop=candidate.crop,
-            quantity=candidate.quantity,
+            area_used=candidate.area_used,
             start_date=candidate.start_date,
             completion_date=candidate.completion_date,
             growth_days=candidate.growth_days,
@@ -598,7 +692,6 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             total_cost=candidate.cost,
             expected_revenue=candidate.revenue,
             profit=candidate.profit,
-            area_used=candidate.area_used,
         )
 
     def _calculate_total_profit(self, allocations: List[CropAllocation]) -> float:
@@ -641,7 +734,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         total_cost = 0.0
         total_revenue = 0.0
         total_profit = 0.0
-        crop_quantities: Dict[str, float] = {}
+        crop_areas: Dict[str, float] = {}
         
         for field in fields:
             field_allocs = field_allocations[field.field_id]
@@ -668,10 +761,10 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             total_revenue += field_revenue
             total_profit += field_profit
             
-            # Aggregate crop quantities
+            # Aggregate crop areas
             for alloc in field_allocs:
                 crop_id = alloc.crop.crop_id
-                crop_quantities[crop_id] = crop_quantities.get(crop_id, 0.0) + alloc.quantity
+                crop_areas[crop_id] = crop_areas.get(crop_id, 0.0) + alloc.area_used
         
         return MultiFieldOptimizationResult(
             optimization_id=str(uuid.uuid4()),
@@ -679,7 +772,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             total_cost=total_cost,
             total_revenue=total_revenue,
             total_profit=total_profit,
-            crop_quantities=crop_quantities,
+            crop_areas=crop_areas,
             optimization_time=computation_time,
             algorithm_used=algorithm_used,
             is_optimal=False,  # Greedy + LS doesn't guarantee optimality

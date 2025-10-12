@@ -104,7 +104,7 @@ class CropInsertOperation(NeighborOperation):
             allocation_id=str(uuid.uuid4()),
             field=candidate.field,
             crop=candidate.crop,
-            quantity=candidate.quantity,
+            area_used=candidate.area_used,
             start_date=candidate.start_date,
             completion_date=candidate.completion_date,
             growth_days=candidate.growth_days,
@@ -112,6 +112,5 @@ class CropInsertOperation(NeighborOperation):
             total_cost=candidate.cost,
             expected_revenue=candidate.revenue,
             profit=candidate.profit,
-            area_used=candidate.area_used,
         )
 

@@ -11,7 +11,7 @@ Fields:
 - total_cost: Sum of all field costs
 - total_revenue: Sum of all field revenues
 - total_profit: Sum of all field profits
-- crop_quantities: Dictionary mapping crop_id to total quantity produced
+- crop_areas: Dictionary mapping crop_id to total area used (m²)
 - optimization_time: Time taken to compute this solution (seconds)
 - algorithm_used: Name of the algorithm used
 - is_optimal: True if this is a proven optimal solution
@@ -32,7 +32,7 @@ class MultiFieldOptimizationResult:
     total_cost: float
     total_revenue: float
     total_profit: float
-    crop_quantities: Dict[str, float]
+    crop_areas: Dict[str, float]
     optimization_time: float
     algorithm_used: str
     is_optimal: bool = False
@@ -48,10 +48,10 @@ class MultiFieldOptimizationResult:
         if self.optimization_time < 0:
             raise ValueError(f"optimization_time must be non-negative, got {self.optimization_time}")
         
-        # Verify crop quantities are non-negative
-        for crop_id, quantity in self.crop_quantities.items():
-            if quantity < 0:
-                raise ValueError(f"crop_quantities[{crop_id}] must be non-negative, got {quantity}")
+        # Verify crop areas are non-negative
+        for crop_id, area in self.crop_areas.items():
+            if area < 0:
+                raise ValueError(f"crop_areas[{crop_id}] must be non-negative, got {area}")
         
         # Verify no duplicate fields
         field_ids = [schedule.field.field_id for schedule in self.field_schedules]
@@ -78,7 +78,7 @@ class MultiFieldOptimizationResult:
     @property
     def crop_diversity(self) -> int:
         """Return the total number of unique crops across all fields."""
-        return len(self.crop_quantities)
+        return len(self.crop_areas)
 
     @property
     def profit_rate(self) -> float:

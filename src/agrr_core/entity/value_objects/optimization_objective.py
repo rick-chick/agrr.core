@@ -39,8 +39,7 @@ class OptimizationMetrics:
     The actual calculations are performed as properties.
     
     Fields for crop allocation:
-        quantity: Allocated quantity
-        area_per_unit: Area per unit (m²)
+        area_used: Allocated area (m²)
         revenue_per_area: Revenue per area (yen/m²)
         max_revenue: Maximum revenue constraint (optional)
         
@@ -55,8 +54,7 @@ class OptimizationMetrics:
     """
     
     # Crop allocation parameters
-    quantity: Optional[float] = None
-    area_per_unit: Optional[float] = None
+    area_used: Optional[float] = None
     revenue_per_area: Optional[float] = None
     max_revenue: Optional[float] = None
     
@@ -83,13 +81,13 @@ class OptimizationMetrics:
         """Calculate total revenue.
         
         Returns:
-            Total revenue (quantity * revenue_per_area * area_per_unit) or None
+            Total revenue (area_used * revenue_per_area) or None
             Capped at max_revenue if specified
         """
-        if self.quantity is None or self.area_per_unit is None or self.revenue_per_area is None:
+        if self.area_used is None or self.revenue_per_area is None:
             return None
         
-        revenue = self.quantity * self.revenue_per_area * self.area_per_unit
+        revenue = self.area_used * self.revenue_per_area
         
         # Apply max_revenue constraint
         if self.max_revenue is not None and revenue > self.max_revenue:

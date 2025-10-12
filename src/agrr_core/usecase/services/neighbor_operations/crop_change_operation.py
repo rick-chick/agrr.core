@@ -16,7 +16,7 @@ class CropChangeOperation(NeighborOperation):
     Strategy:
     - Replace crop in an allocation
     - Find similar candidate (same field, different crop, similar timing)
-    - Adjust quantity to maintain area equivalence
+    - Keep same area
     """
     
     @property
@@ -59,17 +59,13 @@ class CropChangeOperation(NeighborOperation):
                     key=lambda c: abs((c.start_date - alloc.start_date).days)
                 )
                 
-                # Calculate area-equivalent quantity
+                # Keep same area
                 original_area = alloc.area_used
-                new_quantity = original_area / new_crop.area_per_unit if new_crop.area_per_unit > 0 else 0
-                
-                if new_quantity <= 0:
-                    continue
                 
                 # Create new allocation with changed crop
-                new_alloc = self._candidate_to_allocation_with_quantity(
+                new_alloc = self._candidate_to_allocation_with_area(
                     best_candidate,
-                    quantity=new_quantity
+                    area_used=original_area
                 )
                 
                 neighbor = solution.copy()
@@ -78,18 +74,17 @@ class CropChangeOperation(NeighborOperation):
         
         return neighbors
     
-    def _candidate_to_allocation_with_quantity(
+    def _candidate_to_allocation_with_area(
         self,
         candidate: Any,
-        quantity: float,
+        area_used: float,
     ) -> CropAllocation:
-        """Convert candidate to allocation with specified quantity."""
-        area_used = quantity * candidate.crop.area_per_unit
+        """Convert candidate to allocation with specified area."""
         cost = candidate.cost
         
         revenue = None
         if candidate.crop.revenue_per_area is not None:
-            revenue = quantity * candidate.crop.revenue_per_area * candidate.crop.area_per_unit
+            revenue = area_used * candidate.crop.revenue_per_area
         
         profit = (revenue - cost) if revenue is not None else None
         
@@ -97,7 +92,7 @@ class CropChangeOperation(NeighborOperation):
             allocation_id=str(uuid.uuid4()),
             field=candidate.field,
             crop=candidate.crop,
-            quantity=quantity,
+            area_used=area_used,
             start_date=candidate.start_date,
             completion_date=candidate.completion_date,
             growth_days=candidate.growth_days,
@@ -105,6 +100,5 @@ class CropChangeOperation(NeighborOperation):
             total_cost=cost,
             expected_revenue=revenue,
             profit=profit,
-            area_used=area_used,
         )
 

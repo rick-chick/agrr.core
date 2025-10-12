@@ -63,7 +63,7 @@ class OptimizationResultBuilder:
             'total_cost': 0.0,
             'total_revenue': 0.0,
             'total_profit': 0.0,
-            'crop_quantities': {},
+            'crop_areas': {},
         }
         
         for field in fields:
@@ -94,7 +94,7 @@ class OptimizationResultBuilder:
             total_cost=global_metrics['total_cost'],
             total_revenue=global_metrics['total_revenue'],
             total_profit=global_metrics['total_profit'],
-            crop_quantities=global_metrics['crop_quantities'],
+            crop_areas=global_metrics['crop_areas'],
             optimization_time=computation_time,
             algorithm_used=algorithm_used,
             is_optimal=False,  # Heuristic algorithms don't guarantee optimality
@@ -189,7 +189,7 @@ class OptimizationResultBuilder:
         # Aggregate crop quantities
         for alloc in allocations:
             crop_id = alloc.crop.crop_id
-            if crop_id not in global_metrics['crop_quantities']:
-                global_metrics['crop_quantities'][crop_id] = 0.0
-            global_metrics['crop_quantities'][crop_id] += alloc.quantity
+            if crop_id not in global_metrics['crop_areas']:
+                global_metrics['crop_areas'][crop_id] = 0.0
+            global_metrics['crop_areas'][crop_id] += alloc.area_used
 

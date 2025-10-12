@@ -15,7 +15,7 @@ class PeriodReplaceOperation(NeighborOperation):
     Strategy:
     - Keep field and crop
     - Replace with alternative period from DP candidates
-    - Keep same quantity
+    - Keep same area
     """
     
     @property
@@ -50,26 +50,25 @@ class PeriodReplaceOperation(NeighborOperation):
             # Try up to N alternatives
             for candidate in similar_candidates[:max_alternatives]:
                 neighbor = solution.copy()
-                neighbor[i] = self._candidate_to_allocation_with_quantity(
+                neighbor[i] = self._candidate_to_allocation_with_area(
                     candidate,
-                    quantity=alloc.quantity
+                    area_used=alloc.area_used
                 )
                 neighbors.append(neighbor)
         
         return neighbors
     
-    def _candidate_to_allocation_with_quantity(
+    def _candidate_to_allocation_with_area(
         self,
         candidate: Any,
-        quantity: float,
+        area_used: float,
     ) -> CropAllocation:
-        """Convert candidate to allocation with specified quantity."""
-        area_used = quantity * candidate.crop.area_per_unit
+        """Convert candidate to allocation with specified area."""
         cost = candidate.cost
         
         revenue = None
         if candidate.crop.revenue_per_area is not None:
-            revenue = quantity * candidate.crop.revenue_per_area * candidate.crop.area_per_unit
+            revenue = area_used * candidate.crop.revenue_per_area
         
         profit = (revenue - cost) if revenue is not None else None
         
@@ -77,7 +76,7 @@ class PeriodReplaceOperation(NeighborOperation):
             allocation_id=str(uuid.uuid4()),
             field=candidate.field,
             crop=candidate.crop,
-            quantity=quantity,
+            area_used=area_used,
             start_date=candidate.start_date,
             completion_date=candidate.completion_date,
             growth_days=candidate.growth_days,
@@ -85,6 +84,5 @@ class PeriodReplaceOperation(NeighborOperation):
             total_cost=cost,
             expected_revenue=revenue,
             profit=profit,
-            area_used=area_used,
         )
 

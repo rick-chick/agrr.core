@@ -37,7 +37,7 @@ agrr --help
 agrr weather --location 35.6762,139.6503 --days 7
 agrr crop --query "トマト"
 agrr progress --crop rice --variety Koshihikari --start-date 2024-05-01 --weather-file weather_data.json
-agrr optimize-period optimize --crop rice --variety Koshihikari --start-dates "2024-04-01,2024-04-15,2024-05-01" --weather-file weather_data.json --daily-cost 5000
+agrr optimize-period optimize --crop rice --variety Koshihikari --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 --weather-file weather_data.json --field-config examples/field_01.json
 ```
 
 ### Distribution
@@ -212,20 +212,22 @@ Calculate the optimal growth start date that minimizes total costs based on dail
 #### Basic Usage
 
 ```bash
-# Calculate optimal growth period with multiple candidate start dates
+# Calculate optimal growth period
 agrr optimize-period optimize \
   --crop rice \
   --variety Koshihikari \
-  --start-dates "2024-04-01,2024-04-15,2024-05-01" \
+  --evaluation-start 2024-04-01 \
+  --evaluation-end 2024-09-30 \
   --weather-file weather_data.json \
-  --daily-cost 5000
+  --field-config examples/field_01.json
 
 # With different output format
 agrr optimize-period optimize \
   --crop tomato \
-  --start-dates "2024-04-01,2024-04-15" \
+  --evaluation-start 2024-04-01 \
+  --evaluation-end 2024-08-31 \
   --weather-file weather_data.json \
-  --daily-cost 3000 \
+  --field-config examples/field_01.json \
   --format json
 ```
 

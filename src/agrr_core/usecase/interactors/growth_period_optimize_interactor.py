@@ -1,14 +1,15 @@
 """Optimal growth period calculation interactor.
 
-This interactor finds the optimal cultivation start date that minimizes total cost
-based on daily fixed costs, while ensuring completion by a specified deadline.
+This interactor finds the optimal cultivation start date that maximizes profit
+(or minimizes cost when revenue is unknown) based on daily fixed costs,
+while ensuring completion by a specified deadline.
 
 The optimization follows this logic:
 1. Generate candidate start dates from earliest_start_date to completion_deadline
 2. For each candidate, calculate cultivation progress until 100% completion
 3. Filter out candidates that cannot complete by the deadline
 4. Calculate total cost = growth_days * daily_fixed_cost for valid candidates
-5. Select the candidate with minimum total cost
+5. Select the candidate with maximum profit (minimum cost if revenue unknown)
 
 The evaluation period has dual meaning:
 - evaluation_period_start: Earliest possible cultivation start date
@@ -40,7 +41,6 @@ from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.optimization_result_gateway import (
     OptimizationResultGateway,
 )
-from agrr_core.usecase.gateways.field_gateway import FieldGateway
 from agrr_core.usecase.interactors.growth_progress_calculate_interactor import (
     GrowthProgressCalculateInteractor,
 )
@@ -50,21 +50,24 @@ from agrr_core.usecase.ports.input.growth_period_optimize_input_port import (
 from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
+from agrr_core.usecase.interactors.base_optimizer import BaseOptimizer
 
 
-class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
-    """Interactor for finding optimal growth period with minimum cost."""
+class GrowthPeriodOptimizeInteractor(
+    BaseOptimizer[CandidateResultDTO],
+    GrowthPeriodOptimizeInputPort
+):
+    """Interactor for finding optimal growth period using unified objective."""
 
     def __init__(
         self,
         crop_requirement_gateway: CropRequirementGateway,
         weather_gateway: WeatherGateway,
-        field_gateway: Optional[FieldGateway] = None,
         optimization_result_gateway: OptimizationResultGateway = None,
     ):
+        super().__init__()  # Initialize BaseOptimizer
         self.crop_requirement_gateway = crop_requirement_gateway
         self.weather_gateway = weather_gateway
-        self.field_gateway = field_gateway
         self.optimization_result_gateway = optimization_result_gateway
         
         # Use existing growth progress calculator
@@ -79,7 +82,7 @@ class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
         """Calculate optimal growth period using efficient sliding window algorithm.
 
         Args:
-            request: Request DTO containing crop info, evaluation period, and cost parameters
+            request: Request DTO containing crop info, evaluation period, and field
 
         Returns:
             Response DTO containing optimal period and all candidate evaluations
@@ -87,13 +90,13 @@ class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
         Raises:
             ValueError: If no candidate reaches 100% growth completion
         """
-        # Resolve daily_fixed_cost from field_id if provided
-        daily_fixed_cost = await self._resolve_daily_fixed_cost(request)
+        # Get daily_fixed_cost from field entity
+        daily_fixed_cost = request.field.daily_fixed_cost
         
         # Use efficient sliding window algorithm
         candidates = await self._evaluate_candidates_efficient(request, daily_fixed_cost)
         
-        # Find optimal candidate (minimum cost, excluding failures and deadline violations)
+        # Find optimal candidate (maximum profit, excluding failures and deadline violations)
         valid_candidates = [c for c in candidates if c.total_cost is not None]
         
         if not valid_candidates:
@@ -112,7 +115,8 @@ class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
                     "Consider extending weather data or choosing different start dates."
                 )
         
-        optimal_candidate = min(valid_candidates, key=lambda c: c.total_cost)
+        # Use BaseOptimizer's select_best (unified objective function)
+        optimal_candidate = self.select_best(valid_candidates)
         
         # Mark optimal candidate
         for candidate in candidates:
@@ -133,35 +137,9 @@ class GrowthPeriodOptimizeInteractor(GrowthPeriodOptimizeInputPort):
             growth_days=optimal_candidate.growth_days,
             total_cost=optimal_candidate.total_cost,
             daily_fixed_cost=daily_fixed_cost,
+            field=request.field,
             candidates=candidates,
         )
-
-    async def _resolve_daily_fixed_cost(self, request: OptimalGrowthPeriodRequestDTO) -> float:
-        """Resolve daily fixed cost from field_id or direct value.
-        
-        Args:
-            request: Request DTO
-            
-        Returns:
-            Daily fixed cost value
-            
-        Raises:
-            ValueError: If field_id is specified but field not found or field_gateway not available
-        """
-        if request.field_id:
-            if not self.field_gateway:
-                raise ValueError(
-                    f"field_id '{request.field_id}' specified but field_gateway is not available"
-                )
-            
-            field = await self.field_gateway.get(request.field_id)
-            if not field:
-                raise ValueError(f"Field not found: {request.field_id}")
-            
-            return field.daily_fixed_cost
-        else:
-            # Use directly provided daily_fixed_cost
-            return request.daily_fixed_cost
 
     async def _evaluate_candidates_efficient(
         self, request: OptimalGrowthPeriodRequestDTO, daily_fixed_cost: float

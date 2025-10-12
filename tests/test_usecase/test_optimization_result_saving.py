@@ -14,6 +14,7 @@ from agrr_core.entity.entities.temperature_profile_entity import TemperatureProf
 from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
 from agrr_core.entity.entities.weather_entity import WeatherData
+from agrr_core.entity.entities.field_entity import Field
 from agrr_core.usecase.dto.growth_period_optimize_request_dto import (
     OptimalGrowthPeriodRequestDTO,
 )
@@ -80,12 +81,19 @@ class TestOptimizationResultSaving:
         )
 
         # Execute optimization
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+        )
+        
         request = OptimalGrowthPeriodRequestDTO(
             crop_id="rice",
             variety="Koshihikari",
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 15),
-            daily_fixed_cost=5000.0,
+            field=test_field,
             weather_data_file="test_weather.json",
         )
 
@@ -167,12 +175,19 @@ class TestOptimizationResultSaving:
         )
 
         # Execute optimization
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+        )
+        
         request = OptimalGrowthPeriodRequestDTO(
             crop_id="rice",
             variety="Koshihikari",
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 15),
-            daily_fixed_cost=5000.0,
+            field=test_field,
             weather_data_file="test_weather.json",
         )
 
@@ -237,12 +252,19 @@ class TestOptimizationResultSaving:
         )
 
         # Execute optimization
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+        )
+        
         request = OptimalGrowthPeriodRequestDTO(
             crop_id="rice",
             variety="Koshihikari",
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 15),
-            daily_fixed_cost=5000.0,
+            field=test_field,
             weather_data_file="test_weather.json",
         )
 

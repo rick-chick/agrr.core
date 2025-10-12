@@ -84,23 +84,33 @@ quantity[f][c][s] ≥ 0
 #### パターンA: 利益最大化
 
 ```
+Maximize: total_revenue - total_cost
+
+where:
+  total_revenue = Σ(f, c, s) [quantity[f][c][s] × x[f][c][s] × revenue_per_unit[c] × area_per_unit[c]]
+  total_cost = Σ(f, c, s) [x[f][c][s] × growth_days[s] × daily_cost[f]]
+
+または、より詳細に：
+
 Maximize: Σ(f, c, s) [
-  quantity[f][c][s] × x[f][c][s] × (
-    revenue_per_unit[c] - 
-    (growth_days[s] × daily_cost[f] / quantity[f][c][s])
+  x[f][c][s] × (
+    quantity[f][c][s] × revenue_per_unit[c] × area_per_unit[c] - 
+    growth_days[s] × daily_cost[f]
   )
 ]
+
+注: 現在の実装では固定コストモデルを採用しているため、コストは数量に依存しない
 ```
 
 #### パターンB: コスト最小化（生産量制約付き）
 
 ```
-Minimize: Σ(f, c, s) [
-  quantity[f][c][s] × x[f][c][s] × growth_days[s] × daily_cost[f]
-]
+Minimize: Σ(f, c, s) [x[f][c][s] × growth_days[s] × daily_cost[f]]
 
 Subject to:
   Σ(f, s) quantity[f][c][s] × x[f][c][s] ≥ target_quantity[c]  for all c
+
+注: コストは数量に依存しないが、生産量制約を満たす必要がある
 ```
 
 ## データモデル設計

@@ -51,7 +51,12 @@ class GrowthPeriodOptimizeCliPresenter(GrowthPeriodOptimizeOutputPort):
         if self.response.variety:
             print(f" ({self.response.variety})", end="")
         print()
-        print(f"Daily Fixed Cost: ¥{self.response.daily_fixed_cost:,.0f}")
+        print(f"\nField Information:")
+        print(f"  Field: {self.response.field.name} ({self.response.field.field_id})")
+        print(f"  Area: {self.response.field.area:,.1f} m²")
+        if self.response.field.location:
+            print(f"  Location: {self.response.field.location}")
+        print(f"  Daily Fixed Cost: ¥{self.response.field.daily_fixed_cost:,.0f}/day")
         print()
 
         # Optimal solution

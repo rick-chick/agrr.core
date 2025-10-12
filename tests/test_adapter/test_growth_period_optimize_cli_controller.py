@@ -18,6 +18,7 @@ from agrr_core.entity.entities.temperature_profile_entity import TemperatureProf
 from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
 from agrr_core.entity.entities.weather_entity import WeatherData
+from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
@@ -75,11 +76,21 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
         mock_crop_requirement_gateway.craft.return_value = crop_requirement
         mock_weather_gateway.get.return_value = weather_data
 
-        # Create controller with optimization result gateway
+        # Create field entity
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+            location="Test Location"
+        )
+
+        # Create controller with optimization result gateway and field
         controller = GrowthPeriodOptimizeCliController(
             crop_requirement_gateway=mock_crop_requirement_gateway,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
+            field=test_field,
             optimization_result_gateway=mock_optimization_result_gateway,
         )
 
@@ -91,7 +102,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
             "--evaluation-start", "2024-04-01",
             "--evaluation-end", "2024-04-15",
             "--weather-file", "test_weather.json",
-            "--daily-cost", "5000",
+            "--field-config", "test_field.json",
             "--save-results",
         ]
 
@@ -148,11 +159,21 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
         mock_crop_requirement_gateway.craft.return_value = crop_requirement
         mock_weather_gateway.get.return_value = weather_data
 
+        # Create field entity
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+            location="Test Location"
+        )
+
         # Create controller WITHOUT optimization result gateway
         controller = GrowthPeriodOptimizeCliController(
             crop_requirement_gateway=mock_crop_requirement_gateway,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
+            field=test_field,
             optimization_result_gateway=None,  # No gateway
         )
 
@@ -164,7 +185,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
             "--evaluation-start", "2024-04-01",
             "--evaluation-end", "2024-04-15",
             "--weather-file", "test_weather.json",
-            "--daily-cost", "5000",
+            "--field-config", "test_field.json",
         ]
 
         # Should not raise any errors even without gateway

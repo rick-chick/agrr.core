@@ -15,6 +15,7 @@ from agrr_core.adapter.controllers.growth_progress_cli_controller import GrowthP
 from agrr_core.adapter.controllers.growth_period_optimize_cli_controller import GrowthPeriodOptimizeCliController
 from agrr_core.framework.services.llm_client_impl import FrameworkLLMClient
 from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
+from agrr_core.adapter.repositories.field_file_repository import FieldFileRepository
 from agrr_core.framework.repositories.file_repository import FileRepository
 from agrr_core.framework.repositories.inmemory_optimization_result_repository import InMemoryOptimizationResultRepository
 
@@ -51,7 +52,7 @@ Examples:
   # Find optimal planting date
   agrr optimize-period optimize --crop rice --variety Koshihikari \\
     --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
-    --weather-file weather.json --daily-cost 5000
+    --weather-file weather.json --field-config field_01.json
 
   # Predict future weather with ARIMA model
   agrr weather --location 35.6762,139.6503 --days 90 --json > historical.json
@@ -159,6 +160,22 @@ def main() -> None:
             weather_file_repository = WeatherFileRepository(file_repository=file_repository)
             weather_gateway = WeatherGatewayImpl(weather_file_repository=weather_file_repository)
             
+            # Load field configuration
+            # Parse args to extract field-config path
+            field = None
+            if '--field-config' in args or '-fc' in args:
+                try:
+                    fc_index = args.index('--field-config') if '--field-config' in args else args.index('-fc')
+                    if fc_index + 1 < len(args):
+                        field_config_path = args[fc_index + 1]
+                        # Read field configuration from JSON file
+                        field_file_repository = FieldFileRepository(file_repository=file_repository)
+                        fields = asyncio.run(field_file_repository.read_fields_from_file(field_config_path))
+                        if fields:
+                            field = fields[0]  # Use first field (single field format)
+                except (ValueError, IndexError) as e:
+                    print(f"Error loading field configuration: {e}")
+            
             # Create crop requirement gateway with both LLM and file repository
             crop_requirement_gateway = CropRequirementGatewayImpl(
                 llm_client=llm_client,
@@ -179,6 +196,7 @@ def main() -> None:
                 crop_requirement_gateway=crop_requirement_gateway,
                 weather_gateway=weather_gateway,
                 presenter=presenter,
+                field=field,
                 optimization_result_gateway=optimization_result_gateway,
             )
             asyncio.run(controller.run(args[1:]))

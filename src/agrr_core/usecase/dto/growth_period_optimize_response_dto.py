@@ -10,6 +10,7 @@ Fields
 - growth_days: Number of days from start to completion
 - total_cost: Total cost for optimal period
 - daily_fixed_cost: Daily fixed cost used in calculation
+- field: Field entity used in calculation
 - candidates: List of all candidate evaluation results
 """
 
@@ -17,16 +18,40 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 
+from agrr_core.entity.entities.field_entity import Field
+from agrr_core.entity.value_objects.optimization_objective import OptimizationMetrics
+
 
 @dataclass
 class CandidateResultDTO:
-    """Evaluation result for a single candidate start date."""
+    """Evaluation result for a single candidate start date.
+    
+    Implements Optimizable protocol for unified optimization.
+    """
 
     start_date: datetime
     completion_date: Optional[datetime]  # None if 100% not achieved
     growth_days: Optional[int]
     total_cost: Optional[float]  # None if calculation not possible
     is_optimal: bool
+    revenue: Optional[float] = None  # Optional revenue for profit calculation
+
+    def get_metrics(self) -> OptimizationMetrics:
+        """Get optimization metrics (implements Optimizable protocol).
+        
+        Returns:
+            OptimizationMetrics for this candidate
+            
+        Raises:
+            ValueError: If total_cost is None (invalid candidate)
+        """
+        if self.total_cost is None:
+            raise ValueError("Cannot get metrics for candidate without total_cost")
+        
+        return OptimizationMetrics(
+            cost=self.total_cost,
+            revenue=self.revenue
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -50,6 +75,7 @@ class OptimalGrowthPeriodResponseDTO:
     growth_days: int
     total_cost: float
     daily_fixed_cost: float
+    field: Field
     candidates: List[CandidateResultDTO]
 
     def to_dict(self) -> Dict[str, Any]:
@@ -62,6 +88,13 @@ class OptimalGrowthPeriodResponseDTO:
             "growth_days": self.growth_days,
             "total_cost": self.total_cost,
             "daily_fixed_cost": self.daily_fixed_cost,
+            "field": {
+                "field_id": self.field.field_id,
+                "name": self.field.name,
+                "area": self.field.area,
+                "daily_fixed_cost": self.field.daily_fixed_cost,
+                "location": self.field.location,
+            },
             "candidates": [c.to_dict() for c in self.candidates],
         }
 

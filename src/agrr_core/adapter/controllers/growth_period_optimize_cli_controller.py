@@ -10,7 +10,7 @@ from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.optimization_result_gateway import (
     OptimizationResultGateway,
 )
-from agrr_core.usecase.gateways.field_gateway import FieldGateway
+from agrr_core.entity.entities.field_entity import Field
 from agrr_core.usecase.ports.input.growth_period_optimize_input_port import (
     GrowthPeriodOptimizeInputPort,
 )
@@ -36,7 +36,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
         crop_requirement_gateway: CropRequirementGateway,
         weather_gateway: WeatherGateway,
         presenter: GrowthPeriodOptimizeOutputPort,
-        field_gateway: Optional[FieldGateway] = None,
+        field: Optional['Field'] = None,
         optimization_result_gateway: Optional[OptimizationResultGateway] = None,
     ) -> None:
         """Initialize with injected dependencies.
@@ -45,20 +45,19 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
             crop_requirement_gateway: Gateway for crop requirement operations
             weather_gateway: Gateway for weather data operations
             presenter: Presenter for output formatting
-            field_gateway: Optional gateway for field data operations
+            field: Field entity (read from field config file)
             optimization_result_gateway: Optional gateway for saving optimization results
         """
         self.crop_requirement_gateway = crop_requirement_gateway
         self.weather_gateway = weather_gateway
         self.presenter = presenter
-        self.field_gateway = field_gateway
+        self.field = field
         self.optimization_result_gateway = optimization_result_gateway
         
         # Instantiate interactor inside controller
         self.interactor = GrowthPeriodOptimizeInteractor(
             crop_requirement_gateway=self.crop_requirement_gateway,
             weather_gateway=self.weather_gateway,
-            field_gateway=self.field_gateway,
             optimization_result_gateway=self.optimization_result_gateway,
         )
 
@@ -83,20 +82,20 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog="""
 Examples:
-  # Find optimal planting date for rice (April-September period)
+  # Find optimal planting date for rice
   agrr optimize-period optimize --crop rice --variety Koshihikari \\
     --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
-    --weather-file weather.json --daily-cost 5000
+    --weather-file weather.json --field-config field_01.json
 
   # Find optimal date with JSON output
   agrr optimize-period optimize --crop tomato \\
     --evaluation-start 2024-04-01 --evaluation-end 2024-08-31 \\
-    --weather-file weather.json --daily-cost 3000 --format json
+    --weather-file weather.json --field-config field_01.json --format json
 
   # Save optimization results for later analysis
   agrr optimize-period optimize --crop rice --variety Koshihikari \\
     --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
-    --weather-file weather.json --daily-cost 5000 --save-results
+    --weather-file weather.json --field-config field_01.json --save-results
 
   # List all saved optimization results
   agrr optimize-period list-results
@@ -116,6 +115,15 @@ Weather File Format (JSON):
         "temperature_2m_mean": 13.3
       }
     ]
+  }
+
+Field Configuration File Format (JSON):
+  {
+    "field_id": "field_01",
+    "name": "北圃場",
+    "area": 1000.0,
+    "daily_fixed_cost": 5000.0,
+    "location": "北区画"
   }
 
 Crop Requirement File Format (JSON, optional):
@@ -204,15 +212,10 @@ Notes:
             help='Path to crop requirement file (JSON). If not provided, will use LLM to generate requirements.',
         )
         optimize_parser.add_argument(
-            "--field",
-            "-f",
-            help='Field ID (圃場ID) to use for cost calculation',
-        )
-        optimize_parser.add_argument(
-            "--daily-cost",
-            "-d",
-            type=float,
-            help='Daily fixed cost (e.g., 5000 for ¥5,000/day). Used if --field is not specified.',
+            "--field-config",
+            "-fc",
+            required=True,
+            help='Path to field configuration file (JSON containing field information including daily_fixed_cost)',
         )
         optimize_parser.add_argument(
             "--format",
@@ -302,9 +305,14 @@ Notes:
         # Update presenter format
         self.presenter.output_format = args.format
 
-        # Validate that either field or daily_cost is provided
-        if not args.field and args.daily_cost is None:
-            print('Error: Either --field or --daily-cost must be provided')
+        # Validate that field-config is provided
+        if not getattr(args, 'field_config', None):
+            print('Error: --field-config is required')
+            return
+        
+        # Check if field entity was loaded
+        if not self.field:
+            print('Error: Field configuration not loaded. Make sure --field-config is a valid field JSON file.')
             return
         
         # Create request DTO
@@ -314,8 +322,7 @@ Notes:
             evaluation_period_start=evaluation_start,
             evaluation_period_end=evaluation_end,
             weather_data_file=args.weather_file,
-            field_id=args.field,
-            daily_fixed_cost=args.daily_cost,
+            field=self.field,
             crop_requirement_file=getattr(args, 'crop_requirement_file', None),
         )
 

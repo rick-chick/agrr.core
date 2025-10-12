@@ -44,11 +44,16 @@ from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.interactors.growth_period_optimize_interactor import GrowthPeriodOptimizeInteractor
 from agrr_core.usecase.dto.growth_period_optimize_request_dto import OptimalGrowthPeriodRequestDTO
 from agrr_core.usecase.services.neighbor_generator_service import NeighborGeneratorService
+from agrr_core.usecase.interactors.base_optimizer import BaseOptimizer
+from agrr_core.entity.value_objects.optimization_objective import OptimizationMetrics
 
 
 @dataclass
 class AllocationCandidate:
-    """Candidate for crop allocation (internal use)."""
+    """Candidate for crop allocation (internal use).
+    
+    Implements Optimizable protocol for unified optimization.
+    """
     
     field: Field
     crop: Crop
@@ -62,15 +67,28 @@ class AllocationCandidate:
     profit: float
     profit_rate: float
     area_used: float
+    
+    def get_metrics(self) -> OptimizationMetrics:
+        """Get optimization metrics (implements Optimizable protocol).
+        
+        Returns:
+            OptimizationMetrics for this candidate
+        """
+        return OptimizationMetrics(
+            cost=self.cost,
+            revenue=self.revenue
+        )
 
 
-class MultiFieldCropAllocationGreedyInteractor:
+class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate]):
     """Interactor for multi-field crop allocation using greedy + local search.
     
     Optimizations:
     - Phase 1: Configurable parameters, neighbor sampling, candidate filtering
     - Phase 2: Parallel candidate generation, incremental feasibility
     - Phase 3: Adaptive early stopping
+    
+    Uses unified optimization objective via BaseOptimizer.
     """
 
     def __init__(
@@ -80,6 +98,7 @@ class MultiFieldCropAllocationGreedyInteractor:
         weather_gateway: WeatherGateway,
         config: Optional[OptimizationConfig] = None,
     ):
+        super().__init__()  # Initialize BaseOptimizer
         self.field_gateway = field_gateway
         self.crop_requirement_gateway = crop_requirement_gateway
         self.weather_gateway = weather_gateway
@@ -415,16 +434,15 @@ class MultiFieldCropAllocationGreedyInteractor:
     ) -> List[CropAllocation]:
         """Select allocations using greedy algorithm.
         
-        Strategy: Sort candidates by profit_rate (or total_profit) and select
+        Strategy: Sort candidates by profit (using unified objective) and select
         greedily while respecting constraints.
+        
+        Note: optimization_objective parameter is kept for backward compatibility
+        but the actual optimization uses the unified objective (profit maximization).
         """
-        # Sort candidates
-        if optimization_objective == "maximize_profit":
-            # Sort by profit rate (descending)
-            sorted_candidates = sorted(candidates, key=lambda c: c.profit_rate, reverse=True)
-        else:  # minimize_cost
-            # Sort by cost (ascending)
-            sorted_candidates = sorted(candidates, key=lambda c: c.cost)
+        # Sort candidates using BaseOptimizer (unified objective)
+        # This automatically uses profit for sorting
+        sorted_candidates = self.sort_candidates(candidates, reverse=True)
         
         # Track allocated resources
         field_schedules: Dict[str, List[CropAllocation]] = {}  # field_id -> allocations
@@ -476,6 +494,8 @@ class MultiFieldCropAllocationGreedyInteractor:
         Phase 1: Neighbor sampling to limit computational cost
         Phase 2: Incremental feasibility checking for faster validation
         Phase 3: Adaptive early stopping
+        
+        Uses unified optimization objective (profit maximization).
         """
         start_time = time.time()
         current_solution = initial_solution

@@ -13,6 +13,7 @@ from agrr_core.entity.entities.temperature_profile_entity import TemperatureProf
 from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
 from agrr_core.entity.entities.weather_entity import WeatherData
+from agrr_core.entity.entities.field_entity import Field
 from agrr_core.usecase.dto.growth_period_optimize_request_dto import (
     OptimalGrowthPeriodRequestDTO,
 )
@@ -99,13 +100,20 @@ class TestGrowthPeriodOptimizeInteractor:
         # All candidates need 10 days (100 GDD / 10 GDD per day)
         # April 1 start -> completes April 10 (✓ within deadline)
         # April 5 start -> completes April 14 (✓ within deadline) - shortest period
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=1000.0,
+        )
+        
         request = OptimalGrowthPeriodRequestDTO(
             crop_id="rice",
             variety="Koshihikari",
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 15),  # Completion deadline
             weather_data_file="weather_data.json",
-            daily_fixed_cost=1000.0,
+            field=test_field,
         )
 
         response = await self.interactor.execute(request)
@@ -169,13 +177,20 @@ class TestGrowthPeriodOptimizeInteractor:
         self.mock_weather_gateway.get.return_value = weather_data
 
         # Evaluation period with only 1 day
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=1000.0,
+        )
+        
         request = OptimalGrowthPeriodRequestDTO(
             crop_id="rice",
             variety=None,
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 1),
             weather_data_file="weather_data.json",
-            daily_fixed_cost=1000.0,
+            field=test_field,
         )
 
         # Should raise exception when no candidate completes
@@ -222,13 +237,20 @@ class TestGrowthPeriodOptimizeInteractor:
 
         # Start on May 1, must complete by May 5 (deadline)
         # Needs 50 GDD, gets 15 GDD/day -> 4 days needed -> completes May 4 (✓)
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=500.0,
+        )
+        
         request = OptimalGrowthPeriodRequestDTO(
             crop_id="tomato",
             variety=None,
             evaluation_period_start=datetime(2024, 5, 1),
             evaluation_period_end=datetime(2024, 5, 5),  # Completion deadline
             weather_data_file="weather_data.json",
-            daily_fixed_cost=500.0,
+            field=test_field,
         )
 
         response = await self.interactor.execute(request)
@@ -298,13 +320,20 @@ class TestGrowthPeriodOptimizeInteractor:
         # April 2 start -> completes April 11 (✓ 10 days)
         # April 3 start -> completes April 12 (✓ 10 days)
         # April 4+ start -> would complete April 13+ (✗ exceeds deadline on April 13)
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=1000.0,
+        )
+        
         request = OptimalGrowthPeriodRequestDTO(
             crop_id="rice",
             variety="Koshihikari",
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 12),  # Completion deadline
             weather_data_file="weather_data.json",
-            daily_fixed_cost=1000.0,
+            field=test_field,
         )
 
         response = await self.interactor.execute(request)
@@ -367,13 +396,20 @@ class TestGrowthPeriodOptimizeInteractor:
 
         # Start on April 1, needs 10 days -> completes April 10
         # But deadline is April 8 -> Cannot meet deadline
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=1000.0,
+        )
+        
         request = OptimalGrowthPeriodRequestDTO(
             crop_id="rice",
             variety=None,
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 8),  # Unrealistic deadline (too early)
             weather_data_file="weather_data.json",
-            daily_fixed_cost=1000.0,
+            field=test_field,
         )
 
         # Should raise error with helpful message about deadline

@@ -13,6 +13,7 @@ from agrr_core.usecase.dto.growth_period_optimize_response_dto import (
     OptimalGrowthPeriodResponseDTO,
     CandidateResultDTO,
 )
+from agrr_core.entity.entities.field_entity import Field
 
 
 class TestGrowthPeriodOptimizeCliPresenter:
@@ -38,6 +39,14 @@ class TestGrowthPeriodOptimizeCliPresenter:
             ),
         ]
 
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=1000.0,
+            location="Test Location"
+        )
+        
         response = OptimalGrowthPeriodResponseDTO(
             crop_name="Rice",
             variety="Koshihikari",
@@ -46,6 +55,7 @@ class TestGrowthPeriodOptimizeCliPresenter:
             growth_days=6,
             total_cost=6000.0,
             daily_fixed_cost=1000.0,
+            field=test_field,
             candidates=candidates,
         )
 
@@ -83,6 +93,13 @@ class TestGrowthPeriodOptimizeCliPresenter:
             ),
         ]
 
+        test_field = Field(
+            field_id="test_field2",
+            name="Test Field 2",
+            area=1000.0,
+            daily_fixed_cost=500.0,
+        )
+        
         response = OptimalGrowthPeriodResponseDTO(
             crop_name="Tomato",
             variety=None,
@@ -91,6 +108,7 @@ class TestGrowthPeriodOptimizeCliPresenter:
             growth_days=5,
             total_cost=2500.0,
             daily_fixed_cost=500.0,
+            field=test_field,
             candidates=candidates,
         )
 
@@ -123,6 +141,13 @@ class TestGrowthPeriodOptimizeCliPresenter:
             ),
         ]
 
+        test_field = Field(
+            field_id="test_field3",
+            name="Test Field 3",
+            area=1000.0,
+            daily_fixed_cost=1000.0,
+        )
+        
         response = OptimalGrowthPeriodResponseDTO(
             crop_name="Rice",
             variety="Koshihikari",
@@ -131,6 +156,7 @@ class TestGrowthPeriodOptimizeCliPresenter:
             growth_days=6,
             total_cost=6000.0,
             daily_fixed_cost=1000.0,
+            field=test_field,
             candidates=candidates,
         )
 
@@ -171,6 +197,13 @@ class TestGrowthPeriodOptimizeCliPresenter:
             ),
         ]
 
+        test_field = Field(
+            field_id="test_field4",
+            name="Test Field 4",
+            area=1000.0,
+            daily_fixed_cost=1000.0,
+        )
+        
         response = OptimalGrowthPeriodResponseDTO(
             crop_name="Rice",
             variety=None,
@@ -179,6 +212,7 @@ class TestGrowthPeriodOptimizeCliPresenter:
             growth_days=10,
             total_cost=10000.0,
             daily_fixed_cost=1000.0,
+            field=test_field,
             candidates=candidates,
         )
 
@@ -204,6 +238,13 @@ class TestGrowthPeriodOptimizeCliPresenter:
             ),
         ]
 
+        test_field = Field(
+            field_id="test_field5",
+            name="Test Field 5",
+            area=1000.0,
+            daily_fixed_cost=1000.0,
+        )
+        
         response = OptimalGrowthPeriodResponseDTO(
             crop_name="Rice",
             variety="Koshihikari",
@@ -212,6 +253,7 @@ class TestGrowthPeriodOptimizeCliPresenter:
             growth_days=10,
             total_cost=10000.0,
             daily_fixed_cost=1000.0,
+            field=test_field,
             candidates=candidates,
         )
 

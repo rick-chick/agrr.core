@@ -10,6 +10,7 @@ from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.optimization_result_gateway import (
     OptimizationResultGateway,
 )
+from agrr_core.usecase.gateways.interaction_rule_gateway import InteractionRuleGateway
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.usecase.ports.input.growth_period_optimize_input_port import (
     GrowthPeriodOptimizeInputPort,
@@ -38,6 +39,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
         presenter: GrowthPeriodOptimizeOutputPort,
         field: Optional['Field'] = None,
         optimization_result_gateway: Optional[OptimizationResultGateway] = None,
+        interaction_rule_gateway: Optional[InteractionRuleGateway] = None,
     ) -> None:
         """Initialize with injected dependencies.
         
@@ -47,18 +49,21 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
             presenter: Presenter for output formatting
             field: Field entity (read from field config file)
             optimization_result_gateway: Optional gateway for saving optimization results
+            interaction_rule_gateway: Optional gateway for loading interaction rules
         """
         self.crop_requirement_gateway = crop_requirement_gateway
         self.weather_gateway = weather_gateway
         self.presenter = presenter
         self.field = field
         self.optimization_result_gateway = optimization_result_gateway
+        self.interaction_rule_gateway = interaction_rule_gateway
         
         # Instantiate interactor inside controller
         self.interactor = GrowthPeriodOptimizeInteractor(
             crop_requirement_gateway=self.crop_requirement_gateway,
             weather_gateway=self.weather_gateway,
             optimization_result_gateway=self.optimization_result_gateway,
+            interaction_rule_gateway=self.interaction_rule_gateway,
         )
 
     async def execute(
@@ -91,6 +96,12 @@ Examples:
   agrr optimize-period optimize --crop tomato \\
     --evaluation-start 2024-04-01 --evaluation-end 2024-08-31 \\
     --weather-file weather.json --field-config field_01.json --format json
+
+  # Find optimal date considering continuous cultivation impact
+  agrr optimize-period optimize --crop tomato \\
+    --evaluation-start 2024-04-01 --evaluation-end 2024-08-31 \\
+    --weather-file weather.json --field-config field_01.json \\
+    --interaction-rules interaction_rules.json
 
   # Save optimization results for later analysis
   agrr optimize-period optimize --crop rice --variety Koshihikari \\
@@ -218,6 +229,12 @@ Notes:
             help='Path to field configuration file (JSON containing field information including daily_fixed_cost)',
         )
         optimize_parser.add_argument(
+            "--interaction-rules",
+            "-ir",
+            required=False,
+            help='Path to interaction rules JSON file (optional, for continuous cultivation impact)',
+        )
+        optimize_parser.add_argument(
             "--format",
             "-fmt",
             choices=["table", "json"],
@@ -324,6 +341,7 @@ Notes:
             weather_data_file=args.weather_file,
             field=self.field,
             crop_requirement_file=getattr(args, 'crop_requirement_file', None),
+            interaction_rules_file=getattr(args, 'interaction_rules', None),
         )
 
         # Execute use case

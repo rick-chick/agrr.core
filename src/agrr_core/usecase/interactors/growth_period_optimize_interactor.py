@@ -42,6 +42,7 @@ from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.optimization_result_gateway import (
     OptimizationResultGateway,
 )
+from agrr_core.usecase.gateways.interaction_rule_gateway import InteractionRuleGateway
 from agrr_core.usecase.interactors.growth_progress_calculate_interactor import (
     GrowthProgressCalculateInteractor,
 )
@@ -65,11 +66,13 @@ class GrowthPeriodOptimizeInteractor(
         crop_requirement_gateway: CropRequirementGateway,
         weather_gateway: WeatherGateway,
         optimization_result_gateway: OptimizationResultGateway = None,
+        interaction_rule_gateway: InteractionRuleGateway = None,
     ):
         super().__init__()  # Initialize BaseOptimizer
         self.crop_requirement_gateway = crop_requirement_gateway
         self.weather_gateway = weather_gateway
         self.optimization_result_gateway = optimization_result_gateway
+        self.interaction_rule_gateway = interaction_rule_gateway
         
         # Use existing growth progress calculator
         self.growth_progress_interactor = GrowthProgressCalculateInteractor(
@@ -91,6 +94,13 @@ class GrowthPeriodOptimizeInteractor(
         Raises:
             ValueError: If no candidate reaches 100% growth completion
         """
+        # Load interaction rules if provided
+        interaction_rules = []
+        if request.interaction_rules_file and self.interaction_rule_gateway:
+            interaction_rules = await self.interaction_rule_gateway.get_rules(
+                request.interaction_rules_file
+            )
+        
         # Get daily_fixed_cost from field entity
         daily_fixed_cost = request.field.daily_fixed_cost
         

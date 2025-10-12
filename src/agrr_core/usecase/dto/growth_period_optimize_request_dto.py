@@ -16,6 +16,7 @@ Fields
 - weather_data_file: Path to weather data file (JSON or CSV)
 - field: Field entity containing field information including daily_fixed_cost
 - crop_requirement_file: Path to crop requirement file (optional)
+- interaction_rules_file: Path to interaction rules JSON file (optional)
 
 Example:
     evaluation_period_start = 2024-04-01
@@ -43,6 +44,7 @@ class OptimalGrowthPeriodRequestDTO:
     weather_data_file: str
     field: Field  # Field entity containing area, daily_fixed_cost, etc.
     crop_requirement_file: Optional[str] = None  # Path to crop requirement file (optional)
+    interaction_rules_file: Optional[str] = None  # Path to interaction rules JSON file (optional)
 
     def __post_init__(self):
         """Validate input parameters."""

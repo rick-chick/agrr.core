@@ -255,7 +255,7 @@ class TestAreaEquivalentSwapOperation:
         assert new_alloc_b.area_used == pytest.approx(500.0)
 
     def test_swap_formula_verification(self):
-        """Verify the swap quantity formula with explicit calculations."""
+        """Verify the swap area preservation with explicit calculations."""
         field_a = Field("field_a", "Field A", 2000.0, 5000.0)
         field_b = Field("field_b", "Field B", 2000.0, 6000.0)
         
@@ -300,7 +300,7 @@ class TestAreaEquivalentSwapOperation:
         assert result is not None
         new_alloc_a, new_alloc_b = result
         
-        # Formula: new_quantity = original_area / new_crop.area_per_unit
+        # Formula: area_used is preserved during swap
         
         # Crop A moving to Field B (using 400m² from crop B)
         # Expected: 400m² / 0.4m²/unit = 1000 units        assert new_alloc_a.area_used == pytest.approx(400.0)

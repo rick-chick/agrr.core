@@ -68,9 +68,9 @@ class TestFieldSwapCapacityCheck:
     def test_swap_fails_when_capacity_exceeded(self):
         """Test swap with area-equivalent adjustment when capacity allows.
         
-        Note: After Phase 1 refactoring, FieldSwapOperation implements
-        area-equivalent swapping with automatic quantity adjustment.
-        This test now verifies that the swap succeeds with proper adjustment.
+        Note: After refactoring, FieldSwapOperation preserves area_used
+        when swapping allocations between fields.
+        This test now verifies that the swap succeeds within capacity limits.
         """
         field_a = Field("f1", "Field 1", 1000.0, 5000.0)
         field_b = Field("f2", "Field 2", 800.0, 6000.0)

@@ -121,7 +121,7 @@ def test_neighbor_generator_service_respects_operation_weights():
             "crop_insert": 0.0,
             "crop_change": 0.0,
             "period_replace": 0.0,
-            "quantity_adjust": 0.0,
+            "area_adjust": 0.0,
         }
     )
     service = NeighborGeneratorService(config)

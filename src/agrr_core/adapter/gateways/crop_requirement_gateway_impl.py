@@ -356,7 +356,8 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
             name=crop_data['name'],
             area_per_unit=crop_data.get('area_per_unit', 0.25),  # Default 0.25 m² if not specified
             variety=crop_data.get('variety'),
-            revenue_per_area=crop_data.get('revenue_per_area')
+            revenue_per_area=crop_data.get('revenue_per_area'),
+            max_profit=crop_data.get('max_profit')
         )
         
         # Parse stage requirements

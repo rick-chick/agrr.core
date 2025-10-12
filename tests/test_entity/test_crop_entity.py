@@ -190,5 +190,83 @@ class TestCrop:
 
         assert crop1 != crop2
 
+    def test_create_crop_with_max_profit(self):
+        """Test creating a crop with max_profit constraint."""
+        crop = Crop(
+            crop_id="rice",
+            name="Rice",
+            area_per_unit=0.25,
+            variety="Koshihikari",
+            revenue_per_area=50000.0,
+            max_profit=1000000.0,  # Maximum 1,000,000 yen profit
+        )
+
+        assert crop.crop_id == "rice"
+        assert crop.name == "Rice"
+        assert crop.area_per_unit == 0.25
+        assert crop.variety == "Koshihikari"
+        assert crop.revenue_per_area == 50000.0
+        assert crop.max_profit == 1000000.0
+
+    def test_create_crop_without_max_profit(self):
+        """Test creating a crop without max_profit defaults to None."""
+        crop = Crop(
+            crop_id="tomato",
+            name="Tomato",
+            area_per_unit=0.5,
+        )
+
+        assert crop.crop_id == "tomato"
+        assert crop.name == "Tomato"
+        assert crop.area_per_unit == 0.5
+        assert crop.variety is None
+        assert crop.revenue_per_area is None
+        assert crop.max_profit is None
+
+    def test_crop_with_zero_max_profit(self):
+        """Test creating a crop with zero max_profit."""
+        crop = Crop(
+            crop_id="test",
+            name="Test Crop",
+            area_per_unit=1.0,
+            max_profit=0.0,
+        )
+
+        assert crop.max_profit == 0.0
+
+    def test_crop_equality_with_max_profit(self):
+        """Test that crops with same max_profit are equal."""
+        crop1 = Crop(
+            crop_id="rice",
+            name="Rice",
+            area_per_unit=0.25,
+            max_profit=500000.0,
+        )
+        crop2 = Crop(
+            crop_id="rice",
+            name="Rice",
+            area_per_unit=0.25,
+            max_profit=500000.0,
+        )
+
+        assert crop1 == crop2
+
+    def test_crop_inequality_with_different_max_profit(self):
+        """Test that crops with different max_profit are not equal."""
+        crop1 = Crop(
+            crop_id="rice",
+            name="Rice",
+            area_per_unit=0.25,
+            max_profit=500000.0,
+        )
+        crop2 = Crop(
+            crop_id="rice",
+            name="Rice",
+            area_per_unit=0.25,
+            max_profit=1000000.0,
+        )
+
+        assert crop1 != crop2
+
 
 

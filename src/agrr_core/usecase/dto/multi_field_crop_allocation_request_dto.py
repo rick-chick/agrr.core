@@ -19,13 +19,16 @@ from typing import List, Dict, Any, Optional
 
 @dataclass
 class CropRequirementSpec:
-    """Specification for a single crop's requirements."""
+    """Specification for a single crop's requirements.
+    
+    Note: max_quantity is now defined in Crop entity (not here) as it represents
+    business constraints (market demand, contracts) that are inherent to the crop.
+    """
     
     crop_id: str
     variety: Optional[str] = None
     min_quantity: Optional[float] = None
     target_quantity: Optional[float] = None
-    max_quantity: Optional[float] = None
     crop_requirement_file: Optional[str] = None  # Path to pre-generated requirement file
 
 
@@ -74,9 +77,6 @@ class MultiFieldCropAllocationRequestDTO:
             if crop_req.target_quantity is not None and crop_req.target_quantity < 0:
                 raise ValueError(f"target_quantity must be non-negative for {crop_req.crop_id}")
             
-            if crop_req.max_quantity is not None and crop_req.max_quantity < 0:
-                raise ValueError(f"max_quantity must be non-negative for {crop_req.crop_id}")
-            
             # Validate quantity ordering
             if (crop_req.min_quantity is not None and 
                 crop_req.target_quantity is not None and 
@@ -84,13 +84,5 @@ class MultiFieldCropAllocationRequestDTO:
                 raise ValueError(
                     f"min_quantity ({crop_req.min_quantity}) must be <= "
                     f"target_quantity ({crop_req.target_quantity}) for {crop_req.crop_id}"
-                )
-            
-            if (crop_req.target_quantity is not None and 
-                crop_req.max_quantity is not None and 
-                crop_req.target_quantity > crop_req.max_quantity):
-                raise ValueError(
-                    f"target_quantity ({crop_req.target_quantity}) must be <= "
-                    f"max_quantity ({crop_req.max_quantity}) for {crop_req.crop_id}"
                 )
 

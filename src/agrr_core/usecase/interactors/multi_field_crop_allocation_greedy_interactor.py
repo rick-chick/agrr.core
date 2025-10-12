@@ -223,12 +223,12 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 )
                 crop = crop_requirement.crop
                 
-                # Calculate maximum quantity that can fit in the field
-                max_quantity = field.area / crop.area_per_unit if crop.area_per_unit > 0 else 0
+                # Calculate maximum quantity that can fit in the field (field capacity constraint)
+                field_capacity = field.area / crop.area_per_unit if crop.area_per_unit > 0 else 0
                 
                 # Generate candidates for each quantity level
                 for quantity_level in cfg.quantity_levels:
-                    quantity = max_quantity * quantity_level
+                    quantity = field_capacity * quantity_level
                     area_used = quantity * crop.area_per_unit
                     
                     # Use top N period candidates from DP results
@@ -244,6 +244,13 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                         cost = candidate_period.total_cost
                         
                         profit = revenue - cost
+                        
+                        # Apply crop-specific profit constraint if defined
+                        # (e.g., market demand limit, contract cap)
+                        if crop.max_profit is not None and profit > crop.max_profit:
+                            profit = crop.max_profit
+                            revenue = cost + profit  # Adjust revenue to satisfy constraint
+                        
                         profit_rate = (profit / cost) if cost > 0 else 0
                         
                         # ===== Phase 1: Quality Filtering =====
@@ -355,10 +362,10 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         
         # Generate quantity×period candidates
         candidates = []
-        max_quantity = field.area / crop.area_per_unit if crop.area_per_unit > 0 else 0
+        field_capacity = field.area / crop.area_per_unit if crop.area_per_unit > 0 else 0
         
         for quantity_level in config.quantity_levels:
-            quantity = max_quantity * quantity_level
+            quantity = field_capacity * quantity_level
             area_used = quantity * crop.area_per_unit
             
             for candidate_period in optimization_result.candidates[:config.top_period_candidates]:
@@ -369,6 +376,12 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 revenue = quantity * crop.revenue_per_area * crop.area_per_unit if crop.revenue_per_area else 0
                 cost = candidate_period.total_cost
                 profit = revenue - cost
+                
+                # Apply crop-specific profit constraint if defined
+                if crop.max_profit is not None and profit > crop.max_profit:
+                    profit = crop.max_profit
+                    revenue = cost + profit  # Adjust revenue to satisfy constraint
+                
                 profit_rate = (profit / cost) if cost > 0 else 0
                 
                 # Quality filtering

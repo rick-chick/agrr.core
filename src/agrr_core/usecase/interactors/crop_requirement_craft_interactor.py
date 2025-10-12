@@ -62,6 +62,7 @@ class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
             crop_economics = await self.gateway.extract_crop_economics(crop_name, variety)
             area_per_unit = crop_economics.get("area_per_unit", 0.25)
             revenue_per_area = crop_economics.get("revenue_per_area")
+            max_profit = crop_economics.get("max_profit")  # Optional market constraint
 
             # Step 3: Research requirements for each stage and build entities
             crop = Crop(
@@ -69,7 +70,8 @@ class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
                 name=crop_name,
                 area_per_unit=area_per_unit,
                 variety=variety if variety and variety != "default" else None,
-                revenue_per_area=revenue_per_area
+                revenue_per_area=revenue_per_area,
+                max_profit=max_profit
             )
             stage_requirements = []
             

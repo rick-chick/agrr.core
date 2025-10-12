@@ -285,3 +285,92 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
         assert "2024-04-01" in output
         assert "2024-07-15" in output
         assert "1500.0" in output  # GDD
+
+    async def test_optimize_command_with_interaction_rules(self):
+        """Test that --interaction-rules option is correctly parsed and passed to DTO."""
+        # Setup mocks
+        mock_crop_requirement_gateway = AsyncMock()
+        mock_weather_gateway = AsyncMock()
+        mock_optimization_result_gateway = AsyncMock()
+        mock_interaction_rule_gateway = AsyncMock()
+        mock_presenter = MagicMock()
+        mock_presenter.output_format = "table"
+
+        # Setup crop requirements
+        crop = Crop(crop_id="tomato", name="Tomato", area_per_unit=0.25, variety="Aiko")
+        stage = GrowthStage(name="Growth", order=1)
+
+        temp_profile = TemperatureProfile(
+            base_temperature=10.0,
+            optimal_min=20.0,
+            optimal_max=30.0,
+            low_stress_threshold=15.0,
+            high_stress_threshold=35.0,
+            frost_threshold=0.0,
+        )
+        sunshine_profile = SunshineProfile()
+
+        stage_req = StageRequirement(
+            stage=stage,
+            temperature=temp_profile,
+            sunshine=sunshine_profile,
+            thermal=ThermalRequirement(required_gdd=100.0),
+        )
+
+        crop_requirement = CropRequirementAggregate(
+            crop=crop, stage_requirements=[stage_req]
+        )
+
+        # Weather data: 10 GDD per day
+        weather_data = [
+            WeatherData(
+                time=datetime(2024, 4, day),
+                temperature_2m_mean=20.0,
+                temperature_2m_max=25.0,
+                temperature_2m_min=15.0,
+            )
+            for day in range(1, 21)
+        ]
+
+        mock_crop_requirement_gateway.craft.return_value = crop_requirement
+        mock_weather_gateway.get.return_value = weather_data
+
+        # Create field entity
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+            location="Test Location"
+        )
+
+        # Create controller with interaction rule gateway
+        controller = GrowthPeriodOptimizeCliController(
+            crop_requirement_gateway=mock_crop_requirement_gateway,
+            weather_gateway=mock_weather_gateway,
+            presenter=mock_presenter,
+            field=test_field,
+            optimization_result_gateway=mock_optimization_result_gateway,
+            interaction_rule_gateway=mock_interaction_rule_gateway,
+        )
+
+        # Simulate CLI arguments with --interaction-rules option
+        args = [
+            "optimize",
+            "--crop", "tomato",
+            "--variety", "Aiko",
+            "--evaluation-start", "2024-04-01",
+            "--evaluation-end", "2024-06-30",
+            "--weather-file", "test_weather.json",
+            "--field-config", "test_field.json",
+            "--interaction-rules", "test_interaction_rules.json",
+        ]
+
+        # Mock interaction rules (empty list for this test)
+        mock_interaction_rule_gateway.get_rules.return_value = []
+
+        with patch("sys.stdout", new=StringIO()):
+            await controller.run(args)
+
+        # Verify that interaction_rule_gateway.get_rules was called with correct path
+        mock_interaction_rule_gateway.get_rules.assert_called_once_with("test_interaction_rules.json")

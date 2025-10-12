@@ -467,3 +467,69 @@ class TestCropRequirementGatewayImpl:
             # Clean up
             import os
             os.unlink(temp_file_path)
+    
+    @pytest.mark.asyncio
+    async def test_extract_crop_economics_success(self):
+        """Test extract_crop_economics method successfully."""
+        # Mock LLM client
+        self.mock_llm_client.extract_crop_economics = AsyncMock()
+        self.mock_llm_client.extract_crop_economics.return_value = {
+            "data": {
+                "area_per_unit": 0.5,
+                "revenue_per_area": 3000.0
+            }
+        }
+        
+        # Execute
+        result = await self.gateway.extract_crop_economics("トマト", "アイコ")
+        
+        # Verify
+        assert result["area_per_unit"] == 0.5
+        assert result["revenue_per_area"] == 3000.0
+        self.mock_llm_client.extract_crop_economics.assert_called_once_with("トマト", "アイコ")
+    
+    @pytest.mark.asyncio
+    async def test_extract_crop_economics_without_llm_client(self):
+        """Test extract_crop_economics without LLM client (fallback)."""
+        # Setup gateway without LLM client
+        gateway = CropRequirementGatewayImpl(llm_client=None)
+        
+        # Execute
+        result = await gateway.extract_crop_economics("トマト", "アイコ")
+        
+        # Verify fallback behavior
+        assert result["area_per_unit"] == 0.25
+        assert result["revenue_per_area"] is None
+    
+    @pytest.mark.asyncio
+    async def test_extract_crop_family_success(self):
+        """Test extract_crop_family method successfully."""
+        # Mock LLM client
+        self.mock_llm_client.extract_crop_family = AsyncMock()
+        self.mock_llm_client.extract_crop_family.return_value = {
+            "data": {
+                "family_ja": "ナス科",
+                "family_scientific": "Solanaceae"
+            }
+        }
+        
+        # Execute
+        result = await self.gateway.extract_crop_family("トマト", "アイコ")
+        
+        # Verify
+        assert result["family_ja"] == "ナス科"
+        assert result["family_scientific"] == "Solanaceae"
+        self.mock_llm_client.extract_crop_family.assert_called_once_with("トマト", "アイコ")
+    
+    @pytest.mark.asyncio
+    async def test_extract_crop_family_without_llm_client(self):
+        """Test extract_crop_family without LLM client (fallback)."""
+        # Setup gateway without LLM client
+        gateway = CropRequirementGatewayImpl(llm_client=None)
+        
+        # Execute
+        result = await gateway.extract_crop_family("トマト", "アイコ")
+        
+        # Verify fallback behavior
+        assert result["family_ja"] is None
+        assert result["family_scientific"] is None

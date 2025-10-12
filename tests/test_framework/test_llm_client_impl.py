@@ -203,3 +203,33 @@ class TestFrameworkLLMClient:
             # Verify result structure
             assert result["data"]["area_per_unit"] == 0.5
             assert result["data"]["revenue_per_area"] == 3000.0
+    
+    @pytest.mark.asyncio
+    async def test_extract_crop_family(self):
+        """Test extracting crop family (科) information."""
+        crop_name = "トマト"
+        variety = "アイコ"
+        
+        with patch.object(self.client, 'struct', new_callable=AsyncMock) as mock_struct:
+            mock_struct.return_value = {
+                "data": {
+                    "family_ja": "ナス科",
+                    "family_scientific": "Solanaceae"
+                }
+            }
+            
+            result = await self.client.extract_crop_family(crop_name, variety)
+            
+            # Verify struct was called with correct parameters
+            mock_struct.assert_called_once()
+            call_args = mock_struct.call_args
+            query = call_args[0][0]
+            assert crop_name in query
+            assert variety in query
+            assert "植物学的な科" in query or "family" in query
+            assert "family_ja" in call_args[0][1]
+            assert "family_scientific" in call_args[0][1]
+            
+            # Verify result structure
+            assert result["data"]["family_ja"] == "ナス科"
+            assert result["data"]["family_scientific"] == "Solanaceae"

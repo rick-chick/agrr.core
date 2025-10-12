@@ -416,3 +416,107 @@ class TestGrowthPeriodOptimizeInteractor:
         with pytest.raises(ValueError, match="No candidate can complete by the deadline"):
             await self.interactor.execute(request)
 
+    @pytest.mark.asyncio
+    async def test_execute_loads_interaction_rules_when_file_provided(
+        self, mock_interaction_rule_gateway
+    ):
+        """Test that interaction rules are loaded when file path is provided in request."""
+        from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
+        
+        # Setup interactor with interaction rule gateway
+        interactor = GrowthPeriodOptimizeInteractor(
+            crop_requirement_gateway=self.mock_crop_requirement_gateway,
+            weather_gateway=self.mock_weather_gateway,
+            interaction_rule_gateway=mock_interaction_rule_gateway,
+        )
+
+        # Setup mock crop requirements
+        crop = Crop(
+            crop_id="tomato",
+            name="Tomato",
+            area_per_unit=0.25,
+            variety="Aiko",
+            groups=["Solanaceae"]
+        )
+        stage = GrowthStage(name="Growth", order=1)
+
+        temp_profile = TemperatureProfile(
+            base_temperature=10.0,
+            optimal_min=20.0,
+            optimal_max=30.0,
+            low_stress_threshold=15.0,
+            high_stress_threshold=35.0,
+            frost_threshold=0.0,
+        )
+        sunshine_profile = SunshineProfile()
+
+        stage_req = StageRequirement(
+            stage=stage,
+            temperature=temp_profile,
+            sunshine=sunshine_profile,
+            thermal=ThermalRequirement(required_gdd=100.0),
+        )
+
+        crop_requirement = CropRequirementAggregate(
+            crop=crop, stage_requirements=[stage_req]
+        )
+
+        # Weather data
+        weather_data = [
+            WeatherData(
+                time=datetime(2024, 4, day),
+                temperature_2m_mean=20.0,
+                temperature_2m_max=25.0,
+                temperature_2m_min=15.0,
+            )
+            for day in range(1, 21)
+        ]
+
+        self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
+        self.mock_weather_gateway.get.return_value = weather_data
+
+        # Setup interaction rules
+        interaction_rules = [
+            InteractionRule(
+                rule_id="rule_001",
+                rule_type="continuous_cultivation",
+                source_group="Solanaceae",
+                target_group="Solanaceae",
+                impact_ratio=0.7,
+                is_directional=True,
+                description="Solanaceae continuous cultivation penalty",
+            )
+        ]
+        mock_interaction_rule_gateway.get_rules.return_value = interaction_rules
+
+        # Create field and request
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+            location="Test Location"
+        )
+
+        request = OptimalGrowthPeriodRequestDTO(
+            crop_id="tomato",
+            variety="Aiko",
+            evaluation_period_start=datetime(2024, 4, 1),
+            evaluation_period_end=datetime(2024, 4, 15),
+            weather_data_file="weather_data.json",
+            field=test_field,
+            interaction_rules_file="test_interaction_rules.json",
+        )
+
+        # Execute
+        response = await interactor.execute(request)
+
+        # Verify that interaction rules were loaded
+        mock_interaction_rule_gateway.get_rules.assert_called_once_with(
+            "test_interaction_rules.json"
+        )
+        
+        # Verify response is valid
+        assert response.optimal_start_date is not None
+        assert response.completion_date is not None
+

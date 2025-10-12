@@ -278,3 +278,100 @@ class TestPrivateMethods:
         
         assert result["required_gdd"] == 500.0
 
+
+@pytest.mark.unit
+class TestGroupsFieldHandling:
+    """Tests for groups field handling in mapper."""
+    
+    def test_aggregate_to_payload_with_groups(self):
+        """Test conversion when groups field is present."""
+        crop = Crop(
+            crop_id="tomato",
+            name="Tomato",
+            area_per_unit=0.5,
+            variety="Cherry",
+            groups=["Solanaceae", "fruiting_vegetables"]
+        )
+        
+        stage = GrowthStage("Growth", 1)
+        temperature = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0)
+        sunshine = SunshineProfile(3.0, 6.0)
+        thermal = ThermalRequirement(400.0)
+        stage_req = StageRequirement(stage, temperature, sunshine, thermal)
+        aggregate = CropRequirementAggregate(crop, [stage_req])
+        
+        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        
+        # Verify groups field is present and correct
+        assert "groups" in payload
+        assert payload["groups"] == ["Solanaceae", "fruiting_vegetables"]
+        assert isinstance(payload["groups"], list)
+        assert len(payload["groups"]) == 2
+    
+    def test_aggregate_to_payload_with_single_group(self):
+        """Test conversion when groups field has single element (family only)."""
+        crop = Crop(
+            crop_id="cucumber",
+            name="Cucumber",
+            area_per_unit=0.4,
+            groups=["Cucurbitaceae"]  # Only family
+        )
+        
+        stage = GrowthStage("Growth", 1)
+        temperature = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0)
+        sunshine = SunshineProfile(3.0, 6.0)
+        thermal = ThermalRequirement(400.0)
+        stage_req = StageRequirement(stage, temperature, sunshine, thermal)
+        aggregate = CropRequirementAggregate(crop, [stage_req])
+        
+        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        
+        # Verify groups field with single element
+        assert "groups" in payload
+        assert payload["groups"] == ["Cucurbitaceae"]
+        assert len(payload["groups"]) == 1
+    
+    def test_aggregate_to_payload_without_groups(self):
+        """Test conversion when groups field is None."""
+        crop = Crop(
+            crop_id="lettuce",
+            name="Lettuce",
+            area_per_unit=0.3,
+            groups=None
+        )
+        
+        stage = GrowthStage("Growth", 1)
+        temperature = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0)
+        sunshine = SunshineProfile(3.0, 6.0)
+        thermal = ThermalRequirement(400.0)
+        stage_req = StageRequirement(stage, temperature, sunshine, thermal)
+        aggregate = CropRequirementAggregate(crop, [stage_req])
+        
+        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        
+        # Verify groups field is None
+        assert "groups" in payload
+        assert payload["groups"] is None
+    
+    def test_aggregate_to_payload_with_empty_groups(self):
+        """Test conversion when groups field is empty list."""
+        crop = Crop(
+            crop_id="spinach",
+            name="Spinach",
+            area_per_unit=0.2,
+            groups=[]
+        )
+        
+        stage = GrowthStage("Growth", 1)
+        temperature = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0)
+        sunshine = SunshineProfile(3.0, 6.0)
+        thermal = ThermalRequirement(400.0)
+        stage_req = StageRequirement(stage, temperature, sunshine, thermal)
+        aggregate = CropRequirementAggregate(crop, [stage_req])
+        
+        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        
+        # Verify groups field is empty list
+        assert "groups" in payload
+        assert payload["groups"] == []
+

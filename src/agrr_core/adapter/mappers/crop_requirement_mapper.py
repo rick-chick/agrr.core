@@ -57,6 +57,7 @@ class CropRequirementMapper:
             "area_per_unit": aggregate.crop.area_per_unit,
             "revenue_per_area": aggregate.crop.revenue_per_area,
             "max_revenue": aggregate.crop.max_revenue,
+            "groups": aggregate.crop.groups,
             "stages": [
                 CropRequirementMapper.stage_requirement_to_dict(sr)
                 for sr in aggregate.stage_requirements

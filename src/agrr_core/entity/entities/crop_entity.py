@@ -13,10 +13,12 @@ Fields
 - max_revenue: Optional maximum revenue constraint (e.g., yen)
   This represents business constraints such as market demand limits or contract caps.
   Directly specifying revenue limit is simpler than calculating from quantity constraints.
+- groups: Optional list of group identifiers (e.g., ["Solanaceae", "fruiting_vegetables"])
+  Used for interaction rules such as continuous cultivation constraints and companion planting.
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
 
 @dataclass(frozen=True)
@@ -29,5 +31,6 @@ class Crop:
     variety: Optional[str] = None
     revenue_per_area: Optional[float] = None
     max_revenue: Optional[float] = None
+    groups: Optional[List[str]] = None
 
 

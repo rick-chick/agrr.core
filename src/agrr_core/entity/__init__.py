@@ -19,6 +19,7 @@ from .entities.crop_requirement_aggregate_entity import CropRequirementAggregate
 from .entities.optimization_intermediate_result_entity import OptimizationIntermediateResult
 from .entities.optimization_schedule_entity import OptimizationSchedule
 from .entities.field_entity import Field
+from .entities.interaction_rule_entity import InteractionRule
 from .exceptions.weather_error import WeatherError
 from .exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 from .exceptions.invalid_location_error import InvalidLocationError
@@ -46,6 +47,7 @@ __all__ = [
     "OptimizationIntermediateResult",
     "OptimizationSchedule",
     "Field",
+    "InteractionRule",
     "WeatherError",
     "WeatherDataNotFoundError",
     "InvalidLocationError",

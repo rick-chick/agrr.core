@@ -34,7 +34,7 @@ class TestWeatherCliPredictController:
         parser = self.controller.create_argument_parser()
         
         # Check parser attributes
-        assert parser.description == "Weather File-based Prediction CLI - Predict weather from file data"
+        assert parser.description == "Weather Prediction CLI - Predict future weather using ARIMA time series model"
         
         # Check that subcommands exist
         actions = [action.dest for action in parser._actions]
@@ -60,7 +60,7 @@ class TestWeatherCliPredictController:
         args.days = 7
         
         # Execute
-        await self.controller.handle_predict_file_command(args)
+        await self.controller.handle_predict_command(args)
         
         # Verify calls
         self.controller.predict_interactor.execute.assert_called_once_with(
@@ -82,7 +82,7 @@ class TestWeatherCliPredictController:
         args.output = "output.json"
         args.days = 7
         
-        await self.controller.handle_predict_file_command(args)
+        await self.controller.handle_predict_command(args)
         
         self.mock_cli_presenter.display_error.assert_called_once_with(
             "Invalid input file format", "VALIDATION_ERROR"
@@ -100,7 +100,7 @@ class TestWeatherCliPredictController:
         args.output = "output.json"
         args.days = 7
         
-        await self.controller.handle_predict_file_command(args)
+        await self.controller.handle_predict_command(args)
         
         self.mock_cli_presenter.display_error.assert_called_once_with(
             "Unexpected error: Database connection failed", "INTERNAL_ERROR"
@@ -116,11 +116,11 @@ class TestWeatherCliPredictController:
     
     @pytest.mark.asyncio
     async def test_run_predict_file_command(self):
-        """Test run method with predict-file command."""
+        """Test run method with predict command."""
         predictions = [Forecast(date=datetime(2024, 2, 1), predicted_value=17.0)]
         self.controller.predict_interactor.execute = AsyncMock(return_value=predictions)
         
-        args = ['predict-file', '--input', 'input.json', '--output', 'output.json', '--days', '7']
+        args = ['predict', '--input', 'input.json', '--output', 'output.json', '--days', '7']
         
         await self.controller.run(args)
         

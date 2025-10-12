@@ -33,7 +33,7 @@ Available Commands:
   crop              Get crop growth requirements using AI
   progress          Calculate crop growth progress based on weather data
   optimize-period   Find optimal cultivation period to minimize costs
-  predict-file      Predict weather metrics from historical data file (EXPERIMENTAL)
+  predict           Predict future weather using ARIMA time series model
 
 Examples:
   # Get historical weather data for Tokyo (last 7 days)
@@ -52,6 +52,10 @@ Examples:
   agrr optimize-period optimize --crop rice --variety Koshihikari \\
     --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
     --weather-file weather.json --daily-cost 5000
+
+  # Predict future weather with ARIMA model
+  agrr weather --location 35.6762,139.6503 --days 90 --json > historical.json
+  agrr predict --input historical.json --output predictions.json --days 30
 
 For detailed help on each command:
   agrr <command> --help
@@ -116,8 +120,8 @@ def main() -> None:
         container = WeatherCliContainer(config)
         
         # Check subcommands
-        if args[0] == 'predict-file':
-            # Run file-based prediction CLI
+        if args[0] == 'predict':
+            # Run ARIMA prediction CLI
             asyncio.run(container.run_prediction_cli(args))
         elif args and args[0] == 'crop':
             # Run crop requirement craft CLI (direct wiring per project rules)

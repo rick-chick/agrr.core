@@ -3,6 +3,7 @@
 import pytest
 
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
+from agrr_core.entity.value_objects.rule_type import RuleType
 
 
 class TestInteractionRuleCreation:
@@ -12,7 +13,7 @@ class TestInteractionRuleCreation:
         """Test creating a directed interaction rule."""
         rule = InteractionRule(
             rule_id="rule_001",
-            rule_type="continuous_cultivation",
+            rule_type=RuleType.CONTINUOUS_CULTIVATION,
             source_group="Solanaceae",
             target_group="Solanaceae",
             impact_ratio=0.7,
@@ -21,7 +22,7 @@ class TestInteractionRuleCreation:
         )
         
         assert rule.rule_id == "rule_001"
-        assert rule.rule_type == "continuous_cultivation"
+        assert rule.rule_type == RuleType.CONTINUOUS_CULTIVATION
         assert rule.source_group == "Solanaceae"
         assert rule.target_group == "Solanaceae"
         assert rule.impact_ratio == 0.7
@@ -32,7 +33,7 @@ class TestInteractionRuleCreation:
         """Test creating an undirected interaction rule."""
         rule = InteractionRule(
             rule_id="rule_002",
-            rule_type="companion_planting",
+            rule_type=RuleType.COMPANION_PLANTING,
             source_group="Solanaceae",
             target_group="Lamiaceae",
             impact_ratio=1.15,
@@ -47,7 +48,7 @@ class TestInteractionRuleCreation:
         """Test creating a field-crop interaction rule."""
         rule = InteractionRule(
             rule_id="rule_003",
-            rule_type="soil_compatibility",
+            rule_type=RuleType.SOIL_COMPATIBILITY,
             source_group="field_001",
             target_group="Solanaceae",
             impact_ratio=1.2,
@@ -62,7 +63,7 @@ class TestInteractionRuleCreation:
         """Test creating a field group - crop group interaction rule."""
         rule = InteractionRule(
             rule_id="rule_004",
-            rule_type="soil_compatibility",
+            rule_type=RuleType.SOIL_COMPATIBILITY,
             source_group="acidic_soil",
             target_group="Brassicaceae",
             impact_ratio=0.8,
@@ -83,7 +84,7 @@ class TestInteractionRuleValidation:
         with pytest.raises(ValueError, match="impact_ratio must be non-negative"):
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="continuous_cultivation",
+                rule_type=RuleType.CONTINUOUS_CULTIVATION,
                 source_group="Solanaceae",
                 target_group="Solanaceae",
                 impact_ratio=-0.5,
@@ -95,7 +96,7 @@ class TestInteractionRuleValidation:
         with pytest.raises(ValueError, match="source_group must not be empty"):
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="continuous_cultivation",
+                rule_type=RuleType.CONTINUOUS_CULTIVATION,
                 source_group="",
                 target_group="Solanaceae",
                 impact_ratio=0.7,
@@ -107,7 +108,7 @@ class TestInteractionRuleValidation:
         with pytest.raises(ValueError, match="target_group must not be empty"):
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="continuous_cultivation",
+                rule_type=RuleType.CONTINUOUS_CULTIVATION,
                 source_group="Solanaceae",
                 target_group="",
                 impact_ratio=0.7,
@@ -119,19 +120,7 @@ class TestInteractionRuleValidation:
         with pytest.raises(ValueError, match="rule_id must not be empty"):
             InteractionRule(
                 rule_id="",
-                rule_type="continuous_cultivation",
-                source_group="Solanaceae",
-                target_group="Solanaceae",
-                impact_ratio=0.7,
-                is_directional=True
-            )
-    
-    def test_empty_rule_type_raises_error(self):
-        """Test that empty rule_type raises ValueError."""
-        with pytest.raises(ValueError, match="rule_type must not be empty"):
-            InteractionRule(
-                rule_id="rule_001",
-                rule_type="",
+                rule_type=RuleType.CONTINUOUS_CULTIVATION,
                 source_group="Solanaceae",
                 target_group="Solanaceae",
                 impact_ratio=0.7,
@@ -142,7 +131,7 @@ class TestInteractionRuleValidation:
         """Test that zero impact ratio is valid (cultivation not possible)."""
         rule = InteractionRule(
             rule_id="rule_001",
-            rule_type="continuous_cultivation",
+            rule_type=RuleType.CONTINUOUS_CULTIVATION,
             source_group="Solanaceae",
             target_group="Solanaceae",
             impact_ratio=0.0,
@@ -159,7 +148,7 @@ class TestInteractionRuleMatches:
         """Test that directed rule matches in forward direction."""
         rule = InteractionRule(
             rule_id="rule_001",
-            rule_type="continuous_cultivation",
+            rule_type=RuleType.CONTINUOUS_CULTIVATION,
             source_group="Solanaceae",
             target_group="Solanaceae",
             impact_ratio=0.7,
@@ -172,7 +161,7 @@ class TestInteractionRuleMatches:
         """Test that directed rule does not match in backward direction."""
         rule = InteractionRule(
             rule_id="rule_001",
-            rule_type="beneficial_rotation",
+            rule_type=RuleType.BENEFICIAL_ROTATION,
             source_group="Fabaceae",
             target_group="Poaceae",
             impact_ratio=1.1,
@@ -189,7 +178,7 @@ class TestInteractionRuleMatches:
         """Test that undirected rule matches in both directions."""
         rule = InteractionRule(
             rule_id="rule_002",
-            rule_type="companion_planting",
+            rule_type=RuleType.COMPANION_PLANTING,
             source_group="Solanaceae",
             target_group="Lamiaceae",
             impact_ratio=1.15,
@@ -206,7 +195,7 @@ class TestInteractionRuleMatches:
         """Test that rule does not match different groups."""
         rule = InteractionRule(
             rule_id="rule_001",
-            rule_type="continuous_cultivation",
+            rule_type=RuleType.CONTINUOUS_CULTIVATION,
             source_group="Solanaceae",
             target_group="Solanaceae",
             impact_ratio=0.7,
@@ -219,7 +208,7 @@ class TestInteractionRuleMatches:
         """Test field-crop matching rule."""
         rule = InteractionRule(
             rule_id="rule_003",
-            rule_type="soil_compatibility",
+            rule_type=RuleType.SOIL_COMPATIBILITY,
             source_group="field_001",
             target_group="Solanaceae",
             impact_ratio=1.2,
@@ -237,7 +226,7 @@ class TestInteractionRuleGetImpact:
         """Test that get_impact returns impact_ratio when rule matches."""
         rule = InteractionRule(
             rule_id="rule_001",
-            rule_type="continuous_cultivation",
+            rule_type=RuleType.CONTINUOUS_CULTIVATION,
             source_group="Solanaceae",
             target_group="Solanaceae",
             impact_ratio=0.7,
@@ -251,7 +240,7 @@ class TestInteractionRuleGetImpact:
         """Test that get_impact returns 1.0 when rule does not match."""
         rule = InteractionRule(
             rule_id="rule_001",
-            rule_type="continuous_cultivation",
+            rule_type=RuleType.CONTINUOUS_CULTIVATION,
             source_group="Solanaceae",
             target_group="Solanaceae",
             impact_ratio=0.7,
@@ -265,7 +254,7 @@ class TestInteractionRuleGetImpact:
         """Test get_impact with undirected rule in both directions."""
         rule = InteractionRule(
             rule_id="rule_002",
-            rule_type="companion_planting",
+            rule_type=RuleType.COMPANION_PLANTING,
             source_group="Solanaceae",
             target_group="Lamiaceae",
             impact_ratio=1.15,
@@ -284,7 +273,7 @@ class TestInteractionRuleGetImpact:
         """Test get_impact with field-crop matching rule."""
         rule = InteractionRule(
             rule_id="rule_003",
-            rule_type="soil_compatibility",
+            rule_type=RuleType.SOIL_COMPATIBILITY,
             source_group="field_001",
             target_group="Solanaceae",
             impact_ratio=1.2,
@@ -307,7 +296,7 @@ class TestInteractionRuleImmutability:
         """Test that InteractionRule fields cannot be modified."""
         rule = InteractionRule(
             rule_id="rule_001",
-            rule_type="continuous_cultivation",
+            rule_type=RuleType.CONTINUOUS_CULTIVATION,
             source_group="Solanaceae",
             target_group="Solanaceae",
             impact_ratio=0.7,

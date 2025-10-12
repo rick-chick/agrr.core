@@ -7,6 +7,8 @@ and their impact on revenue.
 from dataclasses import dataclass
 from typing import Optional
 
+from agrr_core.entity.value_objects.rule_type import RuleType
+
 
 @dataclass(frozen=True)
 class InteractionRule:
@@ -16,13 +18,13 @@ class InteractionRule:
     
     Fields:
     - rule_id: Unique identifier for this rule
-    - rule_type: Type of interaction rule
-        * "continuous_cultivation": Continuous cultivation (same group repeatedly)
-        * "beneficial_rotation": Beneficial crop rotation
-        * "companion_planting": Companion planting (beneficial combinations)
-        * "allelopathy": Allelopathy (chemical inhibition between plants)
-        * "soil_compatibility": Soil type compatibility
-        * Other custom values are possible
+    - rule_type: Type of interaction rule (RuleType enum)
+        * RuleType.CONTINUOUS_CULTIVATION: Continuous cultivation (same group repeatedly)
+        * RuleType.BENEFICIAL_ROTATION: Beneficial crop rotation
+        * RuleType.COMPANION_PLANTING: Companion planting (beneficial combinations)
+        * RuleType.ALLELOPATHY: Allelopathy (chemical inhibition between plants)
+        * RuleType.SOIL_COMPATIBILITY: Soil type compatibility
+        * RuleType.CLIMATE_COMPATIBILITY: Climate compatibility
     - source_group: Source group name (e.g., "Solanaceae", "field_001", "acidic_soil")
     - target_group: Target group name (e.g., "Solanaceae", "Brassicaceae")
     - impact_ratio: Impact coefficient on revenue
@@ -39,7 +41,7 @@ class InteractionRule:
         # Continuous cultivation damage (Solanaceae)
         >>> InteractionRule(
         ...     rule_id="rule_001",
-        ...     rule_type="continuous_cultivation",
+        ...     rule_type=RuleType.CONTINUOUS_CULTIVATION,
         ...     source_group="Solanaceae",
         ...     target_group="Solanaceae",
         ...     impact_ratio=0.7,
@@ -50,7 +52,7 @@ class InteractionRule:
         # Beneficial rotation: Fabaceae → Poaceae
         >>> InteractionRule(
         ...     rule_id="rule_002",
-        ...     rule_type="beneficial_rotation",
+        ...     rule_type=RuleType.BENEFICIAL_ROTATION,
         ...     source_group="Fabaceae",
         ...     target_group="Poaceae",
         ...     impact_ratio=1.1,
@@ -61,7 +63,7 @@ class InteractionRule:
         # Field × Crop group: Soil compatibility
         >>> InteractionRule(
         ...     rule_id="rule_003",
-        ...     rule_type="soil_compatibility",
+        ...     rule_type=RuleType.SOIL_COMPATIBILITY,
         ...     source_group="field_001",
         ...     target_group="Solanaceae",
         ...     impact_ratio=1.2,
@@ -72,7 +74,7 @@ class InteractionRule:
         # Companion planting (undirected)
         >>> InteractionRule(
         ...     rule_id="rule_004",
-        ...     rule_type="companion_planting",
+        ...     rule_type=RuleType.COMPANION_PLANTING,
         ...     source_group="Solanaceae",
         ...     target_group="Lamiaceae",
         ...     impact_ratio=1.15,
@@ -82,7 +84,7 @@ class InteractionRule:
     """
     
     rule_id: str
-    rule_type: str
+    rule_type: RuleType
     source_group: str
     target_group: str
     impact_ratio: float
@@ -102,9 +104,6 @@ class InteractionRule:
         
         if not self.rule_id or not self.rule_id.strip():
             raise ValueError("rule_id must not be empty")
-        
-        if not self.rule_type or not self.rule_type.strip():
-            raise ValueError("rule_type must not be empty")
     
     def matches(self, group_a: str, group_b: str) -> bool:
         """Check if this rule applies to the given group pair.
@@ -119,7 +118,7 @@ class InteractionRule:
         Examples:
             >>> rule = InteractionRule(
             ...     rule_id="rule_001",
-            ...     rule_type="continuous_cultivation",
+            ...     rule_type=RuleType.CONTINUOUS_CULTIVATION,
             ...     source_group="Solanaceae",
             ...     target_group="Solanaceae",
             ...     impact_ratio=0.7,
@@ -152,7 +151,7 @@ class InteractionRule:
         Examples:
             >>> rule = InteractionRule(
             ...     rule_id="rule_001",
-            ...     rule_type="continuous_cultivation",
+            ...     rule_type=RuleType.CONTINUOUS_CULTIVATION,
             ...     source_group="Solanaceae",
             ...     target_group="Solanaceae",
             ...     impact_ratio=0.7,

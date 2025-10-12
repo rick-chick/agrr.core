@@ -5,6 +5,7 @@ from typing import List
 
 from agrr_core.usecase.gateways.interaction_rule_gateway import InteractionRuleGateway
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
+from agrr_core.entity.value_objects.rule_type import RuleType
 from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
 from agrr_core.entity.exceptions.file_error import FileError
 
@@ -63,7 +64,7 @@ class InteractionRuleGatewayImpl(InteractionRuleGateway):
                 try:
                     rule = InteractionRule(
                         rule_id=rule_dict["rule_id"],
-                        rule_type=rule_dict["rule_type"],
+                        rule_type=RuleType(rule_dict["rule_type"]),
                         source_group=rule_dict["source_group"],
                         target_group=rule_dict["target_group"],
                         impact_ratio=rule_dict["impact_ratio"],

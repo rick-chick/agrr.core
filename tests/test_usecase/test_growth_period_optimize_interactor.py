@@ -14,6 +14,8 @@ from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
 from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.entity.entities.field_entity import Field
+from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
+from agrr_core.entity.value_objects.rule_type import RuleType
 from agrr_core.usecase.dto.growth_period_optimize_request_dto import (
     OptimalGrowthPeriodRequestDTO,
 )
@@ -479,7 +481,7 @@ class TestGrowthPeriodOptimizeInteractor:
         interaction_rules = [
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="continuous_cultivation",
+                rule_type=RuleType.CONTINUOUS_CULTIVATION,
                 source_group="Solanaceae",
                 target_group="Solanaceae",
                 impact_ratio=0.7,

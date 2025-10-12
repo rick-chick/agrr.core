@@ -9,6 +9,7 @@ import pytest
 from agrr_core.adapter.gateways.interaction_rule_gateway_impl import InteractionRuleGatewayImpl
 from agrr_core.framework.repositories.file_repository import FileRepository
 from agrr_core.entity.exceptions.file_error import FileError
+from agrr_core.entity.value_objects.rule_type import RuleType
 
 
 class TestInteractionRuleGatewayImpl:
@@ -50,7 +51,7 @@ class TestInteractionRuleGatewayImpl:
             
             assert len(rules) == 2
             assert rules[0].rule_id == "rule_001"
-            assert rules[0].rule_type == "continuous_cultivation"
+            assert rules[0].rule_type == RuleType.CONTINUOUS_CULTIVATION
             assert rules[0].source_group == "Solanaceae"
             assert rules[0].target_group == "Solanaceae"
             assert rules[0].impact_ratio == 0.7

@@ -5,6 +5,7 @@ import pytest
 from agrr_core.usecase.services.interaction_rule_service import InteractionRuleService
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.entity.entities.crop_entity import Crop
+from agrr_core.entity.value_objects.rule_type import RuleType
 
 
 class TestGetContinuousCultivationImpact:
@@ -54,7 +55,7 @@ class TestGetContinuousCultivationImpact:
         rules = [
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="continuous_cultivation",
+                rule_type=RuleType.CONTINUOUS_CULTIVATION,
                 source_group="Solanaceae",
                 target_group="Solanaceae",
                 impact_ratio=0.7,
@@ -86,7 +87,7 @@ class TestGetContinuousCultivationImpact:
         rules = [
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="continuous_cultivation",
+                rule_type=RuleType.CONTINUOUS_CULTIVATION,
                 source_group="Solanaceae",
                 target_group="Solanaceae",
                 impact_ratio=0.7,
@@ -119,7 +120,7 @@ class TestGetContinuousCultivationImpact:
         rules = [
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="continuous_cultivation",
+                rule_type=RuleType.CONTINUOUS_CULTIVATION,
                 source_group="Solanaceae",
                 target_group="Solanaceae",
                 impact_ratio=0.7,
@@ -151,7 +152,7 @@ class TestGetContinuousCultivationImpact:
         rules = [
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="beneficial_rotation",  # Different rule type
+                rule_type=RuleType.BENEFICIAL_ROTATION,  # Different rule type
                 source_group="Solanaceae",
                 target_group="Solanaceae",
                 impact_ratio=0.5,  # Should not be applied
@@ -184,7 +185,7 @@ class TestGetContinuousCultivationImpact:
         rules = [
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="continuous_cultivation",
+                rule_type=RuleType.CONTINUOUS_CULTIVATION,
                 source_group="Solanaceae",
                 target_group="Solanaceae",
                 impact_ratio=0.8,
@@ -192,7 +193,7 @@ class TestGetContinuousCultivationImpact:
             ),
             InteractionRule(
                 rule_id="rule_002",
-                rule_type="continuous_cultivation",
+                rule_type=RuleType.CONTINUOUS_CULTIVATION,
                 source_group="fruiting_vegetables",
                 target_group="fruiting_vegetables",
                 impact_ratio=0.9,
@@ -261,7 +262,7 @@ class TestGetFieldCropImpact:
         rules = [
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="soil_compatibility",
+                rule_type=RuleType.SOIL_COMPATIBILITY,
                 source_group="acidic_soil",
                 target_group="Solanaceae",
                 impact_ratio=1.2,
@@ -286,7 +287,7 @@ class TestGetFieldCropImpact:
         rules = [
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="soil_compatibility",
+                rule_type=RuleType.SOIL_COMPATIBILITY,
                 source_group="acidic_soil",
                 target_group="Brassicaceae",
                 impact_ratio=0.8,
@@ -312,7 +313,7 @@ class TestGetFieldCropImpact:
         rules = [
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="soil_compatibility",
+                rule_type=RuleType.SOIL_COMPATIBILITY,
                 source_group="acidic_soil",
                 target_group="Solanaceae",
                 impact_ratio=1.1,
@@ -320,7 +321,7 @@ class TestGetFieldCropImpact:
             ),
             InteractionRule(
                 rule_id="rule_002",
-                rule_type="climate_compatibility",
+                rule_type=RuleType.CLIMATE_COMPATIBILITY,
                 source_group="warm_region",
                 target_group="warm_season",
                 impact_ratio=1.15,

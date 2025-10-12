@@ -8,6 +8,7 @@ from typing import List, Optional
 
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.entity.entities.crop_entity import Crop
+from agrr_core.entity.value_objects.rule_type import RuleType
 
 
 class InteractionRuleService:
@@ -74,7 +75,7 @@ class InteractionRuleService:
             for curr_group in current_crop.groups:
                 for rule in self.rules:
                     # Only check continuous_cultivation rules
-                    if rule.rule_type != "continuous_cultivation":
+                    if rule.rule_type != RuleType.CONTINUOUS_CULTIVATION:
                         continue
                     
                     # Get impact for this group combination
@@ -112,7 +113,7 @@ class InteractionRuleService:
             for crop_group in crop.groups:
                 for rule in self.rules:
                     # Check field-crop compatibility rules
-                    if rule.rule_type in ["soil_compatibility", "climate_compatibility"]:
+                    if rule.rule_type in [RuleType.SOIL_COMPATIBILITY, RuleType.CLIMATE_COMPATIBILITY]:
                         impact = rule.get_impact(field_group, crop_group)
                         if impact != 1.0:
                             combined_impact *= impact

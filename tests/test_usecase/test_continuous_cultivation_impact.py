@@ -15,6 +15,7 @@ from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.crop_entity import Crop
 from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
+from agrr_core.entity.value_objects.rule_type import RuleType
 from agrr_core.usecase.services.interaction_rule_service import InteractionRuleService
 
 
@@ -168,7 +169,7 @@ class TestInteractionRuleServiceIntegration:
         rules = [
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="continuous_cultivation",
+                rule_type=RuleType.CONTINUOUS_CULTIVATION,
                 source_group="Solanaceae",
                 target_group="Solanaceae",
                 impact_ratio=0.7,
@@ -209,7 +210,7 @@ class TestInteractionRuleServiceIntegration:
         rules = [
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="continuous_cultivation",
+                rule_type=RuleType.CONTINUOUS_CULTIVATION,
                 source_group="Solanaceae",
                 target_group="Solanaceae",
                 impact_ratio=0.7,
@@ -267,7 +268,7 @@ class TestInteractionRuleServiceIntegration:
         rules = [
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="continuous_cultivation",
+                rule_type=RuleType.CONTINUOUS_CULTIVATION,
                 source_group="Solanaceae",
                 target_group="Solanaceae",
                 impact_ratio=0.7,

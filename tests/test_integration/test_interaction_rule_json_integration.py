@@ -11,13 +11,14 @@ from pathlib import Path
 import pytest
 
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
+from agrr_core.entity.value_objects.rule_type import RuleType
 
 
 def serialize_rule(rule: InteractionRule) -> dict:
     """Helper function to serialize InteractionRule to dict."""
     return {
         "rule_id": rule.rule_id,
-        "rule_type": rule.rule_type,
+        "rule_type": rule.rule_type.value,  # Convert Enum to string
         "source_group": rule.source_group,
         "target_group": rule.target_group,
         "impact_ratio": rule.impact_ratio,
@@ -30,7 +31,7 @@ def deserialize_rule(rule_dict: dict) -> InteractionRule:
     """Helper function to deserialize InteractionRule from dict."""
     return InteractionRule(
         rule_id=rule_dict["rule_id"],
-        rule_type=rule_dict["rule_type"],
+        rule_type=RuleType(rule_dict["rule_type"]),  # Convert string to Enum
         source_group=rule_dict["source_group"],
         target_group=rule_dict["target_group"],
         impact_ratio=rule_dict["impact_ratio"],
@@ -46,7 +47,7 @@ class TestInteractionRuleJSONSerialization:
         """Test serializing a directed InteractionRule to JSON."""
         rule = InteractionRule(
             rule_id="rule_001",
-            rule_type="continuous_cultivation",
+            rule_type=RuleType.CONTINUOUS_CULTIVATION,
             source_group="Solanaceae",
             target_group="Solanaceae",
             impact_ratio=0.7,
@@ -81,7 +82,7 @@ class TestInteractionRuleJSONSerialization:
         
         # Verify
         assert rule.rule_id == "rule_001"
-        assert rule.rule_type == "continuous_cultivation"
+        assert rule.rule_type == RuleType.CONTINUOUS_CULTIVATION
         assert rule.source_group == "Solanaceae"
         assert rule.impact_ratio == 0.7
         assert rule.is_directional is True
@@ -90,7 +91,7 @@ class TestInteractionRuleJSONSerialization:
         """Test roundtrip serialization."""
         original = InteractionRule(
             rule_id="rule_002",
-            rule_type="companion_planting",
+            rule_type=RuleType.COMPANION_PLANTING,
             source_group="Solanaceae",
             target_group="Lamiaceae",
             impact_ratio=1.15,
@@ -116,7 +117,7 @@ class TestInteractionRuleFileOperations:
         """Test saving and loading a single rule from JSON file."""
         rule = InteractionRule(
             rule_id="rule_001",
-            rule_type="continuous_cultivation",
+            rule_type=RuleType.CONTINUOUS_CULTIVATION,
             source_group="Solanaceae",
             target_group="Solanaceae",
             impact_ratio=0.7,
@@ -149,7 +150,7 @@ class TestInteractionRuleFileOperations:
         rules = [
             InteractionRule(
                 rule_id="rule_001",
-                rule_type="continuous_cultivation",
+                rule_type=RuleType.CONTINUOUS_CULTIVATION,
                 source_group="Solanaceae",
                 target_group="Solanaceae",
                 impact_ratio=0.7,
@@ -157,7 +158,7 @@ class TestInteractionRuleFileOperations:
             ),
             InteractionRule(
                 rule_id="rule_002",
-                rule_type="beneficial_rotation",
+                rule_type=RuleType.BENEFICIAL_ROTATION,
                 source_group="Fabaceae",
                 target_group="Poaceae",
                 impact_ratio=1.1,
@@ -165,7 +166,7 @@ class TestInteractionRuleFileOperations:
             ),
             InteractionRule(
                 rule_id="rule_003",
-                rule_type="soil_compatibility",
+                rule_type=RuleType.SOIL_COMPATIBILITY,
                 source_group="field_001",
                 target_group="Solanaceae",
                 impact_ratio=1.2,
@@ -330,13 +331,13 @@ class TestRealWorldInteractionRuleScenarios:
             assert len(rules) == 4
             
             # Verify we can find specific rules
-            cc_rules = [r for r in rules if r.rule_type == "continuous_cultivation"]
+            cc_rules = [r for r in rules if r.rule_type == RuleType.CONTINUOUS_CULTIVATION]
             assert len(cc_rules) == 2
             
-            rot_rules = [r for r in rules if r.rule_type == "beneficial_rotation"]
+            rot_rules = [r for r in rules if r.rule_type == RuleType.BENEFICIAL_ROTATION]
             assert len(rot_rules) == 1
             
-            soil_rules = [r for r in rules if r.rule_type == "soil_compatibility"]
+            soil_rules = [r for r in rules if r.rule_type == RuleType.SOIL_COMPATIBILITY]
             assert len(soil_rules) == 1
             
         finally:

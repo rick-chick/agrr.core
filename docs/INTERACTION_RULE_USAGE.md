@@ -9,15 +9,29 @@
 ## エンティティ構造
 
 ```python
+from agrr_core.entity import InteractionRule, RuleType
+
 @dataclass(frozen=True)
 class InteractionRule:
     rule_id: str              # 規則の一意識別子
-    rule_type: str            # ルールのタイプ
+    rule_type: RuleType       # ルールのタイプ（Enum）
     source_group: str         # 影響を与える側のグループ
     target_group: str         # 影響を受ける側のグループ
     impact_ratio: float       # 収益への影響係数
     is_directional: bool = True   # 方向性（True=有向、False=無向）
     description: Optional[str] = None  # 説明（オプション）
+```
+
+### RuleType Enum
+
+```python
+class RuleType(str, Enum):
+    CONTINUOUS_CULTIVATION = "continuous_cultivation"
+    BENEFICIAL_ROTATION = "beneficial_rotation"
+    COMPANION_PLANTING = "companion_planting"
+    ALLELOPATHY = "allelopathy"
+    SOIL_COMPATIBILITY = "soil_compatibility"
+    CLIMATE_COMPATIBILITY = "climate_compatibility"
 ```
 
 ### フィールド詳細
@@ -69,12 +83,12 @@ class InteractionRule:
 ### 例1: 連作障害（ナス科）
 
 ```python
-from agrr_core.entity import InteractionRule
+from agrr_core.entity import InteractionRule, RuleType
 
 # ナス科の連作障害（収益30%減）
 rule = InteractionRule(
     rule_id="rule_001",
-    rule_type="continuous_cultivation",
+    rule_type=RuleType.CONTINUOUS_CULTIVATION,
     source_group="Solanaceae",
     target_group="Solanaceae",
     impact_ratio=0.7,
@@ -93,7 +107,7 @@ impact = rule.get_impact("Solanaceae", "Solanaceae")
 # マメ科→他の作物への好影響（収益10%増）
 rule = InteractionRule(
     rule_id="rule_002",
-    rule_type="beneficial_rotation",
+    rule_type=RuleType.BENEFICIAL_ROTATION,
     source_group="Fabaceae",
     target_group="Poaceae",
     impact_ratio=1.1,
@@ -116,7 +130,7 @@ impact_reverse = rule.get_impact("Poaceae", "Fabaceae")
 # 特定の圃場がナス科に適している（収益20%増）
 rule = InteractionRule(
     rule_id="rule_003",
-    rule_type="soil_compatibility",
+    rule_type=RuleType.SOIL_COMPATIBILITY,
     source_group="field_001",
     target_group="Solanaceae",
     impact_ratio=1.2,
@@ -135,7 +149,7 @@ impact = rule.get_impact("field_001", "Solanaceae")
 # 酸性土壌ではアブラナ科の収益が下がる（収益20%減）
 rule = InteractionRule(
     rule_id="rule_004",
-    rule_type="soil_compatibility",
+    rule_type=RuleType.SOIL_COMPATIBILITY,
     source_group="acidic_soil",
     target_group="Brassicaceae",
     impact_ratio=0.8,
@@ -155,7 +169,7 @@ impact = rule.get_impact("acidic_soil", "Brassicaceae")
 # トマトとバジルの隣接栽培（相互に収益15%増）
 rule = InteractionRule(
     rule_id="rule_005",
-    rule_type="companion_planting",
+    rule_type=RuleType.COMPANION_PLANTING,
     source_group="Solanaceae",
     target_group="Lamiaceae",
     impact_ratio=1.15,

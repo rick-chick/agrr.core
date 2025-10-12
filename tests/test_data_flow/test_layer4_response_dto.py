@@ -149,14 +149,14 @@ class TestLayer4_ResponseDTO:
                 start_date=datetime(2024, 4, 1),
                 completion_date=datetime(2024, 9, 15),
                 growth_days=167,
-                total_cost=167000.0,
+                field=field,  # 167000 / 167 = 1000
                 is_optimal=False
             ),
             CandidateResultDTO(
                 start_date=datetime(2024, 4, 15),
                 completion_date=datetime(2024, 9, 20),
                 growth_days=158,
-                total_cost=158000.0,
+                field=field,  # 158000 / 158 = 1000
                 is_optimal=True
             ),
         ]

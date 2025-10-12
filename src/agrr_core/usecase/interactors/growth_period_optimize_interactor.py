@@ -23,6 +23,7 @@ from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
     CropRequirementAggregate,
 )
 from agrr_core.entity.entities.weather_entity import WeatherData
+from agrr_core.entity.entities.field_entity import Field
 from agrr_core.usecase.dto.crop_requirement_craft_request_dto import (
     CropRequirementCraftRequestDTO,
 )
@@ -218,12 +219,12 @@ class GrowthPeriodOptimizeInteractor(
             completion_date = datetime.combine(sorted_dates[window_end_idx - 1], datetime.min.time())
             if completion_date <= request.evaluation_period_end:
                 growth_days = (completion_date - current_start).days + 1
-                total_cost = growth_days * daily_fixed_cost
+                # Create candidate with field entity (calculation happens in get_metrics())
                 results.append(CandidateResultDTO(
                     start_date=current_start,
                     completion_date=completion_date,
                     growth_days=growth_days,
-                    total_cost=total_cost,
+                    field=request.field,
                     is_optimal=False
                 ))
                 gdd_per_candidate.append(accumulated_gdd)
@@ -233,7 +234,7 @@ class GrowthPeriodOptimizeInteractor(
                     start_date=current_start,
                     completion_date=completion_date,
                     growth_days=None,
-                    total_cost=None,
+                    field=None,
                     is_optimal=False
                 ))
                 gdd_per_candidate.append(accumulated_gdd)
@@ -263,12 +264,12 @@ class GrowthPeriodOptimizeInteractor(
                 completion_date = datetime.combine(sorted_dates[window_end_idx - 1], datetime.min.time())
                 if completion_date <= request.evaluation_period_end:
                     growth_days = (completion_date - current_start).days + 1
-                    total_cost = growth_days * daily_fixed_cost
+                    # Create candidate with field entity (calculation happens in get_metrics())
                     results.append(CandidateResultDTO(
                         start_date=current_start,
                         completion_date=completion_date,
                         growth_days=growth_days,
-                        total_cost=total_cost,
+                        field=request.field,
                         is_optimal=False
                     ))
                     gdd_per_candidate.append(accumulated_gdd)
@@ -288,7 +289,7 @@ class GrowthPeriodOptimizeInteractor(
                     completion_date=candidate.completion_date,
                     growth_days=candidate.growth_days,
                     accumulated_gdd=gdd_per_candidate[idx] if idx < len(gdd_per_candidate) else 0.0,
-                    total_cost=candidate.total_cost,
+                    field=candidate.field,
                     is_optimal=candidate.is_optimal,
                     base_temperature=base_temp,
                 )
@@ -320,7 +321,7 @@ class GrowthPeriodOptimizeInteractor(
                 crop_id=request.crop_id,
                 variety=request.variety,
                 weather_data_file=request.weather_data_file,
-                daily_fixed_cost=request.daily_fixed_cost,
+                field=request.field,
                 completion_deadline=request.evaluation_period_end,
             )
             candidates.append(candidate_result)
@@ -333,7 +334,7 @@ class GrowthPeriodOptimizeInteractor(
         crop_id: str,
         variety: Optional[str],
         weather_data_file: str,
-        daily_fixed_cost: float,
+        field: Field,
         completion_deadline: datetime,
     ) -> CandidateResultDTO:
         """Evaluate a single candidate start date.
@@ -343,7 +344,7 @@ class GrowthPeriodOptimizeInteractor(
             crop_id: Crop identifier
             variety: Optional variety
             weather_data_file: Weather data file path
-            daily_fixed_cost: Daily fixed cost
+            field: Field entity for cost calculation
             completion_deadline: Deadline for completion (cultivation must finish by this date)
             
         Returns:
@@ -364,7 +365,6 @@ class GrowthPeriodOptimizeInteractor(
         # Find completion date (first date with 100% growth)
         completion_date = None
         growth_days = None
-        total_cost = None
         
         for record in progress_response.progress_records:
             if record.is_complete:
@@ -372,15 +372,15 @@ class GrowthPeriodOptimizeInteractor(
                 # Check if completion date meets the deadline
                 if completion_date <= completion_deadline:
                     growth_days = (completion_date - start_date).days + 1  # Include start day
-                    total_cost = growth_days * daily_fixed_cost
-                # If exceeds deadline, leave total_cost as None (invalid candidate)
+                # If exceeds deadline, leave growth_days as None (invalid candidate)
                 break
         
+        # Create candidate with field entity (calculation happens in get_metrics())
         return CandidateResultDTO(
             start_date=start_date,
             completion_date=completion_date,
             growth_days=growth_days,
-            total_cost=total_cost,
+            field=field if growth_days is not None else None,
             is_optimal=False,  # Will be updated later
         )
 

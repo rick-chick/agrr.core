@@ -27,31 +27,42 @@ class CandidateResultDTO:
     """Evaluation result for a single candidate start date.
     
     Implements Optimizable protocol for unified optimization.
+    This class holds raw parameters for metric calculation.
     """
 
     start_date: datetime
     completion_date: Optional[datetime]  # None if 100% not achieved
     growth_days: Optional[int]
-    total_cost: Optional[float]  # None if calculation not possible
-    is_optimal: bool
+    field: Optional[Field] = None  # Field entity for cost calculation
+    is_optimal: bool = False
     revenue: Optional[float] = None  # Optional revenue for profit calculation
 
     def get_metrics(self) -> OptimizationMetrics:
-        """Get optimization metrics (implements Optimizable protocol).
+        """Get optimization metrics with raw calculation parameters (implements Optimizable protocol).
+        
+        Returns OptimizationMetrics with all raw data needed for calculation.
+        The actual cost calculation happens inside OptimizationMetrics.
         
         Returns:
-            OptimizationMetrics for this candidate
+            OptimizationMetrics containing raw parameters for calculation
             
         Raises:
-            ValueError: If total_cost is None (invalid candidate)
+            ValueError: If growth_days or field is None (invalid candidate)
         """
-        if self.total_cost is None:
-            raise ValueError("Cannot get metrics for candidate without total_cost")
+        if self.growth_days is None or self.field is None:
+            raise ValueError("Cannot get metrics without growth_days and field")
         
         return OptimizationMetrics(
-            cost=self.total_cost,
-            revenue=self.revenue
+            growth_days=self.growth_days,
+            daily_fixed_cost=self.field.daily_fixed_cost,
         )
+    
+    @property
+    def total_cost(self) -> Optional[float]:
+        """Get total cost (convenience property for backward compatibility)."""
+        if self.growth_days is None or self.field is None:
+            return None
+        return self.get_metrics().cost
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""

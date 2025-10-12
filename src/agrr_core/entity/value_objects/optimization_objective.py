@@ -10,15 +10,21 @@ Design Principles:
 4. Testability - Pure functions, easy to test
 
 Usage Example:
-    # Create metrics
-    metrics = OptimizationMetrics.from_cost_and_revenue(cost=1000, revenue=2000)
+    # Candidates implement get_metrics() to provide their metrics
+    class MyCandidateDTO:
+        cost: float
+        revenue: float
+        
+        def get_metrics(self) -> OptimizationMetrics:
+            return OptimizationMetrics(cost=self.cost, revenue=self.revenue)
     
     # Calculate objective (always profit)
     objective = OptimizationObjective()
-    profit = objective.calculate(metrics)  # Returns 1000
+    candidate = MyCandidateDTO(cost=1000, revenue=2000)
+    profit = objective.calculate(candidate.get_metrics())  # Returns 1000
     
     # Select best candidate (always maximize profit)
-    best = objective.select_best(candidates, key_func=lambda c: c.get_metrics())
+    best = objective.select_best(candidates, key_func=lambda c: objective.calculate(c.get_metrics()))
 """
 
 from dataclasses import dataclass
@@ -27,66 +33,89 @@ from typing import Optional, List, Callable, TypeVar
 
 @dataclass(frozen=True)
 class OptimizationMetrics:
-    """Immutable optimization metrics.
+    """Immutable optimization metrics containing raw calculation parameters.
     
-    This value object encapsulates cost and optional revenue.
-    Profit is calculated automatically.
+    This value object holds all necessary parameters for revenue/cost/profit calculations.
+    The actual calculations are performed as properties.
     
-    Fields:
-        cost: Total cost (required)
-        revenue: Total revenue (optional)
+    Fields for crop allocation:
+        quantity: Allocated quantity
+        area_per_unit: Area per unit (m²)
+        revenue_per_area: Revenue per area (yen/m²)
+        max_revenue: Maximum revenue constraint (optional)
+        
+    Fields for growth period:
+        growth_days: Number of growth days
+        daily_fixed_cost: Daily fixed cost (yen/day)
+        
+    Calculated properties:
+        cost: Total cost
+        revenue: Total revenue
+        profit: Total profit (revenue - cost, with constraints)
     """
     
-    cost: float
-    revenue: Optional[float] = None
+    # Crop allocation parameters
+    quantity: Optional[float] = None
+    area_per_unit: Optional[float] = None
+    revenue_per_area: Optional[float] = None
+    max_revenue: Optional[float] = None
     
-    def __post_init__(self):
-        """Validate metrics."""
-        if self.cost < 0:
-            raise ValueError(f"cost must be non-negative, got {self.cost}")
+    # Growth period parameters
+    growth_days: Optional[int] = None
+    daily_fixed_cost: Optional[float] = None
+    
+    @property
+    def cost(self) -> float:
+        """Calculate total cost.
         
-        if self.revenue is not None and self.revenue < 0:
-            raise ValueError(f"revenue must be non-negative, got {self.revenue}")
+        Returns:
+            Total cost (growth_days * daily_fixed_cost)
+            
+        Raises:
+            ValueError: If required parameters are missing
+        """
+        if self.growth_days is None or self.daily_fixed_cost is None:
+            raise ValueError("cost calculation requires growth_days and daily_fixed_cost")
+        return self.growth_days * self.daily_fixed_cost
+    
+    @property
+    def revenue(self) -> Optional[float]:
+        """Calculate total revenue.
+        
+        Returns:
+            Total revenue (quantity * revenue_per_area * area_per_unit) or None
+            Capped at max_revenue if specified
+        """
+        if self.quantity is None or self.area_per_unit is None or self.revenue_per_area is None:
+            return None
+        
+        revenue = self.quantity * self.revenue_per_area * self.area_per_unit
+        
+        # Apply max_revenue constraint
+        if self.max_revenue is not None and revenue > self.max_revenue:
+            return self.max_revenue
+        
+        return revenue
     
     @property
     def profit(self) -> float:
-        """Calculate profit.
+        """Calculate profit with constraints.
         
         Cases:
         1. Revenue known: profit = revenue - cost
-        2. Revenue unknown: profit = -cost (equivalent to cost minimization)
+        2. Revenue unknown: profit = -cost (cost minimization)
+        3. Max revenue constraint: revenue is capped, affecting profit
         
         Returns:
             Profit value (to be maximized)
         """
         if self.revenue is None:
             return -self.cost
-        return self.revenue - self.cost
-    
-    @staticmethod
-    def from_cost_only(cost: float) -> "OptimizationMetrics":
-        """Create metrics with cost only.
         
-        Args:
-            cost: Total cost
-            
-        Returns:
-            OptimizationMetrics with only cost (profit = -cost)
-        """
-        return OptimizationMetrics(cost=cost)
-    
-    @staticmethod
-    def from_cost_and_revenue(cost: float, revenue: float) -> "OptimizationMetrics":
-        """Create metrics with cost and revenue.
+        # Revenue is already capped by max_revenue constraint in revenue property
+        profit = self.revenue - self.cost
         
-        Args:
-            cost: Total cost
-            revenue: Total revenue
-            
-        Returns:
-            OptimizationMetrics with cost and revenue (profit auto-calculated)
-        """
-        return OptimizationMetrics(cost=cost, revenue=revenue)
+        return profit
 
 
 class OptimizationObjective:

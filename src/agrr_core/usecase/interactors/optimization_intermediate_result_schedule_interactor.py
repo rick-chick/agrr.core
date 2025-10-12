@@ -69,11 +69,11 @@ class OptimizationIntermediateResultScheduleInteractor(
         Returns:
             Response DTO containing total cost and selected non-overlapping results
         """
-        # Filter valid results (must have completion_date and total_cost)
+        # Filter valid results (must have completion_date, growth_days, and field for cost calculation)
         valid_results = [
             r
             for r in request.results
-            if r.completion_date is not None and r.total_cost is not None
+            if r.completion_date is not None and r.growth_days is not None and r.field is not None
         ]
 
         # Handle empty case

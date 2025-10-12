@@ -101,14 +101,20 @@ class TestUnifiedObjectiveFunctionSignature:
         )
         schedule_optimizer = OptimizationIntermediateResultScheduleInteractor()
         
-        # Create same metrics
-        metrics = OptimizationMetrics(cost=1000, revenue=2000)
+        # Create same metrics (with full parameters for calculation)
+        metrics = OptimizationMetrics(
+            growth_days=100,
+            daily_fixed_cost=10,
+            quantity=100,
+            area_per_unit=2,
+            revenue_per_area=10
+        )
         
         # Calculate objective using each optimizer
         value1 = period_optimizer.objective.calculate(metrics)
         value2 = schedule_optimizer.objective.calculate(metrics)
         
-        # MUST be the same
+        # MUST be the same (profit = 2000 - 1000 = 1000)
         assert value1 == value2 == 1000, (
             f"Optimizers calculate different values! "
             f"period={value1}, schedule={value2}. "
@@ -128,8 +134,8 @@ class TestUnifiedObjectiveFunctionSignature:
         )
         schedule_optimizer = OptimizationIntermediateResultScheduleInteractor()
         
-        # Create cost-only metrics
-        metrics = OptimizationMetrics(cost=1000)
+        # Create cost-only metrics (no revenue)
+        metrics = OptimizationMetrics(growth_days=100, daily_fixed_cost=10)
         
         # Calculate objective using each optimizer
         value1 = period_optimizer.objective.calculate(metrics)
@@ -160,11 +166,14 @@ class TestObjectiveFunctionChangeDetection:
         If this fails, objective has changed.
         """
         # Test with revenue
-        metrics_with_revenue = OptimizationMetrics(cost=1000, revenue=2000)
-        assert DEFAULT_OBJECTIVE.calculate(metrics_with_revenue) == 1000
+        metrics_with_revenue = OptimizationMetrics(
+            growth_days=100, daily_fixed_cost=10,
+            quantity=100, area_per_unit=2, revenue_per_area=10
+        )
+        assert DEFAULT_OBJECTIVE.calculate(metrics_with_revenue) == 1000  # revenue(2000) - cost(1000)
         
         # Test without revenue (cost minimization)
-        metrics_cost_only = OptimizationMetrics(cost=1000)
+        metrics_cost_only = OptimizationMetrics(growth_days=100, daily_fixed_cost=10)
         assert DEFAULT_OBJECTIVE.calculate(metrics_cost_only) == -1000
     
     def test_objective_function_formula_documentation(self):
@@ -172,6 +181,8 @@ class TestObjectiveFunctionChangeDetection:
         
         Current formula:
         - With revenue: profit = revenue - cost
+          - revenue = quantity * revenue_per_area * area_per_unit
+          - cost = growth_days * daily_fixed_cost
         - Without revenue: profit = -cost (cost minimization equivalent)
         
         Future formula (example):
@@ -180,11 +191,23 @@ class TestObjectiveFunctionChangeDetection:
         # This test documents the current formula
         # Update this when the formula changes
         
-        cost = 1000
-        revenue = 2500
-        expected_profit = revenue - cost  # Current formula
+        growth_days = 100
+        daily_fixed_cost = 10
+        quantity = 125
+        area_per_unit = 2
+        revenue_per_area = 10
         
-        metrics = OptimizationMetrics(cost=cost, revenue=revenue)
+        expected_cost = growth_days * daily_fixed_cost  # 1000
+        expected_revenue = quantity * area_per_unit * revenue_per_area  # 2500
+        expected_profit = expected_revenue - expected_cost  # Current formula: 1500
+        
+        metrics = OptimizationMetrics(
+            growth_days=growth_days,
+            daily_fixed_cost=daily_fixed_cost,
+            quantity=quantity,
+            area_per_unit=area_per_unit,
+            revenue_per_area=revenue_per_area
+        )
         actual_profit = DEFAULT_OBJECTIVE.calculate(metrics)
         
         assert actual_profit == expected_profit == 1500, (

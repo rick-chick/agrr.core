@@ -7,6 +7,7 @@ for schedule storage operations.
 import pytest
 from datetime import datetime
 
+from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
@@ -37,7 +38,7 @@ class TestOptimizationScheduleGatewayImpl:
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=100.0),
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -46,7 +47,7 @@ class TestOptimizationScheduleGatewayImpl:
                 completion_date=datetime(2025, 1, 20),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=800.0,
+                field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=80.0),
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -77,7 +78,7 @@ class TestOptimizationScheduleGatewayImpl:
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=100.0),
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -89,7 +90,7 @@ class TestOptimizationScheduleGatewayImpl:
                 completion_date=datetime(2025, 2, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=900.0,
+                field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=90.0),
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -122,7 +123,7 @@ class TestOptimizationScheduleGatewayImpl:
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=100.0),
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -152,7 +153,7 @@ class TestOptimizationScheduleGatewayImpl:
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=100.0),
                 is_optimal=False,
                 base_temperature=10.0,
             ),

@@ -13,6 +13,7 @@ from agrr_core.entity.entities.optimization_intermediate_result_entity import (
 from agrr_core.entity.entities.optimization_schedule_entity import (
     OptimizationSchedule,
 )
+from agrr_core.entity.entities.field_entity import Field
 
 
 @pytest.mark.asyncio
@@ -24,13 +25,15 @@ class TestOptimizationResultGatewayImpl:
         mock_repository = AsyncMock()
         gateway = OptimizationResultGatewayImpl(mock_repository)
         
+        field = Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=5000.0)
+        
         results = [
             OptimizationIntermediateResult(
                 start_date=datetime(2024, 4, 1),
                 completion_date=datetime(2024, 7, 15),
                 growth_days=106,
                 accumulated_gdd=1500.0,
-                total_cost=530000.0,
+                field=field,
                 is_optimal=True,
                 base_temperature=10.0,
             )
@@ -44,6 +47,9 @@ class TestOptimizationResultGatewayImpl:
     async def test_get(self):
         """Test retrieving optimization results through gateway."""
         mock_repository = AsyncMock()
+        
+        field = Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=5000.0)
+        
         expected_schedule = OptimizationSchedule(
             schedule_id="test_opt",
             selected_results=[
@@ -52,7 +58,7 @@ class TestOptimizationResultGatewayImpl:
                     completion_date=datetime(2024, 7, 15),
                     growth_days=106,
                     accumulated_gdd=1500.0,
-                    total_cost=530000.0,
+                    field=field,
                     is_optimal=True,
                     base_temperature=10.0,
                 )
@@ -73,6 +79,10 @@ class TestOptimizationResultGatewayImpl:
     async def test_get_all(self):
         """Test retrieving all optimization results through gateway."""
         mock_repository = AsyncMock()
+        
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=5000.0)
+        field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=5000.0)
+        
         expected_all = [
             OptimizationSchedule(
                 schedule_id="opt_1",
@@ -81,7 +91,7 @@ class TestOptimizationResultGatewayImpl:
                     completion_date=datetime(2024, 7, 15),
                     growth_days=106,
                     accumulated_gdd=1500.0,
-                    total_cost=530000.0,
+                    field=field1,
                     is_optimal=True,
                     base_temperature=10.0,
                 )],
@@ -94,7 +104,7 @@ class TestOptimizationResultGatewayImpl:
                     completion_date=datetime(2024, 8, 15),
                     growth_days=107,
                     accumulated_gdd=1600.0,
-                    total_cost=535000.0,
+                    field=field2,
                     is_optimal=False,
                     base_temperature=10.0,
                 )],
@@ -132,4 +142,3 @@ class TestOptimizationResultGatewayImpl:
         await gateway.clear()
         
         mock_repository.clear.assert_called_once()
-

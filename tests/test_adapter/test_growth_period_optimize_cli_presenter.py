@@ -27,14 +27,14 @@ class TestGrowthPeriodOptimizeCliPresenter:
                 start_date=datetime(2024, 4, 1),
                 completion_date=datetime(2024, 4, 10),
                 growth_days=10,
-                total_cost=10000.0,
+                field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=1000.0),
                 is_optimal=False,
             ),
             CandidateResultDTO(
                 start_date=datetime(2024, 4, 5),
                 completion_date=datetime(2024, 4, 10),
                 growth_days=6,
-                total_cost=6000.0,
+                field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=600.0),
                 is_optimal=True,
             ),
         ]
@@ -88,7 +88,7 @@ class TestGrowthPeriodOptimizeCliPresenter:
                 start_date=datetime(2024, 5, 1),
                 completion_date=datetime(2024, 5, 5),
                 growth_days=5,
-                total_cost=2500.0,
+                field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=500.0),
                 is_optimal=True,
             ),
         ]
@@ -129,14 +129,14 @@ class TestGrowthPeriodOptimizeCliPresenter:
                 start_date=datetime(2024, 4, 1),
                 completion_date=datetime(2024, 4, 10),
                 growth_days=10,
-                total_cost=10000.0,
+                field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=1000.0),
                 is_optimal=False,
             ),
             CandidateResultDTO(
                 start_date=datetime(2024, 4, 5),
                 completion_date=datetime(2024, 4, 10),
                 growth_days=6,
-                total_cost=6000.0,
+                field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=600.0),
                 is_optimal=True,
             ),
         ]
@@ -185,14 +185,14 @@ class TestGrowthPeriodOptimizeCliPresenter:
                 start_date=datetime(2024, 4, 1),
                 completion_date=datetime(2024, 4, 10),
                 growth_days=10,
-                total_cost=10000.0,
+                field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=1000.0),
                 is_optimal=True,
             ),
             CandidateResultDTO(
                 start_date=datetime(2024, 4, 15),
                 completion_date=None,  # Didn't complete
                 growth_days=None,
-                total_cost=None,
+                field=None,
                 is_optimal=False,
             ),
         ]
@@ -233,7 +233,7 @@ class TestGrowthPeriodOptimizeCliPresenter:
                 start_date=datetime(2024, 4, 1),
                 completion_date=datetime(2024, 4, 10),
                 growth_days=10,
-                total_cost=10000.0,
+                field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=1000.0),
                 is_optimal=True,
             ),
         ]

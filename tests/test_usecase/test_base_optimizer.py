@@ -17,12 +17,21 @@ from agrr_core.entity.value_objects.optimization_objective import (
 @dataclass
 class MockCandidate:
     """Mock candidate for testing."""
-    cost: float
-    revenue: Optional[float] = None
+    growth_days: int
+    daily_fixed_cost: float
+    quantity: Optional[float] = None
+    area_per_unit: Optional[float] = None
+    revenue_per_area: Optional[float] = None
     
     def get_metrics(self) -> OptimizationMetrics:
         """Implement Optimizable protocol."""
-        return OptimizationMetrics(cost=self.cost, revenue=self.revenue)
+        return OptimizationMetrics(
+            growth_days=self.growth_days,
+            daily_fixed_cost=self.daily_fixed_cost,
+            quantity=self.quantity,
+            area_per_unit=self.area_per_unit,
+            revenue_per_area=self.revenue_per_area,
+        )
 
 
 class MockOptimizer(BaseOptimizer[MockCandidate]):
@@ -50,28 +59,28 @@ class TestBaseOptimizer:
         """select_best maximizes profit when revenue is present."""
         optimizer = MockOptimizer()
         candidates = [
-            MockCandidate(cost=100, revenue=200),  # profit=100
-            MockCandidate(cost=80, revenue=220),   # profit=140 ← best
-            MockCandidate(cost=120, revenue=180),  # profit=60
+            MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=10, area_per_unit=2, revenue_per_area=10),  # cost=100, revenue=200, profit=100
+            MockCandidate(growth_days=8, daily_fixed_cost=10, quantity=11, area_per_unit=2, revenue_per_area=10),   # cost=80, revenue=220, profit=140 ← best
+            MockCandidate(growth_days=12, daily_fixed_cost=10, quantity=9, area_per_unit=2, revenue_per_area=10),   # cost=120, revenue=180, profit=60
         ]
         
         best = optimizer.select_best(candidates)
         
-        assert best.cost == 80
-        assert best.revenue == 220
+        assert best.get_metrics().cost == 80
+        assert best.get_metrics().revenue == 220
     
     def test_select_best_without_revenue(self):
         """select_best minimizes cost when revenue is absent."""
         optimizer = MockOptimizer()
         candidates = [
-            MockCandidate(cost=100),  # profit=-100
-            MockCandidate(cost=50),   # profit=-50 ← best (min cost)
-            MockCandidate(cost=200),  # profit=-200
+            MockCandidate(growth_days=10, daily_fixed_cost=10),  # cost=100, profit=-100
+            MockCandidate(growth_days=5, daily_fixed_cost=10),   # cost=50, profit=-50 ← best (min cost)
+            MockCandidate(growth_days=20, daily_fixed_cost=10),  # cost=200, profit=-200
         ]
         
         best = optimizer.select_best(candidates)
         
-        assert best.cost == 50
+        assert best.get_metrics().cost == 50
     
     def test_select_best_with_empty_list_raises_error(self):
         """select_best raises error for empty list."""
@@ -83,7 +92,7 @@ class TestBaseOptimizer:
     def test_calculate_value(self):
         """calculate_value returns profit."""
         optimizer = MockOptimizer()
-        candidate = MockCandidate(cost=100, revenue=200)
+        candidate = MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=10, area_per_unit=2, revenue_per_area=10)
         
         value = optimizer.calculate_value(candidate)
         
@@ -92,8 +101,8 @@ class TestBaseOptimizer:
     def test_compare_candidates(self):
         """compare_candidates compares two candidates."""
         optimizer = MockOptimizer()
-        candidate1 = MockCandidate(cost=100, revenue=300)  # profit=200
-        candidate2 = MockCandidate(cost=100, revenue=250)  # profit=150
+        candidate1 = MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=15, area_per_unit=2, revenue_per_area=10)  # cost=100, revenue=300, profit=200
+        candidate2 = MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=12.5, area_per_unit=2, revenue_per_area=10)  # cost=100, revenue=250, profit=150
         
         result = optimizer.compare_candidates(candidate1, candidate2)
         
@@ -103,33 +112,33 @@ class TestBaseOptimizer:
         """sort_candidates sorts by profit."""
         optimizer = MockOptimizer()
         candidates = [
-            MockCandidate(cost=100, revenue=200),  # profit=100
-            MockCandidate(cost=80, revenue=220),   # profit=140
-            MockCandidate(cost=120, revenue=180),  # profit=60
+            MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=10, area_per_unit=2, revenue_per_area=10),  # cost=100, revenue=200, profit=100
+            MockCandidate(growth_days=8, daily_fixed_cost=10, quantity=11, area_per_unit=2, revenue_per_area=10),   # cost=80, revenue=220, profit=140
+            MockCandidate(growth_days=12, daily_fixed_cost=10, quantity=9, area_per_unit=2, revenue_per_area=10),   # cost=120, revenue=180, profit=60
         ]
         
         sorted_candidates = optimizer.sort_candidates(candidates)
         
         # Best first (reverse=True by default)
-        assert sorted_candidates[0].cost == 80   # profit=140
-        assert sorted_candidates[1].cost == 100  # profit=100
-        assert sorted_candidates[2].cost == 120  # profit=60
+        assert sorted_candidates[0].get_metrics().cost == 80   # profit=140
+        assert sorted_candidates[1].get_metrics().cost == 100  # profit=100
+        assert sorted_candidates[2].get_metrics().cost == 120  # profit=60
     
     def test_sort_candidates_ascending(self):
         """sort_candidates can sort in ascending order."""
         optimizer = MockOptimizer()
         candidates = [
-            MockCandidate(cost=100, revenue=200),  # profit=100
-            MockCandidate(cost=80, revenue=220),   # profit=140
-            MockCandidate(cost=120, revenue=180),  # profit=60
+            MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=10, area_per_unit=2, revenue_per_area=10),  # cost=100, revenue=200, profit=100
+            MockCandidate(growth_days=8, daily_fixed_cost=10, quantity=11, area_per_unit=2, revenue_per_area=10),   # cost=80, revenue=220, profit=140
+            MockCandidate(growth_days=12, daily_fixed_cost=10, quantity=9, area_per_unit=2, revenue_per_area=10),   # cost=120, revenue=180, profit=60
         ]
         
         sorted_candidates = optimizer.sort_candidates(candidates, reverse=False)
         
         # Worst first (reverse=False)
-        assert sorted_candidates[0].cost == 120  # profit=60
-        assert sorted_candidates[1].cost == 100  # profit=100
-        assert sorted_candidates[2].cost == 80   # profit=140
+        assert sorted_candidates[0].get_metrics().cost == 120  # profit=60
+        assert sorted_candidates[1].get_metrics().cost == 100  # profit=100
+        assert sorted_candidates[2].get_metrics().cost == 80   # profit=140
 
 
 class TestBaseOptimizerConsistency:
@@ -147,7 +156,7 @@ class TestBaseOptimizerConsistency:
         """calculate_value produces same result for same candidate."""
         optimizer1 = MockOptimizer()
         optimizer2 = MockOptimizer()
-        candidate = MockCandidate(cost=100, revenue=200)
+        candidate = MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=10, area_per_unit=2, revenue_per_area=10)
         
         value1 = optimizer1.calculate_value(candidate)
         value2 = optimizer2.calculate_value(candidate)
@@ -159,14 +168,14 @@ class TestBaseOptimizerConsistency:
         optimizer1 = MockOptimizer()
         optimizer2 = MockOptimizer()
         candidates = [
-            MockCandidate(cost=100, revenue=200),
-            MockCandidate(cost=80, revenue=220),
-            MockCandidate(cost=120, revenue=180),
+            MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=10, area_per_unit=2, revenue_per_area=10),
+            MockCandidate(growth_days=8, daily_fixed_cost=10, quantity=11, area_per_unit=2, revenue_per_area=10),
+            MockCandidate(growth_days=12, daily_fixed_cost=10, quantity=9, area_per_unit=2, revenue_per_area=10),
         ]
         
         best1 = optimizer1.select_best(candidates)
         best2 = optimizer2.select_best(candidates)
         
         assert best1 is best2
-        assert best1.cost == 80
+        assert best1.get_metrics().cost == 80
 

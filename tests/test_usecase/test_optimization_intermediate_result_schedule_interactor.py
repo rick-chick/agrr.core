@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock
 from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
+from agrr_core.entity.entities.field_entity import Field
 from agrr_core.usecase.interactors.optimization_intermediate_result_schedule_interactor import (
     OptimizationIntermediateResultScheduleInteractor,
 )
@@ -36,12 +37,14 @@ class TestOptimizationIntermediateResultScheduleInteractor:
     @pytest.mark.asyncio
     async def test_single_result(self):
         """Test with single valid result."""
+        field = Field(field_id="field_1", name="Test Field", area=1000.0, daily_fixed_cost=100.0)
+        
         result = OptimizationIntermediateResult(
             start_date=datetime(2025, 1, 1),
             completion_date=datetime(2025, 1, 10),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=1000.0,
+            field=field,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -58,12 +61,16 @@ class TestOptimizationIntermediateResultScheduleInteractor:
     @pytest.mark.asyncio
     async def test_non_overlapping_results_select_all(self):
         """Test with multiple non-overlapping results - should select all."""
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=80.0)
+        field3 = Field(field_id="field_3", name="Field 3", area=1000.0, daily_fixed_cost=90.0)
+        
         result1 = OptimizationIntermediateResult(
             start_date=datetime(2025, 1, 1),
             completion_date=datetime(2025, 1, 10),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=1000.0,
+            field=field1,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -72,7 +79,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             completion_date=datetime(2025, 1, 20),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=800.0,
+            field=field2,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -81,7 +88,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             completion_date=datetime(2025, 1, 30),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=900.0,
+            field=field3,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -99,13 +106,16 @@ class TestOptimizationIntermediateResultScheduleInteractor:
     @pytest.mark.asyncio
     async def test_overlapping_results_select_cheaper(self):
         """Test with overlapping results - should select cheaper one."""
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=133.33)
+        field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=75.0)
+        
         # Expensive result
         result1 = OptimizationIntermediateResult(
             start_date=datetime(2025, 1, 1),
             completion_date=datetime(2025, 1, 15),
             growth_days=15,
             accumulated_gdd=100.0,
-            total_cost=2000.0,
+            field=field1,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -115,7 +125,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             completion_date=datetime(2025, 1, 20),
             growth_days=16,
             accumulated_gdd=100.0,
-            total_cost=1200.0,
+            field=field2,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -134,13 +144,18 @@ class TestOptimizationIntermediateResultScheduleInteractor:
     @pytest.mark.asyncio
     async def test_complex_scheduling(self):
         """Test complex case with multiple overlapping periods."""
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=72.73)
+        field3 = Field(field_id="field_3", name="Field 3", area=1000.0, daily_fixed_cost=60.0)
+        field4 = Field(field_id="field_4", name="Field 4", area=1000.0, daily_fixed_cost=70.0)
+        
         # Period 1: Jan 1-10, cost 1000
         result1 = OptimizationIntermediateResult(
             start_date=datetime(2025, 1, 1),
             completion_date=datetime(2025, 1, 10),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=1000.0,
+            field=field1,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -150,7 +165,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             completion_date=datetime(2025, 1, 15),
             growth_days=11,
             accumulated_gdd=110.0,
-            total_cost=800.0,
+            field=field2,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -160,7 +175,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             completion_date=datetime(2025, 1, 20),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=600.0,
+            field=field3,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -170,7 +185,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             completion_date=datetime(2025, 1, 30),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=700.0,
+            field=field4,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -197,13 +212,15 @@ class TestOptimizationIntermediateResultScheduleInteractor:
     @pytest.mark.asyncio
     async def test_filter_incomplete_results(self):
         """Test that incomplete results (None completion_date or cost) are filtered."""
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        
         # Valid result
         result1 = OptimizationIntermediateResult(
             start_date=datetime(2025, 1, 1),
             completion_date=datetime(2025, 1, 10),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=1000.0,
+            field=field1,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -213,17 +230,17 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             completion_date=None,
             growth_days=None,
             accumulated_gdd=50.0,
-            total_cost=None,
+            field=None,
             is_optimal=False,
             base_temperature=10.0,
         )
-        # Incomplete - no cost
+        # Incomplete - no field
         result3 = OptimizationIntermediateResult(
             start_date=datetime(2025, 1, 15),
             completion_date=datetime(2025, 1, 20),
             growth_days=6,
             accumulated_gdd=60.0,
-            total_cost=None,
+            field=None,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -243,13 +260,16 @@ class TestOptimizationIntermediateResultScheduleInteractor:
     @pytest.mark.asyncio
     async def test_same_start_date_boundary(self):
         """Test boundary case where completion_date equals next start_date."""
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=80.0)
+        
         # Result1 ends on Jan 10
         result1 = OptimizationIntermediateResult(
             start_date=datetime(2025, 1, 1),
             completion_date=datetime(2025, 1, 10),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=1000.0,
+            field=field1,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -257,9 +277,9 @@ class TestOptimizationIntermediateResultScheduleInteractor:
         result2 = OptimizationIntermediateResult(
             start_date=datetime(2025, 1, 10),
             completion_date=datetime(2025, 1, 20),
-            growth_days=11,
+            growth_days=10,
             accumulated_gdd=110.0,
-            total_cost=800.0,
+            field=field2,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -278,13 +298,17 @@ class TestOptimizationIntermediateResultScheduleInteractor:
     @pytest.mark.asyncio
     async def test_unordered_input(self):
         """Test that algorithm works with unordered input."""
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=70.0)
+        field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=100.0)
+        field3 = Field(field_id="field_3", name="Field 3", area=1000.0, daily_fixed_cost=60.0)
+        
         # Input in non-chronological order
         result1 = OptimizationIntermediateResult(
             start_date=datetime(2025, 1, 21),
             completion_date=datetime(2025, 1, 30),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=700.0,
+            field=field1,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -293,7 +317,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             completion_date=datetime(2025, 1, 10),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=1000.0,
+            field=field2,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -302,7 +326,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             completion_date=datetime(2025, 1, 20),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=600.0,
+            field=field3,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -321,6 +345,9 @@ class TestOptimizationIntermediateResultScheduleInteractor:
     @pytest.mark.asyncio
     async def test_save_schedule_with_gateway(self):
         """Test that schedule is saved when gateway is provided."""
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=80.0)
+        
         # Create mock gateway
         mock_gateway = AsyncMock()
         
@@ -335,7 +362,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             completion_date=datetime(2025, 1, 10),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=1000.0,
+            field=field1,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -344,7 +371,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             completion_date=datetime(2025, 1, 20),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=800.0,
+            field=field2,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -372,6 +399,8 @@ class TestOptimizationIntermediateResultScheduleInteractor:
     @pytest.mark.asyncio
     async def test_no_save_without_schedule_id(self):
         """Test that schedule is not saved when schedule_id is not provided."""
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        
         # Create mock gateway
         mock_gateway = AsyncMock()
         
@@ -386,7 +415,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             completion_date=datetime(2025, 1, 10),
             growth_days=10,
             accumulated_gdd=100.0,
-            total_cost=1000.0,
+            field=field1,
             is_optimal=False,
             base_temperature=10.0,
         )
@@ -401,4 +430,3 @@ class TestOptimizationIntermediateResultScheduleInteractor:
         
         # Verify response
         assert response.total_cost == 1000.0
-

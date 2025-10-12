@@ -16,41 +16,59 @@ from agrr_core.entity.value_objects.optimization_objective import (
 class TestOptimizationMetrics:
     """Test OptimizationMetrics value object."""
     
-    def test_from_cost_only(self):
-        """Create metrics with cost only."""
-        metrics = OptimizationMetrics.from_cost_only(cost=1000)
+    def test_metrics_with_cost_only(self):
+        """Calculate metrics with growth period parameters (cost only)."""
+        metrics = OptimizationMetrics(growth_days=100, daily_fixed_cost=10.0)
         
         assert metrics.cost == 1000
         assert metrics.revenue is None
         assert metrics.profit == -1000  # Negative cost for maximization
     
-    def test_from_cost_and_revenue(self):
-        """Create metrics with cost and revenue (profit auto-calculated)."""
-        metrics = OptimizationMetrics.from_cost_and_revenue(cost=1000, revenue=2000)
+    def test_metrics_with_cost_and_revenue(self):
+        """Calculate metrics with crop allocation parameters (cost and revenue)."""
+        metrics = OptimizationMetrics(
+            quantity=100.0,
+            area_per_unit=2.0,
+            revenue_per_area=10.0,
+            growth_days=100,
+            daily_fixed_cost=10.0
+        )
         
-        assert metrics.cost == 1000
-        assert metrics.revenue == 2000
+        assert metrics.cost == 1000  # 100 * 10
+        assert metrics.revenue == 2000  # 100 * 2 * 10
         assert metrics.profit == 1000  # 2000 - 1000
     
     def test_profit_property_with_revenue(self):
         """Profit property calculates revenue - cost."""
-        metrics = OptimizationMetrics(cost=500, revenue=1500)
-        assert metrics.profit == 1000
+        metrics = OptimizationMetrics(
+            quantity=100.0,
+            area_per_unit=2.0,
+            revenue_per_area=7.5,
+            growth_days=50,
+            daily_fixed_cost=10.0
+        )
+        assert metrics.cost == 500  # 50 * 10
+        assert metrics.revenue == 1500  # 100 * 2 * 7.5
+        assert metrics.profit == 1000  # 1500 - 500
     
     def test_profit_property_without_revenue(self):
         """Profit property returns -cost when revenue is None."""
-        metrics = OptimizationMetrics(cost=1000)
+        metrics = OptimizationMetrics(growth_days=100, daily_fixed_cost=10.0)
         assert metrics.profit == -1000
     
-    def test_negative_cost_raises_error(self):
-        """Negative cost is not allowed."""
-        with pytest.raises(ValueError, match="cost must be non-negative"):
-            OptimizationMetrics(cost=-100)
-    
-    def test_negative_revenue_raises_error(self):
-        """Negative revenue is not allowed."""
-        with pytest.raises(ValueError, match="revenue must be non-negative"):
-            OptimizationMetrics(cost=100, revenue=-200)
+    def test_max_revenue_constraint(self):
+        """Max revenue constraint is enforced."""
+        metrics = OptimizationMetrics(
+            quantity=100.0,
+            area_per_unit=2.0,
+            revenue_per_area=10.0,
+            growth_days=100,
+            daily_fixed_cost=10.0,
+            max_revenue=1500.0  # Cap revenue at 1500
+        )
+        assert metrics.cost == 1000
+        assert metrics.revenue == 1500  # Capped at max_revenue
+        assert metrics.profit == 500  # 1500 - 1000
 
 
 class TestOptimizationObjective:
@@ -59,16 +77,22 @@ class TestOptimizationObjective:
     def test_calculate_with_revenue(self):
         """Calculate profit with revenue."""
         objective = OptimizationObjective()
-        metrics = OptimizationMetrics(cost=1000, revenue=2000)
+        metrics = OptimizationMetrics(
+            quantity=100.0,
+            area_per_unit=2.0,
+            revenue_per_area=10.0,
+            growth_days=100,
+            daily_fixed_cost=10.0
+        )
         
         profit = objective.calculate(metrics)
         
-        assert profit == 1000
+        assert profit == 1000  # 2000 - 1000
     
     def test_calculate_without_revenue(self):
         """Calculate profit without revenue (cost minimization equivalent)."""
         objective = OptimizationObjective()
-        metrics = OptimizationMetrics(cost=1000)
+        metrics = OptimizationMetrics(growth_days=100, daily_fixed_cost=10.0)
         
         profit = objective.calculate(metrics)
         
@@ -78,9 +102,9 @@ class TestOptimizationObjective:
         """Select best candidate maximizes profit."""
         objective = OptimizationObjective()
         candidates = [
-            OptimizationMetrics(cost=100, revenue=200),  # profit=100
-            OptimizationMetrics(cost=80, revenue=220),   # profit=140 ← best
-            OptimizationMetrics(cost=120, revenue=180),  # profit=60
+            OptimizationMetrics(quantity=10, area_per_unit=2, revenue_per_area=10, growth_days=10, daily_fixed_cost=10),  # profit=100
+            OptimizationMetrics(quantity=11, area_per_unit=2, revenue_per_area=10, growth_days=8, daily_fixed_cost=10),   # profit=140 ← best
+            OptimizationMetrics(quantity=9, area_per_unit=2, revenue_per_area=10, growth_days=12, daily_fixed_cost=10),   # profit=60
         ]
         
         best = objective.select_best(candidates, key_func=objective.calculate)
@@ -91,9 +115,9 @@ class TestOptimizationObjective:
         """Select best candidate minimizes cost (when revenue is None)."""
         objective = OptimizationObjective()
         candidates = [
-            OptimizationMetrics(cost=100),  # profit=-100
-            OptimizationMetrics(cost=50),   # profit=-50 ← best (minimum cost = max profit)
-            OptimizationMetrics(cost=200),  # profit=-200
+            OptimizationMetrics(growth_days=10, daily_fixed_cost=10),  # cost=100, profit=-100
+            OptimizationMetrics(growth_days=5, daily_fixed_cost=10),   # cost=50, profit=-50 ← best
+            OptimizationMetrics(growth_days=20, daily_fixed_cost=10),  # cost=200, profit=-200
         ]
         
         best = objective.select_best(candidates, key_func=objective.calculate)
@@ -136,13 +160,16 @@ class TestObjectiveFunctionSignature:
         objective = OptimizationObjective()
         
         # Case 1: With revenue
-        metrics1 = OptimizationMetrics(cost=1000, revenue=2000)
+        metrics1 = OptimizationMetrics(
+            quantity=100, area_per_unit=2, revenue_per_area=10,
+            growth_days=100, daily_fixed_cost=10
+        )
         assert objective.calculate(metrics1) == 1000, (
             "Objective function changed! Expected profit = 1000"
         )
         
         # Case 2: Without revenue (cost minimization)
-        metrics2 = OptimizationMetrics(cost=1000)
+        metrics2 = OptimizationMetrics(growth_days=100, daily_fixed_cost=10)
         assert objective.calculate(metrics2) == -1000, (
             "Objective function changed! Expected profit = -1000"
         )
@@ -152,14 +179,20 @@ class TestObjectiveFunctionSignature:
         obj1 = DEFAULT_OBJECTIVE
         obj2 = OptimizationObjective()
         
-        metrics = OptimizationMetrics(cost=100, revenue=200)
+        metrics = OptimizationMetrics(
+            quantity=10, area_per_unit=2, revenue_per_area=10,
+            growth_days=10, daily_fixed_cost=10
+        )
         
         assert obj1.calculate(metrics) == obj2.calculate(metrics)
     
     def test_objective_is_deterministic(self):
         """Objective calculation MUST be deterministic."""
         objective = OptimizationObjective()
-        metrics = OptimizationMetrics(cost=100, revenue=200)
+        metrics = OptimizationMetrics(
+            quantity=10, area_per_unit=2, revenue_per_area=10,
+            growth_days=10, daily_fixed_cost=10
+        )
         
         # Call multiple times
         results = [objective.calculate(metrics) for _ in range(10)]
@@ -167,15 +200,21 @@ class TestObjectiveFunctionSignature:
         # All results must be identical
         assert len(set(results)) == 1
     
-    @pytest.mark.parametrize("cost,revenue,expected_profit", [
-        (100, 200, 100),
-        (500, 1000, 500),
-        (0, 1000, 1000),
-        (1000, 1000, 0),
+    @pytest.mark.parametrize("growth_days,daily_fixed_cost,quantity,area_per_unit,revenue_per_area,expected_profit", [
+        (10, 10, 10, 2, 10, 100),     # cost=100, revenue=200, profit=100
+        (50, 10, 100, 2, 10, 1500),   # cost=500, revenue=2000, profit=1500
+        (0, 10, 100, 2, 10, 2000),    # cost=0, revenue=2000, profit=2000
+        (100, 10, 50, 2, 10, 0),      # cost=1000, revenue=1000, profit=0
     ])
-    def test_profit_calculation_examples(self, cost, revenue, expected_profit):
+    def test_profit_calculation_examples(self, growth_days, daily_fixed_cost, quantity, area_per_unit, revenue_per_area, expected_profit):
         """Test profit calculation with various inputs."""
-        metrics = OptimizationMetrics(cost=cost, revenue=revenue)
+        metrics = OptimizationMetrics(
+            growth_days=growth_days,
+            daily_fixed_cost=daily_fixed_cost,
+            quantity=quantity,
+            area_per_unit=area_per_unit,
+            revenue_per_area=revenue_per_area
+        )
         objective = OptimizationObjective()
         
         profit = objective.calculate(metrics)

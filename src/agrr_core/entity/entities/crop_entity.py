@@ -10,9 +10,9 @@ Fields
 - area_per_unit: Area occupied per unit of crop in square meters (m²)
 - variety: Optional variety/cultivar label (e.g., "Koshihikari")
 - revenue_per_area: Optional revenue per square meter (e.g., yen/m²)
-- max_profit: Optional maximum profit constraint (e.g., yen)
+- max_revenue: Optional maximum revenue constraint (e.g., yen)
   This represents business constraints such as market demand limits or contract caps.
-  Directly specifying profit is simpler than calculating from quantity constraints.
+  Directly specifying revenue limit is simpler than calculating from quantity constraints.
 """
 
 from dataclasses import dataclass
@@ -28,6 +28,6 @@ class Crop:
     area_per_unit: float
     variety: Optional[str] = None
     revenue_per_area: Optional[float] = None
-    max_profit: Optional[float] = None
+    max_revenue: Optional[float] = None
 
 

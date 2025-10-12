@@ -139,10 +139,6 @@ class TestMultiFieldCropAllocationComplete:
             growth_days=122,
             accumulated_gdd=1500.0,
             quantity=1666.0,
-            cost=610000.0,
-            revenue=3000000.0,
-            profit=2390000.0,
-            profit_rate=3.92,
             area_used=500.0,
         )
         
@@ -154,10 +150,6 @@ class TestMultiFieldCropAllocationComplete:
             growth_days=153,
             accumulated_gdd=1800.0,
             quantity=4000.0,
-            cost=918000.0,
-            revenue=5000000.0,
-            profit=4082000.0,
-            profit_rate=4.45,
             area_used=1000.0,
         )
         
@@ -211,10 +203,6 @@ class TestMultiFieldCropAllocationComplete:
             growth_days=122,
             accumulated_gdd=1500.0,
             quantity=3333.0,  # Max quantity
-            cost=610000.0,
-            revenue=6000000.0,
-            profit=5390000.0,
-            profit_rate=8.84,
             area_used=1000.0,
         )
         
@@ -279,10 +267,6 @@ class TestMultiFieldCropAllocationComplete:
                 growth_days=154,
                 accumulated_gdd=1820.0,
                 quantity=2000.0,
-                cost=770000.0,
-                revenue=2500000.0,
-                profit=1730000.0,
-                profit_rate=2.25,
                 area_used=500.0,
             ),
             AllocationCandidate(
@@ -293,10 +277,6 @@ class TestMultiFieldCropAllocationComplete:
                 growth_days=153,
                 accumulated_gdd=1800.0,
                 quantity=4000.0,
-                cost=918000.0,
-                revenue=5000000.0,
-                profit=4082000.0,
-                profit_rate=4.45,
                 area_used=1000.0,
             ),
             AllocationCandidate(
@@ -307,10 +287,6 @@ class TestMultiFieldCropAllocationComplete:
                 growth_days=122,
                 accumulated_gdd=1500.0,
                 quantity=3333.0,
-                cost=610000.0,
-                revenue=6000000.0,
-                profit=5390000.0,
-                profit_rate=8.84,
                 area_used=1000.0,
             ),
         ]

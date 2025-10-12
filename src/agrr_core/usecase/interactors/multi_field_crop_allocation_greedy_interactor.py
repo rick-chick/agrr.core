@@ -53,6 +53,7 @@ class AllocationCandidate:
     """Candidate for crop allocation (internal use).
     
     Implements Optimizable protocol for unified optimization.
+    This class holds entities and raw parameters for metric calculation.
     """
     
     field: Field
@@ -61,23 +62,47 @@ class AllocationCandidate:
     completion_date: datetime
     growth_days: int
     accumulated_gdd: float
-    quantity: float  # Maximum quantity that can be allocated
-    cost: float
-    revenue: float
-    profit: float
-    profit_rate: float
+    quantity: float  # Allocated quantity
     area_used: float
     
     def get_metrics(self) -> OptimizationMetrics:
-        """Get optimization metrics (implements Optimizable protocol).
+        """Get optimization metrics with raw calculation parameters (implements Optimizable protocol).
+        
+        Returns OptimizationMetrics with all raw data needed for calculation.
+        The actual cost/revenue/profit calculations happen inside OptimizationMetrics.
         
         Returns:
-            OptimizationMetrics for this candidate
+            OptimizationMetrics containing raw parameters for calculation
         """
         return OptimizationMetrics(
-            cost=self.cost,
-            revenue=self.revenue
+            quantity=self.quantity,
+            area_per_unit=self.crop.area_per_unit,
+            revenue_per_area=self.crop.revenue_per_area,
+            max_revenue=self.crop.max_revenue,
+            growth_days=self.growth_days,
+            daily_fixed_cost=self.field.daily_fixed_cost,
         )
+    
+    @property
+    def profit(self) -> float:
+        """Get profit (convenience property)."""
+        return self.get_metrics().profit
+    
+    @property
+    def profit_rate(self) -> float:
+        """Get profit rate (convenience property)."""
+        metrics = self.get_metrics()
+        return (metrics.profit / metrics.cost) if metrics.cost > 0 else 0.0
+    
+    @property
+    def cost(self) -> float:
+        """Get cost (convenience property)."""
+        return self.get_metrics().cost
+    
+    @property
+    def revenue(self) -> Optional[float]:
+        """Get revenue (convenience property)."""
+        return self.get_metrics().revenue
 
 
 class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate]):
@@ -236,57 +261,39 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                         if candidate_period.completion_date is None or candidate_period.total_cost is None:
                             continue  # Skip incomplete candidates
                         
-                        # Calculate revenue (quantity-dependent)
-                        revenue = (quantity * crop.revenue_per_area * crop.area_per_unit) if crop.revenue_per_area else 0
-                        
-                        # Cost (fixed cost model - doesn't depend on quantity)
-                        # In variable cost model, this would be adjusted
-                        cost = candidate_period.total_cost
-                        
-                        profit = revenue - cost
-                        
-                        # Apply crop-specific profit constraint if defined
-                        # (e.g., market demand limit, contract cap)
-                        if crop.max_profit is not None and profit > crop.max_profit:
-                            profit = crop.max_profit
-                            revenue = cost + profit  # Adjust revenue to satisfy constraint
-                        
-                        profit_rate = (profit / cost) if cost > 0 else 0
-                        
-                        # ===== Phase 1: Quality Filtering =====
-                        if cfg.enable_candidate_filtering:
-                            # Filter 1: Minimum profit rate
-                            if profit_rate < cfg.min_profit_rate_threshold:
-                                continue  # Skip clearly bad candidates
-                            
-                            # Filter 2: Minimum revenue/cost ratio
-                            if revenue is not None and cost > 0:
-                                revenue_cost_ratio = revenue / cost
-                                if revenue_cost_ratio < cfg.min_revenue_cost_ratio:
-                                    continue
-                            
-                            # Filter 3: Minimum absolute profit (for profit maximization)
-                            if request.optimization_objective == "maximize_profit":
-                                if profit is not None and profit < 0:
-                                    # Only keep profitable candidates unless min quantity required
-                                    crop_req = next((r for r in request.crop_requirements if r.crop_id == crop.crop_id), None)
-                                    if not (crop_req and crop_req.min_quantity and crop_req.min_quantity > 0):
-                                        continue
-                        
-                        candidates.append(AllocationCandidate(
+                        # Create candidate with entities (no calculation - just pass data)
+                        candidate = AllocationCandidate(
                             field=field,
                             crop=crop,
                             start_date=candidate_period.start_date,
                             completion_date=candidate_period.completion_date,
                             growth_days=candidate_period.growth_days,
                             accumulated_gdd=0.0,  # Will be filled if needed
-                            quantity=quantity,  # Variable quantity
-                            cost=cost,
-                            revenue=revenue,
-                            profit=profit,
-                            profit_rate=profit_rate,
-                            area_used=area_used,  # Variable area
-                        ))
+                            quantity=quantity,
+                            area_used=area_used,
+                        )
+                        
+                        # ===== Phase 1: Quality Filtering =====
+                        if cfg.enable_candidate_filtering:
+                            # Filter 1: Minimum profit rate
+                            if candidate.profit_rate < cfg.min_profit_rate_threshold:
+                                continue  # Skip clearly bad candidates
+                            
+                            # Filter 2: Minimum revenue/cost ratio
+                            if candidate.revenue is not None and candidate.cost > 0:
+                                revenue_cost_ratio = candidate.revenue / candidate.cost
+                                if revenue_cost_ratio < cfg.min_revenue_cost_ratio:
+                                    continue
+                            
+                            # Filter 3: Minimum absolute profit (for profit maximization)
+                            if request.optimization_objective == "maximize_profit":
+                                if candidate.profit is not None and candidate.profit < 0:
+                                    # Only keep profitable candidates unless min quantity required
+                                    crop_req = next((r for r in request.crop_requirements if r.crop_id == crop.crop_id), None)
+                                    if not (crop_req and crop_req.min_quantity and crop_req.min_quantity > 0):
+                                        continue
+                        
+                        candidates.append(candidate)
         
         # Post-filtering: Limit candidates per field×crop
         if cfg.enable_candidate_filtering and cfg.max_candidates_per_field_crop > 0:
@@ -372,31 +379,8 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 if candidate_period.completion_date is None:
                     continue
                 
-                # Calculate metrics
-                revenue = quantity * crop.revenue_per_area * crop.area_per_unit if crop.revenue_per_area else 0
-                cost = candidate_period.total_cost
-                profit = revenue - cost
-                
-                # Apply crop-specific profit constraint if defined
-                if crop.max_profit is not None and profit > crop.max_profit:
-                    profit = crop.max_profit
-                    revenue = cost + profit  # Adjust revenue to satisfy constraint
-                
-                profit_rate = (profit / cost) if cost > 0 else 0
-                
-                # Quality filtering
-                if config.enable_candidate_filtering:
-                    if profit_rate < config.min_profit_rate_threshold:
-                        continue
-                    if revenue is not None and cost > 0:
-                        if revenue / cost < config.min_revenue_cost_ratio:
-                            continue
-                    if request.optimization_objective == "maximize_profit" and profit is not None and profit < 0:
-                        crop_req = next((r for r in request.crop_requirements if r.crop_id == crop.crop_id), None)
-                        if not (crop_req and crop_req.min_quantity and crop_req.min_quantity > 0):
-                            continue
-                
-                candidates.append(AllocationCandidate(
+                # Create candidate with entities (no calculation - just pass data)
+                candidate = AllocationCandidate(
                     field=field,
                     crop=crop,
                     start_date=candidate_period.start_date,
@@ -404,12 +388,22 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                     growth_days=candidate_period.growth_days,
                     accumulated_gdd=0.0,
                     quantity=quantity,
-                    cost=cost,
-                    revenue=revenue,
-                    profit=profit,
-                    profit_rate=profit_rate,
                     area_used=area_used,
-                ))
+                )
+                
+                # Quality filtering
+                if config.enable_candidate_filtering:
+                    if candidate.profit_rate < config.min_profit_rate_threshold:
+                        continue
+                    if candidate.revenue is not None and candidate.cost > 0:
+                        if candidate.revenue / candidate.cost < config.min_revenue_cost_ratio:
+                            continue
+                    if request.optimization_objective == "maximize_profit" and candidate.profit is not None and candidate.profit < 0:
+                        crop_req = next((r for r in request.crop_requirements if r.crop_id == crop.crop_id), None)
+                        if not (crop_req and crop_req.min_quantity and crop_req.min_quantity > 0):
+                            continue
+                
+                candidates.append(candidate)
         
         return candidates
     

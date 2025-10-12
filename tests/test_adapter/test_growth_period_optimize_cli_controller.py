@@ -209,7 +209,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
             completion_date=datetime(2024, 7, 15),
             growth_days=106,
             accumulated_gdd=1500.0,
-            total_cost=530000.0,
+            field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=5000.0),
             is_optimal=True,
             base_temperature=10.0,
         )
@@ -254,7 +254,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
             completion_date=datetime(2024, 7, 15),
             growth_days=106,
             accumulated_gdd=1500.0,
-            total_cost=530000.0,
+            field=Field(field_id="test_field", name="Test", area=1000.0, daily_fixed_cost=5000.0),
             is_optimal=True,
             base_temperature=10.0,
         )

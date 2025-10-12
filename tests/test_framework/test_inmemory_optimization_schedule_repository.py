@@ -12,6 +12,7 @@ from agrr_core.entity.entities.optimization_intermediate_result_entity import (
 from agrr_core.entity.entities.optimization_schedule_entity import (
     OptimizationSchedule,
 )
+from agrr_core.entity.entities.field_entity import Field
 from agrr_core.framework.repositories.inmemory_optimization_result_repository import (
     InMemoryOptimizationResultRepository,
 )
@@ -25,6 +26,9 @@ class TestInMemoryOptimizationScheduleRepository:
         """Test saving and retrieving a schedule."""
         repository = InMemoryOptimizationResultRepository()
         
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)  # 1000 / 10 = 100
+        field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=80.0)   # 800 / 10 = 80
+        
         # Create test results
         results = [
             OptimizationIntermediateResult(
@@ -32,7 +36,7 @@ class TestInMemoryOptimizationScheduleRepository:
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=field1,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -41,7 +45,7 @@ class TestInMemoryOptimizationScheduleRepository:
                 completion_date=datetime(2025, 1, 20),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=800.0,
+                field=field2,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -75,6 +79,9 @@ class TestInMemoryOptimizationScheduleRepository:
         """Test retrieving all schedules."""
         repository = InMemoryOptimizationResultRepository()
         
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=90.0)
+        
         # Create test results
         results1 = [
             OptimizationIntermediateResult(
@@ -82,7 +89,7 @@ class TestInMemoryOptimizationScheduleRepository:
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=field1,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -94,7 +101,7 @@ class TestInMemoryOptimizationScheduleRepository:
                 completion_date=datetime(2025, 2, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=900.0,
+                field=field2,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -119,6 +126,8 @@ class TestInMemoryOptimizationScheduleRepository:
         """Test deleting a schedule."""
         repository = InMemoryOptimizationResultRepository()
         
+        field = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        
         # Create and save test result
         results = [
             OptimizationIntermediateResult(
@@ -126,7 +135,7 @@ class TestInMemoryOptimizationScheduleRepository:
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=field,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -157,6 +166,8 @@ class TestInMemoryOptimizationScheduleRepository:
         """Test clearing all schedules."""
         repository = InMemoryOptimizationResultRepository()
         
+        field = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        
         # Create and save test results
         results = [
             OptimizationIntermediateResult(
@@ -164,7 +175,7 @@ class TestInMemoryOptimizationScheduleRepository:
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=field,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -186,6 +197,9 @@ class TestInMemoryOptimizationScheduleRepository:
         """Test that schedules and results storage are separate."""
         repository = InMemoryOptimizationResultRepository()
         
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=90.0)
+        
         # Save optimization results
         optimization_results = [
             OptimizationIntermediateResult(
@@ -193,7 +207,7 @@ class TestInMemoryOptimizationScheduleRepository:
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=field1,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -208,7 +222,7 @@ class TestInMemoryOptimizationScheduleRepository:
                 completion_date=datetime(2025, 2, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=900.0,
+                field=field2,
                 is_optimal=False,
                 base_temperature=10.0,
             ),

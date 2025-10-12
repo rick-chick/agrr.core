@@ -29,19 +29,17 @@ class TestPhase1Filtering:
             None, None, None, config=config
         )
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 6666.67)  # 1,000,000 / 150 = 6666.67
         crop = Crop("c1", "Crop 1", 0.25, revenue_per_area=10000.0)
         
-        # Create candidates with different quality
+        # Create candidates with different quality (cost/revenue/profit calculated automatically)
         candidates = [
             AllocationCandidate(
                 field=field, crop=crop,
                 start_date=datetime(2025, 4, 1),
                 completion_date=datetime(2025, 8, 31),
                 growth_days=150, accumulated_gdd=1800.0,
-                quantity=1000.0, cost=1000000.0,
-                revenue=2500000.0,  # Good: revenue/cost = 2.5
-                profit=1500000.0, profit_rate=1.5,
+                quantity=1000.0,  # revenue = 1000 * 10000 * 0.25 = 2,500,000, cost = 150 * 6666.67 = 1,000,000, profit_rate = 1.5
                 area_used=250.0,
             ),
             AllocationCandidate(
@@ -49,10 +47,8 @@ class TestPhase1Filtering:
                 start_date=datetime(2025, 4, 1),
                 completion_date=datetime(2025, 8, 31),
                 growth_days=150, accumulated_gdd=1800.0,
-                quantity=500.0, cost=1000000.0,
-                revenue=400000.0,  # Bad: revenue/cost = 0.4 < 0.5
-                profit=-600000.0, profit_rate=-0.6,
-                area_used=125.0,
+                quantity=16.0,  # revenue = 16 * 10000 * 0.25 = 40,000, cost = 1,000,000, profit_rate = -0.96 (bad)
+                area_used=4.0,
             ),
         ]
         
@@ -64,7 +60,7 @@ class TestPhase1Filtering:
         ]
         
         assert len(filtered) == 1
-        assert filtered[0].profit_rate == 1.5
+        assert filtered[0].profit_rate == pytest.approx(1.5, rel=1e-3)
     
     def test_post_filtering_limits_candidates(self):
         """Test post-filtering limits candidates per field×crop."""
@@ -75,20 +71,20 @@ class TestPhase1Filtering:
             None, None, None, config=config
         )
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 6666.67)  # 1,000,000 / 150 = 6666.67
         crop = Crop("c1", "Crop 1", 0.25, revenue_per_area=10000.0)
         
-        # Create 10 candidates for same field×crop
+        # Create 10 candidates for same field×crop with different profit rates
+        # Vary growth_days: shorter = lower cost = higher profit_rate
         candidates = []
         for i in range(10):
             candidates.append(AllocationCandidate(
                 field=field, crop=crop,
                 start_date=datetime(2025, 4, i+1),
                 completion_date=datetime(2025, 8, i+1),
-                growth_days=150, accumulated_gdd=1800.0,
-                quantity=1000.0, cost=1000000.0,
-                revenue=2500000.0, profit=1500000.0,
-                profit_rate=1.5 + i * 0.1,  # Different profit rates
+                growth_days=150 - i * 5,  # 150, 145, 140, ..., 105 (shorter = higher profit_rate)
+                accumulated_gdd=1800.0,
+                quantity=1000.0,  # revenue固定、costが変わるのでprofit_rateが変わる
                 area_used=250.0,
             ))
         
@@ -98,9 +94,9 @@ class TestPhase1Filtering:
         # Should keep only top 3
         assert len(filtered) == 3
         
-        # Should keep highest profit_rate
-        profit_rates = [c.profit_rate for c in filtered]
-        assert max(profit_rates) == pytest.approx(2.4)  # 1.5 + 9*0.1
+        # The shortest growth_days (lowest cost) should be selected
+        growth_days_list = [c.growth_days for c in filtered]
+        assert min(growth_days_list) == 105  # i=9: 150 - 9*5 = 105 (highest profit_rate)
 
 
 class TestPhase1Sampling:
@@ -117,7 +113,7 @@ class TestPhase1Sampling:
         )
         
         # Create a moderate solution
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 6666.67)  # 1,000,000 / 150 = 6666.67
         crop = Crop("c1", "Crop 1", 0.25, revenue_per_area=10000.0)
         
         solution = []

@@ -27,7 +27,7 @@ class TestAggregateToPayload:
             area_per_unit=0.25,
             variety="Koshihikari",
             revenue_per_area=10000.0,
-            max_profit=500000.0
+            max_revenue=500000.0
         )
         
         stage = GrowthStage(name="Growth", order=1)
@@ -66,7 +66,7 @@ class TestAggregateToPayload:
         assert payload["variety"] == "Koshihikari"
         assert payload["area_per_unit"] == 0.25
         assert payload["revenue_per_area"] == 10000.0
-        assert payload["max_profit"] == 500000.0
+        assert payload["max_revenue"] == 500000.0
         
         # Verify stages structure
         assert len(payload["stages"]) == 1
@@ -122,9 +122,9 @@ class TestAggregateToPayload:
         
         assert payload["revenue_per_area"] is None
 
-    def test_aggregate_to_payload_no_max_profit(self):
-        """Test conversion when max_profit is None."""
-        crop = Crop("soybean", "Soybean", 0.3, max_profit=None)
+    def test_aggregate_to_payload_no_max_revenue(self):
+        """Test conversion when max_revenue is None."""
+        crop = Crop("soybean", "Soybean", 0.3, max_revenue=None)
         stage = GrowthStage("Growth", 1)
         temperature = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0)
         sunshine = SunshineProfile(3.0, 6.0)
@@ -134,15 +134,15 @@ class TestAggregateToPayload:
         
         payload = CropRequirementMapper.aggregate_to_payload(aggregate)
         
-        assert payload["max_profit"] is None
+        assert payload["max_revenue"] is None
 
-    def test_aggregate_to_payload_with_max_profit(self):
-        """Test conversion when max_profit is specified."""
+    def test_aggregate_to_payload_with_max_revenue(self):
+        """Test conversion when max_revenue is specified."""
         crop = Crop(
             crop_id="cucumber",
             name="Cucumber",
             area_per_unit=0.4,
-            max_profit=800000.0
+            max_revenue=800000.0
         )
         stage = GrowthStage("Growth", 1)
         temperature = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0)
@@ -153,7 +153,7 @@ class TestAggregateToPayload:
         
         payload = CropRequirementMapper.aggregate_to_payload(aggregate)
         
-        assert payload["max_profit"] == 800000.0
+        assert payload["max_revenue"] == 800000.0
 
 
 @pytest.mark.unit

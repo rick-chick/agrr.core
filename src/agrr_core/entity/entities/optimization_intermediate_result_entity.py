@@ -1,7 +1,7 @@
 """Optimization intermediate result entity.
 
 Represents the intermediate results of growth period optimization,
-including start date, completion date, accumulated GDD, cost, and other metrics
+including start date, completion date, accumulated GDD, and other metrics
 for each candidate start date.
 
 Fields
@@ -9,7 +9,7 @@ Fields
 - completion_date: Date when growth reaches 100% (None if not completed)
 - growth_days: Number of days from start to completion (None if not completed)
 - accumulated_gdd: Total accumulated growing degree days (°C·day)
-- total_cost: Total cost for this period (None if not completed or deadline exceeded)
+- field: Field entity for cost calculation
 - is_optimal: True if this is the optimal candidate
 - base_temperature: Base temperature used for GDD calculation (°C)
 - revenue: Optional revenue for profit calculation
@@ -17,9 +17,12 @@ Fields
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from agrr_core.entity.value_objects.optimization_objective import OptimizationMetrics
+
+if TYPE_CHECKING:
+    from agrr_core.entity.entities.field_entity import Field
 
 
 @dataclass(frozen=True)
@@ -36,7 +39,7 @@ class OptimizationIntermediateResult:
     completion_date: Optional[datetime]
     growth_days: Optional[int]
     accumulated_gdd: float
-    total_cost: Optional[float]
+    field: Optional["Field"]
     is_optimal: bool
     base_temperature: float
     revenue: Optional[float] = None  # Optional revenue for profit calculation
@@ -53,11 +56,6 @@ class OptimizationIntermediateResult:
                 f"growth_days must be non-negative, got {self.growth_days}"
             )
         
-        if self.total_cost is not None and self.total_cost < 0.0:
-            raise ValueError(
-                f"total_cost must be non-negative, got {self.total_cost}"
-            )
-        
         if self.revenue is not None and self.revenue < 0.0:
             raise ValueError(
                 f"revenue must be non-negative, got {self.revenue}"
@@ -71,19 +69,29 @@ class OptimizationIntermediateResult:
                 )
     
     def get_metrics(self) -> OptimizationMetrics:
-        """Get optimization metrics (implements Optimizable protocol).
+        """Get optimization metrics with raw calculation parameters (implements Optimizable protocol).
+        
+        Returns OptimizationMetrics with all raw data needed for calculation.
+        The actual cost calculation happens inside OptimizationMetrics.
         
         Returns:
-            OptimizationMetrics for this result
+            OptimizationMetrics containing raw parameters for calculation
             
         Raises:
-            ValueError: If total_cost is None (invalid result)
+            ValueError: If growth_days or field is None (invalid result)
         """
-        if self.total_cost is None:
-            raise ValueError("Cannot get metrics for result without total_cost")
+        if self.growth_days is None or self.field is None:
+            raise ValueError("Cannot get metrics without growth_days and field")
         
         return OptimizationMetrics(
-            cost=self.total_cost,
-            revenue=self.revenue
+            growth_days=self.growth_days,
+            daily_fixed_cost=self.field.daily_fixed_cost,
         )
+    
+    @property
+    def total_cost(self) -> Optional[float]:
+        """Get total cost (convenience property for backward compatibility)."""
+        if self.growth_days is None or self.field is None:
+            return None
+        return self.get_metrics().cost
 

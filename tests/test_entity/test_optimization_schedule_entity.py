@@ -12,6 +12,7 @@ from agrr_core.entity.entities.optimization_intermediate_result_entity import (
 from agrr_core.entity.entities.optimization_schedule_entity import (
     OptimizationSchedule,
 )
+from agrr_core.entity.entities.field_entity import Field
 
 
 class TestOptimizationSchedule:
@@ -19,13 +20,16 @@ class TestOptimizationSchedule:
 
     def test_valid_schedule(self):
         """Test creating a valid schedule."""
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=80.0)
+        
         results = [
             OptimizationIntermediateResult(
                 start_date=datetime(2025, 1, 1),
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=field1,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -34,7 +38,7 @@ class TestOptimizationSchedule:
                 completion_date=datetime(2025, 1, 20),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=800.0,
+                field=field2,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -53,13 +57,15 @@ class TestOptimizationSchedule:
 
     def test_empty_schedule_id_raises_error(self):
         """Test that empty schedule_id raises ValueError."""
+        field = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        
         results = [
             OptimizationIntermediateResult(
                 start_date=datetime(2025, 1, 1),
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=field,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -74,13 +80,15 @@ class TestOptimizationSchedule:
 
     def test_negative_cost_raises_error(self):
         """Test that negative total_cost raises ValueError."""
+        field = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        
         results = [
             OptimizationIntermediateResult(
                 start_date=datetime(2025, 1, 1),
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=field,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -95,13 +103,16 @@ class TestOptimizationSchedule:
 
     def test_overlapping_results_raises_error(self):
         """Test that overlapping results raise ValueError."""
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=66.67)
+        field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=72.73)
+        
         results = [
             OptimizationIntermediateResult(
                 start_date=datetime(2025, 1, 1),
                 completion_date=datetime(2025, 1, 15),
                 growth_days=15,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=field1,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -110,7 +121,7 @@ class TestOptimizationSchedule:
                 completion_date=datetime(2025, 1, 20),
                 growth_days=11,
                 accumulated_gdd=100.0,
-                total_cost=800.0,
+                field=field2,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -125,13 +136,16 @@ class TestOptimizationSchedule:
 
     def test_boundary_non_overlapping_is_valid(self):
         """Test that results touching at boundary are valid (non-overlapping)."""
+        field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=72.73)
+        
         results = [
             OptimizationIntermediateResult(
                 start_date=datetime(2025, 1, 1),
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=field1,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -140,7 +154,7 @@ class TestOptimizationSchedule:
                 completion_date=datetime(2025, 1, 20),
                 growth_days=11,
                 accumulated_gdd=100.0,
-                total_cost=800.0,
+                field=field2,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -162,7 +176,7 @@ class TestOptimizationSchedule:
                 completion_date=None,  # Incomplete
                 growth_days=None,
                 accumulated_gdd=50.0,
-                total_cost=None,
+                field=None,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -177,13 +191,15 @@ class TestOptimizationSchedule:
 
     def test_single_result_schedule(self):
         """Test schedule with single result."""
+        field = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        
         results = [
             OptimizationIntermediateResult(
                 start_date=datetime(2025, 1, 1),
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=field,
                 is_optimal=False,
                 base_temperature=10.0,
             ),
@@ -209,13 +225,15 @@ class TestOptimizationSchedule:
 
     def test_immutability(self):
         """Test that OptimizationSchedule is immutable (frozen)."""
+        field = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
+        
         results = [
             OptimizationIntermediateResult(
                 start_date=datetime(2025, 1, 1),
                 completion_date=datetime(2025, 1, 10),
                 growth_days=10,
                 accumulated_gdd=100.0,
-                total_cost=1000.0,
+                field=field,
                 is_optimal=False,
                 base_temperature=10.0,
             ),

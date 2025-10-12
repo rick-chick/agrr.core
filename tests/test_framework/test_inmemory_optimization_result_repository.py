@@ -12,6 +12,7 @@ from agrr_core.entity.entities.optimization_intermediate_result_entity import (
 from agrr_core.entity.entities.optimization_schedule_entity import (
     OptimizationSchedule,
 )
+from agrr_core.entity.entities.field_entity import Field
 
 
 @pytest.mark.asyncio
@@ -22,13 +23,15 @@ class TestInMemoryOptimizationResultRepository:
         """Test saving and retrieving optimization results."""
         repository = InMemoryOptimizationResultRepository()
         
+        field = Field(field_id="test_field", name="Test Field", area=1000.0, daily_fixed_cost=5000.0)  # 530000 / 106 = 5000
+        
         results = [
             OptimizationIntermediateResult(
                 start_date=datetime(2024, 4, 1),
                 completion_date=datetime(2024, 7, 15),
                 growth_days=106,
                 accumulated_gdd=1500.0,
-                total_cost=530000.0,
+                field=field,
                 is_optimal=True,
                 base_temperature=10.0,
             )
@@ -43,8 +46,8 @@ class TestInMemoryOptimizationResultRepository:
         assert retrieved.schedule_id == optimization_id
         assert len(retrieved.selected_results) == 1
         assert retrieved.selected_results[0].start_date == datetime(2024, 4, 1)
-        assert retrieved.total_cost is None  # No total_cost for intermediate results
         assert retrieved.selected_results[0].accumulated_gdd == 1500.0
+        assert retrieved.selected_results[0].total_cost == 530000.0  # Calculated from field
 
     async def test_get_nonexistent(self):
         """Test retrieving non-existent optimization results."""
@@ -57,13 +60,16 @@ class TestInMemoryOptimizationResultRepository:
         """Test retrieving all optimization results."""
         repository = InMemoryOptimizationResultRepository()
         
+        field1 = Field(field_id="test_field_1", name="Field 1", area=1000.0, daily_fixed_cost=5000.0)
+        field2 = Field(field_id="test_field_2", name="Field 2", area=1000.0, daily_fixed_cost=5000.0)
+        
         results1 = [
             OptimizationIntermediateResult(
                 start_date=datetime(2024, 4, 1),
                 completion_date=datetime(2024, 7, 15),
                 growth_days=106,
                 accumulated_gdd=1500.0,
-                total_cost=530000.0,
+                field=field1,
                 is_optimal=True,
                 base_temperature=10.0,
             )
@@ -75,7 +81,7 @@ class TestInMemoryOptimizationResultRepository:
                 completion_date=datetime(2024, 8, 15),
                 growth_days=107,
                 accumulated_gdd=1600.0,
-                total_cost=535000.0,
+                field=field2,
                 is_optimal=False,
                 base_temperature=10.0,
             )
@@ -101,13 +107,15 @@ class TestInMemoryOptimizationResultRepository:
         """Test deleting existing optimization results."""
         repository = InMemoryOptimizationResultRepository()
         
+        field = Field(field_id="test_field", name="Test Field", area=1000.0, daily_fixed_cost=5000.0)
+        
         results = [
             OptimizationIntermediateResult(
                 start_date=datetime(2024, 4, 1),
                 completion_date=datetime(2024, 7, 15),
                 growth_days=106,
                 accumulated_gdd=1500.0,
-                total_cost=530000.0,
+                field=field,
                 is_optimal=True,
                 base_temperature=10.0,
             )
@@ -133,13 +141,16 @@ class TestInMemoryOptimizationResultRepository:
         """Test clearing all optimization results."""
         repository = InMemoryOptimizationResultRepository()
         
+        field1 = Field(field_id="test_field_1", name="Field 1", area=1000.0, daily_fixed_cost=5000.0)
+        field2 = Field(field_id="test_field_2", name="Field 2", area=1000.0, daily_fixed_cost=5000.0)
+        
         results1 = [
             OptimizationIntermediateResult(
                 start_date=datetime(2024, 4, 1),
                 completion_date=datetime(2024, 7, 15),
                 growth_days=106,
                 accumulated_gdd=1500.0,
-                total_cost=530000.0,
+                field=field1,
                 is_optimal=True,
                 base_temperature=10.0,
             )
@@ -151,7 +162,7 @@ class TestInMemoryOptimizationResultRepository:
                 completion_date=datetime(2024, 8, 15),
                 growth_days=107,
                 accumulated_gdd=1600.0,
-                total_cost=535000.0,
+                field=field2,
                 is_optimal=False,
                 base_temperature=10.0,
             )
@@ -169,13 +180,16 @@ class TestInMemoryOptimizationResultRepository:
         """Test overwriting existing optimization results."""
         repository = InMemoryOptimizationResultRepository()
         
+        field1 = Field(field_id="test_field_1", name="Field 1", area=1000.0, daily_fixed_cost=5000.0)
+        field2 = Field(field_id="test_field_2", name="Field 2", area=1000.0, daily_fixed_cost=5000.0)
+        
         results1 = [
             OptimizationIntermediateResult(
                 start_date=datetime(2024, 4, 1),
                 completion_date=datetime(2024, 7, 15),
                 growth_days=106,
                 accumulated_gdd=1500.0,
-                total_cost=530000.0,
+                field=field1,
                 is_optimal=True,
                 base_temperature=10.0,
             )
@@ -187,7 +201,7 @@ class TestInMemoryOptimizationResultRepository:
                 completion_date=datetime(2024, 8, 15),
                 growth_days=107,
                 accumulated_gdd=1600.0,
-                total_cost=535000.0,
+                field=field2,
                 is_optimal=False,
                 base_temperature=10.0,
             )
@@ -200,4 +214,3 @@ class TestInMemoryOptimizationResultRepository:
         retrieved = await repository.get(optimization_id)
         assert retrieved is not None
         assert retrieved.selected_results == results2
-

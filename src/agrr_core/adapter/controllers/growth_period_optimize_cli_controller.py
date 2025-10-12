@@ -79,8 +79,87 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
 
     def create_argument_parser(self) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(
-            description="Optimal Growth Period Calculator - Find the best start date to minimize costs",
+            description="Optimal Growth Period Calculator - Find the best cultivation start date to minimize costs",
             formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog="""
+Examples:
+  # Find optimal planting date for rice (April-September period)
+  agrr optimize-period optimize --crop rice --variety Koshihikari \\
+    --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
+    --weather-file weather.json --daily-cost 5000
+
+  # Find optimal date with JSON output
+  agrr optimize-period optimize --crop tomato \\
+    --evaluation-start 2024-04-01 --evaluation-end 2024-08-31 \\
+    --weather-file weather.json --daily-cost 3000 --format json
+
+  # Save optimization results for later analysis
+  agrr optimize-period optimize --crop rice --variety Koshihikari \\
+    --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
+    --weather-file weather.json --daily-cost 5000 --save-results
+
+  # List all saved optimization results
+  agrr optimize-period list-results
+
+  # Show details of a saved result
+  agrr optimize-period show-result rice_Koshihikari_2024-04-01_2024-09-30
+
+Weather File Format (JSON):
+  {
+    "latitude": 35.6762,
+    "longitude": 139.6503,
+    "data": [
+      {
+        "time": "2024-04-01",
+        "temperature_2m_max": 18.5,
+        "temperature_2m_min": 8.2,
+        "temperature_2m_mean": 13.3
+      }
+    ]
+  }
+
+Crop Requirement File Format (JSON, optional):
+  {
+    "crop_name": "rice",
+    "variety": "Koshihikari",
+    "base_temperature": 10.0,
+    "gdd_requirement": 2400.0,
+    "stages": [
+      {
+        "name": "germination",
+        "gdd_requirement": 200.0,
+        "optimal_temp_min": 20.0,
+        "optimal_temp_max": 30.0
+      }
+    ]
+  }
+
+Output (Table):
+  Start Date  | Completion  | Days | GDD    | Cost      | Status
+  ------------|-------------|------|--------|-----------|--------
+  2024-04-15  | 2024-09-18  | 156  | 2400.0 | ¥780,000  | ★
+  2024-04-20  | 2024-09-22  | 155  | 2400.0 | ¥775,000  |
+
+Output (JSON):
+  {
+    "optimal_result": {
+      "start_date": "2024-04-15",
+      "completion_date": "2024-09-18",
+      "growth_days": 156,
+      "total_cost": 780000,
+      "accumulated_gdd": 2400.0
+    },
+    "all_candidates": [ ... ]
+  }
+
+Notes:
+  - The algorithm evaluates all possible start dates within the evaluation period
+  - Only candidates that complete before the evaluation-end deadline are considered
+  - The optimal start date minimizes total cultivation cost
+  - Daily cost includes fixed costs like field rent, but not variable costs
+  - Weather file can be generated using 'agrr weather' command
+  - Crop requirements are auto-generated using AI if not provided
+            """
         )
 
         subparsers = parser.add_subparsers(dest="command", help="Available commands")

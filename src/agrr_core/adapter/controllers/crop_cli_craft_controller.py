@@ -37,18 +37,62 @@ class CropCliCraftController:
 
     def create_argument_parser(self) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(
-            description="Crop Requirement CLI - Craft crop stage requirements",
+            description="Crop Requirement CLI - Get crop growth requirements using AI",
             formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog="""
+Examples:
+  # Get crop requirements for tomato (in Japanese)
+  agrr crop --query "トマト"
+  
+  # Get requirements for a specific variety
+  agrr crop --query "アイコトマト"
+  
+  # Get requirements for rice
+  agrr crop --query "稲"
+  
+  # Save crop requirements to file
+  agrr crop --query "トマト" > crop_requirements.json
+
+Output Format (JSON):
+  {
+    "success": true,
+    "data": {
+      "crop_name": "tomato",
+      "variety": "general",
+      "base_temperature": 10.0,
+      "gdd_requirement": 2000.0,
+      "stages": [
+        {
+          "name": "germination",
+          "gdd_requirement": 150.0,
+          "optimal_temp_min": 20.0,
+          "optimal_temp_max": 30.0,
+          "description": "種子発芽期"
+        },
+        {
+          "name": "vegetative",
+          "gdd_requirement": 800.0,
+          "optimal_temp_min": 18.0,
+          "optimal_temp_max": 28.0,
+          "description": "栄養成長期"
+        }
+      ]
+    }
+  }
+
+Note: This command uses AI (LLM) to generate crop growth requirements.
+      The output can be used as input for 'agrr progress' and 'agrr optimize-period' commands.
+            """
         )
 
         subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-        craft_parser = subparsers.add_parser("crop", help="Craft crop requirements")
+        craft_parser = subparsers.add_parser("crop", help="Get crop growth requirements")
         craft_parser.add_argument(
             "--query",
             "-q",
             required=True,
-            help='Crop query string (e.g., "トマト", "アイコトマト")',
+            help='Crop query string (e.g., "トマト", "アイコトマト", "稲")',
         )
         craft_parser.add_argument(
             "--json",

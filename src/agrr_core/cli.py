@@ -1,5 +1,6 @@
 """CLI application entry point."""
 
+import argparse
 import asyncio
 import sys
 from typing import Optional
@@ -18,20 +19,104 @@ from agrr_core.framework.repositories.file_repository import FileRepository
 from agrr_core.framework.repositories.inmemory_optimization_result_repository import InMemoryOptimizationResultRepository
 
 
+def print_help() -> None:
+    """Print main help message."""
+    help_text = """
+agrr - Agricultural Resource & Risk management core CLI
+
+Usage:
+  agrr <command> [options]
+
+Available Commands:
+  weather           Get historical weather data from Open-Meteo API
+  forecast          Get 16-day weather forecast from tomorrow
+  crop              Get crop growth requirements using AI
+  progress          Calculate crop growth progress based on weather data
+  optimize-period   Find optimal cultivation period to minimize costs
+  predict-file      Predict weather metrics from historical data file (EXPERIMENTAL)
+
+Examples:
+  # Get historical weather data for Tokyo (last 7 days)
+  agrr weather --location 35.6762,139.6503 --days 7
+
+  # Get 16-day weather forecast
+  agrr forecast --location 35.6762,139.6503
+
+  # Get crop requirements with AI
+  agrr crop --query "トマト"
+
+  # Calculate growth progress
+  agrr progress --crop rice --variety Koshihikari --start-date 2024-05-01 --weather-file weather.json
+
+  # Find optimal planting date
+  agrr optimize-period optimize --crop rice --variety Koshihikari \\
+    --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
+    --weather-file weather.json --daily-cost 5000
+
+For detailed help on each command:
+  agrr <command> --help
+
+Input File Formats:
+
+1. Weather Data File (JSON):
+   {
+     "latitude": 35.6762,
+     "longitude": 139.6503,
+     "elevation": 40.0,
+     "timezone": "Asia/Tokyo",
+     "data": [
+       {
+         "time": "2024-05-01",
+         "temperature_2m_max": 25.5,
+         "temperature_2m_min": 15.2,
+         "temperature_2m_mean": 20.3,
+         "precipitation_sum": 0.0,
+         "sunshine_duration": 28800.0
+       }
+     ]
+   }
+
+2. Crop Requirement File (JSON):
+   {
+     "crop_name": "rice",
+     "variety": "Koshihikari",
+     "base_temperature": 10.0,
+     "gdd_requirement": 2400.0,
+     "stages": [
+       {
+         "name": "germination",
+         "gdd_requirement": 200.0,
+         "optimal_temp_min": 20.0,
+         "optimal_temp_max": 30.0
+       }
+     ]
+   }
+
+Note: You can generate weather data using 'agrr weather' command with --json flag.
+
+"""
+    print(help_text)
+
+
 def main() -> None:
     """Main entry point for CLI application."""
     try:
+        # Get command line arguments (excluding script name)
+        args = sys.argv[1:] if len(sys.argv) > 1 else []
+        
+        # Show help if no arguments or --help/-h is specified
+        if not args or args[0] in ['--help', '-h', 'help']:
+            print_help()
+            sys.exit(0)
+        
         # Create container with configuration
         config = {
             'open_meteo_base_url': 'https://archive-api.open-meteo.com/v1/archive'
         }
         container = WeatherCliContainer(config)
         
-        # Get command line arguments (excluding script name)
-        args = sys.argv[1:] if len(sys.argv) > 1 else None
-        
         # Check subcommands
-        if args and args[0] == 'predict-file':
+        if args[0] == 'predict-file':
             # Run file-based prediction CLI
             asyncio.run(container.run_prediction_cli(args))
         elif args and args[0] == 'crop':

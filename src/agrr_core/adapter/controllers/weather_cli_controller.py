@@ -42,13 +42,45 @@ class WeatherCliFetchController:
             epilog="""
 Examples:
   # Get historical weather for Tokyo for the last 7 days (ending yesterday)
-  python -m agrr_core.cli weather --location 35.6762,139.6503 --days 7
+  agrr weather --location 35.6762,139.6503 --days 7
   
   # Get weather for specific historical date range
-  python -m agrr_core.cli weather --location 35.6762,139.6503 --start-date 2024-01-01 --end-date 2024-01-07
+  agrr weather --location 35.6762,139.6503 --start-date 2024-01-01 --end-date 2024-01-07
   
-  # Get historical weather for New York with JSON output
-  python -m agrr_core.cli weather --location 40.7128,-74.0060 --days 5 --json
+  # Get historical weather for New York with JSON output (save to file)
+  agrr weather --location 40.7128,-74.0060 --days 5 --json > weather.json
+  
+  # Get 16-day forecast from tomorrow
+  agrr forecast --location 35.6762,139.6503
+
+Major Cities Coordinates:
+  Tokyo:     35.6762,139.6503
+  Osaka:     34.6937,135.5023
+  New York:  40.7128,-74.0060
+  London:    51.5074,-0.1278
+  Paris:     48.8566,2.3522
+
+JSON Output Format:
+  {
+    "data": [
+      {
+        "time": "2024-05-01",
+        "temperature_2m_max": 25.5,
+        "temperature_2m_min": 15.2,
+        "temperature_2m_mean": 20.3,
+        "precipitation_sum": 0.0,
+        "sunshine_duration": 28800.0,
+        "sunshine_hours": 8.0
+      }
+    ],
+    "total_count": 7,
+    "location": {
+      "latitude": 35.6762,
+      "longitude": 139.6503,
+      "elevation": 40.0,
+      "timezone": "Asia/Tokyo"
+    }
+  }
             """
         )
         
@@ -56,7 +88,46 @@ Examples:
         subparsers = parser.add_subparsers(dest='command', help='Available commands')
         
         # Weather command
-        weather_parser = subparsers.add_parser('weather', help='Get weather forecast data')
+        weather_parser = subparsers.add_parser(
+            'weather', 
+            help='Get historical weather data',
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog="""
+Examples:
+  # Get historical weather for Tokyo for the last 7 days
+  agrr weather --location 35.6762,139.6503 --days 7
+  
+  # Get weather for specific date range
+  agrr weather --location 35.6762,139.6503 --start-date 2024-01-01 --end-date 2024-01-07
+  
+  # Save weather data to file (JSON format)
+  agrr weather --location 40.7128,-74.0060 --days 5 --json > weather.json
+
+Major Cities:
+  Tokyo:     35.6762,139.6503
+  Osaka:     34.6937,135.5023
+  New York:  40.7128,-74.0060
+  London:    51.5074,-0.1278
+
+Output (JSON):
+  {
+    "data": [
+      {
+        "time": "2024-05-01",
+        "temperature_2m_max": 25.5,
+        "temperature_2m_min": 15.2,
+        "temperature_2m_mean": 20.3,
+        "precipitation_sum": 0.0,
+        "sunshine_duration": 28800.0
+      }
+    ],
+    "location": {
+      "latitude": 35.6762,
+      "longitude": 139.6503
+    }
+  }
+            """
+        )
         
         # Location argument (required)
         weather_parser.add_argument(
@@ -91,7 +162,31 @@ Examples:
         )
         
         # Forecast command (16-day forecast from tomorrow)
-        forecast_parser = subparsers.add_parser('forecast', help='Get 16-day weather forecast starting from tomorrow')
+        forecast_parser = subparsers.add_parser(
+            'forecast', 
+            help='Get 16-day weather forecast starting from tomorrow',
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog="""
+Examples:
+  # Get 16-day forecast for Tokyo
+  agrr forecast --location 35.6762,139.6503
+  
+  # Get forecast with JSON output (save to file)
+  agrr forecast --location 35.6762,139.6503 --json > forecast.json
+  
+  # Get forecast for New York
+  agrr forecast --location 40.7128,-74.0060
+
+Major Cities:
+  Tokyo:     35.6762,139.6503
+  Osaka:     34.6937,135.5023
+  New York:  40.7128,-74.0060
+  London:    51.5074,-0.1278
+
+Note: Forecast data starts from tomorrow and extends 16 days into the future.
+      This is useful for planning future cultivation activities.
+            """
+        )
         
         # Location argument (required)
         forecast_parser.add_argument(

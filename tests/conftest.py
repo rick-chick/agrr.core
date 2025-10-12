@@ -205,6 +205,10 @@ def mock_crop_requirement_gateway(sample_crop_requirement_aggregate):
         "area_per_unit": 0.5,
         "revenue_per_area": 2000.0
     }
+    gateway.extract_crop_family.return_value = {
+        "family_ja": "ナス科",
+        "family_scientific": "Solanaceae"
+    }
     return gateway
 
 
@@ -377,6 +381,14 @@ def mock_file_repository():
     repository.write.return_value = None
     repository.delete.return_value = None
     return repository
+
+
+@pytest.fixture
+def mock_interaction_rule_gateway():
+    """Mock InteractionRuleGateway for testing."""
+    gateway = AsyncMock()
+    gateway.get_rules.return_value = []
+    return gateway
 
 
 

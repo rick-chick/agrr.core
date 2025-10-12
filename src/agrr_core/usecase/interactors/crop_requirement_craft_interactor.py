@@ -64,6 +64,15 @@ class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
             revenue_per_area = crop_economics.get("revenue_per_area")
             max_revenue = crop_economics.get("max_revenue")  # Optional market constraint
 
+            # Extract crop family information (separate LLM call)
+            crop_family = await self.gateway.extract_crop_family(crop_name, variety)
+            family_scientific = crop_family.get("family_scientific")
+            
+            # Build groups list with family at the beginning
+            groups = []
+            if family_scientific:
+                groups.append(family_scientific)
+
             # Step 3: Research requirements for each stage and build entities
             crop = Crop(
                 crop_id=crop_name.lower(),
@@ -71,7 +80,8 @@ class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
                 area_per_unit=area_per_unit,
                 variety=variety if variety and variety != "default" else None,
                 revenue_per_area=revenue_per_area,
-                max_revenue=max_revenue
+                max_revenue=max_revenue,
+                groups=groups if groups else None
             )
             stage_requirements = []
             

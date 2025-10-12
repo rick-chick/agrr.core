@@ -349,3 +349,43 @@ class FrameworkLLMClient(LLMClient):
         result = await self.struct(query, structure, instruction)
         debug_print(f"Crop economics result: {result['data']}")
         return result
+
+    async def extract_crop_family(self, crop_name: str, variety: str) -> Dict[str, Any]:
+        """Extract crop family (科) information.
+        
+        This is a separate LLM call to get the botanical family of the crop.
+        
+        Args:
+            crop_name: Name of the crop
+            variety: Variety name
+            
+        Returns:
+            Dict containing family (科) information
+        """
+        query = f"""作物: {crop_name}
+品種: {variety}
+
+この作物の植物学的な科（family）を調査してください。
+例:
+- トマト → ナス科（Solanaceae）
+- キュウリ → ウリ科（Cucurbitaceae）
+- イネ → イネ科（Poaceae）
+
+日本語の科名と学名の両方を返してください。"""
+
+        structure = {
+            "family_ja": None,  # Japanese family name (e.g., "ナス科")
+            "family_scientific": None  # Scientific family name (e.g., "Solanaceae")
+        }
+        
+        instruction = """
+        作物の植物学的な科（family）を調査し、JSON形式で返してください。
+        - family_ja: 日本語の科名（例: "ナス科"）
+        - family_scientific: 学名（例: "Solanaceae"）
+        
+        正確な植物分類学に基づいて科名を返してください。
+        """
+        
+        result = await self.struct(query, structure, instruction)
+        debug_print(f"Crop family result: {result['data']}")
+        return result

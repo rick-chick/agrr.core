@@ -191,6 +191,31 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
             "revenue_per_area": None  # No revenue data by default
         }
 
+    async def extract_crop_family(self, crop_name: str, variety: str) -> Dict[str, Any]:
+        """Extract crop family (科) information.
+        
+        This is a separate LLM call to get the botanical family of the crop.
+        
+        Args:
+            crop_name: Name of the crop
+            variety: Variety name
+            
+        Returns:
+            Dict containing family information (family_ja and family_scientific)
+        """
+        if self.llm_client is not None:
+            if hasattr(self.llm_client, 'extract_crop_family'):
+                result = await self.llm_client.extract_crop_family(crop_name, variety)
+                return result.get("data", {})
+            else:
+                raise RuntimeError("LLM client does not support extract_crop_family")
+        
+        # Fallback
+        return {
+            "family_ja": None,
+            "family_scientific": None
+        }
+
     async def _infer_with_llm(self, crop_query: str) -> Tuple[Crop, List[StageRequirement]]:
         # Deprecated: This method is now replaced by the 3-step methods above
         # Kept for backward compatibility

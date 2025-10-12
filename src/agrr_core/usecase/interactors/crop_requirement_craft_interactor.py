@@ -21,6 +21,8 @@ from agrr_core.entity import (
 from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
     CropRequirementAggregate,
 )
+from agrr_core.adapter.mappers.llm_response_normalizer import LLMResponseNormalizer
+from agrr_core.adapter.mappers.crop_requirement_mapper import CropRequirementMapper
 
 
 class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
@@ -51,14 +53,9 @@ class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
             # Step 2: Define growth stages
             growth_stages_data = await self.gateway.define_growth_stages(crop_name, variety)
             
-            # Handle various field names from Step 2
-            growth_stages = (
-                growth_stages_data.get("growth_periods") or
-                growth_stages_data.get("management_stages") or
-                growth_stages_data.get("管理ステージ構成") or
-                growth_stages_data.get("管理ステージ") or
-                growth_stages_data.get("growth_stages") or
-                []
+            # Normalize growth stages field (Phase 2: use Normalizer)
+            growth_stages = LLMResponseNormalizer.normalize_growth_stages_field(
+                growth_stages_data
             )
 
             # Extract crop economic information (separate LLM call)
@@ -77,53 +74,34 @@ class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
             stage_requirements = []
             
             for i, stage in enumerate(growth_stages):
-                # Handle different response structures from Step 2
-                stage_name = (
-                    stage.get("period_name") or
-                    stage.get("stage_name") or
-                    stage.get("ステージ名") or
-                    stage.get("stage") or
-                    "Unknown Stage"
-                )
-                stage_description = (
-                    stage.get("period_description") or
-                    stage.get("description") or
-                    stage.get("management_focus") or
-                    stage.get("管理の重点") or
-                    stage.get("management_transition_point") or
-                    stage.get("管理転換点") or
-                    stage.get("start_condition") or
-                    ""
-                )
+                # Normalize field names (Phase 2: use Normalizer)
+                stage_name = LLMResponseNormalizer.normalize_stage_name(stage)
+                stage_description = LLMResponseNormalizer.normalize_stage_description(stage)
                 
                 stage_requirement_data = await self.gateway.research_stage_requirements(
                     crop_name, variety, stage_name, stage_description
                 )
                 
-                # Build entities from the data
+                # Build entities from the data (Phase 2: use Normalizer)
                 growth_stage = GrowthStage(name=stage_name, order=i + 1)
                 
-                temp_data = stage_requirement_data.get("temperature", {})
-                temperature = TemperatureProfile(
-                    base_temperature=temp_data.get("base_temperature", 10.0),
-                    optimal_min=temp_data.get("optimal_min", 20.0),
-                    optimal_max=temp_data.get("optimal_max", 26.0),
-                    low_stress_threshold=temp_data.get("low_stress_threshold", 12.0),
-                    high_stress_threshold=temp_data.get("high_stress_threshold", 32.0),
-                    frost_threshold=temp_data.get("frost_threshold", 0.0),
-                    sterility_risk_threshold=temp_data.get("sterility_risk_threshold", 35.0)
+                # Normalize temperature data
+                temp_data = LLMResponseNormalizer.normalize_temperature_field(
+                    stage_requirement_data
                 )
+                temperature = TemperatureProfile(**temp_data)
                 
-                sun_data = stage_requirement_data.get("sunshine", {})
-                sunshine = SunshineProfile(
-                    minimum_sunshine_hours=sun_data.get("minimum_sunshine_hours", 3.0),
-                    target_sunshine_hours=sun_data.get("target_sunshine_hours", 6.0)
+                # Normalize sunshine data
+                sun_data = LLMResponseNormalizer.normalize_sunshine_field(
+                    stage_requirement_data
                 )
+                sunshine = SunshineProfile(**sun_data)
                 
-                thermal_data = stage_requirement_data.get("thermal", {})
-                thermal = ThermalRequirement(
-                    required_gdd=thermal_data.get("required_gdd", 400.0)
+                # Normalize thermal data
+                thermal_data = LLMResponseNormalizer.normalize_thermal_field(
+                    stage_requirement_data
                 )
+                thermal = ThermalRequirement(**thermal_data)
                 
                 stage_req = StageRequirement(
                     stage=growth_stage,
@@ -136,37 +114,9 @@ class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
             # Build aggregate
             aggregate = CropRequirementAggregate(crop=crop, stage_requirements=stage_requirements)
             
-            # Minimal payload handed to presenter; mapping can be done here or by an adapter
-            payload = {
-                "crop_id": aggregate.crop.crop_id,
-                "crop_name": aggregate.crop.name,
-                "variety": aggregate.crop.variety,
-                "area_per_unit": aggregate.crop.area_per_unit,
-                "revenue_per_area": aggregate.crop.revenue_per_area,
-                "stages": [
-                    {
-                        "name": sr.stage.name,
-                        "order": sr.stage.order,
-                        "temperature": {
-                            "base_temperature": sr.temperature.base_temperature,
-                            "optimal_min": sr.temperature.optimal_min,
-                            "optimal_max": sr.temperature.optimal_max,
-                            "low_stress_threshold": sr.temperature.low_stress_threshold,
-                            "high_stress_threshold": sr.temperature.high_stress_threshold,
-                            "frost_threshold": sr.temperature.frost_threshold,
-                            "sterility_risk_threshold": sr.temperature.sterility_risk_threshold,
-                        },
-                        "sunshine": {
-                            "minimum_sunshine_hours": sr.sunshine.minimum_sunshine_hours,
-                            "target_sunshine_hours": sr.sunshine.target_sunshine_hours,
-                        },
-                        "thermal": {
-                            "required_gdd": sr.thermal.required_gdd,
-                        },
-                    }
-                    for sr in aggregate.stage_requirements
-                ],
-            }
+            # Convert aggregate to payload (Phase 2: use Mapper)
+            payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+            
             return self.presenter.format_success(payload)
         except Exception as e:
             return self.presenter.format_error(f"Crafting failed: {e}")

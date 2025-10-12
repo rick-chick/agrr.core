@@ -28,6 +28,7 @@ from agrr_core.adapter.utils.llm_struct_schema import (
     build_stage_requirement_structure,
     build_stage_requirement_descriptions,
 )
+from agrr_core.adapter.mappers.llm_response_normalizer import LLMResponseNormalizer
 
 
 class CropRequirementGatewayImpl(CropRequirementGateway):
@@ -211,20 +212,6 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
         sr = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
         return crop, [sr]
 
-    def _normalize_stage_name(self, stage_data: Dict[str, Any]) -> str:
-        """Normalize stage name from various possible field names.
-        
-        Step 2 formats: stage_name, ステージ名, stage
-        Step 3 formats: name, stage_name
-        """
-        # Try various field names for stage name
-        return (
-            stage_data.get("stage_name") or
-            stage_data.get("ステージ名") or
-            stage_data.get("stage") or
-            stage_data.get("name") or
-            "Unknown Stage"
-        )
     
     def _parse_flow_result(self, flow_result: Dict[str, Any]) -> Tuple[Crop, List[StageRequirement]]:
         """Parse the 3-step flow result into domain entities.
@@ -260,60 +247,40 @@ class CropRequirementGatewayImpl(CropRequirementGateway):
             if "stage" in stage_data and isinstance(stage_data["stage"], dict):
                 # Step 3 structure: {"stage": {"name": ..., "temperature_requirements": ...}}
                 stage_info = stage_data["stage"]
-                stage_name = self._normalize_stage_name(stage_info)
+                stage_name = LLMResponseNormalizer.normalize_stage_name(stage_info)
                 
-                # Parse temperature profile (Step 3 field names)
-                temp_data = stage_info.get("temperature_requirements") or stage_info.get("temperature", {})
-                temp_range = temp_data.get("optimal_temperature_range", {})
-                temp = TemperatureProfile(
-                    base_temperature=temp_data.get("base_temperature", 10.0),
-                    optimal_min=temp_range.get("night") or temp_data.get("optimal_min", 20.0),
-                    optimal_max=temp_range.get("day") or temp_data.get("optimal_max", 26.0),
-                    low_stress_threshold=(
-                        temp_data.get("low_temperature_stress_threshold") or 
-                        temp_data.get("low_stress_threshold", 12.0)
-                    ),
-                    high_stress_threshold=(
-                        temp_data.get("high_temperature_stress_threshold") or 
-                        temp_data.get("high_stress_threshold", 32.0)
-                    ),
-                    frost_threshold=(
-                        temp_data.get("frost_damage_risk_temperature") or 
-                        temp_data.get("frost_threshold", 0.0)
-                    ),
-                    sterility_risk_threshold=(
-                        temp_data.get("high_temperature_damage_threshold") or
-                        temp_data.get("high_temperature_disability_threshold") or
-                        temp_data.get("high_temperature_disability_risk_temperature") or
-                        temp_data.get("sterility_risk_threshold") or
-                        (temp_data.get("high_temperature_damage", {}) or {}).get("infertility_risk_temperature")
-                    ),
-                )
+                # Normalize temperature, sunshine, thermal data (Phase 2: use Normalizer)
+                # Prepare data dict for normalization (stage_info is nested under "stage" key)
+                normalized_data = {"temperature": stage_info.get("temperature_requirements") or stage_info.get("temperature", {})}
                 
-                # Parse sunshine profile (Step 3 field names)
-                sun_data = (
+                # Add sunshine data
+                normalized_data["sunshine"] = (
                     stage_info.get("sunlight_requirements") or 
                     stage_info.get("light_requirements") or 
                     stage_info.get("sunshine") or
                     {}
                 )
-                sun = SunshineProfile(
-                    minimum_sunshine_hours=sun_data.get("minimum_sunlight_hours", sun_data.get("minimum_sunshine_hours", 3.0)),
-                    target_sunshine_hours=sun_data.get("target_sunlight_hours", sun_data.get("target_sunshine_hours", 6.0))
-                )
                 
-                # Parse thermal requirement (Step 3 field names)
-                thermal_data = (
+                # Add thermal data
+                normalized_data["thermal"] = (
                     stage_info.get("accumulated_temperature") or 
                     stage_info.get("growing_degree_days") or
                     stage_info.get("gdd_requirements") or
                     stage_info.get("thermal") or
                     {}
                 )
+                
+                temp_data = LLMResponseNormalizer.normalize_temperature_field(normalized_data)
+                temp = TemperatureProfile(**temp_data)
+                
+                sun_data = LLMResponseNormalizer.normalize_sunshine_field(normalized_data)
+                sun = SunshineProfile(**sun_data)
+                
+                thermal_data = LLMResponseNormalizer.normalize_thermal_field(normalized_data)
             else:
                 # Step 2 structure (flat): {"stage_name"/"ステージ名"/"stage": ..., "management_focus": ...}
                 # Or old fallback structure
-                stage_name = self._normalize_stage_name(stage_data)
+                stage_name = LLMResponseNormalizer.normalize_stage_name(stage_data)
                 
                 # Step 2 doesn't have temperature/sunshine/thermal data yet
                 # Use defaults for now (will be populated by Step 3)

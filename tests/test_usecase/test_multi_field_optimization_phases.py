@@ -135,9 +135,12 @@ class TestPhase1Sampling:
                 area_used=25.0,
             ))
         
-        # Generate neighbors with sampling
-        neighbors = interactor._generate_neighbors_sampled(
-            solution, [], [field], [crop], config
+        # Generate neighbors using NeighborGeneratorService (refactored)
+        neighbors = interactor.neighbor_generator.generate_neighbors(
+            solution=solution,
+            candidates=[],
+            fields=[field],
+            crops=[crop],
         )
         
         # Should be limited to max_neighbors_per_iteration

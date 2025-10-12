@@ -11,6 +11,17 @@ from agrr_core.usecase.interactors.multi_field_crop_allocation_greedy_interactor
     MultiFieldCropAllocationGreedyInteractor,
     AllocationCandidate,
 )
+from agrr_core.usecase.dto.optimization_config import OptimizationConfig
+from agrr_core.usecase.services.neighbor_operations import (
+    FieldSwapOperation,
+    FieldMoveOperation,
+    FieldReplaceOperation,
+    FieldRemoveOperation,
+    CropInsertOperation,
+    CropChangeOperation,
+    PeriodReplaceOperation,
+    QuantityAdjustOperation,
+)
 
 
 class TestMultiFieldCropAllocationComplete:
@@ -18,35 +29,39 @@ class TestMultiFieldCropAllocationComplete:
 
     def test_field_operations_complete(self):
         """Test that all Field operations are implemented."""
-        interactor = MultiFieldCropAllocationGreedyInteractor(None, None, None)
+        # Verify operation classes exist (Phase 1 refactoring)
+        field_swap = FieldSwapOperation()
+        field_move = FieldMoveOperation()
+        field_replace = FieldReplaceOperation()
+        field_remove = FieldRemoveOperation()
         
-        # Verify methods exist
-        assert hasattr(interactor, '_field_swap_neighbors')
-        assert hasattr(interactor, '_field_move_neighbors')
-        assert hasattr(interactor, '_field_replace_neighbors')
-        assert hasattr(interactor, '_field_remove_neighbors')
+        # Verify operation names
+        assert field_swap.operation_name == "field_swap"
+        assert field_move.operation_name == "field_move"
+        assert field_replace.operation_name == "field_replace"
+        assert field_remove.operation_name == "field_remove"
 
     def test_crop_operations_complete(self):
         """Test that all Crop operations are implemented."""
-        interactor = MultiFieldCropAllocationGreedyInteractor(None, None, None)
+        # Verify operation classes exist (Phase 1 refactoring)
+        crop_insert = CropInsertOperation()
+        crop_change = CropChangeOperation()
         
-        # Verify methods exist
-        assert hasattr(interactor, '_crop_insert_neighbors')
-        assert hasattr(interactor, '_crop_change_neighbors')
+        # Verify operation names
+        assert crop_insert.operation_name == "crop_insert"
+        assert crop_change.operation_name == "crop_change"
 
     def test_period_operations_complete(self):
         """Test that Period operations use DP results."""
-        interactor = MultiFieldCropAllocationGreedyInteractor(None, None, None)
-        
-        # Verify method exists
-        assert hasattr(interactor, '_period_replace_neighbors')
+        # Verify operation class exists (Phase 1 refactoring)
+        period_replace = PeriodReplaceOperation()
+        assert period_replace.operation_name == "period_replace"
 
     def test_quantity_operations_complete(self):
         """Test that Quantity operations are implemented."""
-        interactor = MultiFieldCropAllocationGreedyInteractor(None, None, None)
-        
-        # Verify method exists
-        assert hasattr(interactor, '_quantity_adjust_neighbors')
+        # Verify operation class exists (Phase 1 refactoring)
+        quantity_adjust = QuantityAdjustOperation()
+        assert quantity_adjust.operation_name == "quantity_adjust"
 
     def test_quantity_adjust_increases_profit(self):
         """Test that quantity adjustment can increase profit."""
@@ -70,10 +85,14 @@ class TestMultiFieldCropAllocationComplete:
         )
         
         solution = [alloc]
-        interactor = MultiFieldCropAllocationGreedyInteractor(None, None, None)
+        
+        # Use QuantityAdjustOperation (Phase 1 refactoring)
+        operation = QuantityAdjustOperation()
+        config = OptimizationConfig()
+        context = {"config": config}
         
         # Generate quantity adjustment neighbors
-        neighbors = interactor._quantity_adjust_neighbors(solution)
+        neighbors = operation.generate_neighbors(solution, context)
         
         # Should generate neighbors with adjusted quantities
         assert len(neighbors) > 0
@@ -144,10 +163,13 @@ class TestMultiFieldCropAllocationComplete:
         
         candidates = [candidate_tomato_a, candidate_rice_b]
         
-        interactor = MultiFieldCropAllocationGreedyInteractor(None, None, None)
+        # Use CropInsertOperation (Phase 1 refactoring)
+        operation = CropInsertOperation()
+        config = OptimizationConfig()
+        context = {"candidates": candidates, "config": config}
         
         # Generate crop insert neighbors
-        neighbors = interactor._crop_insert_neighbors(solution, candidates)
+        neighbors = operation.generate_neighbors(solution, context)
         
         # Should generate neighbors with inserted allocations
         assert len(neighbors) == 2  # Both unused candidates can be inserted
@@ -199,10 +221,12 @@ class TestMultiFieldCropAllocationComplete:
         candidates = [candidate_tomato]
         crops = [rice, tomato]
         
-        interactor = MultiFieldCropAllocationGreedyInteractor(None, None, None)
+        # Use CropChangeOperation (Phase 1 refactoring)
+        operation = CropChangeOperation()
+        context = {"candidates": candidates, "crops": crops}
         
         # Generate crop change neighbors
-        neighbors = interactor._crop_change_neighbors(solution, candidates, crops)
+        neighbors = operation.generate_neighbors(solution, context)
         
         # Should generate neighbor with changed crop
         assert len(neighbors) == 1
@@ -294,10 +318,17 @@ class TestMultiFieldCropAllocationComplete:
         fields = [field_a, field_b]
         crops = [rice, tomato]
         
-        interactor = MultiFieldCropAllocationGreedyInteractor(None, None, None)
+        # Use NeighborGeneratorService (Phase 1 refactoring)
+        config = OptimizationConfig(enable_neighbor_sampling=False)
+        interactor = MultiFieldCropAllocationGreedyInteractor(None, None, None, config=config)
         
-        # Generate all neighbors
-        neighbors = interactor._generate_neighbors(solution, candidates, fields, crops)
+        # Generate all neighbors using NeighborGeneratorService
+        neighbors = interactor.neighbor_generator.generate_neighbors(
+            solution=solution,
+            candidates=candidates,
+            fields=fields,
+            crops=crops,
+        )
         
         # Should generate multiple neighbors from different operations
         assert len(neighbors) > 0

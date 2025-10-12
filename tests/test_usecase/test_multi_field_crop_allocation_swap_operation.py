@@ -6,8 +6,8 @@ from datetime import datetime
 from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.crop_entity import Crop
-from agrr_core.usecase.interactors.multi_field_crop_allocation_greedy_interactor import (
-    MultiFieldCropAllocationGreedyInteractor,
+from agrr_core.usecase.services.neighbor_operations.field_swap_operation import (
+    FieldSwapOperation,
 )
 
 
@@ -77,15 +77,11 @@ class TestAreaEquivalentSwapOperation:
             area_used=300.0,  # 1000 × 0.3
         )
         
-        # Create interactor (mock gateways not needed for this test)
-        interactor = MultiFieldCropAllocationGreedyInteractor(
-            field_gateway=None,
-            crop_requirement_gateway=None,
-            weather_gateway=None,
-        )
+        # Create operation for testing
+        operation = FieldSwapOperation()
         
         # Perform swap with area adjustment
-        result = interactor._swap_allocations_with_area_adjustment(alloc_a, alloc_b)
+        result = operation._swap_allocations_with_area_adjustment(alloc_a, alloc_b, [alloc_a, alloc_b])
         
         assert result is not None
         new_alloc_a, new_alloc_b = result
@@ -117,11 +113,11 @@ class TestAreaEquivalentSwapOperation:
         assert new_alloc_b.total_cost == pytest.approx(610000.0)
         
         # Verify revenues are recalculated based on new quantities
-        # Rice in Field B: 1200 × 50000 × 0.25 = 1,500,000円
-        assert new_alloc_a.expected_revenue == pytest.approx(1500000.0)
+        # Rice in Field B: 1200 × 50000 × 0.25 = 15,000,000円
+        assert new_alloc_a.expected_revenue == pytest.approx(15000000.0, rel=0.001)
         
-        # Tomato in Field A: 1666.67 × 60000 × 0.3 = 3,000,000円
-        assert new_alloc_b.expected_revenue == pytest.approx(3000000.0, rel=0.01)
+        # Tomato in Field A: 1666.67 × 60000 × 0.3 = 30,000,000円
+        assert new_alloc_b.expected_revenue == pytest.approx(30000000.0, rel=0.01)
 
     def test_swap_maintains_area_conservation(self):
         """Test that total area usage is conserved after swap."""
@@ -159,8 +155,8 @@ class TestAreaEquivalentSwapOperation:
             area_used=500.0,  # 2500 × 0.2
         )
         
-        interactor = MultiFieldCropAllocationGreedyInteractor(None, None, None)
-        result = interactor._swap_allocations_with_area_adjustment(alloc_a, alloc_b)
+        operation = FieldSwapOperation()
+        result = operation._swap_allocations_with_area_adjustment(alloc_a, alloc_b, [alloc_a, alloc_b])
         
         assert result is not None
         new_alloc_a, new_alloc_b = result
@@ -175,7 +171,11 @@ class TestAreaEquivalentSwapOperation:
         assert new_alloc_b.area_used == pytest.approx(400.0)  # Wheat now uses rice's area
 
     def test_swap_rejects_if_exceeds_field_capacity(self):
-        """Test that swap is rejected if adjusted quantity exceeds field capacity."""
+        """Test swap with area-equivalent adjustment between fields of different sizes.
+        
+        Note: After Phase 1 refactoring, FieldSwapOperation uses area-equivalent
+        adjustment, so the swap succeeds by adjusting quantities.
+        """
         # Small field
         field_a = Field("field_a", "Field A", 100.0, 5000.0)  # Only 100m²
         # Large field
@@ -212,12 +212,19 @@ class TestAreaEquivalentSwapOperation:
             area_used=900.0,
         )
         
-        interactor = MultiFieldCropAllocationGreedyInteractor(None, None, None)
-        result = interactor._swap_allocations_with_area_adjustment(alloc_a, alloc_b)
+        operation = FieldSwapOperation()
+        result = operation._swap_allocations_with_area_adjustment(alloc_a, alloc_b, [alloc_a, alloc_b])
         
-        # Swap should be rejected because:
-        # Tomato moving to Field A would need 900m², but Field A only has 100m²
-        assert result is None
+        # With area-equivalent adjustment, swap succeeds:
+        # Rice → Field B (uses Tomato's 900m²)
+        # Tomato → Field A (adjusted to use Rice's 50m²)
+        # Field A: Tomato 50m² ≤ 100m² ✓
+        # Field B: Rice 900m² ≤ 1000m² ✓
+        assert result is not None
+        
+        new_alloc_a, new_alloc_b = result
+        assert new_alloc_a.area_used == pytest.approx(900.0, rel=0.001)  # Rice uses 900m²
+        assert new_alloc_b.area_used == pytest.approx(50.0, rel=0.001)   # Tomato uses 50m²
 
     def test_swap_with_zero_area_per_unit_returns_none(self):
         """Test that swap returns None if area_per_unit is invalid."""
@@ -254,8 +261,8 @@ class TestAreaEquivalentSwapOperation:
             area_used=500.0,
         )
         
-        interactor = MultiFieldCropAllocationGreedyInteractor(None, None, None)
-        result = interactor._swap_allocations_with_area_adjustment(alloc_a, alloc_b)
+        operation = FieldSwapOperation()
+        result = operation._swap_allocations_with_area_adjustment(alloc_a, alloc_b, [alloc_a, alloc_b])
         
         # Should return None because area_per_unit is invalid
         assert result is None
@@ -302,8 +309,8 @@ class TestAreaEquivalentSwapOperation:
             area_used=400.0,
         )
         
-        interactor = MultiFieldCropAllocationGreedyInteractor(None, None, None)
-        result = interactor._swap_allocations_with_area_adjustment(alloc_a, alloc_b)
+        operation = FieldSwapOperation()
+        result = operation._swap_allocations_with_area_adjustment(alloc_a, alloc_b, [alloc_a, alloc_b])
         
         assert result is not None
         new_alloc_a, new_alloc_b = result

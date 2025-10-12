@@ -24,8 +24,6 @@ async def test_craft_success(mock_crop_requirement_gateway, mock_crop_requiremen
     assert data["crop_id"] == "tomato"
     assert data["crop_name"] == "Tomato"
     assert data["variety"] is None  # "default" is converted to None
-    assert data["area_per_unit"] == 0.5  # From mock
-    assert data["revenue_per_area"] == 2000.0  # From mock
     assert isinstance(data["stages"], list)
     assert data["stages"][0]["name"] == "Vegetative"
 

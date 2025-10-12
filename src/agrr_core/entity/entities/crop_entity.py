@@ -12,7 +12,7 @@ Fields
 - revenue_per_area: Optional revenue per square meter (e.g., yen/m²)
 - max_revenue: Optional maximum revenue constraint (e.g., yen)
   This represents business constraints such as market demand limits or contract caps.
-  Directly specifying revenue limit is simpler than calculating from quantity constraints.
+  Directly specifying revenue limit is simpler than calculating from area constraints.
 - groups: Optional list of group identifiers (e.g., ["Solanaceae", "fruiting_vegetables"])
   Used for interaction rules such as continuous cultivation constraints and companion planting.
 """

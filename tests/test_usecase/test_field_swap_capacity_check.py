@@ -26,7 +26,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_a",
             field=field_a,
             crop=rice,
-            quantity=2000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 8, 31),
             growth_days=153,
@@ -41,7 +40,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_b",
             field=field_b,
             crop=tomato,
-            quantity=1000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 7, 31),
             growth_days=122,
@@ -86,7 +84,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_a1",
             field=field_a,
             crop=rice,
-            quantity=2000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 6, 30),
             growth_days=91,
@@ -99,7 +96,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_a2",
             field=field_a,
             crop=wheat,
-            quantity=2000.0,
             start_date=datetime(2025, 7, 1),
             completion_date=datetime(2025, 9, 30),
             growth_days=92,
@@ -113,7 +109,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_b1",
             field=field_b,
             crop=tomato,
-            quantity=2000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 7, 31),
             growth_days=122,
@@ -131,23 +126,11 @@ class TestFieldSwapCapacityCheck:
             alloc_a2, alloc_b1, solution
         )
         
-        # With area-equivalent adjustment, swap succeeds:
-        # Wheat moves to Field 2, using Tomato's 600m² space
-        # Tomato moves to Field 1, adjusted to use Wheat's 400m² space
-        # Field 1: Rice 500m² + Tomato 400m² = 900m² ≤ 1000m² ✓
-        # Field 2: Wheat 600m² ≤ 800m² ✓
-        assert result is not None
-        
-        new_alloc_a, new_alloc_b = result
-        
-        # Verify area-equivalent adjustment
-        # Wheat uses Tomato's original area (600m²)
-        assert new_alloc_a.area_used == pytest.approx(600.0, rel=0.001)
-        assert new_alloc_a.field.field_id == "f2"
-        
-        # Tomato is adjusted to use Wheat's original area (400m²)
-        assert new_alloc_b.area_used == pytest.approx(400.0, rel=0.001)
-        assert new_alloc_b.field.field_id == "f1"
+        # Swap FAILS because capacity is exceeded:
+        # Wheat(400m²) → Field 2: 400m² ≤ 800m² ✓ (OK)
+        # Tomato(600m²) → Field 1: Rice 500m² + Tomato 600m² = 1100m² > 1000m² ✗ (exceeds)
+        # Therefore swap returns None
+        assert result is None
 
     def test_swap_succeeds_when_within_capacity(self):
         """Test swap succeeds when total area fits within field capacity."""
@@ -163,7 +146,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_a1",
             field=field_a,
             crop=rice,
-            quantity=2000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 6, 30),
             growth_days=91,
@@ -178,7 +160,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_a2",
             field=field_a,
             crop=wheat,
-            quantity=1500.0,
             start_date=datetime(2025, 7, 1),
             completion_date=datetime(2025, 9, 30),
             growth_days=92,
@@ -194,7 +175,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_b1",
             field=field_b,
             crop=tomato,
-            quantity=1333.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 7, 31),
             growth_days=122,
@@ -221,17 +201,13 @@ class TestFieldSwapCapacityCheck:
         
         new_alloc_a, new_alloc_b = result
         
-        # Verify area usage
-        # Wheat going to Field 2 (using Tomato's 400m²)
-        # new_quantity = 400m² / 0.2m²/unit = 2000 units
-        assert new_alloc_a.quantity == pytest.approx(2000.0, rel=0.001)  # Allow 0.1% floating point tolerance
-        assert new_alloc_a.area_used == pytest.approx(400.0, rel=0.001)
+        # Verify area usage (areas are preserved in swap)
+        # Wheat going to Field 2 (keeps its 300m²)
+        assert new_alloc_a.area_used == pytest.approx(300.0, rel=0.001)
         assert new_alloc_a.field.field_id == "f2"
         
-        # Tomato going to Field 1 (using Wheat's 300m²)
-        # new_quantity = 300m² / 0.3m²/unit = 1000 units
-        assert new_alloc_b.quantity == pytest.approx(1000.0)
-        assert new_alloc_b.area_used == pytest.approx(300.0)
+        # Tomato going to Field 1 (keeps its 400m²)
+        assert new_alloc_b.area_used == pytest.approx(400.0, rel=0.001)
         assert new_alloc_b.field.field_id == "f1"
 
     def test_swap_with_tight_capacity(self):
@@ -248,7 +224,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_a1",
             field=field_a,
             crop=rice,
-            quantity=2000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 6, 30),
             growth_days=91,
@@ -261,7 +236,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_a2",
             field=field_a,
             crop=wheat,
-            quantity=2000.0,
             start_date=datetime(2025, 7, 1),
             completion_date=datetime(2025, 9, 30),
             growth_days=92,
@@ -275,7 +249,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_b1",
             field=field_b,
             crop=tomato,
-            quantity=500.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 7, 31),
             growth_days=122,
@@ -313,7 +286,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_a1",
             field=field_a,
             crop=rice,
-            quantity=2000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 6, 30),
             growth_days=91,
@@ -326,7 +298,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_a2",
             field=field_a,
             crop=wheat,
-            quantity=2000.0,
             start_date=datetime(2025, 7, 1),
             completion_date=datetime(2025, 9, 30),
             growth_days=92,
@@ -340,7 +311,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_b1",
             field=field_b,
             crop=tomato,
-            quantity=666.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 7, 31),
             growth_days=122,
@@ -379,7 +349,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_a1",
             field=field_a,
             crop=rice,
-            quantity=2000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 6, 30),
             growth_days=91,
@@ -392,7 +361,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_a2",
             field=field_a,
             crop=wheat,
-            quantity=2000.0,
             start_date=datetime(2025, 7, 1),
             completion_date=datetime(2025, 9, 30),
             growth_days=92,
@@ -406,7 +374,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_b1",
             field=field_b,
             crop=tomato,
-            quantity=2000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 7, 31),
             growth_days=122,
@@ -424,16 +391,11 @@ class TestFieldSwapCapacityCheck:
             alloc_a2, alloc_b1, solution
         )
         
-        # With area-equivalent adjustment, swap succeeds:
-        # Wheat → Field 2 (uses Tomato's 600m²)
-        # Tomato → Field 1 (adjusted to use Wheat's 400m²)
-        # Field 1: Rice 500m² + Tomato 400m² = 900m² ≤ 1000m² ✓
-        # Field 2: Wheat 600m² ≤ 800m² ✓
-        assert result is not None  # Swap succeeds with area adjustment
-        
-        new_alloc_a, new_alloc_b = result
-        assert new_alloc_a.area_used == pytest.approx(600.0, rel=0.001)
-        assert new_alloc_b.area_used == pytest.approx(400.0, rel=0.001)
+        # Swap FAILS because capacity is exceeded (new implementation keeps area):
+        # Wheat 400m² → Field 2: 400m² ≤ 800m² ✓
+        # Tomato 600m² → Field 1: Rice 500m² + Tomato 600m² = 1100m² > 1000m² ✗
+        # Field 1 capacity exceeded, so swap returns None
+        assert result is None  # Swap fails due to capacity exceeded
 
     def test_swap_both_fields_have_multiple_allocations(self):
         """Test swap when both fields have multiple allocations."""
@@ -450,7 +412,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_a1",
             field=field_a,
             crop=rice,
-            quantity=2000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 6, 30),
             growth_days=91,
@@ -463,7 +424,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_a2",
             field=field_a,
             crop=wheat,
-            quantity=1500.0,
             start_date=datetime(2025, 7, 1),
             completion_date=datetime(2025, 9, 30),
             growth_days=92,
@@ -477,7 +437,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_b1",
             field=field_b,
             crop=tomato,
-            quantity=1000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 7, 31),
             growth_days=122,
@@ -490,7 +449,6 @@ class TestFieldSwapCapacityCheck:
             allocation_id="alloc_b2",
             field=field_b,
             crop=lettuce,
-            quantity=1333.0,
             start_date=datetime(2025, 8, 1),
             completion_date=datetime(2025, 10, 31),
             growth_days=92,

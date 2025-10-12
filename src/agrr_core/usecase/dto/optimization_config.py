@@ -14,10 +14,14 @@ class OptimizationConfig:
     
     # ===== Candidate Generation =====
     
-    quantity_levels: List[float] = field(
+    area_levels: List[float] = field(
         default_factory=lambda: [1.0, 0.75, 0.5, 0.25]
     )
-    """Quantity levels to generate candidates at (as fraction of max quantity)."""
+    """Area levels to generate candidates at (as fraction of field area).
+    
+    Values represent area fraction (0.0-1.0) of field.area to allocate.
+    Example: [1.0, 0.75, 0.5, 0.25] generates candidates using 100%, 75%, 50%, 25% of field area.
+    """
     
     top_period_candidates: int = 3
     """Number of top period candidates to use from DP results."""
@@ -61,12 +65,16 @@ class OptimizationConfig:
     improvement_threshold_ratio: float = 0.001
     """Relative improvement threshold for early stopping (0.1%)."""
     
-    # ===== Quantity Adjustment =====
+    # ===== Area Adjustment =====
     
-    quantity_adjustment_multipliers: List[float] = field(
+    area_adjustment_multipliers: List[float] = field(
         default_factory=lambda: [0.8, 0.9, 1.1, 1.2]
     )
-    """Multipliers for quantity adjustment operations (±10%, ±20%)."""
+    """Multipliers for area adjustment operations (±10%, ±20%).
+    
+    Values multiply the current area_used to generate neighbor solutions.
+    Example: [0.8, 0.9, 1.1, 1.2] tries -20%, -10%, +10%, +20% adjustments.
+    """
     
     # ===== Operation Weights =====
     
@@ -78,7 +86,7 @@ class OptimizationConfig:
         'crop_insert': 0.2,
         'crop_change': 0.1,
         'period_replace': 0.1,
-        'quantity_adjust': 0.1,
+        'area_adjust': 0.1,
     })
     """Weights for different neighborhood operations (for prioritized sampling)."""
     
@@ -102,7 +110,7 @@ class OptimizationConfig:
             - Quality: -5% compared to default
         """
         return cls(
-            quantity_levels=[1.0, 0.5],
+            area_levels=[1.0, 0.5],
             top_period_candidates=2,
             max_local_search_iterations=50,
             max_no_improvement=10,
@@ -119,7 +127,7 @@ class OptimizationConfig:
             - Quality: +2-3% compared to default
         """
         return cls(
-            quantity_levels=[1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25],
+            area_levels=[1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25],
             top_period_candidates=5,
             max_local_search_iterations=200,
             max_no_improvement=30,

@@ -16,7 +16,7 @@ from agrr_core.usecase.services.neighbor_operations import (
     CropInsertOperation,
     CropChangeOperation,
     PeriodReplaceOperation,
-    QuantityAdjustOperation,
+    AreaAdjustOperation,
 )
 
 
@@ -61,7 +61,7 @@ class NeighborGeneratorService:
             CropInsertOperation(),
             CropChangeOperation(),
             PeriodReplaceOperation(),
-            QuantityAdjustOperation(),
+            AreaAdjustOperation(),
         ]
     
     def generate_neighbors(

@@ -50,7 +50,6 @@ class TestAreaEquivalentSwapOperation:
             allocation_id="alloc_a",
             field=field_a,
             crop=rice,
-            quantity=2000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 8, 31),
             growth_days=153,
@@ -66,7 +65,6 @@ class TestAreaEquivalentSwapOperation:
             allocation_id="alloc_b",
             field=field_b,
             crop=tomato,
-            quantity=1000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 7, 31),
             growth_days=122,
@@ -94,16 +92,12 @@ class TestAreaEquivalentSwapOperation:
         assert new_alloc_a.crop.crop_id == "rice"
         assert new_alloc_b.crop.crop_id == "tomato"
         
-        # Verify area-equivalent quantity adjustment
-        # Rice in Field B: should use 300m² (tomato's original area)
-        # new_quantity = 300m² / 0.25m²/plant = 1200 plants
-        assert new_alloc_a.quantity == pytest.approx(1200.0)
-        assert new_alloc_a.area_used == pytest.approx(300.0)
+        # Verify areas are preserved in swap (new implementation)
+        # Rice in Field B: keeps its 500m²
+        assert new_alloc_a.area_used == pytest.approx(500.0)
         
-        # Tomato in Field A: should use 500m² (rice's original area)
-        # new_quantity = 500m² / 0.3m²/plant ≈ 1666.67 plants
-        assert new_alloc_b.quantity == pytest.approx(1666.67, rel=0.01)
-        assert new_alloc_b.area_used == pytest.approx(500.0)
+        # Tomato in Field A: keeps its 300m²
+        assert new_alloc_b.area_used == pytest.approx(300.0)
         
         # Verify costs are recalculated based on new field's daily_fixed_cost
         # Rice in Field B: 153 days × 6000円/day = 918,000円
@@ -112,12 +106,12 @@ class TestAreaEquivalentSwapOperation:
         # Tomato in Field A: 122 days × 5000円/day = 610,000円
         assert new_alloc_b.total_cost == pytest.approx(610000.0)
         
-        # Verify revenues are recalculated based on new quantities
-        # Rice in Field B: 1200 × 50000 × 0.25 = 15,000,000円
-        assert new_alloc_a.expected_revenue == pytest.approx(15000000.0, rel=0.001)
+        # Verify revenues are recalculated based on area_used
+        # Rice in Field B: 500m² × 50000円/m² = 25,000,000円
+        assert new_alloc_a.expected_revenue == pytest.approx(25000000.0, rel=0.001)
         
-        # Tomato in Field A: 1666.67 × 60000 × 0.3 = 30,000,000円
-        assert new_alloc_b.expected_revenue == pytest.approx(30000000.0, rel=0.01)
+        # Tomato in Field A: 300m² × 60000円/m² = 18,000,000円
+        assert new_alloc_b.expected_revenue == pytest.approx(18000000.0, rel=0.01)
 
     def test_swap_maintains_area_conservation(self):
         """Test that total area usage is conserved after swap."""
@@ -132,7 +126,6 @@ class TestAreaEquivalentSwapOperation:
             allocation_id="alloc_a",
             field=field_a,
             crop=rice,
-            quantity=1600.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 8, 31),
             growth_days=153,
@@ -146,7 +139,6 @@ class TestAreaEquivalentSwapOperation:
             allocation_id="alloc_b",
             field=field_b,
             crop=wheat,
-            quantity=2500.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 8, 31),
             growth_days=150,
@@ -166,9 +158,9 @@ class TestAreaEquivalentSwapOperation:
         total_area_after = new_alloc_a.area_used + new_alloc_b.area_used
         assert total_area_after == pytest.approx(900.0)
         
-        # Individual areas are swapped
-        assert new_alloc_a.area_used == pytest.approx(500.0)  # Rice now uses wheat's area
-        assert new_alloc_b.area_used == pytest.approx(400.0)  # Wheat now uses rice's area
+        # Individual areas are preserved (new implementation)
+        assert new_alloc_a.area_used == pytest.approx(400.0)  # Rice keeps its 400m²
+        assert new_alloc_b.area_used == pytest.approx(500.0)  # Wheat keeps its 500m²
 
     def test_swap_rejects_if_exceeds_field_capacity(self):
         """Test swap with area-equivalent adjustment between fields of different sizes.
@@ -189,7 +181,6 @@ class TestAreaEquivalentSwapOperation:
             allocation_id="alloc_a",
             field=field_a,
             crop=rice,
-            quantity=200.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 8, 31),
             growth_days=153,
@@ -203,7 +194,6 @@ class TestAreaEquivalentSwapOperation:
             allocation_id="alloc_b",
             field=field_b,
             crop=tomato,
-            quantity=3000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 7, 31),
             growth_days=122,
@@ -215,44 +205,37 @@ class TestAreaEquivalentSwapOperation:
         operation = FieldSwapOperation()
         result = operation._swap_allocations_with_area_adjustment(alloc_a, alloc_b, [alloc_a, alloc_b])
         
-        # With area-equivalent adjustment, swap succeeds:
-        # Rice → Field B (uses Tomato's 900m²)
-        # Tomato → Field A (adjusted to use Rice's 50m²)
-        # Field A: Tomato 50m² ≤ 100m² ✓
-        # Field B: Rice 900m² ≤ 1000m² ✓
-        assert result is not None
-        
-        new_alloc_a, new_alloc_b = result
-        assert new_alloc_a.area_used == pytest.approx(900.0, rel=0.001)  # Rice uses 900m²
-        assert new_alloc_b.area_used == pytest.approx(50.0, rel=0.001)   # Tomato uses 50m²
+        # With area preservation (new implementation), swap FAILS:
+        # Rice 50m² → Field B: 50m² ≤ 1000m² ✓
+        # Tomato 900m² → Field A: 900m² > 100m² ✗ (exceeds capacity)
+        # Therefore swap returns None
+        assert result is None
 
     def test_swap_with_zero_area_per_unit_returns_none(self):
-        """Test that swap returns None if area_per_unit is invalid."""
+        """Test that swap works with area_used (new implementation ignores area_per_unit)."""
         field_a = Field("field_a", "Field A", 1000.0, 5000.0)
         field_b = Field("field_b", "Field B", 1000.0, 6000.0)
         
-        # Invalid crop with zero area_per_unit
-        invalid_crop = Crop("invalid", "Invalid", 0.0)
-        valid_crop = Crop("rice", "Rice", 0.25)
+        # Crop with zero area_per_unit (no longer affects swap)
+        crop_a = Crop("crop_a", "Crop A", 0.0)
+        crop_b = Crop("crop_b", "Crop B", 0.25)
         
         alloc_a = CropAllocation(
             allocation_id="alloc_a",
             field=field_a,
-            crop=invalid_crop,
-            quantity=1000.0,
+            crop=crop_a,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 8, 31),
             growth_days=153,
             accumulated_gdd=1800.0,
             total_cost=765000.0,
-            area_used=0.0,
+            area_used=100.0,  # Changed from 0.0 to valid value
         )
         
         alloc_b = CropAllocation(
             allocation_id="alloc_b",
             field=field_b,
-            crop=valid_crop,
-            quantity=2000.0,
+            crop=crop_b,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 8, 31),
             growth_days=153,
@@ -264,8 +247,12 @@ class TestAreaEquivalentSwapOperation:
         operation = FieldSwapOperation()
         result = operation._swap_allocations_with_area_adjustment(alloc_a, alloc_b, [alloc_a, alloc_b])
         
-        # Should return None because area_per_unit is invalid
-        assert result is None
+        # New implementation: swap succeeds because it only uses area_used (ignores area_per_unit)
+        assert result is not None
+        new_alloc_a, new_alloc_b = result
+        # Areas are preserved
+        assert new_alloc_a.area_used == pytest.approx(100.0)
+        assert new_alloc_b.area_used == pytest.approx(500.0)
 
     def test_swap_formula_verification(self):
         """Verify the swap quantity formula with explicit calculations."""
@@ -282,7 +269,6 @@ class TestAreaEquivalentSwapOperation:
             allocation_id="alloc_a",
             field=field_a,
             crop=crop_a,
-            quantity=1000.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 8, 31),
             growth_days=100,
@@ -298,7 +284,6 @@ class TestAreaEquivalentSwapOperation:
             allocation_id="alloc_b",
             field=field_b,
             crop=crop_b,
-            quantity=800.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 8, 31),
             growth_days=100,
@@ -318,14 +303,10 @@ class TestAreaEquivalentSwapOperation:
         # Formula: new_quantity = original_area / new_crop.area_per_unit
         
         # Crop A moving to Field B (using 400m² from crop B)
-        # Expected: 400m² / 0.4m²/unit = 1000 units
-        assert new_alloc_a.quantity == pytest.approx(1000.0)
-        assert new_alloc_a.area_used == pytest.approx(400.0)
+        # Expected: 400m² / 0.4m²/unit = 1000 units        assert new_alloc_a.area_used == pytest.approx(400.0)
         
         # Crop B moving to Field A (using 400m² from crop A)
-        # Expected: 400m² / 0.5m²/unit = 800 units
-        assert new_alloc_b.quantity == pytest.approx(800.0)
-        assert new_alloc_b.area_used == pytest.approx(400.0)
+        # Expected: 400m² / 0.5m²/unit = 800 units        assert new_alloc_b.area_used == pytest.approx(400.0)
         
         # In this case, quantities remain the same because areas were equal
         # This verifies the formula works correctly

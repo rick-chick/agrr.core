@@ -29,8 +29,8 @@ from agrr_core.usecase.services.neighbor_operations.crop_change_operation import
 from agrr_core.usecase.services.neighbor_operations.period_replace_operation import (
     PeriodReplaceOperation,
 )
-from agrr_core.usecase.services.neighbor_operations.quantity_adjust_operation import (
-    QuantityAdjustOperation,
+from agrr_core.usecase.services.neighbor_operations.area_adjust_operation import (
+    AreaAdjustOperation,
 )
 
 __all__ = [
@@ -42,6 +42,6 @@ __all__ = [
     "CropInsertOperation",
     "CropChangeOperation",
     "PeriodReplaceOperation",
-    "QuantityAdjustOperation",
+    "AreaAdjustOperation",
 ]
 

@@ -49,7 +49,6 @@ class TestBuild:
             allocation_id="alloc1",
             field=field,
             crop=crop,
-            quantity=2000.0,
             start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 8, 31),
             growth_days=150,
@@ -70,7 +69,7 @@ class TestBuild:
         assert result.total_cost == 750000.0
         assert result.total_revenue == 5000000.0
         assert result.total_profit == 4250000.0
-        assert result.crop_quantities["rice"] == 2000.0
+        assert result.crop_areas["rice"] == 500.0
         assert result.optimization_time == 10.5
         assert result.algorithm_used == "Greedy + Local Search"
         
@@ -93,7 +92,6 @@ class TestBuild:
             allocation_id="alloc1",
             field=field,
             crop=rice,
-            quantity=1000.0,
             start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 7, 31),
             growth_days=120,
@@ -108,7 +106,6 @@ class TestBuild:
             allocation_id="alloc2",
             field=field,
             crop=wheat,
-            quantity=1666.0,
             start_date=datetime(2024, 8, 1),
             completion_date=datetime(2024, 11, 30),
             growth_days=120,
@@ -129,8 +126,8 @@ class TestBuild:
         assert result.total_cost == 1200000.0
         assert result.total_revenue == 6500000.0
         assert result.total_profit == 5300000.0
-        assert result.crop_quantities["rice"] == 1000.0
-        assert result.crop_quantities["wheat"] == 1666.0
+        assert result.crop_areas["rice"] == 250.0
+        assert result.crop_areas["wheat"] == 500.0
         
         # Check field schedule
         schedule = result.field_schedules[0]
@@ -150,7 +147,6 @@ class TestBuild:
             allocation_id="alloc1",
             field=field1,
             crop=crop,
-            quantity=2000.0,
             start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 8, 31),
             growth_days=150,
@@ -165,7 +161,6 @@ class TestBuild:
             allocation_id="alloc2",
             field=field2,
             crop=crop,
-            quantity=1600.0,
             start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 8, 31),
             growth_days=150,
@@ -187,7 +182,7 @@ class TestBuild:
         assert result.total_cost == 1425000.0
         assert result.total_revenue == 9000000.0
         assert result.total_profit == 7575000.0
-        assert result.crop_quantities["rice"] == 3600.0
+        assert result.crop_areas["rice"] == 900.0
         
         # Field schedules
         assert len(result.field_schedules) == 2
@@ -215,7 +210,6 @@ class TestBuild:
             allocation_id="alloc1",
             field=field,
             crop=crop,
-            quantity=2000.0,
             start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 8, 31),
             growth_days=150,
@@ -253,7 +247,6 @@ class TestGroupByField:
             allocation_id="alloc1",
             field=field,
             crop=crop,
-            quantity=1000.0,
             start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 6, 30),
             growth_days=90,
@@ -268,7 +261,6 @@ class TestGroupByField:
             allocation_id="alloc2",
             field=field,
             crop=crop,
-            quantity=1000.0,
             start_date=datetime(2024, 7, 1),
             completion_date=datetime(2024, 9, 30),
             growth_days=90,
@@ -296,7 +288,6 @@ class TestGroupByField:
             allocation_id="alloc1",
             field=field1,
             crop=crop,
-            quantity=1000.0,
             start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 6, 30),
             growth_days=90,
@@ -311,7 +302,6 @@ class TestGroupByField:
             allocation_id="alloc2",
             field=field2,
             crop=crop,
-            quantity=800.0,
             start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 6, 30),
             growth_days=90,
@@ -341,7 +331,6 @@ class TestGroupByField:
             allocation_id="alloc1",
             field=field1,
             crop=crop,
-            quantity=1000.0,
             start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 6, 30),
             growth_days=90,
@@ -375,7 +364,6 @@ class TestCalculateFieldMetrics:
             allocation_id="alloc1",
             field=field,
             crop=crop,
-            quantity=2000.0,
             start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 8, 31),
             growth_days=150,
@@ -405,7 +393,6 @@ class TestCalculateFieldMetrics:
             allocation_id="alloc1",
             field=field,
             crop=crop,
-            quantity=1000.0,
             start_date=datetime(2024, 1, 1),
             completion_date=datetime(2024, 3, 31),
             growth_days=90,
@@ -420,7 +407,6 @@ class TestCalculateFieldMetrics:
             allocation_id="alloc2",
             field=field,
             crop=crop,
-            quantity=2000.0,
             start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 6, 30),
             growth_days=90,
@@ -456,7 +442,6 @@ class TestAggregateMetrics:
             allocation_id="alloc1",
             field=field,
             crop=rice,
-            quantity=1000.0,
             start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 7, 31),
             growth_days=120,
@@ -471,7 +456,6 @@ class TestAggregateMetrics:
             allocation_id="alloc2",
             field=field,
             crop=wheat,
-            quantity=1666.0,
             start_date=datetime(2024, 8, 1),
             completion_date=datetime(2024, 11, 30),
             growth_days=120,
@@ -486,7 +470,7 @@ class TestAggregateMetrics:
             'total_cost': 0.0,
             'total_revenue': 0.0,
             'total_profit': 0.0,
-            'crop_quantities': {},
+            'crop_areas': {},
         }
         
         field_metrics = {
@@ -502,6 +486,6 @@ class TestAggregateMetrics:
         assert global_metrics['total_cost'] == 1140000.0
         assert global_metrics['total_revenue'] == 6500000.0
         assert global_metrics['total_profit'] == 5360000.0
-        assert global_metrics['crop_quantities']['rice'] == 1000.0
-        assert global_metrics['crop_quantities']['wheat'] == 1666.0
+        assert global_metrics['crop_areas']['rice'] == 250.0
+        assert global_metrics['crop_areas']['wheat'] == 500.0
 

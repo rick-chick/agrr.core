@@ -19,8 +19,7 @@ class MockCandidate:
     """Mock candidate for testing."""
     growth_days: int
     daily_fixed_cost: float
-    quantity: Optional[float] = None
-    area_per_unit: Optional[float] = None
+    area_used: Optional[float] = None
     revenue_per_area: Optional[float] = None
     
     def get_metrics(self) -> OptimizationMetrics:
@@ -28,8 +27,7 @@ class MockCandidate:
         return OptimizationMetrics(
             growth_days=self.growth_days,
             daily_fixed_cost=self.daily_fixed_cost,
-            quantity=self.quantity,
-            area_per_unit=self.area_per_unit,
+            area_used=self.area_used,
             revenue_per_area=self.revenue_per_area,
         )
 
@@ -59,9 +57,9 @@ class TestBaseOptimizer:
         """select_best maximizes profit when revenue is present."""
         optimizer = MockOptimizer()
         candidates = [
-            MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=10, area_per_unit=2, revenue_per_area=10),  # cost=100, revenue=200, profit=100
-            MockCandidate(growth_days=8, daily_fixed_cost=10, quantity=11, area_per_unit=2, revenue_per_area=10),   # cost=80, revenue=220, profit=140 ← best
-            MockCandidate(growth_days=12, daily_fixed_cost=10, quantity=9, area_per_unit=2, revenue_per_area=10),   # cost=120, revenue=180, profit=60
+            MockCandidate(growth_days=10, daily_fixed_cost=10, area_used=20, revenue_per_area=10),  # cost=100, revenue=200, profit=100
+            MockCandidate(growth_days=8, daily_fixed_cost=10, area_used=22, revenue_per_area=10),   # cost=80, revenue=220, profit=140 ← best
+            MockCandidate(growth_days=12, daily_fixed_cost=10, area_used=18, revenue_per_area=10),  # cost=120, revenue=180, profit=60
         ]
         
         best = optimizer.select_best(candidates)
@@ -92,7 +90,7 @@ class TestBaseOptimizer:
     def test_calculate_value(self):
         """calculate_value returns profit."""
         optimizer = MockOptimizer()
-        candidate = MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=10, area_per_unit=2, revenue_per_area=10)
+        candidate = MockCandidate(growth_days=10, daily_fixed_cost=10, area_used=20, revenue_per_area=10)
         
         value = optimizer.calculate_value(candidate)
         
@@ -101,8 +99,8 @@ class TestBaseOptimizer:
     def test_compare_candidates(self):
         """compare_candidates compares two candidates."""
         optimizer = MockOptimizer()
-        candidate1 = MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=15, area_per_unit=2, revenue_per_area=10)  # cost=100, revenue=300, profit=200
-        candidate2 = MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=12.5, area_per_unit=2, revenue_per_area=10)  # cost=100, revenue=250, profit=150
+        candidate1 = MockCandidate(growth_days=10, daily_fixed_cost=10, area_used=30, revenue_per_area=10)  # cost=100, revenue=300, profit=200
+        candidate2 = MockCandidate(growth_days=10, daily_fixed_cost=10, area_used=25, revenue_per_area=10)  # cost=100, revenue=250, profit=150
         
         result = optimizer.compare_candidates(candidate1, candidate2)
         
@@ -112,9 +110,9 @@ class TestBaseOptimizer:
         """sort_candidates sorts by profit."""
         optimizer = MockOptimizer()
         candidates = [
-            MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=10, area_per_unit=2, revenue_per_area=10),  # cost=100, revenue=200, profit=100
-            MockCandidate(growth_days=8, daily_fixed_cost=10, quantity=11, area_per_unit=2, revenue_per_area=10),   # cost=80, revenue=220, profit=140
-            MockCandidate(growth_days=12, daily_fixed_cost=10, quantity=9, area_per_unit=2, revenue_per_area=10),   # cost=120, revenue=180, profit=60
+            MockCandidate(growth_days=10, daily_fixed_cost=10, area_used=20, revenue_per_area=10),  # cost=100, revenue=200, profit=100
+            MockCandidate(growth_days=8, daily_fixed_cost=10, area_used=22, revenue_per_area=10),   # cost=80, revenue=220, profit=140
+            MockCandidate(growth_days=12, daily_fixed_cost=10, area_used=18, revenue_per_area=10),  # cost=120, revenue=180, profit=60
         ]
         
         sorted_candidates = optimizer.sort_candidates(candidates)
@@ -128,9 +126,9 @@ class TestBaseOptimizer:
         """sort_candidates can sort in ascending order."""
         optimizer = MockOptimizer()
         candidates = [
-            MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=10, area_per_unit=2, revenue_per_area=10),  # cost=100, revenue=200, profit=100
-            MockCandidate(growth_days=8, daily_fixed_cost=10, quantity=11, area_per_unit=2, revenue_per_area=10),   # cost=80, revenue=220, profit=140
-            MockCandidate(growth_days=12, daily_fixed_cost=10, quantity=9, area_per_unit=2, revenue_per_area=10),   # cost=120, revenue=180, profit=60
+            MockCandidate(growth_days=10, daily_fixed_cost=10, area_used=20, revenue_per_area=10),  # cost=100, revenue=200, profit=100
+            MockCandidate(growth_days=8, daily_fixed_cost=10, area_used=22, revenue_per_area=10),   # cost=80, revenue=220, profit=140
+            MockCandidate(growth_days=12, daily_fixed_cost=10, area_used=18, revenue_per_area=10),  # cost=120, revenue=180, profit=60
         ]
         
         sorted_candidates = optimizer.sort_candidates(candidates, reverse=False)
@@ -156,7 +154,7 @@ class TestBaseOptimizerConsistency:
         """calculate_value produces same result for same candidate."""
         optimizer1 = MockOptimizer()
         optimizer2 = MockOptimizer()
-        candidate = MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=10, area_per_unit=2, revenue_per_area=10)
+        candidate = MockCandidate(growth_days=10, daily_fixed_cost=10, area_used=20, revenue_per_area=10)
         
         value1 = optimizer1.calculate_value(candidate)
         value2 = optimizer2.calculate_value(candidate)
@@ -168,9 +166,9 @@ class TestBaseOptimizerConsistency:
         optimizer1 = MockOptimizer()
         optimizer2 = MockOptimizer()
         candidates = [
-            MockCandidate(growth_days=10, daily_fixed_cost=10, quantity=10, area_per_unit=2, revenue_per_area=10),
-            MockCandidate(growth_days=8, daily_fixed_cost=10, quantity=11, area_per_unit=2, revenue_per_area=10),
-            MockCandidate(growth_days=12, daily_fixed_cost=10, quantity=9, area_per_unit=2, revenue_per_area=10),
+            MockCandidate(growth_days=10, daily_fixed_cost=10, area_used=20, revenue_per_area=10),
+            MockCandidate(growth_days=8, daily_fixed_cost=10, area_used=22, revenue_per_area=10),
+            MockCandidate(growth_days=12, daily_fixed_cost=10, area_used=18, revenue_per_area=10),
         ]
         
         best1 = optimizer1.select_best(candidates)

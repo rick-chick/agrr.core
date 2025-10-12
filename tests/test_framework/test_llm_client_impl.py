@@ -19,6 +19,7 @@ class TestFrameworkLLMClient:
         assert isinstance(self.client, FrameworkLLMClient)
     
     @pytest.mark.asyncio
+    @pytest.mark.e2e
     async def test_struct_with_openai(self):
         """Test struct method with OpenAI API (requires OPENAI_API_KEY)."""
         structure = {"name": None, "value": None}

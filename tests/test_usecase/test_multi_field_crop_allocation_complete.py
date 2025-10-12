@@ -20,7 +20,7 @@ from agrr_core.usecase.services.neighbor_operations import (
     CropInsertOperation,
     CropChangeOperation,
     PeriodReplaceOperation,
-    QuantityAdjustOperation,
+    AreaAdjustOperation,
 )
 
 
@@ -57,14 +57,14 @@ class TestMultiFieldCropAllocationComplete:
         period_replace = PeriodReplaceOperation()
         assert period_replace.operation_name == "period_replace"
 
-    def test_quantity_operations_complete(self):
-        """Test that Quantity operations are implemented."""
-        # Verify operation class exists (Phase 1 refactoring)
-        quantity_adjust = QuantityAdjustOperation()
-        assert quantity_adjust.operation_name == "quantity_adjust"
+    def test_area_operations_complete(self):
+        """Test that Area operations are implemented."""
+        # Verify operation class exists
+        area_adjust = AreaAdjustOperation()
+        assert area_adjust.operation_name == "area_adjust"
 
-    def test_quantity_adjust_increases_profit(self):
-        """Test that quantity adjustment can increase profit."""
+    def test_area_adjust_increases_profit(self):
+        """Test that area adjustment can increase profit."""
         field = Field("f1", "Field 1", 1000.0, 5000.0)
         rice = Crop("rice", "Rice", 0.25, revenue_per_area=50000.0)
         
@@ -73,36 +73,35 @@ class TestMultiFieldCropAllocationComplete:
             allocation_id="alloc_1",
             field=field,
             crop=rice,
-            quantity=2000.0,  # 50% capacity
+            area_used=500.0,  # 50% of field area
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 8, 31),
             growth_days=153,
             accumulated_gdd=1800.0,
             total_cost=765000.0,  # Fixed cost
-            expected_revenue=2500000.0,  # 2000 × 50000 × 0.25
-            profit=1735000.0,
-            area_used=500.0,
+            expected_revenue=25000000.0,  # 500 × 50000
+            profit=24235000.0,
         )
         
         solution = [alloc]
         
-        # Use QuantityAdjustOperation (Phase 1 refactoring)
-        operation = QuantityAdjustOperation()
+        # Use AreaAdjustOperation
+        operation = AreaAdjustOperation()
         config = OptimizationConfig()
         context = {"config": config}
         
-        # Generate quantity adjustment neighbors
+        # Generate area adjustment neighbors
         neighbors = operation.generate_neighbors(solution, context)
         
-        # Should generate neighbors with adjusted quantities
+        # Should generate neighbors with adjusted areas
         assert len(neighbors) > 0
         
-        # Check that some neighbors have increased quantity
-        increased_qty_neighbors = [
+        # Check that some neighbors have increased area
+        increased_area_neighbors = [
             n for n in neighbors 
-            if n[0].quantity > alloc.quantity
+            if n[0].area_used > alloc.area_used
         ]
-        assert len(increased_qty_neighbors) > 0
+        assert len(increased_area_neighbors) > 0
 
     def test_crop_insert_adds_new_allocation(self):
         """Test that crop insert adds new allocations."""
@@ -117,15 +116,14 @@ class TestMultiFieldCropAllocationComplete:
             allocation_id="alloc_1",
             field=field_a,
             crop=rice,
-            quantity=2000.0,
+            area_used=500.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 8, 31),
             growth_days=153,
             accumulated_gdd=1800.0,
             total_cost=765000.0,
-            expected_revenue=2500000.0,
-            profit=1735000.0,
-            area_used=500.0,
+            expected_revenue=25000000.0,  # 500 × 50000
+            profit=24235000.0,
         )
         
         solution = [alloc_current]
@@ -138,7 +136,6 @@ class TestMultiFieldCropAllocationComplete:
             completion_date=datetime(2025, 12, 31),
             growth_days=122,
             accumulated_gdd=1500.0,
-            quantity=1666.0,
             area_used=500.0,
         )
         
@@ -149,7 +146,6 @@ class TestMultiFieldCropAllocationComplete:
             completion_date=datetime(2025, 8, 31),
             growth_days=153,
             accumulated_gdd=1800.0,
-            quantity=4000.0,
             area_used=1000.0,
         )
         
@@ -181,15 +177,14 @@ class TestMultiFieldCropAllocationComplete:
             allocation_id="alloc_1",
             field=field,
             crop=rice,
-            quantity=2000.0,
+            area_used=500.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 8, 31),
             growth_days=153,
             accumulated_gdd=1800.0,
             total_cost=765000.0,
-            expected_revenue=2500000.0,
-            profit=1735000.0,
-            area_used=500.0,  # 2000 × 0.25
+            expected_revenue=25000000.0,  # 500 × 50000
+            profit=24235000.0,
         )
         
         solution = [alloc]
@@ -202,7 +197,6 @@ class TestMultiFieldCropAllocationComplete:
             completion_date=datetime(2025, 7, 31),
             growth_days=122,
             accumulated_gdd=1500.0,
-            quantity=3333.0,  # Max quantity
             area_used=1000.0,
         )
         
@@ -226,10 +220,6 @@ class TestMultiFieldCropAllocationComplete:
         
         # Area should be maintained (500m²)
         assert new_alloc.area_used == pytest.approx(500.0, rel=0.01)
-        
-        # Quantity should be adjusted for area equivalence
-        # 500m² / 0.3m²/unit = 1666.67 units
-        assert new_alloc.quantity == pytest.approx(1666.67, rel=0.01)
 
     def test_all_operations_generate_valid_neighbors(self):
         """Test that all operations generate valid neighbor solutions."""
@@ -244,15 +234,14 @@ class TestMultiFieldCropAllocationComplete:
             allocation_id="alloc_a",
             field=field_a,
             crop=rice,
-            quantity=2000.0,
+            area_used=500.0,
             start_date=datetime(2025, 4, 1),
             completion_date=datetime(2025, 8, 31),
             growth_days=153,
             accumulated_gdd=1800.0,
             total_cost=765000.0,
-            expected_revenue=2500000.0,
-            profit=1735000.0,
-            area_used=500.0,
+            expected_revenue=25000000.0,  # 500 × 50000
+            profit=24235000.0,
         )
         
         solution = [alloc_a]
@@ -266,7 +255,6 @@ class TestMultiFieldCropAllocationComplete:
                 completion_date=datetime(2025, 9, 15),
                 growth_days=154,
                 accumulated_gdd=1820.0,
-                quantity=2000.0,
                 area_used=500.0,
             ),
             AllocationCandidate(
@@ -276,7 +264,6 @@ class TestMultiFieldCropAllocationComplete:
                 completion_date=datetime(2025, 8, 31),
                 growth_days=153,
                 accumulated_gdd=1800.0,
-                quantity=4000.0,
                 area_used=1000.0,
             ),
             AllocationCandidate(
@@ -286,7 +273,6 @@ class TestMultiFieldCropAllocationComplete:
                 completion_date=datetime(2025, 12, 31),
                 growth_days=122,
                 accumulated_gdd=1500.0,
-                quantity=3333.0,
                 area_used=1000.0,
             ),
         ]

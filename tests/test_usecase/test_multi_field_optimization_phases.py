@@ -38,16 +38,14 @@ class TestPhase1Filtering:
                 field=field, crop=crop,
                 start_date=datetime(2025, 4, 1),
                 completion_date=datetime(2025, 8, 31),
-                growth_days=150, accumulated_gdd=1800.0,
-                quantity=1000.0,  # revenue = 1000 * 10000 * 0.25 = 2,500,000, cost = 150 * 6666.67 = 1,000,000, profit_rate = 1.5
+                growth_days=150, accumulated_gdd=1800.0,  # revenue = 1000 * 10000 * 0.25 = 2,500,000, cost = 150 * 6666.67 = 1,000,000, profit_rate = 1.5
                 area_used=250.0,
             ),
             AllocationCandidate(
                 field=field, crop=crop,
                 start_date=datetime(2025, 4, 1),
                 completion_date=datetime(2025, 8, 31),
-                growth_days=150, accumulated_gdd=1800.0,
-                quantity=16.0,  # revenue = 16 * 10000 * 0.25 = 40,000, cost = 1,000,000, profit_rate = -0.96 (bad)
+                growth_days=150, accumulated_gdd=1800.0,  # revenue = 16 * 10000 * 0.25 = 40,000, cost = 1,000,000, profit_rate = -0.96 (bad)
                 area_used=4.0,
             ),
         ]
@@ -83,8 +81,7 @@ class TestPhase1Filtering:
                 start_date=datetime(2025, 4, i+1),
                 completion_date=datetime(2025, 8, i+1),
                 growth_days=150 - i * 5,  # 150, 145, 140, ..., 105 (shorter = higher profit_rate)
-                accumulated_gdd=1800.0,
-                quantity=1000.0,  # revenue固定、costが変わるのでprofit_rateが変わる
+                accumulated_gdd=1800.0,  # revenue固定、costが変わるのでprofit_rateが変わる
                 area_used=250.0,
             ))
         
@@ -121,7 +118,6 @@ class TestPhase1Sampling:
             solution.append(CropAllocation(
                 allocation_id=f"alloc_{i}",
                 field=field, crop=crop,
-                quantity=100.0,
                 start_date=datetime(2025, 4, 1),
                 completion_date=datetime(2025, 8, 31),
                 growth_days=150, accumulated_gdd=1800.0,
@@ -200,7 +196,7 @@ class TestConfigProfiles:
         default = OptimizationConfig()
         
         assert fast.max_local_search_iterations < default.max_local_search_iterations
-        assert len(fast.quantity_levels) < len(default.quantity_levels)
+        assert len(fast.area_levels) < len(default.area_levels)
         assert fast.max_neighbors_per_iteration < default.max_neighbors_per_iteration
     
     def test_quality_profile_settings(self):
@@ -209,7 +205,7 @@ class TestConfigProfiles:
         default = OptimizationConfig()
         
         assert quality.max_local_search_iterations > default.max_local_search_iterations
-        assert len(quality.quantity_levels) > len(default.quantity_levels)
+        assert len(quality.area_levels) > len(default.area_levels)
         assert quality.max_neighbors_per_iteration > default.max_neighbors_per_iteration
     
     def test_profile_comparison(self):
@@ -222,7 +218,7 @@ class TestConfigProfiles:
         assert fast.max_local_search_iterations < balanced.max_local_search_iterations < quality.max_local_search_iterations
         
         # Thoroughness: fast < balanced < quality
-        assert len(fast.quantity_levels) < len(balanced.quantity_levels) < len(quality.quantity_levels)
+        assert len(fast.area_levels) < len(balanced.area_levels) < len(quality.area_levels)
 
 
 class TestIntegration:

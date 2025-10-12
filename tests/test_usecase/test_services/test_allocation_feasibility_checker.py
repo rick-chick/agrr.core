@@ -30,9 +30,7 @@ class TestIsFeasible:
         alloc = CropAllocation(
             allocation_id="alloc1",
             field=field,
-            crop=crop,
-            quantity=1000.0,
-            start_date=datetime(2024, 4, 1),
+            crop=crop,            start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 8, 31),
             growth_days=150,
             accumulated_gdd=1500.0,
@@ -54,9 +52,7 @@ class TestIsFeasible:
         alloc1 = CropAllocation(
             allocation_id="alloc1",
             field=field,
-            crop=crop,
-            quantity=1000.0,
-            start_date=datetime(2024, 4, 1),
+            crop=crop,            start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 6, 30),
             growth_days=90,
             accumulated_gdd=900.0,
@@ -69,9 +65,7 @@ class TestIsFeasible:
         alloc2 = CropAllocation(
             allocation_id="alloc2",
             field=field,
-            crop=crop,
-            quantity=1000.0,
-            start_date=datetime(2024, 7, 1),  # After alloc1
+            crop=crop,            start_date=datetime(2024, 7, 1),  # After alloc1
             completion_date=datetime(2024, 9, 30),
             growth_days=90,
             accumulated_gdd=900.0,
@@ -93,9 +87,7 @@ class TestIsFeasible:
         alloc1 = CropAllocation(
             allocation_id="alloc1",
             field=field,
-            crop=crop,
-            quantity=1000.0,
-            start_date=datetime(2024, 4, 1),
+            crop=crop,            start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 6, 30),
             growth_days=90,
             accumulated_gdd=900.0,
@@ -108,9 +100,7 @@ class TestIsFeasible:
         alloc2 = CropAllocation(
             allocation_id="alloc2",
             field=field,
-            crop=crop,
-            quantity=1000.0,
-            start_date=datetime(2024, 6, 1),  # Overlaps with alloc1
+            crop=crop,            start_date=datetime(2024, 6, 1),  # Overlaps with alloc1
             completion_date=datetime(2024, 9, 30),
             growth_days=120,
             accumulated_gdd=1200.0,
@@ -133,9 +123,7 @@ class TestIsFeasible:
         alloc1 = CropAllocation(
             allocation_id="alloc1",
             field=field1,
-            crop=crop,
-            quantity=1000.0,
-            start_date=datetime(2024, 4, 1),
+            crop=crop,            start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 6, 30),
             growth_days=90,
             accumulated_gdd=900.0,
@@ -148,9 +136,7 @@ class TestIsFeasible:
         alloc2 = CropAllocation(
             allocation_id="alloc2",
             field=field2,  # Different field
-            crop=crop,
-            quantity=800.0,
-            start_date=datetime(2024, 5, 1),  # Overlaps in time
+            crop=crop,            start_date=datetime(2024, 5, 1),  # Overlaps in time
             completion_date=datetime(2024, 7, 31),
             growth_days=90,
             accumulated_gdd=900.0,
@@ -177,9 +163,7 @@ class TestCheckTimeConstraints:
         alloc1 = CropAllocation(
             allocation_id="alloc1",
             field=field,
-            crop=crop,
-            quantity=1000.0,
-            start_date=datetime(2024, 1, 1),
+            crop=crop,            start_date=datetime(2024, 1, 1),
             completion_date=datetime(2024, 3, 31),
             growth_days=90,
             accumulated_gdd=900.0,
@@ -192,9 +176,7 @@ class TestCheckTimeConstraints:
         alloc2 = CropAllocation(
             allocation_id="alloc2",
             field=field,
-            crop=crop,
-            quantity=1000.0,
-            start_date=datetime(2024, 4, 1),
+            crop=crop,            start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 6, 30),
             growth_days=90,
             accumulated_gdd=900.0,
@@ -216,9 +198,7 @@ class TestCheckTimeConstraints:
         alloc1 = CropAllocation(
             allocation_id="alloc1",
             field=field,
-            crop=crop,
-            quantity=1000.0,
-            start_date=datetime(2024, 4, 1),
+            crop=crop,            start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 6, 30),
             growth_days=90,
             accumulated_gdd=900.0,
@@ -231,9 +211,7 @@ class TestCheckTimeConstraints:
         alloc2 = CropAllocation(
             allocation_id="alloc2",
             field=field,
-            crop=crop,
-            quantity=1000.0,
-            start_date=datetime(2024, 6, 1),  # Overlaps
+            crop=crop,            start_date=datetime(2024, 6, 1),  # Overlaps
             completion_date=datetime(2024, 9, 30),
             growth_days=120,
             accumulated_gdd=1200.0,
@@ -261,9 +239,7 @@ class TestCheckAreaConstraints:
         alloc1 = CropAllocation(
             allocation_id="alloc1",
             field=field,
-            crop=crop,
-            quantity=1000.0,
-            start_date=datetime(2024, 1, 1),
+            crop=crop,            start_date=datetime(2024, 1, 1),
             completion_date=datetime(2024, 3, 31),
             growth_days=90,
             accumulated_gdd=900.0,
@@ -276,9 +252,7 @@ class TestCheckAreaConstraints:
         alloc2 = CropAllocation(
             allocation_id="alloc2",
             field=field,
-            crop=crop,
-            quantity=1000.0,
-            start_date=datetime(2024, 4, 1),
+            crop=crop,            start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 6, 30),
             growth_days=90,
             accumulated_gdd=900.0,
@@ -301,9 +275,7 @@ class TestCheckAreaConstraints:
         alloc1 = CropAllocation(
             allocation_id="alloc1",
             field=field,
-            crop=crop,
-            quantity=1200.0,
-            start_date=datetime(2024, 1, 1),
+            crop=crop,            start_date=datetime(2024, 1, 1),
             completion_date=datetime(2024, 3, 31),
             growth_days=90,
             accumulated_gdd=900.0,
@@ -316,9 +288,7 @@ class TestCheckAreaConstraints:
         alloc2 = CropAllocation(
             allocation_id="alloc2",
             field=field,
-            crop=crop,
-            quantity=1200.0,
-            start_date=datetime(2024, 4, 1),
+            crop=crop,            start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 6, 30),
             growth_days=90,
             accumulated_gdd=900.0,
@@ -341,9 +311,7 @@ class TestCheckAreaConstraints:
         alloc = CropAllocation(
             allocation_id="alloc1",
             field=field,
-            crop=crop,
-            quantity=4000.0,
-            start_date=datetime(2024, 4, 1),
+            crop=crop,            start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 8, 31),
             growth_days=150,
             accumulated_gdd=1500.0,
@@ -367,9 +335,7 @@ class TestCheckAreaConstraints:
         alloc1 = CropAllocation(
             allocation_id="alloc1",
             field=field1,
-            crop=crop,
-            quantity=3000.0,
-            start_date=datetime(2024, 4, 1),
+            crop=crop,            start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 8, 31),
             growth_days=150,
             accumulated_gdd=1500.0,
@@ -382,9 +348,7 @@ class TestCheckAreaConstraints:
         alloc2 = CropAllocation(
             allocation_id="alloc2",
             field=field2,
-            crop=crop,
-            quantity=2400.0,
-            start_date=datetime(2024, 4, 1),
+            crop=crop,            start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 8, 31),
             growth_days=150,
             accumulated_gdd=1500.0,
@@ -413,9 +377,7 @@ class TestComplexScenarios:
         alloc1 = CropAllocation(
             allocation_id="alloc1",
             field=field,
-            crop=rice,
-            quantity=2000.0,
-            start_date=datetime(2024, 4, 1),
+            crop=rice,            start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 7, 31),
             growth_days=120,
             accumulated_gdd=1200.0,
@@ -429,9 +391,7 @@ class TestComplexScenarios:
         alloc2 = CropAllocation(
             allocation_id="alloc2",
             field=field,
-            crop=wheat,
-            quantity=1666.0,
-            start_date=datetime(2024, 8, 1),
+            crop=wheat,            start_date=datetime(2024, 8, 1),
             completion_date=datetime(2024, 11, 30),
             growth_days=120,
             accumulated_gdd=1100.0,
@@ -455,9 +415,7 @@ class TestComplexScenarios:
         alloc1 = CropAllocation(
             allocation_id="alloc1",
             field=field1,
-            crop=crop,
-            quantity=2000.0,
-            start_date=datetime(2024, 4, 1),
+            crop=crop,            start_date=datetime(2024, 4, 1),
             completion_date=datetime(2024, 8, 31),
             growth_days=150,
             accumulated_gdd=1500.0,
@@ -470,9 +428,7 @@ class TestComplexScenarios:
         alloc2 = CropAllocation(
             allocation_id="alloc2",
             field=field2,  # Different field
-            crop=crop,
-            quantity=1600.0,
-            start_date=datetime(2024, 4, 1),  # Same time
+            crop=crop,            start_date=datetime(2024, 4, 1),  # Same time
             completion_date=datetime(2024, 8, 31),
             growth_days=150,
             accumulated_gdd=1500.0,

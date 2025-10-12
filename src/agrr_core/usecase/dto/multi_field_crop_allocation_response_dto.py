@@ -69,14 +69,13 @@ class MultiFieldCropAllocationResponseDTO:
                                 "crop_id": alloc.crop.crop_id,
                                 "crop_name": alloc.crop.name,
                                 "variety": alloc.crop.variety,
-                                "quantity": alloc.quantity,
+                                "area_used": alloc.area_used,
                                 "start_date": alloc.start_date.isoformat(),
                                 "completion_date": alloc.completion_date.isoformat(),
                                 "growth_days": alloc.growth_days,
                                 "total_cost": alloc.total_cost,
                                 "expected_revenue": alloc.expected_revenue,
                                 "profit": alloc.profit,
-                                "area_used": alloc.area_used,
                             }
                             for alloc in schedule.allocations
                         ],

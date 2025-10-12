@@ -105,8 +105,7 @@ class TestUnifiedObjectiveFunctionSignature:
         metrics = OptimizationMetrics(
             growth_days=100,
             daily_fixed_cost=10,
-            quantity=100,
-            area_per_unit=2,
+            area_used=200,  # 100 × 2
             revenue_per_area=10
         )
         
@@ -168,7 +167,7 @@ class TestObjectiveFunctionChangeDetection:
         # Test with revenue
         metrics_with_revenue = OptimizationMetrics(
             growth_days=100, daily_fixed_cost=10,
-            quantity=100, area_per_unit=2, revenue_per_area=10
+            area_used=200, revenue_per_area=10  # 100 × 2 = 200
         )
         assert DEFAULT_OBJECTIVE.calculate(metrics_with_revenue) == 1000  # revenue(2000) - cost(1000)
         
@@ -181,7 +180,7 @@ class TestObjectiveFunctionChangeDetection:
         
         Current formula:
         - With revenue: profit = revenue - cost
-          - revenue = quantity * revenue_per_area * area_per_unit
+          - revenue = area_used * revenue_per_area
           - cost = growth_days * daily_fixed_cost
         - Without revenue: profit = -cost (cost minimization equivalent)
         
@@ -193,19 +192,17 @@ class TestObjectiveFunctionChangeDetection:
         
         growth_days = 100
         daily_fixed_cost = 10
-        quantity = 125
-        area_per_unit = 2
+        area_used = 250  # 125 × 2
         revenue_per_area = 10
         
         expected_cost = growth_days * daily_fixed_cost  # 1000
-        expected_revenue = quantity * area_per_unit * revenue_per_area  # 2500
+        expected_revenue = area_used * revenue_per_area  # 2500
         expected_profit = expected_revenue - expected_cost  # Current formula: 1500
         
         metrics = OptimizationMetrics(
             growth_days=growth_days,
             daily_fixed_cost=daily_fixed_cost,
-            quantity=quantity,
-            area_per_unit=area_per_unit,
+            area_used=area_used,
             revenue_per_area=revenue_per_area
         )
         actual_profit = DEFAULT_OBJECTIVE.calculate(metrics)

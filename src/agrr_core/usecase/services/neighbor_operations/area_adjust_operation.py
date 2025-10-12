@@ -9,7 +9,7 @@ from agrr_core.usecase.services.neighbor_operations.base_neighbor_operation impo
 )
 
 
-class QuantityAdjustOperation(NeighborOperation):
+class AreaAdjustOperation(NeighborOperation):
     """A1. Area Adjust: Increase or decrease area by ±10%, ±20%.
     
     Strategy:
@@ -20,7 +20,7 @@ class QuantityAdjustOperation(NeighborOperation):
     
     @property
     def operation_name(self) -> str:
-        return "quantity_adjust"
+        return "area_adjust"
     
     @property
     def default_weight(self) -> float:
@@ -35,7 +35,7 @@ class QuantityAdjustOperation(NeighborOperation):
         neighbors = []
         config = context.get("config")
         
-        multipliers = config.quantity_adjustment_multipliers if config else [0.8, 0.9, 1.1, 1.2]
+        multipliers = config.area_adjustment_multipliers if config else [0.8, 0.9, 1.1, 1.2]
         
         for i, alloc in enumerate(solution):
             # Calculate available area in field

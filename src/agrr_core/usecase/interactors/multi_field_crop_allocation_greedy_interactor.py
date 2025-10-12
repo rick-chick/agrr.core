@@ -271,7 +271,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 field_max_area = field.area
                 
                 # Generate candidates for each area level
-                for area_level in cfg.quantity_levels:  # Note: will rename this to area_levels later
+                for area_level in cfg.area_levels:
                     area_used = field_max_area * area_level
                     
                     # Use top N period candidates from DP results
@@ -388,7 +388,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         candidates = []
         field_max_area = field.area
         
-        for area_level in config.quantity_levels:  # Note: will rename this to area_levels later
+        for area_level in config.area_levels:
             area_used = field_max_area * area_level
             
             for candidate_period in optimization_result.candidates[:config.top_period_candidates]:

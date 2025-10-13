@@ -2,7 +2,7 @@
 
 import re
 from datetime import datetime
-from typing import List
+from typing import List, Tuple
 from agrr_core.entity.entities.weather_entity import WeatherData
 
 
@@ -48,7 +48,7 @@ class WeatherValidator:
         return True
     
     @staticmethod
-    def validate_weather_data_detailed(weather_data: List[WeatherData]) -> tuple[bool, str]:
+    def validate_weather_data_detailed(weather_data: List[WeatherData]) -> Tuple[bool, str]:
         """
         Validate weather data quality with detailed error information.
         

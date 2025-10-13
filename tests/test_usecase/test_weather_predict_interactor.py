@@ -88,7 +88,7 @@ class TestWeatherPredictInteractor:
         """Test execute with no weather data."""
         self.mock_weather_gateway.get.return_value = []
         
-        with pytest.raises(ValueError, match="Insufficient data for prediction"):
+        with pytest.raises(ValueError, match="No weather data provided"):
             await self.interactor.execute(
                 input_source="input.json",
                 output_destination="output.json",
@@ -110,6 +110,52 @@ class TestWeatherPredictInteractor:
                 output_destination="output.json",
                 prediction_days=7
             )
+    
+    @pytest.mark.asyncio
+    async def test_execute_missing_temperature_data(self):
+        """Test execute with missing temperature data."""
+        # Create 30 records with some missing temperature_2m_mean
+        weather_data = [
+            WeatherData(time=datetime(2024, 1, i), temperature_2m_mean=15.0 if i <= 25 else None) 
+            for i in range(1, 31)  # 30 records, last 5 have None temperature
+        ]
+        self.mock_weather_gateway.get.return_value = weather_data
+        
+        with pytest.raises(ValueError, match="Temperature data.*is missing"):
+            await self.interactor.execute(
+                input_source="input.json",
+                output_destination="output.json",
+                prediction_days=7
+            )
+    
+    @pytest.mark.asyncio
+    async def test_execute_optional_fields_can_be_none(self):
+        """Test that optional fields (humidity, sunshine, weather_code) can be None."""
+        # Create 30 records with required temperature but optional fields as None
+        weather_data = [
+            WeatherData(
+                time=datetime(2024, 1, i), 
+                temperature_2m_mean=15.0,
+                sunshine_duration=None,  # Optional field
+                weather_code=None  # Optional field
+            ) 
+            for i in range(1, 31)  # 30 records
+        ]
+        self.mock_weather_gateway.get.return_value = weather_data
+        
+        predictions = [
+            Forecast(date=datetime(2024, 2, 1), predicted_value=17.0)
+        ]
+        self.mock_prediction_gateway.predict.return_value = predictions
+        
+        # Should succeed because temperature is present and optional fields can be None
+        result = await self.interactor.execute(
+            input_source="input.json",
+            output_destination="output.json",
+            prediction_days=7
+        )
+        
+        assert result == predictions
     
     @pytest.mark.asyncio
     async def test_execute_file_error(self):

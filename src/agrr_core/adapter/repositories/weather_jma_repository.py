@@ -179,32 +179,50 @@ class WeatherJMARepository:
             
             # Collect data for each month in the range
             all_weather_data = []
+            failed_months = []
             
             # Start from the first day of the start month
             current = start.replace(day=1)
             end_month = end.replace(day=1)
             
             while current <= end_month:
-                # Build URL for this month
-                url = self._build_url(prec_no, block_no, current.year, current.month)
-                
-                # Fetch HTML tables
-                tables = await self.html_table_fetcher.get(url)
-                
-                # Find data table (id="tablefix1")
-                data_table = self._find_data_table(tables)
-                
-                # Convert to WeatherData entities
-                weather_data_list = self._parse_jma_table(data_table, start_date, end_date, current.year, current.month)
-                all_weather_data.extend(weather_data_list)
+                try:
+                    # Build URL for this month
+                    url = self._build_url(prec_no, block_no, current.year, current.month)
+                    
+                    # Fetch HTML tables
+                    tables = await self.html_table_fetcher.get(url)
+                    
+                    # Find data table (id="tablefix1")
+                    data_table = self._find_data_table(tables)
+                    
+                    # Convert to WeatherData entities
+                    weather_data_list = self._parse_jma_table(data_table, start_date, end_date, current.year, current.month)
+                    all_weather_data.extend(weather_data_list)
+                    
+                except (HtmlFetchError, WeatherAPIError) as e:
+                    # Log failure but continue with other months (Partial Success strategy)
+                    failed_months.append((current.year, current.month))
+                    self.logger.warning(
+                        f"Failed to fetch data for {current.year}-{current.month:02d}: {e}. "
+                        f"Continuing with available data."
+                    )
                 
                 # Move to next month using relativedelta (handles month-end correctly)
                 current = current + relativedelta(months=1)
             
+            # If we got no data at all, raise error
             if not all_weather_data:
                 raise WeatherDataNotFoundError(
                     f"No weather data found for location ({latitude}, {longitude}) "
-                    f"from {start_date} to {end_date}"
+                    f"from {start_date} to {end_date}. "
+                    f"Failed months: {failed_months if failed_months else 'None'}"
+                )
+            
+            # Log partial success if any months failed
+            if failed_months:
+                self.logger.warning(
+                    f"Partial data returned. Missing data for {len(failed_months)} month(s): {failed_months}"
                 )
             
             # Create location
@@ -303,10 +321,11 @@ class WeatherJMARepository:
             month: Month of the data
             
         Returns:
-            List of WeatherData entities
+            List of WeatherData entities (sorted by date, deduplicated)
         """
-        weather_data_list = []
+        weather_data_dict = {}  # Dict[datetime, WeatherData] for deduplication
         skipped_count = 0
+        duplicate_count = 0
         
         # Parse date range for filtering
         start_dt = datetime.strptime(start_date, "%Y-%m-%d")
@@ -330,6 +349,15 @@ class WeatherJMARepository:
                 if record_date < start_dt or record_date > end_dt:
                     continue
                 
+                # Check for duplicate dates (First Wins strategy)
+                if record_date in weather_data_dict:
+                    duplicate_count += 1
+                    self.logger.warning(
+                        f"[{year}-{month:02d}-{day:02d}] Duplicate date detected. "
+                        f"Using first occurrence, discarding duplicate."
+                    )
+                    continue
+                
                 # Extract data from cells
                 # cells[3]: 降水量合計
                 # cells[6]: 平均気温
@@ -343,6 +371,23 @@ class WeatherJMARepository:
                 temp_mean = self._safe_float(row.cells[6])
                 temp_max = self._safe_float(row.cells[7])
                 temp_min = self._safe_float(row.cells[8])
+                
+                # Temperature is required for agricultural predictions (GDD calculation)
+                # Skip rows with no temperature data
+                if temp_mean is None and temp_max is None and temp_min is None:
+                    date_str = f"{year}-{month:02d}-{day:02d}"
+                    self.logger.warning(
+                        f"[{date_str}] All temperature values are None. "
+                        f"Skipping row (temperature required for GDD calculation)."
+                    )
+                    skipped_count += 1
+                    continue
+                
+                # Calculate mean temperature if missing but max/min available
+                if temp_mean is None and temp_max is not None and temp_min is not None:
+                    temp_mean = (temp_max + temp_min) / 2
+                    date_str = f"{year}-{month:02d}-{day:02d}"
+                    self.logger.info(f"[{date_str}] Calculated mean temp from max/min: {temp_mean}℃")
                 
                 # 日照時間（時間 → 秒に変換）
                 sunshine_hours = self._safe_float(row.cells[16] if len(row.cells) > 16 else None)
@@ -368,7 +413,7 @@ class WeatherJMARepository:
                 # Validate weather data before adding
                 date_str = f"{year}-{month:02d}-{day:02d}"
                 if self._validate_weather_data(weather_data, date_str):
-                    weather_data_list.append(weather_data)
+                    weather_data_dict[record_date] = weather_data
                 else:
                     skipped_count += 1
                 
@@ -385,7 +430,15 @@ class WeatherJMARepository:
         if skipped_count > 0:
             self.logger.info(f"Skipped {skipped_count} invalid weather records due to data quality issues")
         
-        return weather_data_list
+        # Log duplicate records
+        if duplicate_count > 0:
+            self.logger.warning(
+                f"Detected {duplicate_count} duplicate dates. "
+                f"Data quality issue in source."
+            )
+        
+        # Return sorted list
+        return sorted(weather_data_dict.values(), key=lambda x: x.time)
     
     def _safe_float(self, value) -> Optional[float]:
         """

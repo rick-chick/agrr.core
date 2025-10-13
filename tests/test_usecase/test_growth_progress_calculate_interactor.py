@@ -29,12 +29,12 @@ class TestGrowthProgressCalculateInteractor:
     @pytest.fixture(autouse=True)
     def setup(
         self,
-        mock_growth_progress_crop_requirement_gateway,
-        mock_growth_progress_weather_gateway,
+        gateway_crop_requirement,
+        gateway_weather,
     ):
         """Set up test fixtures using conftest mocks."""
-        self.mock_crop_requirement_gateway = mock_growth_progress_crop_requirement_gateway
-        self.mock_weather_gateway = mock_growth_progress_weather_gateway
+        self.mock_crop_requirement_gateway = gateway_crop_requirement
+        self.mock_weather_gateway = gateway_weather
         self.interactor = GrowthProgressCalculateInteractor(
             crop_requirement_gateway=self.mock_crop_requirement_gateway,
             weather_gateway=self.mock_weather_gateway,

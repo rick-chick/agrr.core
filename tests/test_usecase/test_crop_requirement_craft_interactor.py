@@ -10,10 +10,10 @@ from agrr_core.usecase.dto.crop_requirement_craft_request_dto import (
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_craft_success(mock_crop_requirement_gateway, mock_crop_requirement_output_port):
+async def test_craft_success(gateway_crop_requirement, output_port_crop_requirement):
     interactor = CropRequirementCraftInteractor(
-        gateway=mock_crop_requirement_gateway,
-        presenter=mock_crop_requirement_output_port,
+        gateway=gateway_crop_requirement,
+        presenter=output_port_crop_requirement,
     )
 
     req = CropRequirementCraftRequestDTO(crop_query="トマト")
@@ -30,10 +30,10 @@ async def test_craft_success(mock_crop_requirement_gateway, mock_crop_requiremen
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_craft_empty_query_returns_error(mock_crop_requirement_gateway, mock_crop_requirement_output_port):
+async def test_craft_empty_query_returns_error(gateway_crop_requirement, output_port_crop_requirement):
     interactor = CropRequirementCraftInteractor(
-        gateway=mock_crop_requirement_gateway,
-        presenter=mock_crop_requirement_output_port,
+        gateway=gateway_crop_requirement,
+        presenter=output_port_crop_requirement,
     )
 
     req = CropRequirementCraftRequestDTO(crop_query="   ")
@@ -45,13 +45,13 @@ async def test_craft_empty_query_returns_error(mock_crop_requirement_gateway, mo
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_craft_gateway_exception_returns_error(mock_crop_requirement_gateway, mock_crop_requirement_output_port):
+async def test_craft_gateway_exception_returns_error(gateway_crop_requirement, output_port_crop_requirement):
     # Configure gateway to raise on any step
-    mock_crop_requirement_gateway.extract_crop_variety.side_effect = RuntimeError("llm error")
+    gateway_crop_requirement.extract_crop_variety.side_effect = RuntimeError("llm error")
 
     interactor = CropRequirementCraftInteractor(
-        gateway=mock_crop_requirement_gateway,
-        presenter=mock_crop_requirement_output_port,
+        gateway=gateway_crop_requirement,
+        presenter=output_port_crop_requirement,
     )
 
     req = CropRequirementCraftRequestDTO(crop_query="トマト")
@@ -63,11 +63,11 @@ async def test_craft_gateway_exception_returns_error(mock_crop_requirement_gatew
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_craft_includes_family_in_groups(mock_crop_requirement_gateway, mock_crop_requirement_output_port):
+async def test_craft_includes_family_in_groups(gateway_crop_requirement, output_port_crop_requirement):
     """Test that crop family is extracted and added to groups."""
     interactor = CropRequirementCraftInteractor(
-        gateway=mock_crop_requirement_gateway,
-        presenter=mock_crop_requirement_output_port,
+        gateway=gateway_crop_requirement,
+        presenter=output_port_crop_requirement,
     )
 
     req = CropRequirementCraftRequestDTO(crop_query="トマト")
@@ -85,6 +85,6 @@ async def test_craft_includes_family_in_groups(mock_crop_requirement_gateway, mo
     assert data["groups"][0] == "Solanaceae"
     
     # Verify that extract_crop_family was called
-    mock_crop_requirement_gateway.extract_crop_family.assert_called_once()
+    gateway_crop_requirement.extract_crop_family.assert_called_once()
 
 

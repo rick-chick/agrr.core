@@ -52,9 +52,10 @@ class WeatherPredictInteractor:
         # Get weather data
         historical_data = await self.weather_gateway.get(input_source)
         
-        # Validate weather data quality
-        if not WeatherValidator.validate_weather_data(historical_data):
-            raise ValueError(f"Insufficient data for prediction. Found {len(historical_data)} records, need at least 30")
+        # Validate weather data quality with detailed error information
+        is_valid, error_message = WeatherValidator.validate_weather_data_detailed(historical_data)
+        if not is_valid:
+            raise ValueError(error_message)
         
         # Generate predictions
         predictions = await self.prediction_gateway.predict(

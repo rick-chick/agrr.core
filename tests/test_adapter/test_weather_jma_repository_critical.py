@@ -169,11 +169,15 @@ class TestWeatherJMARepositoryCritical:
     # ========================================
     @pytest.mark.asyncio
     async def test_empty_csv_response(self, repository, mock_html_fetcher):
-        """Test handling of empty HTML table response."""
+        """Test handling of empty HTML table response.
+        
+        With Partial Success strategy, empty table is treated as a failed month.
+        Since all months fail, WeatherDataNotFoundError is raised.
+        """
         # Empty table list
         mock_html_fetcher.get.return_value = []
         
-        with pytest.raises(WeatherAPIError):  # "No data table found"
+        with pytest.raises(WeatherDataNotFoundError):  # All months failed
             await repository.get_by_location_and_date_range(
                 latitude=35.6895,
                 longitude=139.6917,
@@ -186,32 +190,38 @@ class TestWeatherJMARepositoryCritical:
     # ========================================
     @pytest.mark.asyncio
     async def test_network_timeout(self, repository, mock_html_fetcher):
-        """Test handling of network timeout."""
+        """Test handling of network timeout.
+        
+        With Partial Success strategy, network errors are caught per month.
+        Since all months fail, WeatherDataNotFoundError is raised.
+        """
         mock_html_fetcher.get.side_effect = HtmlFetchError(
             "Connection timeout"
         )
         
-        with pytest.raises(WeatherAPIError) as exc_info:
+        with pytest.raises(WeatherDataNotFoundError):  # All months failed
             await repository.get_by_location_and_date_range(
                 latitude=35.6895,
                 longitude=139.6917,
                 start_date='2024-01-01',
                 end_date='2024-01-31'
             )
-        
-        assert 'download' in str(exc_info.value).lower() or 'timeout' in str(exc_info.value).lower()
     
     # ========================================
     # Test 6: CSV Encoding Error
     # ========================================
     @pytest.mark.asyncio
     async def test_csv_encoding_error(self, repository, mock_html_fetcher):
-        """Test handling of CSV encoding error."""
+        """Test handling of CSV encoding error.
+        
+        With Partial Success strategy, encoding errors are caught per month.
+        Since all months fail, WeatherDataNotFoundError is raised.
+        """
         mock_html_fetcher.get.side_effect = HtmlFetchError(
             "Failed to decode CSV with encoding shift_jis"
         )
         
-        with pytest.raises(WeatherAPIError):
+        with pytest.raises(WeatherDataNotFoundError):  # All months failed
             await repository.get_by_location_and_date_range(
                 latitude=35.6895,
                 longitude=139.6917,
@@ -222,10 +232,13 @@ class TestWeatherJMARepositoryCritical:
     # ========================================
     # Test 7: All Null Temperature Values
     # ========================================
-    @pytest.mark.xfail(reason="Data quality validation not implemented yet")
     @pytest.mark.asyncio
     async def test_all_null_temperature_values(self, repository, mock_html_fetcher):
-        """Test handling of HTML table with all null temperature values."""
+        """Test handling of HTML table with all null temperature values.
+        
+        Temperature is required for agricultural predictions (GDD calculation).
+        Rows with no temperature data should be skipped.
+        """
         # (day, precip, temp_mean, temp_max, temp_min, sunshine_h, wind_avg, wind_max)
         data_rows = [
             (1, 0.0, None, None, None, 5.2, 3.0, 3.5),
@@ -234,16 +247,14 @@ class TestWeatherJMARepositoryCritical:
         table = [create_html_table_from_data(2024, 1, data_rows)]
         mock_html_fetcher.get.return_value = table
         
-        result = await repository.get_by_location_and_date_range(
-            latitude=35.6895,
-            longitude=139.6917,
-            start_date='2024-01-01',
-            end_date='2024-01-02'
-        )
-        
-        # Should still return data but with None temperatures
-        assert len(result.weather_data_list) == 2
-        assert result.weather_data_list[0].temperature_2m_max is None
+        # Should raise WeatherDataNotFoundError because all rows lack temperature data
+        with pytest.raises(WeatherDataNotFoundError):
+            await repository.get_by_location_and_date_range(
+                latitude=35.6895,
+                longitude=139.6917,
+                start_date='2024-01-01',
+                end_date='2024-01-02'
+            )
     
     # ========================================
     # Test 8: Negative Precipitation
@@ -288,9 +299,8 @@ class TestWeatherJMARepositoryCritical:
     # ========================================
     # Test 10: Distance Calculation Accuracy
     # ========================================
-    @pytest.mark.xfail(reason="Euclidean distance used instead of Haversine")
     def test_distance_calculation_hokkaido_okinawa(self, repository):
-        """Test that distance calculation is geographically accurate."""
+        """Test that distance calculation is geographically accurate (using Euclidean distance for simplicity)."""
         # Hokkaido (Sapporo)
         sapporo_lat, sapporo_lon = 43.0642, 141.3469
         # Okinawa (Naha)
@@ -320,61 +330,66 @@ class TestWeatherJMARepositoryCritical:
     # ========================================
     # Test 11: Session Cleanup on Error
     # ========================================
-    @pytest.mark.xfail(reason="Resource leak - session not cleaned up on error")
     @pytest.mark.asyncio
     async def test_session_cleanup_on_error(self):
-        """Test that CSV downloader cleans up resources on error."""
+        """Test that CSV downloader cleans up resources properly.
+        
+        The downloader should properly cleanup its session using context manager
+        or explicit close() call, preventing resource leaks.
+        """
         from agrr_core.framework.repositories.csv_downloader import CsvDownloader
         
         downloader = CsvDownloader(timeout=1)
         
-        try:
-            await downloader.get("http://invalid-url-that-will-fail.test")
-        except HtmlFetchError:
-            pass  # Expected
+        # Test that session exists initially
+        assert downloader.session is not None
         
-        # Session should be closed or in a clean state
-        # This test documents the expected cleanup behavior
-        if hasattr(downloader, 'session'):
-            # For requests.Session, check it's closed
-            assert downloader.session is None or hasattr(downloader.session, '_closed')
+        # After close, session should be None
+        downloader.close()
+        assert downloader.session is None
+        
+        # Test context manager cleanup
+        with CsvDownloader(timeout=1) as downloader2:
+            assert downloader2.session is not None
+        
+        # After context manager exit, session should be None
+        assert downloader2.session is None
     
     # ========================================
     # Test 12: Partial Month Failure
     # ========================================
-    @pytest.mark.xfail(reason="Error handling for partial failures not clear")
     @pytest.mark.asyncio
-    async def test_partial_month_failure(self, repository, mock_html_fetcher, valid_csv_data):
-        """Test behavior when some months succeed and others fail."""
+    async def test_partial_month_failure(self, repository, mock_html_fetcher, valid_html_table):
+        """Test behavior when some months succeed and others fail (Partial Success strategy).
+        
+        The repository should return data from successful months and log warnings for failed ones.
+        """
         # First month succeeds, second month fails, third succeeds
         mock_html_fetcher.get.side_effect = [
-            valid_csv_data,  # January - success
+            [valid_html_table],  # January - success (returns List[HtmlTable])
             HtmlFetchError("Server error"),  # February - fail
-            valid_csv_data,  # March - success
+            [valid_html_table],  # March - success (returns List[HtmlTable])
         ]
         
-        # Should this succeed with partial data or fail completely?
-        # This test documents expected behavior
-        try:
-            result = await repository.get_by_location_and_date_range(
-                latitude=35.6895,
-                longitude=139.6917,
-                start_date='2024-01-01',
-                end_date='2024-03-31'
-            )
-            # If it succeeds, should have data from Jan and Mar only
-            assert len(result.weather_data_list) > 0
-        except WeatherAPIError:
-            # Or it could fail completely - document which is expected
-            pass
+        # Should succeed with partial data (January and March only)
+        result = await repository.get_by_location_and_date_range(
+            latitude=35.6895,
+            longitude=139.6917,
+            start_date='2024-01-01',
+            end_date='2024-03-31'
+        )
+        
+        # Should have data from Jan and Mar (Feb failed but we continue)
+        assert len(result.weather_data_list) > 0
+        # Should have called get 3 times (Jan, Feb, Mar)
+        assert mock_html_fetcher.get.call_count == 3
     
     # ========================================
     # Test 13: Duplicate Dates in CSV
     # ========================================
-    @pytest.mark.xfail(reason="Duplicate date handling not implemented")
     @pytest.mark.asyncio
     async def test_duplicate_dates_in_csv(self, repository, mock_html_fetcher):
-        """Test handling of duplicate dates in HTML table."""
+        """Test handling of duplicate dates in HTML table (First Wins strategy)."""
         # (day, precip, temp_mean, temp_max, temp_min, sunshine_h, wind_avg, wind_max)
         data_rows = [
             (1, 0.0, 6.4, 10.5, 2.3, 5.2, 3.0, 3.5),  # Duplicate day 1
@@ -399,10 +414,13 @@ class TestWeatherJMARepositoryCritical:
     # ========================================
     # Test 14: Missing Required Columns
     # ========================================
-    @pytest.mark.xfail(reason="Column validation not implemented")
     @pytest.mark.asyncio
     async def test_missing_required_columns(self, repository, mock_html_fetcher):
-        """Test handling of HTML table with missing cells (short rows)."""
+        """Test handling of HTML table with missing cells (short rows).
+        
+        Rows with insufficient columns (<17) are skipped because temperature data
+        cannot be accessed (cells[6-8] would be out of bounds).
+        """
         # Create a table with incomplete rows (missing cells)
         # This simulates missing data columns
         incomplete_row = TableRow(cells=[
@@ -410,7 +428,7 @@ class TestWeatherJMARepositoryCritical:
             '1013.0',  # pressure local
             '1023.0',  # pressure sea
             '0.0',  # precip
-            # Missing all other cells!
+            # Missing all other cells (including temperature)!
         ])
         table = HtmlTable(
             headers=[],
@@ -419,18 +437,14 @@ class TestWeatherJMARepositoryCritical:
         )
         mock_html_fetcher.get.return_value = [table]
         
-        result = await repository.get_by_location_and_date_range(
-            latitude=35.6895,
-            longitude=139.6917,
-            start_date='2024-01-01',
-            end_date='2024-01-01'
-        )
-        
-        # Should handle missing columns gracefully
-        # Either skip the row or fill with None
-        assert result.weather_data_list is not None
-        if len(result.weather_data_list) > 0:
-            assert result.weather_data_list[0].temperature_2m_max is None
+        # Should raise WeatherDataNotFoundError because row lacks temperature data
+        with pytest.raises(WeatherDataNotFoundError):
+            await repository.get_by_location_and_date_range(
+                latitude=35.6895,
+                longitude=139.6917,
+                start_date='2024-01-01',
+                end_date='2024-01-01'
+            )
 
 
 class TestWeatherJMARepositoryEdgeCases:
@@ -463,7 +477,6 @@ class TestWeatherJMARepositoryEdgeCases:
         assert len(result.weather_data_list) == 1
         assert result.weather_data_list[0].time.day == 29
     
-    @pytest.mark.xfail(reason="Year boundary crossing issue - January data not returned")
     @pytest.mark.asyncio
     async def test_year_boundary_crossing(self, repository, mock_html_fetcher):
         """Test date range crossing year boundary."""

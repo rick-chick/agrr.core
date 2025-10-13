@@ -40,11 +40,48 @@ class WeatherValidator:
             return False
         
         # Check if all data points have valid temperature values
+        # Temperature is required for prediction, but humidity, sunshine, and weather_code are optional
         for data in weather_data:
             if data.temperature_2m_mean is None:
                 return False
         
         return True
+    
+    @staticmethod
+    def validate_weather_data_detailed(weather_data: List[WeatherData]) -> tuple[bool, str]:
+        """
+        Validate weather data quality with detailed error information.
+        
+        Returns:
+            Tuple of (is_valid, error_message)
+            - is_valid: True if validation passes, False otherwise
+            - error_message: Empty string if valid, detailed error message if invalid
+        """
+        if not weather_data:
+            return False, "No weather data provided"
+        
+        # Check if we have sufficient data for prediction
+        record_count = len(weather_data)
+        if record_count < 30:
+            return False, f"Insufficient data for prediction. Found {record_count} records, need at least 30"
+        
+        # Check if all data points have valid temperature values
+        # Temperature is required for prediction, but humidity, sunshine, and weather_code are optional
+        missing_temp_indices = []
+        for idx, data in enumerate(weather_data):
+            if data.temperature_2m_mean is None:
+                missing_temp_indices.append(idx)
+        
+        if missing_temp_indices:
+            if len(missing_temp_indices) <= 5:
+                # Show specific indices if there are few missing values
+                indices_str = ", ".join(str(i) for i in missing_temp_indices[:5])
+                return False, f"Temperature data (temperature_2m_mean) is missing in {len(missing_temp_indices)} records (indices: {indices_str}). Found {record_count} total records. Temperature is required for prediction."
+            else:
+                # Show count if there are many missing values
+                return False, f"Temperature data (temperature_2m_mean) is missing in {len(missing_temp_indices)} out of {record_count} records. Temperature is required for prediction."
+        
+        return True, ""
     
     @staticmethod
     def validate_coordinates(latitude: float, longitude: float) -> bool:

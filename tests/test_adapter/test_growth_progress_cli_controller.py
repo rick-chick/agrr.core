@@ -22,20 +22,20 @@ class TestGrowthProgressCliController:
     @pytest.fixture(autouse=True)
     def setup(
         self,
-        mock_growth_progress_crop_requirement_gateway,
-        mock_growth_progress_weather_gateway,
-        mock_growth_progress_presenter,
+        gateway_crop_requirement,
+        gateway_weather,
+        output_port_growth_progress,
     ):
         """Set up test fixtures using conftest mocks."""
         # Create controller with mocked dependencies from conftest
         self.controller = GrowthProgressCliController(
-            crop_requirement_gateway=mock_growth_progress_crop_requirement_gateway,
-            weather_gateway=mock_growth_progress_weather_gateway,
-            presenter=mock_growth_progress_presenter,
+            crop_requirement_gateway=gateway_crop_requirement,
+            weather_gateway=gateway_weather,
+            presenter=output_port_growth_progress,
         )
-        self.mock_crop_requirement_gateway = mock_growth_progress_crop_requirement_gateway
-        self.mock_weather_gateway = mock_growth_progress_weather_gateway
-        self.mock_presenter = mock_growth_progress_presenter
+        self.mock_crop_requirement_gateway = gateway_crop_requirement
+        self.mock_weather_gateway = gateway_weather
+        self.mock_presenter = output_port_growth_progress
 
     @pytest.mark.asyncio
     async def test_execute_calls_interactor(self):

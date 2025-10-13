@@ -1,4 +1,12 @@
-"""Pytest configuration for adapter layer tests."""
+"""Pytest configuration for adapter layer tests.
+
+Adapter layer tests focus on:
+- Controllers (Input port implementations)
+- Presenters (Output port implementations)
+- Gateway implementations
+- Repository implementations
+- Mapper implementations
+"""
 
 import pytest
 from unittest.mock import MagicMock, AsyncMock
@@ -8,28 +16,32 @@ from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresent
 from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
 
 
-@pytest.fixture
-def mock_fetch_weather_interactor():
-    """Mock fetch weather interactor."""
-    return AsyncMock(spec=FetchWeatherDataInteractor)
-
+# ============================================================================
+# Adapter Layer - Controller Fixtures
+# ============================================================================
 
 @pytest.fixture
-def mock_cli_presenter():
-    """Mock CLI presenter."""
+def presenter_weather_cli():
+    """Mock CLI presenter for weather data."""
     return MagicMock(spec=WeatherCLIPresenter)
 
 
 @pytest.fixture
-def mock_weather_gateway():
-    """Mock weather gateway."""
-    return AsyncMock()
+def controller_weather_cli_fetch(gateway_weather, presenter_weather_cli):
+    """CLI weather fetch controller with mocked dependencies."""
+    return WeatherCliFetchController(
+        weather_gateway=gateway_weather,
+        cli_presenter=presenter_weather_cli
+    )
 
+
+# ============================================================================
+# UseCase Layer - Interactor Fixtures (for adapter tests)
+# ============================================================================
 
 @pytest.fixture
-def cli_weather_controller(mock_weather_gateway, mock_cli_presenter):
-    """CLI weather controller with mocked dependencies."""
-    return WeatherCliFetchController(
-        weather_gateway=mock_weather_gateway,
-        cli_presenter=mock_cli_presenter
-    )
+def interactor_fetch_weather():
+    """Mock fetch weather interactor for controller tests."""
+    return AsyncMock(spec=FetchWeatherDataInteractor)
+
+

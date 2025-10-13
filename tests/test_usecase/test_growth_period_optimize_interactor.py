@@ -30,15 +30,15 @@ class TestGrowthPeriodOptimizeInteractor:
     @pytest.fixture(autouse=True)
     def setup(
         self,
-        mock_growth_progress_crop_requirement_gateway,
-        mock_growth_progress_weather_gateway,
+        gateway_crop_requirement,
+        gateway_weather,
     ):
         """Set up test fixtures using conftest mocks."""
-        self.mock_crop_requirement_gateway = mock_growth_progress_crop_requirement_gateway
-        self.mock_weather_gateway = mock_growth_progress_weather_gateway
+        self.gateway_crop_requirement = gateway_crop_requirement
+        self.gateway_weather = gateway_weather
         self.interactor = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=self.mock_crop_requirement_gateway,
-            weather_gateway=self.mock_weather_gateway,
+            crop_requirement_gateway=self.gateway_crop_requirement,
+            weather_gateway=self.gateway_weather,
         )
 
     @pytest.mark.asyncio
@@ -95,8 +95,8 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 4, 20), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
         ]
 
-        self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
-        self.mock_weather_gateway.get.return_value = weather_data
+        self.gateway_crop_requirement.craft.return_value = crop_requirement
+        self.gateway_weather.get.return_value = weather_data
 
         # Request: Start between April 1-5, must complete by April 15 (completion deadline)
         # All candidates need 10 days (100 GDD / 10 GDD per day)
@@ -175,8 +175,8 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 4, 5), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
         ]
 
-        self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
-        self.mock_weather_gateway.get.return_value = weather_data
+        self.gateway_crop_requirement.craft.return_value = crop_requirement
+        self.gateway_weather.get.return_value = weather_data
 
         # Evaluation period with only 1 day
         test_field = Field(
@@ -234,8 +234,8 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 5, 4), temperature_2m_mean=25.0, temperature_2m_max=30.0, temperature_2m_min=20.0),
         ]
 
-        self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
-        self.mock_weather_gateway.get.return_value = weather_data
+        self.gateway_crop_requirement.craft.return_value = crop_requirement
+        self.gateway_weather.get.return_value = weather_data
 
         # Start on May 1, must complete by May 5 (deadline)
         # Needs 50 GDD, gets 15 GDD/day -> 4 days needed -> completes May 4 (✓)
@@ -313,8 +313,8 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 4, 15), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
         ]
 
-        self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
-        self.mock_weather_gateway.get.return_value = weather_data
+        self.gateway_crop_requirement.craft.return_value = crop_requirement
+        self.gateway_weather.get.return_value = weather_data
 
         # Evaluation period: April 1-3 as start date candidates
         # Completion deadline: April 13
@@ -393,8 +393,8 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 4, 10), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
         ]
 
-        self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
-        self.mock_weather_gateway.get.return_value = weather_data
+        self.gateway_crop_requirement.craft.return_value = crop_requirement
+        self.gateway_weather.get.return_value = weather_data
 
         # Start on April 1, needs 10 days -> completes April 10
         # But deadline is April 8 -> Cannot meet deadline
@@ -420,16 +420,16 @@ class TestGrowthPeriodOptimizeInteractor:
 
     @pytest.mark.asyncio
     async def test_execute_loads_interaction_rules_when_file_provided(
-        self, mock_interaction_rule_gateway
+        self, gateway_interaction_rule
     ):
         """Test that interaction rules are loaded when file path is provided in request."""
         from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
         
         # Setup interactor with interaction rule gateway
         interactor = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=self.mock_crop_requirement_gateway,
-            weather_gateway=self.mock_weather_gateway,
-            interaction_rule_gateway=mock_interaction_rule_gateway,
+            crop_requirement_gateway=self.gateway_crop_requirement,
+            weather_gateway=self.gateway_weather,
+            interaction_rule_gateway=gateway_interaction_rule,
         )
 
         # Setup mock crop requirements
@@ -474,8 +474,8 @@ class TestGrowthPeriodOptimizeInteractor:
             for day in range(1, 21)
         ]
 
-        self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
-        self.mock_weather_gateway.get.return_value = weather_data
+        self.gateway_crop_requirement.craft.return_value = crop_requirement
+        self.gateway_weather.get.return_value = weather_data
 
         # Setup interaction rules
         interaction_rules = [
@@ -489,7 +489,7 @@ class TestGrowthPeriodOptimizeInteractor:
                 description="Solanaceae continuous cultivation penalty",
             )
         ]
-        mock_interaction_rule_gateway.get_rules.return_value = interaction_rules
+        gateway_interaction_rule.get_rules.return_value = interaction_rules
 
         # Create field and request
         test_field = Field(
@@ -514,7 +514,7 @@ class TestGrowthPeriodOptimizeInteractor:
         response = await interactor.execute(request)
 
         # Verify that interaction rules were loaded
-        mock_interaction_rule_gateway.get_rules.assert_called_once_with(
+        gateway_interaction_rule.get_rules.assert_called_once_with(
             "test_interaction_rules.json"
         )
         

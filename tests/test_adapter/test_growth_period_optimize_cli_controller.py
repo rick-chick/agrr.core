@@ -31,7 +31,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
     async def test_optimize_command_saves_results_when_flag_set(self):
         """Test that optimization results are saved when --save-results flag is used."""
         # Setup mocks
-        mock_crop_requirement_gateway = AsyncMock()
+        gateway_crop_requirement = AsyncMock()
         mock_weather_gateway = AsyncMock()
         mock_optimization_result_gateway = AsyncMock()
         mock_presenter = MagicMock()
@@ -73,7 +73,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
             for day in range(1, 21)
         ]
 
-        mock_crop_requirement_gateway.craft.return_value = crop_requirement
+        gateway_crop_requirement.craft.return_value = crop_requirement
         mock_weather_gateway.get.return_value = weather_data
 
         # Create field entity
@@ -87,7 +87,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
 
         # Create controller with optimization result gateway and field
         controller = GrowthPeriodOptimizeCliController(
-            crop_requirement_gateway=mock_crop_requirement_gateway,
+            crop_requirement_gateway=gateway_crop_requirement,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
             field=test_field,
@@ -115,7 +115,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
     async def test_optimize_command_without_gateway(self):
         """Test that optimization works without gateway (no storage)."""
         # Setup mocks
-        mock_crop_requirement_gateway = AsyncMock()
+        gateway_crop_requirement = AsyncMock()
         mock_weather_gateway = AsyncMock()
         mock_presenter = MagicMock()
         mock_presenter.output_format = "table"
@@ -156,7 +156,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
             for day in range(1, 21)
         ]
 
-        mock_crop_requirement_gateway.craft.return_value = crop_requirement
+        gateway_crop_requirement.craft.return_value = crop_requirement
         mock_weather_gateway.get.return_value = weather_data
 
         # Create field entity
@@ -170,7 +170,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
 
         # Create controller WITHOUT optimization result gateway
         controller = GrowthPeriodOptimizeCliController(
-            crop_requirement_gateway=mock_crop_requirement_gateway,
+            crop_requirement_gateway=gateway_crop_requirement,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
             field=test_field,
@@ -198,7 +198,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
     async def test_list_results_command(self):
         """Test list-results command displays saved results."""
         # Setup mocks
-        mock_crop_requirement_gateway = AsyncMock()
+        gateway_crop_requirement = AsyncMock()
         mock_weather_gateway = AsyncMock()
         mock_optimization_result_gateway = AsyncMock()
         mock_presenter = MagicMock()
@@ -220,7 +220,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
 
         # Create controller
         controller = GrowthPeriodOptimizeCliController(
-            crop_requirement_gateway=mock_crop_requirement_gateway,
+            crop_requirement_gateway=gateway_crop_requirement,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
             optimization_result_gateway=mock_optimization_result_gateway,
@@ -243,7 +243,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
     async def test_show_result_command(self):
         """Test show-result command displays specific optimization result."""
         # Setup mocks
-        mock_crop_requirement_gateway = AsyncMock()
+        gateway_crop_requirement = AsyncMock()
         mock_weather_gateway = AsyncMock()
         mock_optimization_result_gateway = AsyncMock()
         mock_presenter = MagicMock()
@@ -263,7 +263,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
 
         # Create controller
         controller = GrowthPeriodOptimizeCliController(
-            crop_requirement_gateway=mock_crop_requirement_gateway,
+            crop_requirement_gateway=gateway_crop_requirement,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
             optimization_result_gateway=mock_optimization_result_gateway,
@@ -289,7 +289,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
     async def test_optimize_command_with_interaction_rules(self):
         """Test that --interaction-rules option is correctly parsed and passed to DTO."""
         # Setup mocks
-        mock_crop_requirement_gateway = AsyncMock()
+        gateway_crop_requirement = AsyncMock()
         mock_weather_gateway = AsyncMock()
         mock_optimization_result_gateway = AsyncMock()
         mock_interaction_rule_gateway = AsyncMock()
@@ -332,7 +332,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
             for day in range(1, 21)
         ]
 
-        mock_crop_requirement_gateway.craft.return_value = crop_requirement
+        gateway_crop_requirement.craft.return_value = crop_requirement
         mock_weather_gateway.get.return_value = weather_data
 
         # Create field entity
@@ -346,7 +346,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
 
         # Create controller with interaction rule gateway
         controller = GrowthPeriodOptimizeCliController(
-            crop_requirement_gateway=mock_crop_requirement_gateway,
+            crop_requirement_gateway=gateway_crop_requirement,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
             field=test_field,

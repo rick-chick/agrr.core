@@ -64,13 +64,13 @@ class TestAllOptimizersUseSameDefaultObjective:
     
     def test_growth_period_uses_default_objective(
         self,
-        mock_growth_progress_crop_requirement_gateway,
-        mock_growth_progress_weather_gateway,
+        gateway_crop_requirement,
+        gateway_weather,
     ):
         """GrowthPeriodOptimizeInteractor uses DEFAULT_OBJECTIVE."""
         interactor = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=mock_growth_progress_crop_requirement_gateway,
-            weather_gateway=mock_growth_progress_weather_gateway,
+            crop_requirement_gateway=gateway_crop_requirement,
+            weather_gateway=gateway_weather,
         )
         
         assert interactor.objective is DEFAULT_OBJECTIVE
@@ -90,14 +90,14 @@ class TestUnifiedObjectiveFunctionSignature:
     
     def test_all_optimizers_calculate_same_profit(
         self,
-        mock_growth_progress_crop_requirement_gateway,
-        mock_growth_progress_weather_gateway,
+        gateway_crop_requirement,
+        gateway_weather,
     ):
         """All optimizers MUST calculate the same objective value from same metrics."""
         # Create optimizers
         period_optimizer = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=mock_growth_progress_crop_requirement_gateway,
-            weather_gateway=mock_growth_progress_weather_gateway,
+            crop_requirement_gateway=gateway_crop_requirement,
+            weather_gateway=gateway_weather,
         )
         schedule_optimizer = OptimizationIntermediateResultScheduleInteractor()
         
@@ -122,14 +122,14 @@ class TestUnifiedObjectiveFunctionSignature:
     
     def test_all_optimizers_handle_cost_only_same_way(
         self,
-        mock_growth_progress_crop_requirement_gateway,
-        mock_growth_progress_weather_gateway,
+        gateway_crop_requirement,
+        gateway_weather,
     ):
         """All optimizers MUST handle cost-only case the same way."""
         # Create optimizers
         period_optimizer = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=mock_growth_progress_crop_requirement_gateway,
-            weather_gateway=mock_growth_progress_weather_gateway,
+            crop_requirement_gateway=gateway_crop_requirement,
+            weather_gateway=gateway_weather,
         )
         schedule_optimizer = OptimizationIntermediateResultScheduleInteractor()
         

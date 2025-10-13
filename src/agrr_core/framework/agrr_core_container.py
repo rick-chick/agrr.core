@@ -8,6 +8,7 @@ from agrr_core.adapter.repositories.weather_jma_repository import WeatherJMARepo
 from agrr_core.framework.repositories.file_repository import FileRepository
 from agrr_core.framework.repositories.http_client import HttpClient
 from agrr_core.framework.repositories.html_table_fetcher import HtmlTableFetcher
+from agrr_core.framework.repositories.csv_downloader import CsvDownloader
 from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
@@ -148,6 +149,13 @@ class AgrrCoreContainer:
             timeout = self.config.get('html_fetch_timeout', 30)
             self._instances['html_table_fetcher'] = HtmlTableFetcher(timeout=timeout)
         return self._instances['html_table_fetcher']
+    
+    def get_csv_downloader(self) -> CsvDownloader:
+        """Get CSV downloader instance."""
+        if 'csv_downloader' not in self._instances:
+            timeout = self.config.get('csv_download_timeout', 30)
+            self._instances['csv_downloader'] = CsvDownloader(timeout=timeout)
+        return self._instances['csv_downloader']
     
     def get_weather_jma_repository(self) -> WeatherJMARepository:
         """Get JMA weather repository instance."""

@@ -20,7 +20,7 @@ class CsvDownloader(CsvServiceInterface):
             timeout: Request timeout in seconds
         """
         self.timeout = timeout
-        self.session = requests.Session()
+        self.session: Optional[requests.Session] = requests.Session()
     
     async def download_csv(
         self,
@@ -63,7 +63,9 @@ class CsvDownloader(CsvServiceInterface):
     
     def close(self) -> None:
         """Close HTTP session."""
-        self.session.close()
+        if self.session:
+            self.session.close()
+            self.session = None
     
     def __enter__(self):
         """Context manager entry."""
@@ -71,5 +73,9 @@ class CsvDownloader(CsvServiceInterface):
     
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
+        self.close()
+    
+    def __del__(self):
+        """Destructor to ensure session cleanup."""
         self.close()
 

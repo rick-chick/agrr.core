@@ -70,7 +70,7 @@ class TestOptimizationResultSaving:
             for day in range(1, 21)
         ]
 
-        gateway_crop_requirement.craft.return_value = crop_requirement
+        gateway_crop_requirement.get.return_value = crop_requirement
         mock_weather_gateway.get.return_value = weather_data
 
         # Create interactor with optimization result gateway
@@ -94,7 +94,6 @@ class TestOptimizationResultSaving:
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 15),
             field=test_field,
-            weather_data_file="test_weather.json",
         )
 
         response = await interactor.execute(request)
@@ -164,7 +163,7 @@ class TestOptimizationResultSaving:
             for day in range(1, 21)
         ]
 
-        gateway_crop_requirement.craft.return_value = crop_requirement
+        gateway_crop_requirement.get.return_value = crop_requirement
         mock_weather_gateway.get.return_value = weather_data
 
         # Create interactor without optimization result gateway
@@ -188,7 +187,6 @@ class TestOptimizationResultSaving:
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 15),
             field=test_field,
-            weather_data_file="test_weather.json",
         )
 
         # Should not raise any errors
@@ -241,7 +239,7 @@ class TestOptimizationResultSaving:
             for day in range(1, 21)
         ]
 
-        gateway_crop_requirement.craft.return_value = crop_requirement
+        gateway_crop_requirement.get.return_value = crop_requirement
         mock_weather_gateway.get.return_value = weather_data
 
         # Create interactor with optimization result gateway
@@ -265,7 +263,6 @@ class TestOptimizationResultSaving:
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 15),
             field=test_field,
-            weather_data_file="test_weather.json",
         )
 
         response = await interactor.execute(request)

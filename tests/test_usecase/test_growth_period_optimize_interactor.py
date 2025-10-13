@@ -95,7 +95,7 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 4, 20), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
         ]
 
-        self.gateway_crop_requirement.craft.return_value = crop_requirement
+        self.gateway_crop_requirement.get.return_value = crop_requirement
         self.gateway_weather.get.return_value = weather_data
 
         # Request: Start between April 1-5, must complete by April 15 (completion deadline)
@@ -114,7 +114,6 @@ class TestGrowthPeriodOptimizeInteractor:
             variety="Koshihikari",
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 15),  # Completion deadline
-            weather_data_file="weather_data.json",
             field=test_field,
         )
 
@@ -175,7 +174,7 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 4, 5), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
         ]
 
-        self.gateway_crop_requirement.craft.return_value = crop_requirement
+        self.gateway_crop_requirement.get.return_value = crop_requirement
         self.gateway_weather.get.return_value = weather_data
 
         # Evaluation period with only 1 day
@@ -191,7 +190,6 @@ class TestGrowthPeriodOptimizeInteractor:
             variety=None,
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 1),
-            weather_data_file="weather_data.json",
             field=test_field,
         )
 
@@ -234,7 +232,7 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 5, 4), temperature_2m_mean=25.0, temperature_2m_max=30.0, temperature_2m_min=20.0),
         ]
 
-        self.gateway_crop_requirement.craft.return_value = crop_requirement
+        self.gateway_crop_requirement.get.return_value = crop_requirement
         self.gateway_weather.get.return_value = weather_data
 
         # Start on May 1, must complete by May 5 (deadline)
@@ -251,7 +249,6 @@ class TestGrowthPeriodOptimizeInteractor:
             variety=None,
             evaluation_period_start=datetime(2024, 5, 1),
             evaluation_period_end=datetime(2024, 5, 5),  # Completion deadline
-            weather_data_file="weather_data.json",
             field=test_field,
         )
 
@@ -313,7 +310,7 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 4, 15), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
         ]
 
-        self.gateway_crop_requirement.craft.return_value = crop_requirement
+        self.gateway_crop_requirement.get.return_value = crop_requirement
         self.gateway_weather.get.return_value = weather_data
 
         # Evaluation period: April 1-3 as start date candidates
@@ -334,7 +331,6 @@ class TestGrowthPeriodOptimizeInteractor:
             variety="Koshihikari",
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 12),  # Completion deadline
-            weather_data_file="weather_data.json",
             field=test_field,
         )
 
@@ -393,7 +389,7 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 4, 10), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
         ]
 
-        self.gateway_crop_requirement.craft.return_value = crop_requirement
+        self.gateway_crop_requirement.get.return_value = crop_requirement
         self.gateway_weather.get.return_value = weather_data
 
         # Start on April 1, needs 10 days -> completes April 10
@@ -410,7 +406,6 @@ class TestGrowthPeriodOptimizeInteractor:
             variety=None,
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 8),  # Unrealistic deadline (too early)
-            weather_data_file="weather_data.json",
             field=test_field,
         )
 
@@ -474,7 +469,7 @@ class TestGrowthPeriodOptimizeInteractor:
             for day in range(1, 21)
         ]
 
-        self.gateway_crop_requirement.craft.return_value = crop_requirement
+        self.gateway_crop_requirement.get.return_value = crop_requirement
         self.gateway_weather.get.return_value = weather_data
 
         # Setup interaction rules
@@ -505,18 +500,14 @@ class TestGrowthPeriodOptimizeInteractor:
             variety="Aiko",
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 4, 15),
-            weather_data_file="weather_data.json",
             field=test_field,
-            interaction_rules_file="test_interaction_rules.json",
         )
 
         # Execute
         response = await interactor.execute(request)
 
         # Verify that interaction rules were loaded
-        gateway_interaction_rule.get_rules.assert_called_once_with(
-            "test_interaction_rules.json"
-        )
+        gateway_interaction_rule.get_rules.assert_called_once()
         
         # Verify response is valid
         assert response.optimal_start_date is not None

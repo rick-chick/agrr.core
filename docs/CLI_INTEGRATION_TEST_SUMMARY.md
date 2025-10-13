@@ -202,7 +202,7 @@ $ pytest tests/test_integration/test_interaction_rule_json_integration.py -v
    - 複数ルールの累積適用
 
 2. **CLI E2Eテスト**
-   - `agrr crop`コマンドのgroups出力
+   - `agrr crop crop`コマンドのgroups出力
    - JSONファイル経由のデータ受け渡し
    - InteractionRuleファイルの読み込み
 

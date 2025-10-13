@@ -175,12 +175,15 @@ Note: Weather file can be generated using 'agrr weather' command with --json fla
         # Update presenter format
         self.presenter.output_format = args.format
 
-        # Create request DTO
+        # Note: File path is NOT passed to Interactor
+        # It is configured at Gateway initialization (done at CLI startup)
+        # Gateway is already initialized with appropriate repository and file path
+
+        # Create request DTO (no file paths, no entities - just business data)
         request = GrowthProgressCalculateRequestDTO(
             crop_id=args.crop,
             variety=args.variety,
             start_date=start_date,
-            weather_data_file=args.weather_file,
         )
 
         # Execute use case

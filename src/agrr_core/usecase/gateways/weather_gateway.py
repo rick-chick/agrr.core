@@ -8,11 +8,19 @@ from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWith
 
 
 class WeatherGateway(ABC):
-    """Gateway interface for weather domain operations."""
+    """Gateway interface for weather domain operations.
+    
+    Note: Data source (file path, URL, etc.) is injected at initialization via Repository,
+    not passed as method arguments.
+    """
     
     @abstractmethod
-    async def get(self, source: str) -> List[WeatherData]:
-        """Get weather data from source."""
+    async def get(self) -> List[WeatherData]:
+        """Get weather data from configured source.
+        
+        Returns:
+            List of WeatherData entities
+        """
         pass
     
     @abstractmethod

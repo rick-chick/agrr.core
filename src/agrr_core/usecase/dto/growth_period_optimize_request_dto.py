@@ -13,10 +13,12 @@ Fields
 - variety: Optional variety/cultivar
 - evaluation_period_start: Earliest possible start date for cultivation
 - evaluation_period_end: Completion deadline (cultivation must finish by this date)
-- weather_data_file: Path to weather data file (JSON or CSV)
 - field: Field entity containing field information including daily_fixed_cost
-- crop_requirement_file: Path to crop requirement file (optional)
-- interaction_rules_file: Path to interaction rules JSON file (optional)
+
+Note:
+- Weather data, crop requirements, and interaction rules are NOT in this DTO
+- They are obtained by Interactor via Gateways that were initialized with appropriate repositories
+- File paths are injected at Framework layer (Repository initialization), not UseCase layer
 
 Example:
     evaluation_period_start = 2024-04-01
@@ -41,10 +43,7 @@ class OptimalGrowthPeriodRequestDTO:
     variety: Optional[str]
     evaluation_period_start: datetime
     evaluation_period_end: datetime
-    weather_data_file: str
     field: Field  # Field entity containing area, daily_fixed_cost, etc.
-    crop_requirement_file: Optional[str] = None  # Path to crop requirement file (optional)
-    interaction_rules_file: Optional[str] = None  # Path to interaction rules JSON file (optional)
 
     def __post_init__(self):
         """Validate input parameters."""

@@ -1,23 +1,15 @@
-"""Gateway interface for crafting crop stage requirements (LLM-backed)."""
+"""Gateway interface for crop requirements."""
 
 from abc import ABC, abstractmethod
-from typing import Protocol, Dict, Any
+from typing import Dict, Any
 
 from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
     CropRequirementAggregate,
 )
-from agrr_core.usecase.dto.crop_requirement_craft_request_dto import (
-    CropRequirementCraftRequestDTO,
-)
 
 
 class CropRequirementGateway(ABC):
-    """Gateway for inferring crop requirements from external services/LLMs."""
-
-    @abstractmethod
-    async def craft(self, request: CropRequirementCraftRequestDTO) -> CropRequirementAggregate:
-        """Infer and assemble a CropRequirementAggregate from the request."""
-        pass
+    """Gateway for crop requirements (individual LLM calls and repository access)."""
 
     @abstractmethod
     async def extract_crop_variety(self, crop_query: str) -> Dict[str, Any]:
@@ -40,7 +32,7 @@ class CropRequirementGateway(ABC):
             variety: Variety name
             
         Returns:
-            Dict containing crop_info and growth_stages
+            Dict containing crop_info and growth_periods
         """
         pass
 
@@ -59,16 +51,42 @@ class CropRequirementGateway(ABC):
             Dict containing detailed requirements for the stage
         """
         pass
-    
+
     @abstractmethod
-    async def get(self, file_path: str) -> CropRequirementAggregate:
-        """Load crop requirements from file.
+    async def extract_crop_economics(self, crop_name: str, variety: str) -> Dict[str, Any]:
+        """Extract crop economic information (area per unit and revenue per area).
         
         Args:
-            file_path: Path to crop requirement JSON file
+            crop_name: Name of the crop
+            variety: Variety name
             
         Returns:
-            CropRequirementAggregate loaded from file
+            Dict containing area_per_unit and revenue_per_area
+        """
+        pass
+
+    @abstractmethod
+    async def extract_crop_family(self, crop_name: str, variety: str) -> Dict[str, Any]:
+        """Extract crop family (科) information.
+        
+        Args:
+            crop_name: Name of the crop
+            variety: Variety name
+            
+        Returns:
+            Dict containing family information (family_ja and family_scientific)
+        """
+        pass
+
+    @abstractmethod
+    async def get(self) -> CropRequirementAggregate:
+        """Load crop requirements from configured source.
+        
+        Returns:
+            CropRequirementAggregate loaded from configured source
+            
+        Note:
+            Source configuration (file path, etc.) is set at initialization.
         """
         pass
 

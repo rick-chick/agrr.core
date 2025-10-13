@@ -95,12 +95,12 @@ class TestCLIArgumentParsing:
         
         # Create mocked components
         file_repo = FileRepository()
-        weather_file_repo = WeatherFileRepository(file_repo)
+        weather_file_repo = WeatherFileRepository(file_repo, "test_weather.json")
         csv_downloader = CsvDownloader()
         jma_repo = WeatherJMARepository(csv_downloader)
         
         weather_gateway = WeatherGatewayImpl(
-            weather_file_repository=weather_file_repo,
+            weather_repository=weather_file_repo,
             weather_api_repository=jma_repo
         )
         presenter = WeatherCLIPresenter()
@@ -139,12 +139,12 @@ class TestCLIArgumentParsing:
         
         # Create mocked components
         file_repo = FileRepository()
-        weather_file_repo = WeatherFileRepository(file_repo)
+        weather_file_repo = WeatherFileRepository(file_repo, "test_weather.json")
         http_client = HttpClient("https://test.com")
         openmeteo_repo = WeatherAPIOpenMeteoRepository(http_client)
         
         weather_gateway = WeatherGatewayImpl(
-            weather_file_repository=weather_file_repo,
+            weather_repository=weather_file_repo,
             weather_api_repository=openmeteo_repo
         )
         presenter = WeatherCLIPresenter()
@@ -178,12 +178,12 @@ class TestCLIArgumentParsing:
         
         # Create mocked components
         file_repo = FileRepository()
-        weather_file_repo = WeatherFileRepository(file_repo)
+        weather_file_repo = WeatherFileRepository(file_repo, "test_weather.json")
         http_client = HttpClient("https://test.com")
         openmeteo_repo = WeatherAPIOpenMeteoRepository(http_client)
         
         weather_gateway = WeatherGatewayImpl(
-            weather_file_repository=weather_file_repo,
+            weather_repository=weather_file_repo,
             weather_api_repository=openmeteo_repo
         )
         presenter = WeatherCLIPresenter()

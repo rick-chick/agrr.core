@@ -7,14 +7,33 @@ from datetime import datetime
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
+from agrr_core.adapter.interfaces.weather_repository_interface import WeatherRepositoryInterface
 
 
-class WeatherFileRepository:
-    """Repository for reading weather data from files and writing predictions to files."""
+class WeatherFileRepository(WeatherRepositoryInterface):
+    """File-based implementation of WeatherRepository.
     
-    def __init__(self, file_repository: FileRepositoryInterface):
-        """Initialize weather file repository."""
+    Reads weather data from JSON/CSV files.
+    File path is configured at initialization.
+    """
+    
+    def __init__(self, file_repository: FileRepositoryInterface, file_path: str):
+        """Initialize weather file repository.
+        
+        Args:
+            file_repository: File repository for file I/O operations (Framework layer)
+            file_path: File path to weather data file
+        """
         self.file_repository = file_repository
+        self.file_path = file_path
+    
+    async def get(self) -> List[WeatherData]:
+        """Get weather data from configured file.
+        
+        Returns:
+            List of WeatherData entities
+        """
+        return await self.read_weather_data_from_file(self.file_path)
     
     # ===== Reading Methods =====
     

@@ -51,7 +51,7 @@ agrr --help
 ### 動作確認
 ```bash
 ./dist/agrr --help
-./dist/agrr crop --query "トマト"
+./dist/agrr crop crop --query "トマト"
 ```
 
 ### 配布
@@ -78,7 +78,7 @@ docker build -t agrr .
 # 実行
 docker run --rm agrr --help
 docker run --rm agrr weather --location 35.6762,139.6503 --days 7
-docker run --rm agrr crop --query "トマト"
+docker run --rm agrr crop crop --query "トマト"
 
 # エイリアスを作成（便利）
 alias agrr='docker run --rm agrr'

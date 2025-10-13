@@ -32,9 +32,15 @@ from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 class AgrrCoreContainer:
     """Unified dependency injection container for agrr.core application."""
     
-    def __init__(self, config: Dict[str, Any] = None):
-        """Initialize container with configuration."""
+    def __init__(self, config: Dict[str, Any] = None, weather_file_path: str = ""):
+        """Initialize container with configuration.
+        
+        Args:
+            config: Configuration dictionary
+            weather_file_path: Path to weather data file (optional, for file-based operations)
+        """
         self.config = config or {}
+        self.weather_file_path = weather_file_path
         self._instances = {}
     
     # Weather Repository Management
@@ -77,7 +83,7 @@ class AgrrCoreContainer:
                 weather_api_repository = self.get_weather_api_repository()
             
             self._instances['weather_gateway'] = WeatherGatewayImpl(
-                weather_file_repository=weather_file_repository,
+                weather_repository=weather_file_repository,
                 weather_api_repository=weather_api_repository
             )
         
@@ -113,10 +119,16 @@ class AgrrCoreContainer:
         return self._instances['cli_controller']
     
     def get_weather_file_repository(self) -> WeatherFileRepository:
-        """Get weather file repository instance."""
+        """Get weather file repository instance.
+        
+        Note: Uses weather_file_path from container initialization.
+        """
         if 'weather_file_repository' not in self._instances:
             file_repository_impl = self.get_file_repository_impl()
-            self._instances['weather_file_repository'] = WeatherFileRepository(file_repository_impl)
+            self._instances['weather_file_repository'] = WeatherFileRepository(
+                file_repository_impl, 
+                file_path=self.weather_file_path
+            )
         return self._instances['weather_file_repository']
     
     def get_time_series_service(self) -> TimeSeriesInterface:
@@ -170,7 +182,7 @@ class AgrrCoreContainer:
             weather_file_repository = self.get_weather_file_repository()
             weather_api_repository = self.get_weather_api_repository()
             self._instances['weather_gateway'] = WeatherGatewayImpl(
-                weather_file_repository=weather_file_repository,
+                weather_repository=weather_file_repository,
                 weather_api_repository=weather_api_repository
             )
         return self._instances['weather_gateway']
@@ -289,8 +301,8 @@ class AgrrCoreContainer:
 class WeatherCliContainer(AgrrCoreContainer):
     """Weather CLI container for backward compatibility."""
     
-    def __init__(self, config: Dict[str, Any] = None):
-        super().__init__(config)
+    def __init__(self, config: Dict[str, Any] = None, weather_file_path: str = ""):
+        super().__init__(config, weather_file_path)
     
     def get_weather_repository(self) -> WeatherGateway:
         """Get weather repository instance with CLI defaults."""
@@ -300,8 +312,8 @@ class WeatherCliContainer(AgrrCoreContainer):
 class PredictionContainer(AgrrCoreContainer):
     """Prediction container for backward compatibility."""
     
-    def __init__(self, config: Dict[str, Any] = None):
-        super().__init__(config)
+    def __init__(self, config: Dict[str, Any] = None, weather_file_path: str = ""):
+        super().__init__(config, weather_file_path)
     
     def get_weather_repository(self) -> WeatherGateway:
         """Get weather repository instance with prediction defaults."""

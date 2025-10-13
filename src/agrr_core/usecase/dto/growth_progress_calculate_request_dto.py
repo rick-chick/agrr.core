@@ -7,7 +7,11 @@ Fields
 - crop_id: Crop identifier (e.g., "rice", "tomato")
 - variety: Optional variety/cultivar
 - start_date: Growth start date (sowing/planting date)
-- weather_data_file: Path to weather data file (JSON or CSV)
+
+Note:
+- Weather data is NOT in this DTO
+- It is obtained by Interactor via Gateway that was initialized with appropriate repository
+- File path is injected at Framework layer (Repository initialization), not UseCase layer
 """
 
 from dataclasses import dataclass
@@ -22,5 +26,4 @@ class GrowthProgressCalculateRequestDTO:
     crop_id: str
     variety: Optional[str]
     start_date: datetime
-    weather_data_file: str  # Path to weather data file (JSON or CSV)
 

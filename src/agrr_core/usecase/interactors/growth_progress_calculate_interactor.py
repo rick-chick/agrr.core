@@ -21,9 +21,6 @@ from agrr_core.entity.entities.growth_progress_timeline_entity import (
 from agrr_core.entity.entities.growth_stage_entity import GrowthStage
 from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
 from agrr_core.entity.entities.weather_entity import WeatherData
-from agrr_core.usecase.dto.crop_requirement_craft_request_dto import (
-    CropRequirementCraftRequestDTO,
-)
 from agrr_core.usecase.dto.growth_progress_calculate_request_dto import (
     GrowthProgressCalculateRequestDTO,
 )
@@ -60,13 +57,13 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
         Returns:
             Response DTO containing daily growth progress records
         """
-        # Step 1: Get crop requirements
+        # Step 1: Get crop requirements (via LLM)
         crop_requirement = await self._get_crop_requirements(
             request.crop_id, request.variety
         )
 
-        # Step 2: Get weather data from file
-        weather_data_list = await self._get_weather_data(request.weather_data_file)
+        # Step 2: Get weather data via gateway (file path configured at initialization)
+        weather_data_list = await self.weather_gateway.get()
 
         # Step 3: Calculate growth progress timeline
         timeline = self._calculate_growth_progress(
@@ -80,21 +77,7 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
         self, crop_id: str, variety: str
     ) -> CropRequirementAggregate:
         """Get crop requirements from gateway."""
-        craft_request = CropRequirementCraftRequestDTO(
-            crop_query=f"{crop_id} {variety}" if variety else crop_id
-        )
-        return await self.crop_requirement_gateway.craft(craft_request)
-
-    async def _get_weather_data(self, source: str) -> List[WeatherData]:
-        """Get weather data from gateway.
-
-        Args:
-            source: Data source identifier
-
-        Returns:
-            List of WeatherData entities
-        """
-        return await self.weather_gateway.get(source)
+        return await self.crop_requirement_gateway.get()
 
     def _calculate_growth_progress(
         self,

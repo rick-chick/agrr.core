@@ -27,7 +27,10 @@ class TestWeatherFileRepository:
         self.mock_file_repository.read = AsyncMock(return_value='{"data": [{"time": "2024-01-01", "temperature_2m_max": 25.0}]}')
         self.mock_file_repository.write = AsyncMock(return_value=None)
         self.mock_file_repository.delete = AsyncMock(return_value=None)
-        self.repository = WeatherFileRepository(self.mock_file_repository)
+        self.repository = WeatherFileRepository(
+            self.mock_file_repository,
+            file_path="test_weather.json"
+        )
     
     # ===== Input Validation Tests =====
     

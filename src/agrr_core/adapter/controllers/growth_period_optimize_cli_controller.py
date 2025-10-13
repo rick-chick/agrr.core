@@ -144,16 +144,27 @@ Field Configuration File Format (JSON):
 
 Crop Requirement File Format (JSON, optional):
   {
-    "crop_name": "rice",
-    "variety": "Koshihikari",
-    "base_temperature": 10.0,
-    "gdd_requirement": 2400.0,
-    "stages": [
+    "crop": {
+      "crop_id": "rice",
+      "name": "Rice",
+      "variety": "Koshihikari",
+      "area_per_unit": 0.25,
+      "revenue_per_area": 10000.0,
+      "max_revenue": 500000.0,
+      "groups": ["Poaceae", "cereals"]
+    },
+    "stage_requirements": [
       {
-        "name": "germination",
-        "gdd_requirement": 200.0,
-        "optimal_temp_min": 20.0,
-        "optimal_temp_max": 30.0
+        "stage": {"name": "germination", "order": 1},
+        "temperature": {
+          "base_temperature": 10.0,
+          "optimal_min": 20.0,
+          "optimal_max": 30.0,
+          "low_stress_threshold": 15.0,
+          "high_stress_threshold": 35.0,
+          "frost_threshold": 0.0
+        },
+        "thermal": {"required_gdd": 200.0}
       }
     ]
   }
@@ -183,6 +194,8 @@ Notes:
   - Daily cost includes fixed costs like field rent, but not variable costs
   - Weather file can be generated using 'agrr weather' command
   - Crop requirements are auto-generated using AI if not provided
+  - The 'groups' field in crop data is essential for interaction rules (continuous cultivation, etc.)
+  - Note: 'agrr crop crop' output format differs from the file format shown above
             """
         )
 
@@ -337,16 +350,17 @@ Notes:
             print('Error: Field configuration not loaded. Make sure --field-config is a valid field JSON file.')
             return
         
-        # Create request DTO
+        # Note: File paths are NOT passed to Interactor
+        # They are configured at Gateway initialization (done at CLI startup)
+        # Gateways are already initialized with appropriate repositories and file paths
+        
+        # Create request DTO (no file paths, no entities - just business data)
         request = OptimalGrowthPeriodRequestDTO(
             crop_id=args.crop,
             variety=args.variety,
             evaluation_period_start=evaluation_start,
             evaluation_period_end=evaluation_end,
-            weather_data_file=args.weather_file,
             field=self.field,
-            crop_requirement_file=getattr(args, 'crop_requirement_file', None),
-            interaction_rules_file=getattr(args, 'interaction_rules', None),
         )
 
         # Execute use case

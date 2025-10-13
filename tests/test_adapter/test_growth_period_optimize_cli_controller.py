@@ -73,7 +73,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
             for day in range(1, 21)
         ]
 
-        gateway_crop_requirement.craft.return_value = crop_requirement
+        gateway_crop_requirement.get.return_value = crop_requirement
         mock_weather_gateway.get.return_value = weather_data
 
         # Create field entity
@@ -156,7 +156,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
             for day in range(1, 21)
         ]
 
-        gateway_crop_requirement.craft.return_value = crop_requirement
+        gateway_crop_requirement.get.return_value = crop_requirement
         mock_weather_gateway.get.return_value = weather_data
 
         # Create field entity
@@ -332,7 +332,7 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
             for day in range(1, 21)
         ]
 
-        gateway_crop_requirement.craft.return_value = crop_requirement
+        gateway_crop_requirement.get.return_value = crop_requirement
         mock_weather_gateway.get.return_value = weather_data
 
         # Create field entity
@@ -372,5 +372,5 @@ class TestGrowthPeriodOptimizeCliControllerWithStorage:
         with patch("sys.stdout", new=StringIO()):
             await controller.run(args)
 
-        # Verify that interaction_rule_gateway.get_rules was called with correct path
-        mock_interaction_rule_gateway.get_rules.assert_called_once_with("test_interaction_rules.json")
+        # Verify that interaction_rule_gateway.get_rules was called (no args - path configured at init)
+        mock_interaction_rule_gateway.get_rules.assert_called_once()

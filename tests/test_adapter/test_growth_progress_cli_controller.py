@@ -45,7 +45,6 @@ class TestGrowthProgressCliController:
             crop_id="rice",
             variety="Koshihikari",
             start_date=datetime(2024, 5, 1),
-            weather_data_file="weather.json",
         )
         
         # Setup mock response

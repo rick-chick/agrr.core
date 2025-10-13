@@ -24,9 +24,6 @@ from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
 )
 from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.entity.entities.field_entity import Field
-from agrr_core.usecase.dto.crop_requirement_craft_request_dto import (
-    CropRequirementCraftRequestDTO,
-)
 from agrr_core.usecase.dto.growth_period_optimize_request_dto import (
     OptimalGrowthPeriodRequestDTO,
 )
@@ -97,12 +94,14 @@ class GrowthPeriodOptimizeInteractor(
         Raises:
             ValueError: If no candidate reaches 100% growth completion
         """
-        # Load interaction rules if provided
+        # Load interaction rules via gateway (if gateway is configured with file path)
         interaction_rules = []
-        if request.interaction_rules_file and self.interaction_rule_gateway:
-            interaction_rules = await self.interaction_rule_gateway.get_rules(
-                request.interaction_rules_file
-            )
+        if self.interaction_rule_gateway:
+            try:
+                interaction_rules = await self.interaction_rule_gateway.get_rules()
+            except ValueError:
+                # Gateway not configured with file path - no rules to apply
+                pass
         
         # Get daily_fixed_cost from field entity
         daily_fixed_cost = request.field.daily_fixed_cost
@@ -174,18 +173,11 @@ class GrowthPeriodOptimizeInteractor(
         Returns:
             List of candidate results
         """
-        # Get crop requirements and weather data
-        if request.crop_requirement_file:
-            # Load from file (fast, no LLM)
-            crop_requirement = await self.crop_requirement_gateway.get(
-                request.crop_requirement_file
-            )
-        else:
-            # Use LLM to generate (slow)
-            crop_requirement = await self._get_crop_requirements(
-                request.crop_id, request.variety
-            )
-        weather_data = await self.weather_gateway.get(request.weather_data_file)
+        # Get crop requirements via gateway
+        crop_requirement = await self.crop_requirement_gateway.get()
+        
+        # Get weather data via gateway (file path configured at initialization)
+        weather_data = await self.weather_gateway.get()
         
         # Calculate total required GDD
         total_required_gdd = sum(
@@ -352,7 +344,7 @@ class GrowthPeriodOptimizeInteractor(
         start_date: datetime,
         crop_id: str,
         variety: Optional[str],
-        weather_data_file: str,
+        weather_data: List[WeatherData],
         field: Field,
         completion_deadline: datetime,
     ) -> CandidateResultDTO:
@@ -362,7 +354,7 @@ class GrowthPeriodOptimizeInteractor(
             start_date: Candidate cultivation start date
             crop_id: Crop identifier
             variety: Optional variety
-            weather_data_file: Weather data file path
+            weather_data: List of weather data entities
             field: Field entity for cost calculation
             completion_deadline: Deadline for completion (cultivation must finish by this date)
             
@@ -375,7 +367,7 @@ class GrowthPeriodOptimizeInteractor(
             crop_id=crop_id,
             variety=variety,
             start_date=start_date,
-            weather_data_file=weather_data_file,
+            weather_data=weather_data,
         )
         
         # Calculate growth progress
@@ -406,9 +398,6 @@ class GrowthPeriodOptimizeInteractor(
     async def _get_crop_requirements(
         self, crop_id: str, variety: Optional[str]
     ) -> CropRequirementAggregate:
-        """Get crop requirements from gateway (uses LLM)."""
-        craft_request = CropRequirementCraftRequestDTO(
-            crop_query=f"{crop_id} {variety}" if variety else crop_id
-        )
-        return await self.crop_requirement_gateway.craft(craft_request)
+        """Get crop requirements from gateway."""
+        return await self.crop_requirement_gateway.get()
 

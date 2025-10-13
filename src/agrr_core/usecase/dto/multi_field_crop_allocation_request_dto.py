@@ -41,7 +41,6 @@ class MultiFieldCropAllocationRequestDTO:
     crop_requirements: List[CropRequirementSpec]
     planning_period_start: datetime
     planning_period_end: datetime
-    weather_data_file: str
     optimization_objective: str = "maximize_profit"  # or "minimize_cost"
     max_computation_time: Optional[float] = None  # seconds
 

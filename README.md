@@ -35,7 +35,7 @@ pip install -e .
 # Now you can use 'agrr' command anywhere
 agrr --help
 agrr weather --location 35.6762,139.6503 --days 7
-agrr crop --query "トマト"
+agrr crop crop --query "トマト"
 agrr progress --crop rice --variety Koshihikari --start-date 2024-05-01 --weather-file weather_data.json
 agrr optimize-period optimize --crop rice --variety Koshihikari --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 --weather-file weather_data.json --field-config examples/field_01.json
 ```
@@ -84,7 +84,7 @@ agrr optimize-period optimize --crop rice --variety Koshihikari --evaluation-sta
    
    # Run
    docker run --rm agrr weather --location 35.6762,139.6503 --days 7
-   docker run --rm agrr crop --query "トマト"
+   docker run --rm agrr crop crop --query "トマト"
    ```
 
 5. **GitHubから直接インストール**
@@ -106,7 +106,7 @@ Get weather data from the command line:
 ```bash
 # Using the agrr command (after pip install -e .)
 agrr weather --location 35.6762,139.6503 --days 7
-agrr crop --query "トマト"
+agrr crop crop --query "トマト"
 agrr predict-file --input weather.json --output predictions.json
 
 # Or using the standalone binary

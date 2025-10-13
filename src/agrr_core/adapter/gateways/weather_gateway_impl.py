@@ -5,34 +5,43 @@ from typing import List
 from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
-from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
+from agrr_core.adapter.interfaces.weather_repository_interface import WeatherRepositoryInterface
 from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
 
 
 class WeatherGatewayImpl(WeatherGateway):
-    """Implementation of weather gateway."""
+    """Implementation of weather gateway.
+    
+    This gateway depends on WeatherRepositoryInterface abstraction,
+    not specific implementations (file, SQL, memory, etc.).
+    """
 
     def __init__(
         self, 
-        weather_file_repository: WeatherFileRepository = None,
+        weather_repository: WeatherRepositoryInterface = None,
         weather_api_repository: WeatherAPIOpenMeteoRepository = None
     ):
-        """Initialize weather gateway."""
-        self.weather_file_repository = weather_file_repository
-        self.weather_api_repository = weather_api_repository
-
-    async def get(self, source: str) -> List[WeatherData]:
-        """Get weather data from source.
+        """Initialize weather gateway with repository abstraction.
         
         Args:
-            source: Data source identifier (e.g., file path)
-            
+            weather_repository: Repository abstraction for weather data (file, SQL, memory, etc.)
+            weather_api_repository: API repository for external weather data
+        """
+        self.weather_repository = weather_repository
+        self.weather_api_repository = weather_api_repository
+
+    async def get(self) -> List[WeatherData]:
+        """Get weather data from configured repository.
+        
         Returns:
             List of WeatherData entities
+            
+        Note:
+            Repository is configured with its data source at initialization.
         """
-        if self.weather_file_repository is None:
-            raise ValueError("WeatherFileRepository not initialized")
-        return await self.weather_file_repository.read_weather_data_from_file(source)
+        if self.weather_repository is None:
+            raise ValueError("WeatherRepository not initialized")
+        return await self.weather_repository.get()
 
     async def create(self, weather_data: List[WeatherData], destination: str) -> None:
         """Create weather data at destination."""

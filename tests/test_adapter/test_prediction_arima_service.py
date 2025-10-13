@@ -408,54 +408,5 @@ class TestPredictionARIMAService:
         assert 'temperature' in result[0]  # First batch should succeed
         assert 'error' in result[1]  # Second batch should have error
     
-    def test_interpolate_missing_values_middle(self):
-        """Test linear interpolation for missing values in the middle."""
-        data = [10.0, None, 20.0, None, None, 40.0]
-        result = self.service._interpolate_missing_values(data)
-        
-        assert len(result) == 6
-        assert result[0] == 10.0
-        assert result[1] == 15.0  # Linear interpolation between 10 and 20
-        assert result[2] == 20.0
-        assert abs(result[3] - 26.666666666666668) < 1e-10  # Linear interpolation between 20 and 40
-        assert abs(result[4] - 33.333333333333336) < 1e-10  # Linear interpolation between 20 and 40
-        assert result[5] == 40.0
-    
-    def test_interpolate_missing_values_at_start(self):
-        """Test linear interpolation with missing values at the start."""
-        data = [None, None, 20.0, 30.0]
-        result = self.service._interpolate_missing_values(data)
-        
-        assert len(result) == 4
-        assert result[0] == 20.0  # Use first valid value
-        assert result[1] == 20.0  # Use first valid value
-        assert result[2] == 20.0
-        assert result[3] == 30.0
-    
-    def test_interpolate_missing_values_at_end(self):
-        """Test linear interpolation with missing values at the end."""
-        data = [10.0, 20.0, None, None]
-        result = self.service._interpolate_missing_values(data)
-        
-        assert len(result) == 4
-        assert result[0] == 10.0
-        assert result[1] == 20.0
-        assert result[2] == 20.0  # Use last valid value
-        assert result[3] == 20.0  # Use last valid value
-    
-    def test_interpolate_missing_values_all_missing(self):
-        """Test linear interpolation with all missing values."""
-        data = [None, None, None]
-        
-        with pytest.raises(PredictionError, match="All values are missing"):
-            self.service._interpolate_missing_values(data)
-    
-    def test_interpolate_missing_values_no_missing(self):
-        """Test linear interpolation with no missing values."""
-        data = [10.0, 20.0, 30.0]
-        result = self.service._interpolate_missing_values(data)
-        
-        assert len(result) == 3
-        assert result[0] == 10.0
-        assert result[1] == 20.0
-        assert result[2] == 30.0
+    # Note: Interpolation tests have been moved to test_interpolation_utils.py
+    # The prediction service now uses LinearInterpolationService for interpolation

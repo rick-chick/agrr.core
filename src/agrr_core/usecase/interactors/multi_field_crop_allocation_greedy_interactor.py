@@ -255,7 +255,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                     evaluation_period_start=request.planning_period_start,
                     evaluation_period_end=request.planning_period_end,
                     weather_data_file=request.weather_data_file,
-                    field_id=field.field_id,
+                    field=field,
                     crop_requirement_file=crop_spec.crop_requirement_file,
                 )
                 
@@ -371,9 +371,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             variety=crop_spec.variety,
             evaluation_period_start=request.planning_period_start,
             evaluation_period_end=request.planning_period_end,
-            weather_data_file=request.weather_data_file,
-            field_id=field.field_id,
-            crop_requirement_file=crop_spec.crop_requirement_file,
+            field=field,
         )
         
         optimization_result = await self.growth_period_optimizer.execute(optimization_request)

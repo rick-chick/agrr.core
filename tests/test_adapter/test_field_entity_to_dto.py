@@ -39,7 +39,6 @@ class TestFieldEntityToDTO:
             variety="Koshihikari",
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 9, 30),
-            weather_data_file="weather.json",
             field=field
         )
 
@@ -70,7 +69,6 @@ class TestFieldEntityToDTO:
             variety="Koshihikari",
             evaluation_period_start=datetime(2024, 4, 1),
             evaluation_period_end=datetime(2024, 9, 30),
-            weather_data_file="weather.json",
             field=field
         )
 

@@ -19,6 +19,7 @@ from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
 from agrr_core.adapter.mappers.crop_requirement_mapper import CropRequirementMapper
 from agrr_core.adapter.gateways.crop_requirement_gateway_impl import CropRequirementGatewayImpl
+from agrr_core.adapter.repositories.crop_requirement_file_repository import CropRequirementFileRepository
 from agrr_core.framework.repositories.file_repository import FileRepository
 
 
@@ -162,12 +163,16 @@ class TestCropGroupsDataFlowThroughGateway:
         try:
             # Load using Gateway
             file_repository = FileRepository()
+            crop_requirement_repository = CropRequirementFileRepository(
+                file_repository=file_repository,
+                file_path=str(temp_file)
+            )
             gateway = CropRequirementGatewayImpl(
                 llm_client=None,
-                file_repository=file_repository
+                crop_requirement_repository=crop_requirement_repository
             )
             
-            aggregate = await gateway.get(str(temp_file))
+            aggregate = await gateway.get()
             
             # Verify groups field was loaded correctly
             assert aggregate.crop.groups is not None
@@ -228,12 +233,16 @@ class TestCropGroupsDataFlowThroughGateway:
         
         try:
             file_repository = FileRepository()
+            crop_requirement_repository = CropRequirementFileRepository(
+                file_repository=file_repository,
+                file_path=str(temp_file)
+            )
             gateway = CropRequirementGatewayImpl(
                 llm_client=None,
-                file_repository=file_repository
+                crop_requirement_repository=crop_requirement_repository
             )
             
-            aggregate = await gateway.get(str(temp_file))
+            aggregate = await gateway.get()
             
             # groups should be None for backward compatibility
             assert aggregate.crop.groups is None
@@ -301,12 +310,16 @@ class TestCropGroupsDataFlowThroughGateway:
         try:
             # 4. Load back using Gateway
             file_repository = FileRepository()
+            crop_requirement_repository = CropRequirementFileRepository(
+                file_repository=file_repository,
+                file_path=str(temp_file)
+            )
             gateway = CropRequirementGatewayImpl(
                 llm_client=None,
-                file_repository=file_repository
+                crop_requirement_repository=crop_requirement_repository
             )
             
-            loaded_aggregate = await gateway.get(str(temp_file))
+            loaded_aggregate = await gateway.get()
             
             # 5. Verify all fields including groups
             assert loaded_aggregate.crop.crop_id == original_crop.crop_id

@@ -14,17 +14,17 @@ class InteractionRuleGateway(ABC):
     """Gateway for loading interaction rules."""
     
     @abstractmethod
-    async def get_rules(self, file_path: str) -> List[InteractionRule]:
-        """Load interaction rules from a file.
+    async def get_rules(self) -> List[InteractionRule]:
+        """Load interaction rules from configured source.
         
-        Args:
-            file_path: Path to the interaction rules JSON file
-            
         Returns:
             List of InteractionRule entities
             
         Raises:
             FileError: If file cannot be read or parsed
+            
+        Note:
+            File path is configured at repository initialization, not passed here.
         """
         pass
 

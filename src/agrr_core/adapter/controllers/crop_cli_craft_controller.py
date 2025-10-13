@@ -42,16 +42,16 @@ class CropCliCraftController:
             epilog="""
 Examples:
   # Get crop requirements for tomato (in Japanese)
-  agrr crop --query "トマト"
+  agrr crop crop --query "トマト"
   
   # Get requirements for a specific variety
-  agrr crop --query "アイコトマト"
+  agrr crop crop --query "アイコトマト"
   
   # Get requirements for rice
-  agrr crop --query "稲"
+  agrr crop crop --query "稲"
   
   # Save crop requirements to file
-  agrr crop --query "トマト" > crop_requirements.json
+  agrr crop crop --query "トマト" > crop_requirements.json
 
 Output Format (JSON):
   {

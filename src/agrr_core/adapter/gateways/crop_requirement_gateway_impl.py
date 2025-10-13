@@ -1,426 +1,98 @@
-"""Adapter: Crop requirement gateway implementation (LLM-injected, stub fallback).
+"""Adapter: Crop requirement gateway implementation.
 
-This implementation accepts an LLM client via dependency injection. If the
-client is provided, `_infer_with_llm` will attempt to use it; otherwise (or on
-errors), it falls back to deterministic defaults. The adapter translates LLM
-outputs to domain entities (`CropRequirementAggregate`).
+This implementation uses CropRequirementLLMRepository for LLM-based operations.
 """
 
-from typing import List, Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any
 
 from agrr_core.usecase.gateways.crop_requirement_gateway import CropRequirementGateway
-from agrr_core.usecase.dto.crop_requirement_craft_request_dto import (
-    CropRequirementCraftRequestDTO,
+from agrr_core.adapter.interfaces.llm_client import LLMClient
+from agrr_core.adapter.interfaces.crop_requirement_repository_interface import (
+    CropRequirementRepositoryInterface,
 )
-from agrr_core.entity import (
-    Crop,
-    GrowthStage,
-    TemperatureProfile,
-    SunshineProfile,
-    ThermalRequirement,
-    StageRequirement,
+from agrr_core.adapter.repositories.crop_requirement_llm_repository import (
+    CropRequirementLLMRepository,
 )
 from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
     CropRequirementAggregate,
 )
-from agrr_core.adapter.interfaces.llm_client import LLMClient
-from agrr_core.adapter.utils.llm_struct_schema import (
-    build_stage_requirement_structure,
-    build_stage_requirement_descriptions,
-)
-from agrr_core.adapter.mappers.llm_response_normalizer import LLMResponseNormalizer
 
 
 class CropRequirementGatewayImpl(CropRequirementGateway):
-    """Gateway that uses an injected LLM client to craft requirements (if present)."""
+    """Gateway that uses CropRequirementLLMRepository for LLM operations."""
 
-    def __init__(self, llm_client: Optional[LLMClient] = None, file_repository=None):
-        """Initialize with an optional LLM client (DI) and file repository.
-
-        The client is expected to expose an async `generate(prompt: str) -> str`-like
-        API. We do not enforce a strict protocol here to avoid tight coupling.
+    def __init__(
+        self,
+        llm_client: Optional[LLMClient] = None,
+        crop_requirement_repository: Optional[CropRequirementRepositoryInterface] = None
+    ):
+        """Initialize with optional LLM client and repository.
         
         Args:
-            llm_client: Optional LLM client for generating requirements
-            file_repository: Optional file repository for loading requirements from files
+            llm_client: Optional LLM client for LLM operations
+            crop_requirement_repository: Optional repository for get operations
         """
         self.llm_client = llm_client
-        self.file_repository = file_repository
-
-    async def craft(self, request: CropRequirementCraftRequestDTO) -> CropRequirementAggregate:
-        crop_query = (request.crop_query or "").strip()
-        
-        # Step 1: Extract crop and variety
-        step1_result = await self.extract_crop_variety(crop_query)
-        crop_name = step1_result.get("crop_name", crop_query)
-        variety = step1_result.get("variety", "default")
-        
-        # Step 2: Define growth periods
-        step2_result = await self.define_growth_stages(crop_name, variety)
-        growth_periods = step2_result.get("growth_periods", [])
-        
-        # Step 3: Research requirements for each period
-        stage_requirements = []
-        for period in growth_periods:
-            period_name = period.get("period_name", "Unknown")
-            period_desc = period.get("period_description", "")
-            order = period.get("order", len(stage_requirements) + 1)
-            
-            step3_result = await self.research_stage_requirements(
-                crop_name, variety, period_name, period_desc
-            )
-            
-            # Parse step3 result into entities
-            temp_data = step3_result.get("temperature", {})
-            temp = TemperatureProfile(
-                base_temperature=temp_data.get("base_temperature", 10.0),
-                optimal_min=temp_data.get("optimal_min", 20.0),
-                optimal_max=temp_data.get("optimal_max", 26.0),
-                low_stress_threshold=temp_data.get("low_stress_threshold", 12.0),
-                high_stress_threshold=temp_data.get("high_stress_threshold", 32.0),
-                frost_threshold=temp_data.get("frost_threshold", 0.0),
-                sterility_risk_threshold=temp_data.get("sterility_risk_threshold"),
-            )
-            
-            sun_data = step3_result.get("sunshine", {})
-            sun = SunshineProfile(
-                minimum_sunshine_hours=sun_data.get("minimum_sunshine_hours", 3.0),
-                target_sunshine_hours=sun_data.get("target_sunshine_hours", 6.0)
-            )
-            
-            thermal_data = step3_result.get("thermal", {})
-            thermal = ThermalRequirement(
-                required_gdd=thermal_data.get("required_gdd", 400.0)
-            )
-            
-            stage = GrowthStage(name=period_name, order=order)
-            sr = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
-            stage_requirements.append(sr)
-        
-        # Create crop entity
-        crop = Crop(
-            crop_id=crop_name.lower(),
-            name=crop_name,
-            area_per_unit=0.25,  # Default area per unit in m²
-            variety=variety if variety and variety != "default" else None
-        )
-        
-        return CropRequirementAggregate(crop=crop, stage_requirements=stage_requirements)
+        self.llm_repo = CropRequirementLLMRepository(llm_client) if llm_client else None
+        self.crop_requirement_repository = crop_requirement_repository
 
     async def extract_crop_variety(self, crop_query: str) -> Dict[str, Any]:
-        """Step 1: Extract crop name and variety from user input."""
-        if self.llm_client is not None:
-            if hasattr(self.llm_client, 'step1_crop_variety_selection'):
-                result = await self.llm_client.step1_crop_variety_selection(crop_query)
-                return result.get("data", {})
-            else:
-                raise RuntimeError("LLM client does not support step1_crop_variety_selection")
+        """Step 1: Extract crop name and variety from user input.
         
-        # Fallback
-        return {"crop_name": crop_query, "variety": "default"}
+        Delegates to CropRequirementLLMRepository.
+        """
+        if not self.llm_repo:
+            raise ValueError("LLM client not provided. Cannot extract crop variety.")
+        return await self.llm_repo.extract_crop_variety(crop_query)
 
     async def define_growth_stages(self, crop_name: str, variety: str) -> Dict[str, Any]:
-        """Step 2: Define growth stages for the crop variety."""
-        if self.llm_client is not None:
-            if hasattr(self.llm_client, 'step2_growth_stage_definition'):
-                result = await self.llm_client.step2_growth_stage_definition(crop_name, variety)
-                return result.get("data", {})
-            else:
-                raise RuntimeError("LLM client does not support step2_growth_stage_definition")
+        """Step 2: Define growth stages for the crop variety.
         
-        # Fallback
-        return {
-            "crop_info": {"name": crop_name, "variety": variety},
-            "growth_periods": [{"period_name": "Default", "order": 1, "period_description": ""}]
-        }
+        Delegates to CropRequirementLLMRepository.
+        """
+        if not self.llm_repo:
+            raise ValueError("LLM client not provided. Cannot define growth stages.")
+        return await self.llm_repo.define_growth_stages(crop_name, variety)
 
     async def research_stage_requirements(self, crop_name: str, variety: str, 
                                          stage_name: str, stage_description: str) -> Dict[str, Any]:
-        """Step 3: Research variety-specific requirements for a specific stage."""
-        if self.llm_client is not None:
-            if hasattr(self.llm_client, 'step3_variety_specific_research'):
-                result = await self.llm_client.step3_variety_specific_research(
-                    crop_name, variety, stage_name, stage_description
-                )
-                return result.get("data", {})
-            else:
-                raise RuntimeError("LLM client does not support step3_variety_specific_research")
+        """Step 3: Research variety-specific requirements for a specific stage.
         
-        # Fallback
-        return {
-            "temperature": {
-                "base_temperature": 10.0,
-                "optimal_min": 20.0,
-                "optimal_max": 26.0,
-                "low_stress_threshold": 12.0,
-                "high_stress_threshold": 32.0,
-                "frost_threshold": 0.0,
-                "sterility_risk_threshold": 35.0
-            },
-            "sunshine": {
-                "minimum_sunshine_hours": 3.0,
-                "target_sunshine_hours": 6.0
-            },
-            "thermal": {
-                "required_gdd": 400.0
-            }
-        }
+        Delegates to CropRequirementLLMRepository.
+        """
+        if not self.llm_repo:
+            raise ValueError("LLM client not provided. Cannot research stage requirements.")
+        return await self.llm_repo.research_stage_requirements(
+            crop_name, variety, stage_name, stage_description
+        )
 
     async def extract_crop_economics(self, crop_name: str, variety: str) -> Dict[str, Any]:
         """Extract crop economic information (area per unit and revenue per area).
         
-        This is a separate LLM call independent from growth stage information.
-        
-        Args:
-            crop_name: Name of the crop
-            variety: Variety name
-            
-        Returns:
-            Dict containing area_per_unit and revenue_per_area
+        Delegates to CropRequirementLLMRepository.
         """
-        if self.llm_client is not None:
-            if hasattr(self.llm_client, 'extract_crop_economics'):
-                result = await self.llm_client.extract_crop_economics(crop_name, variety)
-                return result.get("data", {})
-            else:
-                raise RuntimeError("LLM client does not support extract_crop_economics")
-        
-        # Fallback
-        return {
-            "area_per_unit": 0.25,  # Default 0.25 m² per unit
-            "revenue_per_area": None  # No revenue data by default
-        }
+        if not self.llm_repo:
+            raise ValueError("LLM client not provided. Cannot extract crop economics.")
+        return await self.llm_repo.extract_crop_economics(crop_name, variety)
 
     async def extract_crop_family(self, crop_name: str, variety: str) -> Dict[str, Any]:
         """Extract crop family (科) information.
         
-        This is a separate LLM call to get the botanical family of the crop.
-        
-        Args:
-            crop_name: Name of the crop
-            variety: Variety name
-            
-        Returns:
-            Dict containing family information (family_ja and family_scientific)
+        Delegates to CropRequirementLLMRepository.
         """
-        if self.llm_client is not None:
-            if hasattr(self.llm_client, 'extract_crop_family'):
-                result = await self.llm_client.extract_crop_family(crop_name, variety)
-                return result.get("data", {})
-            else:
-                raise RuntimeError("LLM client does not support extract_crop_family")
-        
-        # Fallback
-        return {
-            "family_ja": None,
-            "family_scientific": None
-        }
+        if not self.llm_repo:
+            raise ValueError("LLM client not provided. Cannot extract crop family.")
+        return await self.llm_repo.extract_crop_family(crop_name, variety)
 
-    async def _infer_with_llm(self, crop_query: str) -> Tuple[Crop, List[StageRequirement]]:
-        # Deprecated: This method is now replaced by the 3-step methods above
-        # Kept for backward compatibility
-        # Stubbed thresholds: keep aligned with entity docstrings
-        name = crop_query if crop_query else "Unknown"
-        crop = Crop(crop_id=name.lower(), name=name, area_per_unit=0.25, variety=None)
-        stage = GrowthStage(name="Default", order=1)
-        temp = TemperatureProfile(
-            base_temperature=10.0,
-            optimal_min=20.0,
-            optimal_max=26.0,
-            low_stress_threshold=12.0,
-            high_stress_threshold=32.0,
-            frost_threshold=0.0,
-            sterility_risk_threshold=35.0,
-        )
-        sun = SunshineProfile(minimum_sunshine_hours=3.0, target_sunshine_hours=6.0)
-        thermal = ThermalRequirement(required_gdd=400.0)
-        sr = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
-        return crop, [sr]
-
-    
-    def _parse_flow_result(self, flow_result: Dict[str, Any]) -> Tuple[Crop, List[StageRequirement]]:
-        """Parse the 3-step flow result into domain entities.
+    async def get(self) -> CropRequirementAggregate:
+        """Load crop requirements from configured repository.
         
-        Handles different field names from Step 2 and Step 3:
-        - Step 2: stage_name/ステージ名/stage, management_focus/管理の重点, management_boundary/管理転換点
-        - Step 3: name, temperature_requirements, sunlight_requirements, accumulated_temperature
-        
-        Args:
-            flow_result: Result containing crop_info and stages data
-            
         Returns:
-            Tuple of Crop and list of StageRequirement entities
+            CropRequirementAggregate loaded from repository
         """
-        crop_info = flow_result.get("crop_info", {})
-        crop_name = crop_info.get("name", "Unknown")
-        variety = crop_info.get("variety", "default")
+        if not self.crop_requirement_repository:
+            raise ValueError("CropRequirementRepository not provided. Cannot load requirements.")
         
-        # Create crop entity
-        crop = Crop(
-            crop_id=crop_name.lower(),
-            name=crop_name,
-            area_per_unit=0.25,  # Default area per unit in m²
-            variety=variety if variety and variety != "default" else None
-        )
-        
-        # Parse stage requirements
-        stage_requirements = []
-        stages_data = flow_result.get("stages", [])
-        
-        for i, stage_data in enumerate(stages_data):
-            # Determine if this is a Step 3 result (nested "stage" key) or Step 2 result (flat structure)
-            if "stage" in stage_data and isinstance(stage_data["stage"], dict):
-                # Step 3 structure: {"stage": {"name": ..., "temperature_requirements": ...}}
-                stage_info = stage_data["stage"]
-                stage_name = LLMResponseNormalizer.normalize_stage_name(stage_info)
-                
-                # Normalize temperature, sunshine, thermal data (Phase 2: use Normalizer)
-                # Prepare data dict for normalization (stage_info is nested under "stage" key)
-                normalized_data = {"temperature": stage_info.get("temperature_requirements") or stage_info.get("temperature", {})}
-                
-                # Add sunshine data
-                normalized_data["sunshine"] = (
-                    stage_info.get("sunlight_requirements") or 
-                    stage_info.get("light_requirements") or 
-                    stage_info.get("sunshine") or
-                    {}
-                )
-                
-                # Add thermal data
-                normalized_data["thermal"] = (
-                    stage_info.get("accumulated_temperature") or 
-                    stage_info.get("growing_degree_days") or
-                    stage_info.get("gdd_requirements") or
-                    stage_info.get("thermal") or
-                    {}
-                )
-                
-                temp_data = LLMResponseNormalizer.normalize_temperature_field(normalized_data)
-                temp = TemperatureProfile(**temp_data)
-                
-                sun_data = LLMResponseNormalizer.normalize_sunshine_field(normalized_data)
-                sun = SunshineProfile(**sun_data)
-                
-                thermal_data = LLMResponseNormalizer.normalize_thermal_field(normalized_data)
-            else:
-                # Step 2 structure (flat): {"stage_name"/"ステージ名"/"stage": ..., "management_focus": ...}
-                # Or old fallback structure
-                stage_name = LLMResponseNormalizer.normalize_stage_name(stage_data)
-                
-                # Step 2 doesn't have temperature/sunshine/thermal data yet
-                # Use defaults for now (will be populated by Step 3)
-                temp = TemperatureProfile(
-                    base_temperature=10.0,
-                    optimal_min=20.0,
-                    optimal_max=26.0,
-                    low_stress_threshold=12.0,
-                    high_stress_threshold=32.0,
-                    frost_threshold=0.0,
-                    sterility_risk_threshold=35.0,
-                )
-                sun = SunshineProfile(minimum_sunshine_hours=3.0, target_sunshine_hours=6.0)
-                thermal_data = {}
-            
-            # Create stage entity
-            stage = GrowthStage(name=stage_name, order=i+1)
-            
-            # Parse thermal requirement
-            required_gdd = thermal_data.get("required_gdd") if thermal_data else None
-            if required_gdd is None:
-                required_gdd = 400.0
-            thermal = ThermalRequirement(required_gdd=required_gdd)
-            
-            # Create stage requirement
-            sr = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
-            stage_requirements.append(sr)
-        
-        return crop, stage_requirements
-    
-    async def get(self, file_path: str) -> CropRequirementAggregate:
-        """Load crop requirements from JSON file using file repository.
-        
-        Args:
-            file_path: Path to crop requirement JSON file
-            
-        Returns:
-            CropRequirementAggregate loaded from file
-            
-        Expected JSON format:
-        {
-            "crop": {"crop_id": "rice", "name": "Rice", "variety": "Koshihikari"},
-            "stage_requirements": [
-                {
-                    "stage": {"name": "Growth", "order": 1},
-                    "temperature": {
-                        "base_temperature": 10.0,
-                        "optimal_min": 20.0,
-                        "optimal_max": 30.0,
-                        "low_stress_threshold": 15.0,
-                        "high_stress_threshold": 35.0,
-                        "frost_threshold": 0.0
-                    },
-                    "thermal": {"required_gdd": 500.0}
-                }
-            ]
-        }
-        """
-        if not self.file_repository:
-            raise ValueError("File repository not provided. Cannot load from file.")
-        
-        # Read file using repository
-        content = await self.file_repository.read(file_path)
-        
-        # Parse JSON
-        import json
-        data = json.loads(content)
-        
-        # Parse crop info
-        crop_data = data['crop']
-        crop = Crop(
-            crop_id=crop_data['crop_id'],
-            name=crop_data['name'],
-            area_per_unit=crop_data.get('area_per_unit', 0.25),  # Default 0.25 m² if not specified
-            variety=crop_data.get('variety'),
-            revenue_per_area=crop_data.get('revenue_per_area'),
-            max_revenue=crop_data.get('max_revenue'),
-            groups=crop_data.get('groups')
-        )
-        
-        # Parse stage requirements
-        stage_requirements = []
-        for stage_req_data in data['stage_requirements']:
-            stage = GrowthStage(
-                name=stage_req_data['stage']['name'],
-                order=stage_req_data['stage']['order']
-            )
-            
-            temp_data = stage_req_data['temperature']
-            temperature = TemperatureProfile(
-                base_temperature=temp_data['base_temperature'],
-                optimal_min=temp_data['optimal_min'],
-                optimal_max=temp_data['optimal_max'],
-                low_stress_threshold=temp_data['low_stress_threshold'],
-                high_stress_threshold=temp_data['high_stress_threshold'],
-                frost_threshold=temp_data['frost_threshold']
-            )
-            
-            sunshine = SunshineProfile()  # Use defaults
-            
-            thermal = ThermalRequirement(
-                required_gdd=stage_req_data['thermal']['required_gdd']
-            )
-            
-            stage_req = StageRequirement(
-                stage=stage,
-                temperature=temperature,
-                sunshine=sunshine,
-                thermal=thermal
-            )
-            stage_requirements.append(stage_req)
-        
-        return CropRequirementAggregate(
-            crop=crop,
-            stage_requirements=stage_requirements
-        )
+        return await self.crop_requirement_repository.get()
 
 

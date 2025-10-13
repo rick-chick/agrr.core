@@ -98,14 +98,14 @@ class TestGrowthProgressCalculateInteractor:
         )
 
         self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
+        self.mock_crop_requirement_gateway.get.return_value = crop_requirement
         self.mock_weather_gateway.get.return_value = weather_data
 
         # Execute
         request = GrowthProgressCalculateRequestDTO(
             crop_id="rice",
             variety="Koshihikari",
-            start_date=datetime(2024, 5, 1),
-            weather_data_file="weather_data.json",
+            start_date=datetime(2024, 5, 1)
         )
 
         response = await self.interactor.execute(request)
@@ -175,14 +175,14 @@ class TestGrowthProgressCalculateInteractor:
         )
 
         self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
+        self.mock_crop_requirement_gateway.get.return_value = crop_requirement
         self.mock_weather_gateway.get.return_value = weather_data
 
         # Execute
         request = GrowthProgressCalculateRequestDTO(
             crop_id="rice",
             variety=None,
-            start_date=datetime(2024, 5, 1),
-            weather_data_file="weather_data.json",
+            start_date=datetime(2024, 5, 1)
         )
 
         response = await self.interactor.execute(request)

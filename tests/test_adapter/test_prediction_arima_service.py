@@ -87,7 +87,10 @@ class TestPredictionARIMAService:
     async def test_predict_multiple_metrics_success(self):
         """Test successful multiple metrics prediction."""
         metrics = ['temperature']
-        model_config = {'prediction_days': 3}
+        model_config = {
+            'prediction_days': 3,
+            'apply_seasonal_adjustment': False  # Disable for unit test
+        }
         
         result = await self.service.predict_multiple_metrics(
             self.sample_weather_data, metrics, model_config
@@ -98,7 +101,8 @@ class TestPredictionARIMAService:
         
         # Check that time series service methods were called
         assert self.mock_time_series_service.check_stationarity_called
-        assert self.mock_time_series_service.make_stationary_called
+        # make_stationary should not be called anymore - ARIMA handles differencing internally
+        assert not self.mock_time_series_service.make_stationary_called
         assert self.mock_time_series_service.create_model_called
     
     @pytest.mark.asyncio
@@ -117,9 +121,12 @@ class TestPredictionARIMAService:
     
     @pytest.mark.asyncio
     async def test_predict_single_metric_success(self):
-        """Test successful single metric prediction."""
+        """Test successful single metric prediction (without seasonal adjustment for testing)."""
         metric = 'temperature'
-        model_config = {'prediction_days': 3}
+        model_config = {
+            'prediction_days': 3,
+            'apply_seasonal_adjustment': False  # Disable for unit test
+        }
         
         result = await self.service._predict_single_metric(
             self.sample_weather_data, metric, model_config
@@ -139,7 +146,10 @@ class TestPredictionARIMAService:
         insufficient_data = self.sample_weather_data[:10]
         
         metric = 'temperature'
-        model_config = {'prediction_days': 3}
+        model_config = {
+            'prediction_days': 3,
+            'apply_seasonal_adjustment': False
+        }
         
         with pytest.raises(PredictionError, match="Insufficient data for temperature. Need at least 30 data points"):
             await self.service._predict_single_metric(
@@ -147,10 +157,34 @@ class TestPredictionARIMAService:
             )
     
     @pytest.mark.asyncio
+    async def test_predict_single_metric_with_seasonal_adjustment(self):
+        """Test prediction with hybrid model (seasonal adjustment enabled)."""
+        metric = 'temperature'
+        model_config = {
+            'prediction_days': 3,
+            'apply_seasonal_adjustment': True  # Enable hybrid model
+        }
+        
+        result = await self.service._predict_single_metric(
+            self.sample_weather_data, metric, model_config
+        )
+        
+        assert len(result) == 3
+        for forecast in result:
+            assert isinstance(forecast, Forecast)
+            # Values should be adjusted based on seasonal patterns
+            assert forecast.predicted_value != 20.0  # Should be different from raw ARIMA
+            assert forecast.confidence_lower is not None
+            assert forecast.confidence_upper is not None
+    
+    @pytest.mark.asyncio
     async def test_predict_single_metric_stationary_data(self):
-        """Test prediction with stationary data."""
+        """Test prediction with stationary data - should use d=0."""
         # Mock the time series service to return stationary data
-        self.mock_time_series_service.check_stationarity = Mock(return_value=True)
+        stationary_mock = Mock(return_value=True)
+        create_model_mock = Mock(return_value=MockTimeSeriesModel([], (1, 0, 1)))
+        self.mock_time_series_service.check_stationarity = stationary_mock
+        self.mock_time_series_service.create_model = create_model_mock
         
         metric = 'temperature'
         model_config = {'prediction_days': 3}
@@ -160,8 +194,42 @@ class TestPredictionARIMAService:
         )
         
         assert len(result) == 3
-        # Should not call make_stationary for stationary data
+        # Should check stationarity
+        assert stationary_mock.called
+        # make_stationary should never be called - ARIMA handles differencing internally
         assert not self.mock_time_series_service.make_stationary_called
+        # Verify that d=0 is used for stationary data
+        assert create_model_mock.called
+        call_args = create_model_mock.call_args
+        order_used = call_args[0][1]  # Second positional argument is 'order'
+        assert order_used[1] == 0  # d parameter should be 0 for stationary data
+    
+    @pytest.mark.asyncio
+    async def test_predict_single_metric_non_stationary_data(self):
+        """Test prediction with non-stationary data - should use d=1."""
+        # Mock the time series service to return non-stationary data
+        non_stationary_mock = Mock(return_value=False)
+        create_model_mock = Mock(return_value=MockTimeSeriesModel([], (1, 1, 1)))
+        self.mock_time_series_service.check_stationarity = non_stationary_mock
+        self.mock_time_series_service.create_model = create_model_mock
+        
+        metric = 'temperature'
+        model_config = {'prediction_days': 3}
+        
+        result = await self.service._predict_single_metric(
+            self.sample_weather_data, metric, model_config
+        )
+        
+        assert len(result) == 3
+        # Should check stationarity
+        assert non_stationary_mock.called
+        # make_stationary should never be called - ARIMA handles differencing internally
+        assert not self.mock_time_series_service.make_stationary_called
+        # Verify that d=1 is used for non-stationary data
+        assert create_model_mock.called
+        call_args = create_model_mock.call_args
+        order_used = call_args[0][1]  # Second positional argument is 'order'
+        assert order_used[1] == 1  # d parameter should be 1 for non-stationary data
     
     @pytest.mark.asyncio
     async def test_predict_single_metric_with_fallback_model(self):

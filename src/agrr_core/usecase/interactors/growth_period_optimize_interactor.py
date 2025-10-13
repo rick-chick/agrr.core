@@ -53,6 +53,7 @@ from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
 from agrr_core.usecase.interactors.base_optimizer import BaseOptimizer
+from agrr_core.usecase.interfaces.weather_interpolator import WeatherInterpolator
 
 
 class GrowthPeriodOptimizeInteractor(
@@ -67,12 +68,14 @@ class GrowthPeriodOptimizeInteractor(
         weather_gateway: WeatherGateway,
         optimization_result_gateway: OptimizationResultGateway = None,
         interaction_rule_gateway: InteractionRuleGateway = None,
+        weather_interpolator: Optional[WeatherInterpolator] = None,
     ):
         super().__init__()  # Initialize BaseOptimizer
         self.crop_requirement_gateway = crop_requirement_gateway
         self.weather_gateway = weather_gateway
         self.optimization_result_gateway = optimization_result_gateway
         self.interaction_rule_gateway = interaction_rule_gateway
+        self.weather_interpolator = weather_interpolator
         
         # Use existing growth progress calculator
         self.growth_progress_interactor = GrowthProgressCalculateInteractor(
@@ -198,6 +201,12 @@ class GrowthPeriodOptimizeInteractor(
         
         # Sort dates to ensure chronological order
         sorted_dates = sorted(weather_by_date.keys())
+        
+        # Apply interpolation if interpolator is provided
+        if self.weather_interpolator:
+            weather_by_date = self.weather_interpolator.interpolate_temperature(
+                weather_by_date, sorted_dates
+            )
         
         if not sorted_dates:
             raise ValueError("No weather data available")

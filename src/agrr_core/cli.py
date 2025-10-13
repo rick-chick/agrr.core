@@ -19,6 +19,7 @@ from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRe
 from agrr_core.adapter.repositories.field_file_repository import FieldFileRepository
 from agrr_core.framework.repositories.file_repository import FileRepository
 from agrr_core.framework.repositories.inmemory_optimization_result_repository import InMemoryOptimizationResultRepository
+from agrr_core.adapter.services.weather_linear_interpolator import WeatherLinearInterpolator
 
 
 def print_help() -> None:
@@ -240,6 +241,9 @@ def main() -> None:
                 file_repository=file_repository
             )
             
+            # Setup weather interpolator
+            weather_interpolator = WeatherLinearInterpolator()
+            
             # Setup presenter
             from agrr_core.adapter.presenters.growth_period_optimize_cli_presenter import GrowthPeriodOptimizeCliPresenter
             presenter = GrowthPeriodOptimizeCliPresenter(output_format="table")
@@ -251,6 +255,7 @@ def main() -> None:
                 field=field,
                 optimization_result_gateway=optimization_result_gateway,
                 interaction_rule_gateway=interaction_rule_gateway,
+                weather_interpolator=weather_interpolator,
             )
             asyncio.run(controller.run(args[1:]))
         else:

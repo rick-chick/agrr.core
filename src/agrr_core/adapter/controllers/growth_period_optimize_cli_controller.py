@@ -27,6 +27,7 @@ from agrr_core.usecase.dto.growth_period_optimize_request_dto import (
 from agrr_core.usecase.dto.growth_period_optimize_response_dto import (
     OptimalGrowthPeriodResponseDTO,
 )
+from agrr_core.usecase.interfaces.weather_interpolator import WeatherInterpolator
 
 
 class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
@@ -40,6 +41,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
         field: Optional['Field'] = None,
         optimization_result_gateway: Optional[OptimizationResultGateway] = None,
         interaction_rule_gateway: Optional[InteractionRuleGateway] = None,
+        weather_interpolator: Optional[WeatherInterpolator] = None,
     ) -> None:
         """Initialize with injected dependencies.
         
@@ -50,6 +52,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
             field: Field entity (read from field config file)
             optimization_result_gateway: Optional gateway for saving optimization results
             interaction_rule_gateway: Optional gateway for loading interaction rules
+            weather_interpolator: Optional interpolator for missing weather data
         """
         self.crop_requirement_gateway = crop_requirement_gateway
         self.weather_gateway = weather_gateway
@@ -57,6 +60,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
         self.field = field
         self.optimization_result_gateway = optimization_result_gateway
         self.interaction_rule_gateway = interaction_rule_gateway
+        self.weather_interpolator = weather_interpolator
         
         # Instantiate interactor inside controller
         self.interactor = GrowthPeriodOptimizeInteractor(
@@ -64,6 +68,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
             weather_gateway=self.weather_gateway,
             optimization_result_gateway=self.optimization_result_gateway,
             interaction_rule_gateway=self.interaction_rule_gateway,
+            weather_interpolator=self.weather_interpolator,
         )
 
     async def execute(

@@ -211,12 +211,11 @@ class TestPredictionARIMAService:
     
     def test_extract_metric_data_unknown_metric(self):
         """Test extracting unknown metric data."""
-        data = self.service._extract_metric_data(self.sample_weather_data, 'unknown_metric')
-        
-        assert len(data) == 0  # Should be empty for unknown metric
+        with pytest.raises(PredictionError, match="All values are missing"):
+            self.service._extract_metric_data(self.sample_weather_data, 'unknown_metric')
     
     def test_extract_metric_data_with_none_values(self):
-        """Test extracting metric data with None values."""
+        """Test extracting metric data with None values using linear interpolation."""
         # Create weather data with some None values
         weather_data_with_nones = [
             WeatherData(
@@ -232,9 +231,15 @@ class TestPredictionARIMAService:
         
         data = self.service._extract_metric_data(weather_data_with_nones, 'temperature')
         
-        # Should only include non-None values
-        assert len(data) == 20  # Half the values
+        # Should interpolate None values, so still 40 data points
+        assert len(data) == 40
         assert all(val is not None for val in data)
+        
+        # Check that interpolation was performed correctly
+        # For example, data[1] should be interpolated between data[0]=15.0 and data[2]=17.0
+        assert data[0] == 15.0  # Original value
+        assert data[1] == 16.0  # Interpolated value (15.0 + (17.0-15.0)/2)
+        assert data[2] == 17.0  # Original value
     
     @pytest.mark.asyncio
     async def test_evaluate_model_accuracy(self):
@@ -334,3 +339,55 @@ class TestPredictionARIMAService:
         assert len(result) == 2
         assert 'temperature' in result[0]  # First batch should succeed
         assert 'error' in result[1]  # Second batch should have error
+    
+    def test_interpolate_missing_values_middle(self):
+        """Test linear interpolation for missing values in the middle."""
+        data = [10.0, None, 20.0, None, None, 40.0]
+        result = self.service._interpolate_missing_values(data)
+        
+        assert len(result) == 6
+        assert result[0] == 10.0
+        assert result[1] == 15.0  # Linear interpolation between 10 and 20
+        assert result[2] == 20.0
+        assert abs(result[3] - 26.666666666666668) < 1e-10  # Linear interpolation between 20 and 40
+        assert abs(result[4] - 33.333333333333336) < 1e-10  # Linear interpolation between 20 and 40
+        assert result[5] == 40.0
+    
+    def test_interpolate_missing_values_at_start(self):
+        """Test linear interpolation with missing values at the start."""
+        data = [None, None, 20.0, 30.0]
+        result = self.service._interpolate_missing_values(data)
+        
+        assert len(result) == 4
+        assert result[0] == 20.0  # Use first valid value
+        assert result[1] == 20.0  # Use first valid value
+        assert result[2] == 20.0
+        assert result[3] == 30.0
+    
+    def test_interpolate_missing_values_at_end(self):
+        """Test linear interpolation with missing values at the end."""
+        data = [10.0, 20.0, None, None]
+        result = self.service._interpolate_missing_values(data)
+        
+        assert len(result) == 4
+        assert result[0] == 10.0
+        assert result[1] == 20.0
+        assert result[2] == 20.0  # Use last valid value
+        assert result[3] == 20.0  # Use last valid value
+    
+    def test_interpolate_missing_values_all_missing(self):
+        """Test linear interpolation with all missing values."""
+        data = [None, None, None]
+        
+        with pytest.raises(PredictionError, match="All values are missing"):
+            self.service._interpolate_missing_values(data)
+    
+    def test_interpolate_missing_values_no_missing(self):
+        """Test linear interpolation with no missing values."""
+        data = [10.0, 20.0, 30.0]
+        result = self.service._interpolate_missing_values(data)
+        
+        assert len(result) == 3
+        assert result[0] == 10.0
+        assert result[1] == 20.0
+        assert result[2] == 30.0

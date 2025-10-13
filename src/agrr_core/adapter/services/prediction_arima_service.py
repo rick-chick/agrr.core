@@ -101,20 +101,74 @@ class PredictionARIMAService(PredictionServiceGateway):
         return forecasts
     
     def _extract_metric_data(self, historical_data: List[WeatherData], metric: str) -> List[float]:
-        """Extract data for specific metric."""
+        """Extract data for specific metric with linear interpolation for missing values."""
         data = []
         
+        # Extract raw data (including None values)
         for weather_data in historical_data:
-            if metric == 'temperature' and weather_data.temperature_2m_mean is not None:
-                data.append(weather_data.temperature_2m_mean)
-            elif metric == 'precipitation' and weather_data.precipitation_sum is not None:
-                data.append(weather_data.precipitation_sum)
-            elif metric == 'sunshine' and weather_data.sunshine_duration is not None:
-                data.append(weather_data.sunshine_duration)
+            value = None
+            if metric == 'temperature':
+                value = weather_data.temperature_2m_mean
+            elif metric == 'precipitation':
+                value = weather_data.precipitation_sum
+            elif metric == 'sunshine':
+                value = weather_data.sunshine_duration
             elif metric == 'pressure' and hasattr(weather_data, 'pressure'):
-                data.append(weather_data.pressure)
+                value = weather_data.pressure
+            
+            data.append(value)
+        
+        # Apply linear interpolation for missing values
+        data = self._interpolate_missing_values(data)
         
         return data
+    
+    def _interpolate_missing_values(self, data: List[float]) -> List[float]:
+        """Apply linear interpolation to fill missing values."""
+        if not data:
+            return data
+        
+        # Convert to numpy array for easier manipulation
+        arr = np.array(data, dtype=float)
+        
+        # Find indices of non-null values
+        valid_indices = np.where(~np.isnan(arr))[0]
+        
+        if len(valid_indices) == 0:
+            raise PredictionError("All values are missing. Cannot perform interpolation.")
+        
+        # If there are missing values at the beginning, use the first valid value
+        if valid_indices[0] > 0:
+            arr[:valid_indices[0]] = arr[valid_indices[0]]
+        
+        # If there are missing values at the end, use the last valid value
+        if valid_indices[-1] < len(arr) - 1:
+            arr[valid_indices[-1] + 1:] = arr[valid_indices[-1]]
+        
+        # Interpolate missing values in the middle
+        for i in range(len(arr)):
+            if np.isnan(arr[i]):
+                # Find the nearest non-null values before and after
+                prev_idx = None
+                next_idx = None
+                
+                for j in range(i - 1, -1, -1):
+                    if not np.isnan(arr[j]):
+                        prev_idx = j
+                        break
+                
+                for j in range(i + 1, len(arr)):
+                    if not np.isnan(arr[j]):
+                        next_idx = j
+                        break
+                
+                # Perform linear interpolation
+                if prev_idx is not None and next_idx is not None:
+                    # Linear interpolation formula
+                    weight = (i - prev_idx) / (next_idx - prev_idx)
+                    arr[i] = arr[prev_idx] + weight * (arr[next_idx] - arr[prev_idx])
+        
+        return arr.tolist()
     
     
     async def evaluate_model_accuracy(

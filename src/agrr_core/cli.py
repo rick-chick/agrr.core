@@ -30,7 +30,7 @@ Usage:
   agrr <command> [options]
 
 Available Commands:
-  weather           Get historical weather data from Open-Meteo API
+  weather           Get historical weather data from Open-Meteo or JMA
   forecast          Get 16-day weather forecast from tomorrow
   crop              Get crop growth requirements using AI
   progress          Calculate crop growth progress based on weather data
@@ -38,8 +38,11 @@ Available Commands:
   predict           Predict future weather using ARIMA time series model
 
 Examples:
-  # Get historical weather data for Tokyo (last 7 days)
+  # Get historical weather data for Tokyo (last 7 days) - OpenMeteo
   agrr weather --location 35.6762,139.6503 --days 7
+
+  # Get historical weather data for Tokyo - JMA (気象庁)
+  agrr weather --location 35.6762,139.6503 --days 7 --data-source jma
 
   # Get 16-day weather forecast
   agrr forecast --location 35.6762,139.6503
@@ -147,9 +150,20 @@ def main() -> None:
             print_help()
             sys.exit(0)
         
+        # Extract data-source from arguments if present
+        weather_data_source = 'openmeteo'  # default
+        if '--data-source' in args:
+            try:
+                ds_index = args.index('--data-source')
+                if ds_index + 1 < len(args):
+                    weather_data_source = args[ds_index + 1]
+            except (ValueError, IndexError):
+                pass
+        
         # Create container with configuration
         config = {
-            'open_meteo_base_url': 'https://archive-api.open-meteo.com/v1/archive'
+            'open_meteo_base_url': 'https://archive-api.open-meteo.com/v1/archive',
+            'weather_data_source': weather_data_source
         }
         container = WeatherCliContainer(config)
         

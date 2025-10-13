@@ -7,6 +7,8 @@ from .invalid_date_range_error import InvalidDateRangeError
 from .weather_api_error import WeatherAPIError
 from .prediction_error import PredictionError
 from .file_error import FileError
+from .csv_download_error import CsvDownloadError
+from .html_fetch_error import HtmlFetchError
 
 __all__ = [
     "WeatherError",
@@ -16,4 +18,6 @@ __all__ = [
     "WeatherAPIError",
     "PredictionError",
     "FileError",
+    "CsvDownloadError",
+    "HtmlFetchError",
 ]

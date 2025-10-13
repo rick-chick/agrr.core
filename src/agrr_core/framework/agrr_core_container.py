@@ -4,8 +4,10 @@ import asyncio
 from typing import Dict, Any, Optional
 
 from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
+from agrr_core.adapter.repositories.weather_jma_repository import WeatherJMARepository
 from agrr_core.framework.repositories.file_repository import FileRepository
 from agrr_core.framework.repositories.http_client import HttpClient
+from agrr_core.framework.repositories.html_table_fetcher import HtmlTableFetcher
 from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
@@ -64,7 +66,15 @@ class AgrrCoreContainer:
         """Get weather gateway instance."""
         if 'weather_gateway' not in self._instances:
             weather_file_repository = self.get_weather_file_repository()
-            weather_api_repository = self.get_weather_api_repository()
+            
+            # Get appropriate weather API repository based on data source
+            data_source = self.config.get('weather_data_source', 'openmeteo')
+            
+            if data_source == 'jma':
+                weather_api_repository = self.get_weather_jma_repository()
+            else:
+                weather_api_repository = self.get_weather_api_repository()
+            
             self._instances['weather_gateway'] = WeatherGatewayImpl(
                 weather_file_repository=weather_file_repository,
                 weather_api_repository=weather_api_repository
@@ -93,7 +103,7 @@ class AgrrCoreContainer:
     def get_cli_controller(self) -> WeatherCliFetchController:
         """Get CLI controller instance."""
         if 'cli_controller' not in self._instances:
-            weather_gateway = self.get_weather_gateway()
+            weather_gateway = self.get_weather_gateway_impl()  # ← 修正: data_source対応版を使用
             cli_presenter = self.get_cli_presenter()
             self._instances['cli_controller'] = WeatherCliFetchController(
                 weather_gateway=weather_gateway,
@@ -131,6 +141,20 @@ class AgrrCoreContainer:
                 forecast_http_service_impl
             )
         return self._instances['weather_api_repository']
+    
+    def get_html_table_fetcher(self) -> HtmlTableFetcher:
+        """Get HTML table fetcher instance."""
+        if 'html_table_fetcher' not in self._instances:
+            timeout = self.config.get('html_fetch_timeout', 30)
+            self._instances['html_table_fetcher'] = HtmlTableFetcher(timeout=timeout)
+        return self._instances['html_table_fetcher']
+    
+    def get_weather_jma_repository(self) -> WeatherJMARepository:
+        """Get JMA weather repository instance."""
+        if 'weather_jma_repository' not in self._instances:
+            html_table_fetcher = self.get_html_table_fetcher()
+            self._instances['weather_jma_repository'] = WeatherJMARepository(html_table_fetcher)
+        return self._instances['weather_jma_repository']
     
     def get_weather_gateway(self) -> WeatherGateway:
         """Get weather gateway instance."""

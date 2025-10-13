@@ -37,12 +37,15 @@ class WeatherCliFetchController:
     def create_argument_parser(self) -> argparse.ArgumentParser:
         """Create argument parser for CLI commands."""
         parser = argparse.ArgumentParser(
-            description="Weather Forecast CLI - Get weather data from Open-Meteo",
+            description="Weather Forecast CLI - Get weather data from Open-Meteo or JMA",
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog="""
 Examples:
   # Get historical weather for Tokyo for the last 7 days (ending yesterday)
   agrr weather --location 35.6762,139.6503 --days 7
+  
+  # Get weather from JMA (Japan Meteorological Agency) for Tokyo
+  agrr weather --location 35.6762,139.6503 --days 7 --data-source jma
   
   # Get weather for specific historical date range
   agrr weather --location 35.6762,139.6503 --start-date 2024-01-01 --end-date 2024-01-07
@@ -134,6 +137,14 @@ Output (JSON):
             '--location', '-l',
             required=True,
             help='Location coordinates as "latitude,longitude" (e.g., "35.6762,139.6503" for Tokyo)'
+        )
+        
+        # Data source selection
+        weather_parser.add_argument(
+            '--data-source',
+            choices=['openmeteo', 'jma'],
+            default='openmeteo',
+            help='Weather data source: openmeteo (global, default) or jma (Japan only, more accurate for Japan)'
         )
         
         # Date range arguments

@@ -14,10 +14,19 @@ from agrr_core.usecase.interactors.multi_field_crop_allocation_greedy_interactor
 )
 
 
+@pytest.fixture
+def mock_crop_profile_gateway_internal():
+    """Mock CropProfileGateway for internal use."""
+    gateway = AsyncMock()
+    gateway.save.return_value = None
+    gateway.delete.return_value = None
+    return gateway
+
+
 class TestPhase1Filtering:
     """Test Phase 1: Candidate filtering."""
     
-    def test_candidate_filtering_enabled(self):
+    def test_candidate_filtering_enabled(self, mock_crop_profile_gateway_internal):
         """Test that filtering removes low-quality candidates."""
         # Create interactor with filtering enabled
         config = OptimizationConfig(
@@ -26,7 +35,9 @@ class TestPhase1Filtering:
             min_revenue_cost_ratio=0.5,
         )
         interactor = MultiFieldCropAllocationGreedyInteractor(
-            None, None, None, config=config
+            None, None, None, 
+            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
+            config=config
         )
         
         field = Field("f1", "Field 1", 1000.0, 6666.67)  # 1,000,000 / 150 = 6666.67
@@ -60,13 +71,15 @@ class TestPhase1Filtering:
         assert len(filtered) == 1
         assert filtered[0].profit_rate == pytest.approx(1.5, rel=1e-3)
     
-    def test_post_filtering_limits_candidates(self):
+    def test_post_filtering_limits_candidates(self, mock_crop_profile_gateway_internal):
         """Test post-filtering limits candidates per field×crop."""
         config = OptimizationConfig(
             max_candidates_per_field_crop=3
         )
         interactor = MultiFieldCropAllocationGreedyInteractor(
-            None, None, None, config=config
+            None, None, None, 
+            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
+            config=config
         )
         
         field = Field("f1", "Field 1", 1000.0, 6666.67)  # 1,000,000 / 150 = 6666.67
@@ -99,14 +112,16 @@ class TestPhase1Filtering:
 class TestPhase1Sampling:
     """Test Phase 1: Neighbor sampling."""
     
-    def test_neighbor_sampling_reduces_count(self):
+    def test_neighbor_sampling_reduces_count(self, mock_crop_profile_gateway_internal):
         """Test that sampling reduces neighbor count."""
         config = OptimizationConfig(
             enable_neighbor_sampling=True,
             max_neighbors_per_iteration=50,
         )
         interactor = MultiFieldCropAllocationGreedyInteractor(
-            None, None, None, config=config
+            None, None, None, 
+            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
+            config=config
         )
         
         # Create a moderate solution
@@ -143,7 +158,7 @@ class TestPhase2ParallelGeneration:
     """Test Phase 2: Parallel candidate generation."""
     
     @pytest.mark.asyncio
-    async def test_parallel_generation_structure(self):
+    async def test_parallel_generation_structure(self, mock_crop_profile_gateway_internal):
         """Test that parallel generation has correct structure."""
         # Create mock gateways
         field_gateway = AsyncMock()
@@ -155,7 +170,9 @@ class TestPhase2ParallelGeneration:
         )
         
         interactor = MultiFieldCropAllocationGreedyInteractor(
-            field_gateway, crop_req_gateway, weather_gateway, config=config
+            field_gateway, crop_req_gateway, weather_gateway, 
+            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
+            config=config
         )
         
         # Check that method exists
@@ -224,7 +241,7 @@ class TestConfigProfiles:
 class TestIntegration:
     """Test that all phases work together."""
     
-    def test_config_can_be_passed_to_interactor(self):
+    def test_config_can_be_passed_to_interactor(self, mock_crop_profile_gateway_internal):
         """Test that config can be passed to interactor."""
         custom_config = OptimizationConfig(
             max_local_search_iterations=10,
@@ -232,20 +249,24 @@ class TestIntegration:
         )
         
         interactor = MultiFieldCropAllocationGreedyInteractor(
-            None, None, None, config=custom_config
+            None, None, None, 
+            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
+            config=custom_config
         )
         
         assert interactor.config.max_local_search_iterations == 10
         assert interactor.config.enable_neighbor_sampling is False
     
-    def test_config_can_be_overridden_at_execution(self):
+    def test_config_can_be_overridden_at_execution(self, mock_crop_profile_gateway_internal):
         """Test that config can be overridden at execution time."""
         default_config = OptimizationConfig(
             max_local_search_iterations=100
         )
         
         interactor = MultiFieldCropAllocationGreedyInteractor(
-            None, None, None, config=default_config
+            None, None, None, 
+            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
+            config=default_config
         )
         
         # Override should work at execution

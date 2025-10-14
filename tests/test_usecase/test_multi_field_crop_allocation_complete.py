@@ -24,6 +24,15 @@ from agrr_core.usecase.services.neighbor_operations import (
 )
 
 
+@pytest.fixture
+def mock_crop_profile_gateway_internal():
+    """Mock CropProfileGateway for internal use."""
+    gateway = AsyncMock()
+    gateway.save.return_value = None
+    gateway.delete.return_value = None
+    return gateway
+
+
 class TestMultiFieldCropAllocationComplete:
     """Test all neighborhood operations in the complete framework."""
 
@@ -221,7 +230,7 @@ class TestMultiFieldCropAllocationComplete:
         # Area should be maintained (500m²)
         assert new_alloc.area_used == pytest.approx(500.0, rel=0.01)
 
-    def test_all_operations_generate_valid_neighbors(self):
+    def test_all_operations_generate_valid_neighbors(self, mock_crop_profile_gateway_internal):
         """Test that all operations generate valid neighbor solutions."""
         # Setup
         field_a = Field("f1", "Field A", 1000.0, 5000.0)
@@ -282,7 +291,11 @@ class TestMultiFieldCropAllocationComplete:
         
         # Use NeighborGeneratorService (Phase 1 refactoring)
         config = OptimizationConfig(enable_neighbor_sampling=False)
-        interactor = MultiFieldCropAllocationGreedyInteractor(None, None, None, config=config)
+        interactor = MultiFieldCropAllocationGreedyInteractor(
+            None, None, None, 
+            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
+            config=config
+        )
         
         # Generate all neighbors using NeighborGeneratorService
         neighbors = interactor.neighbor_generator.generate_neighbors(

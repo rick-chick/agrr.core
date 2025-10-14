@@ -23,6 +23,7 @@ class TestWeatherPredictInteractor:
         self.mock_weather_gateway.create = AsyncMock()
         
         # Setup async mocks for prediction gateway methods
+        self.mock_prediction_gateway.read_historical_data = AsyncMock()
         self.mock_prediction_gateway.predict = AsyncMock()
         self.mock_prediction_gateway.create = AsyncMock()
         
@@ -39,7 +40,7 @@ class TestWeatherPredictInteractor:
             WeatherData(time=datetime(2024, 1, i), temperature_2m_mean=15.0) 
             for i in range(1, 31)  # 30 records
         ]
-        self.mock_weather_gateway.get.return_value = weather_data
+        self.mock_prediction_gateway.read_historical_data.return_value = weather_data
         
         predictions = [
             Forecast(date=datetime(2024, 2, 1), predicted_value=17.0)
@@ -54,7 +55,7 @@ class TestWeatherPredictInteractor:
         )
         
         # Verify calls
-        self.mock_weather_gateway.get.assert_called_once_with("input.json")
+        self.mock_prediction_gateway.read_historical_data.assert_called_once_with("input.json")
         self.mock_prediction_gateway.predict.assert_called_once_with(
             weather_data, 'temperature', {'prediction_days': 7}
         )
@@ -86,7 +87,7 @@ class TestWeatherPredictInteractor:
     @pytest.mark.asyncio
     async def test_execute_no_data(self):
         """Test execute with no weather data."""
-        self.mock_weather_gateway.get.return_value = []
+        self.mock_prediction_gateway.read_historical_data.return_value = []
         
         with pytest.raises(ValueError, match="No weather data provided"):
             await self.interactor.execute(
@@ -102,7 +103,7 @@ class TestWeatherPredictInteractor:
             WeatherData(time=datetime(2024, 1, i), temperature_2m_mean=15.0) 
             for i in range(1, 10)  # Only 9 records
         ]
-        self.mock_weather_gateway.get.return_value = weather_data
+        self.mock_prediction_gateway.read_historical_data.return_value = weather_data
         
         with pytest.raises(ValueError, match="Insufficient data for prediction"):
             await self.interactor.execute(
@@ -119,7 +120,7 @@ class TestWeatherPredictInteractor:
             WeatherData(time=datetime(2024, 1, i), temperature_2m_mean=15.0 if i <= 25 else None) 
             for i in range(1, 31)  # 30 records, last 5 have None temperature
         ]
-        self.mock_weather_gateway.get.return_value = weather_data
+        self.mock_prediction_gateway.read_historical_data.return_value = weather_data
         
         with pytest.raises(ValueError, match="Temperature data.*is missing"):
             await self.interactor.execute(
@@ -141,7 +142,7 @@ class TestWeatherPredictInteractor:
             ) 
             for i in range(1, 31)  # 30 records
         ]
-        self.mock_weather_gateway.get.return_value = weather_data
+        self.mock_prediction_gateway.read_historical_data.return_value = weather_data
         
         predictions = [
             Forecast(date=datetime(2024, 2, 1), predicted_value=17.0)
@@ -160,7 +161,7 @@ class TestWeatherPredictInteractor:
     @pytest.mark.asyncio
     async def test_execute_file_error(self):
         """Test execute with file error."""
-        self.mock_weather_gateway.get.side_effect = FileError("File not found")
+        self.mock_prediction_gateway.read_historical_data.side_effect = FileError("File not found")
         
         with pytest.raises(FileError, match="File not found"):
             await self.interactor.execute(

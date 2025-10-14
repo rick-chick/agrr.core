@@ -6,6 +6,7 @@ is correctly applied in the optimization process.
 
 import pytest
 from datetime import datetime
+from unittest.mock import AsyncMock
 
 from agrr_core.usecase.interactors.multi_field_crop_allocation_greedy_interactor import (
     AllocationCandidate,
@@ -17,6 +18,15 @@ from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.entity.value_objects.rule_type import RuleType
 from agrr_core.usecase.services.interaction_rule_service import InteractionRuleService
+
+
+@pytest.fixture
+def mock_crop_profile_gateway_internal():
+    """Mock CropProfileGateway for internal use."""
+    gateway = AsyncMock()
+    gateway.save.return_value = None
+    gateway.delete.return_value = None
+    return gateway
 
 
 class TestAllocationCandidateWithInteractionImpact:
@@ -106,7 +116,7 @@ class TestAllocationCandidateWithInteractionImpact:
 class TestInteractionRuleServiceIntegration:
     """Test InteractionRuleService integration with Optimizer."""
     
-    def test_get_previous_crop_no_allocations(self):
+    def test_get_previous_crop_no_allocations(self, mock_crop_profile_gateway_internal):
         """Test getting previous crop when there are no allocations."""
         rules = []
         interaction_rule_service = InteractionRuleService(rules)
@@ -115,6 +125,7 @@ class TestInteractionRuleServiceIntegration:
             field_gateway=None,  # Mock
             crop_gateway=None,  # Mock
             weather_gateway=None,  # Mock
+            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
             interaction_rules=rules
         )
         
@@ -127,13 +138,14 @@ class TestInteractionRuleServiceIntegration:
         
         assert previous_crop is None
     
-    def test_get_previous_crop_with_prior_allocation(self):
+    def test_get_previous_crop_with_prior_allocation(self, mock_crop_profile_gateway_internal):
         """Test getting previous crop from prior allocation."""
         rules = []
         interactor = MultiFieldCropAllocationGreedyInteractor(
             field_gateway=None,
             crop_gateway=None,
             weather_gateway=None,
+            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
             interaction_rules=rules
         )
         
@@ -164,7 +176,7 @@ class TestInteractionRuleServiceIntegration:
         assert previous_crop is not None
         assert previous_crop.crop_id == "tomato"
     
-    def test_apply_interaction_rules_no_previous_crop(self):
+    def test_apply_interaction_rules_no_previous_crop(self, mock_crop_profile_gateway_internal):
         """Test applying interaction rules when there's no previous crop."""
         rules = [
             InteractionRule(
@@ -181,6 +193,7 @@ class TestInteractionRuleServiceIntegration:
             field_gateway=None,
             crop_gateway=None,
             weather_gateway=None,
+            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
             interaction_rules=rules
         )
         
@@ -205,7 +218,7 @@ class TestInteractionRuleServiceIntegration:
         assert updated_candidate.interaction_impact == 1.0
         assert updated_candidate.previous_crop is None
     
-    def test_apply_interaction_rules_continuous_cultivation_detected(self):
+    def test_apply_interaction_rules_continuous_cultivation_detected(self, mock_crop_profile_gateway_internal):
         """Test that continuous cultivation is detected and penalty applied."""
         rules = [
             InteractionRule(
@@ -223,6 +236,7 @@ class TestInteractionRuleServiceIntegration:
             field_gateway=None,
             crop_gateway=None,
             weather_gateway=None,
+            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
             interaction_rules=rules
         )
         
@@ -263,7 +277,7 @@ class TestInteractionRuleServiceIntegration:
         assert updated_candidate.previous_crop is not None
         assert updated_candidate.previous_crop.crop_id == "tomato"
     
-    def test_apply_interaction_rules_no_continuous_cultivation(self):
+    def test_apply_interaction_rules_no_continuous_cultivation(self, mock_crop_profile_gateway_internal):
         """Test that different families don't trigger continuous cultivation penalty."""
         rules = [
             InteractionRule(
@@ -280,6 +294,7 @@ class TestInteractionRuleServiceIntegration:
             field_gateway=None,
             crop_gateway=None,
             weather_gateway=None,
+            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
             interaction_rules=rules
         )
         

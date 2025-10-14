@@ -133,6 +133,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         field_gateway: FieldGateway,
         crop_gateway: CropProfileGateway,
         weather_gateway: WeatherGateway,
+        crop_profile_gateway_internal: CropProfileGateway,
         config: Optional[OptimizationConfig] = None,
         interaction_rules: Optional[List[InteractionRule]] = None,
     ):
@@ -142,14 +143,9 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         self.weather_gateway = weather_gateway
         self.config = config or OptimizationConfig()
         
-        # Create in-memory crop_profile_gateway for growth period optimizer
-        from agrr_core.adapter.gateways.crop_profile_gateway_impl import CropProfileGatewayImpl
-        from agrr_core.framework.repositories.inmemory_crop_profile_repository import InMemoryCropProfileRepository
-        
-        crop_profile_repository = InMemoryCropProfileRepository()
-        self.crop_profile_gateway_internal = CropProfileGatewayImpl(
-            profile_repository=crop_profile_repository
-        )
+        # Inject crop_profile_gateway for growth period optimizer
+        # (This should be an in-memory gateway instance created by Adapter/Controller layer)
+        self.crop_profile_gateway_internal = crop_profile_gateway_internal
         
         # Create growth period optimizer for candidate generation
         self.growth_period_optimizer = GrowthPeriodOptimizeInteractor(

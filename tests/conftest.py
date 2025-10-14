@@ -211,6 +211,16 @@ def gateway_interaction_rule():
     return gateway
 
 
+@pytest.fixture
+def gateway_crop_profile_internal():
+    """Mock CropProfileGateway for internal use (in-memory)."""
+    gateway = AsyncMock()
+    gateway.save.return_value = None
+    gateway.delete.return_value = None
+    gateway.get.return_value = None
+    return gateway
+
+
 # ============================================================================
 # UseCase Layer Fixtures - Output Ports (Presenter Interfaces)
 # ============================================================================

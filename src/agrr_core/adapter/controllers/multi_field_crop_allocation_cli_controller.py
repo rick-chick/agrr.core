@@ -27,6 +27,8 @@ from agrr_core.usecase.dto.multi_field_crop_allocation_response_dto import (
 )
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
+from agrr_core.adapter.gateways.crop_profile_gateway_impl import CropProfileGatewayImpl
+from agrr_core.framework.repositories.inmemory_crop_profile_repository import InMemoryCropProfileRepository
 
 
 class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
@@ -61,11 +63,19 @@ class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
         # Load interaction rules if gateway is provided
         self.interaction_rules: List[InteractionRule] = []
         
+        # Create in-memory crop_profile_gateway for growth period optimizer
+        # (Controller layer instantiates Adapter/Framework implementations)
+        crop_profile_repository = InMemoryCropProfileRepository()
+        crop_profile_gateway_internal = CropProfileGatewayImpl(
+            profile_repository=crop_profile_repository
+        )
+        
         # Instantiate interactor inside controller
         self.interactor = MultiFieldCropAllocationGreedyInteractor(
             field_gateway=self.field_gateway,
             crop_gateway=self.crop_gateway,
             weather_gateway=self.weather_gateway,
+            crop_profile_gateway_internal=crop_profile_gateway_internal,
             config=self.config,
             interaction_rules=self.interaction_rules,
         )

@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 from agrr_core.entity.entities.crop_profile_entity import CropProfile
+from agrr_core.entity.entities.crop_entity import Crop
 from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.usecase.dto.growth_period_optimize_request_dto import (
@@ -104,8 +105,13 @@ class GrowthPeriodOptimizeInteractor(
         # Get daily_fixed_cost from field entity
         daily_fixed_cost = request.field.daily_fixed_cost
         
+        # Get crop profile for revenue information
+        crop_profile = await self._get_crop_profile(
+            request.crop_id, request.variety
+        )
+        
         # Use efficient sliding window algorithm
-        candidates = await self._evaluate_candidates_efficient(request, daily_fixed_cost)
+        candidates = await self._evaluate_candidates_efficient(request, daily_fixed_cost, crop_profile.crop)
         
         # Find optimal candidate (maximum profit, excluding failures and deadline violations)
         valid_candidates = [c for c in candidates if c.total_cost is not None]
@@ -135,11 +141,6 @@ class GrowthPeriodOptimizeInteractor(
                 # Create new candidate with is_optimal=True
                 object.__setattr__(candidate, 'is_optimal', True)
         
-        # Get crop info for response
-        crop_profile = await self._get_crop_profile(
-            request.crop_id, request.variety
-        )
-        
         return OptimalGrowthPeriodResponseDTO(
             crop_name=crop_profile.crop.name,
             variety=crop_profile.crop.variety,
@@ -153,7 +154,7 @@ class GrowthPeriodOptimizeInteractor(
         )
 
     async def _evaluate_candidates_efficient(
-        self, request: OptimalGrowthPeriodRequestDTO, daily_fixed_cost: float
+        self, request: OptimalGrowthPeriodRequestDTO, daily_fixed_cost: float, crop: Crop
     ) -> List[CandidateResultDTO]:
         """Evaluate candidates using efficient sliding window algorithm.
         
@@ -228,12 +229,13 @@ class GrowthPeriodOptimizeInteractor(
             completion_date = datetime.combine(sorted_dates[window_end_idx - 1], datetime.min.time())
             if completion_date <= request.evaluation_period_end:
                 growth_days = (completion_date - current_start).days + 1
-                # Create candidate with field entity (calculation happens in get_metrics())
+                # Create candidate with field and crop entities (calculation happens in get_metrics())
                 results.append(CandidateResultDTO(
                     start_date=current_start,
                     completion_date=completion_date,
                     growth_days=growth_days,
                     field=request.field,
+                    crop=crop,
                     is_optimal=False
                 ))
                 gdd_per_candidate.append(accumulated_gdd)
@@ -244,6 +246,7 @@ class GrowthPeriodOptimizeInteractor(
                     completion_date=completion_date,
                     growth_days=None,
                     field=None,
+                    crop=None,
                     is_optimal=False
                 ))
                 gdd_per_candidate.append(accumulated_gdd)
@@ -273,12 +276,13 @@ class GrowthPeriodOptimizeInteractor(
                 completion_date = datetime.combine(sorted_dates[window_end_idx - 1], datetime.min.time())
                 if completion_date <= request.evaluation_period_end:
                     growth_days = (completion_date - current_start).days + 1
-                    # Create candidate with field entity (calculation happens in get_metrics())
+                    # Create candidate with field and crop entities (calculation happens in get_metrics())
                     results.append(CandidateResultDTO(
                         start_date=current_start,
                         completion_date=completion_date,
                         growth_days=growth_days,
                         field=request.field,
+                        crop=crop,
                         is_optimal=False
                     ))
                     gdd_per_candidate.append(accumulated_gdd)
@@ -354,6 +358,7 @@ class GrowthPeriodOptimizeInteractor(
         variety: Optional[str],
         weather_data: List[WeatherData],
         field: Field,
+        crop: Crop,
         completion_deadline: datetime,
     ) -> CandidateResultDTO:
         """Evaluate a single candidate start date.
@@ -394,12 +399,13 @@ class GrowthPeriodOptimizeInteractor(
                 # If exceeds deadline, leave growth_days as None (invalid candidate)
                 break
         
-        # Create candidate with field entity (calculation happens in get_metrics())
+        # Create candidate with field and crop entities (calculation happens in get_metrics())
         return CandidateResultDTO(
             start_date=start_date,
             completion_date=completion_date,
             growth_days=growth_days,
             field=field if growth_days is not None else None,
+            crop=crop if growth_days is not None else None,
             is_optimal=False,  # Will be updated later
         )
 

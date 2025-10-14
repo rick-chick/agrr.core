@@ -19,6 +19,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 
 from agrr_core.entity.entities.field_entity import Field
+from agrr_core.entity.entities.crop_entity import Crop
 from agrr_core.entity.value_objects.optimization_objective import OptimizationMetrics
 
 
@@ -34,14 +35,14 @@ class CandidateResultDTO:
     completion_date: Optional[datetime]  # None if 100% not achieved
     growth_days: Optional[int]
     field: Optional[Field] = None  # Field entity for cost calculation
+    crop: Optional[Crop] = None  # Crop entity for revenue calculation
     is_optimal: bool = False
-    revenue: Optional[float] = None  # Optional revenue for profit calculation
 
     def get_metrics(self) -> OptimizationMetrics:
         """Get optimization metrics with raw calculation parameters (implements Optimizable protocol).
         
         Returns OptimizationMetrics with all raw data needed for calculation.
-        The actual cost calculation happens inside OptimizationMetrics.
+        The actual cost/revenue/profit calculations happen inside OptimizationMetrics.
         
         Returns:
             OptimizationMetrics containing raw parameters for calculation
@@ -52,9 +53,23 @@ class CandidateResultDTO:
         if self.growth_days is None or self.field is None:
             raise ValueError("Cannot get metrics without growth_days and field")
         
+        # Calculate area_used from field area if crop is provided
+        area_used = None
+        revenue_per_area = None
+        max_revenue = None
+        
+        if self.crop is not None:
+            # Use full field area for single-crop period optimization
+            area_used = self.field.area
+            revenue_per_area = self.crop.revenue_per_area
+            max_revenue = self.crop.max_revenue
+        
         return OptimizationMetrics(
             growth_days=self.growth_days,
             daily_fixed_cost=self.field.daily_fixed_cost,
+            area_used=area_used,
+            revenue_per_area=revenue_per_area,
+            max_revenue=max_revenue,
         )
     
     @property

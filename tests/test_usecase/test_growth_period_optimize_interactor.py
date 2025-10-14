@@ -513,3 +513,110 @@ class TestGrowthPeriodOptimizeInteractor:
         assert response.optimal_start_date is not None
         assert response.completion_date is not None
 
+    @pytest.mark.asyncio
+    async def test_execute_optimizes_for_profit_when_revenue_available(self):
+        """Test that the interactor optimizes for profit (revenue - cost) when revenue information is available."""
+        # Setup crop with revenue information
+        crop = Crop(
+            crop_id="tomato",
+            name="Tomato",
+            area_per_unit=0.5,
+            variety="Momotaro",
+            revenue_per_area=50000.0,  # ¥50,000 per m²
+            max_revenue=None,
+        )
+        stage = GrowthStage(name="Growth", order=1)
+
+        temp_profile = TemperatureProfile(
+            base_temperature=10.0,
+            optimal_min=20.0,
+            optimal_max=30.0,
+            low_stress_threshold=15.0,
+            high_stress_threshold=35.0,
+            frost_threshold=0.0,
+        )
+        sunshine_profile = SunshineProfile()
+
+        stage_req = StageRequirement(
+            stage=stage,
+            temperature=temp_profile,
+            sunshine=sunshine_profile,
+            thermal=ThermalRequirement(required_gdd=100.0),
+        )
+
+        crop_profile = CropProfile(
+            crop=crop, stage_requirements=[stage_req]
+        )
+
+        # Weather data: varying GDD per day to create different growth periods
+        # Days 1-5: 5 GDD/day (temp=15, base=10 -> GDD=5)
+        # Days 6-20: 10 GDD/day (temp=20, base=10 -> GDD=10)
+        weather_data = [
+            # Slow growth period (5 GDD/day)
+            WeatherData(time=datetime(2024, 4, 1), temperature_2m_mean=15.0, temperature_2m_max=20.0, temperature_2m_min=10.0),
+            WeatherData(time=datetime(2024, 4, 2), temperature_2m_mean=15.0, temperature_2m_max=20.0, temperature_2m_min=10.0),
+            WeatherData(time=datetime(2024, 4, 3), temperature_2m_mean=15.0, temperature_2m_max=20.0, temperature_2m_min=10.0),
+            WeatherData(time=datetime(2024, 4, 4), temperature_2m_mean=15.0, temperature_2m_max=20.0, temperature_2m_min=10.0),
+            WeatherData(time=datetime(2024, 4, 5), temperature_2m_mean=15.0, temperature_2m_max=20.0, temperature_2m_min=10.0),
+            # Fast growth period (10 GDD/day)
+            WeatherData(time=datetime(2024, 4, 6), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 7), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 8), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 9), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 10), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 11), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 12), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 13), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 14), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 15), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 16), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 17), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 18), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 19), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+            WeatherData(time=datetime(2024, 4, 20), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
+        ]
+
+        self.gateway_crop_profile.get.return_value = crop_profile
+        self.gateway_weather.get.return_value = weather_data
+
+        # Field: 1000 m² area, ¥1000/day fixed cost
+        # Revenue: 1000 m² * ¥50,000/m² = ¥50,000,000
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=1000.0,
+        )
+        
+        request = OptimalGrowthPeriodRequestDTO(
+            crop_id="tomato",
+            variety="Momotaro",
+            evaluation_period_start=datetime(2024, 4, 1),
+            evaluation_period_end=datetime(2024, 4, 20),
+            field=test_field,
+        )
+
+        response = await self.interactor.execute(request)
+
+        # Expected behavior:
+        # - April 1 start: 5*5 + 75 = 100 GDD, needs ~15 days (5 days slow + 10 days fast)
+        #   Cost: 15 * ¥1000 = ¥15,000, Revenue: ¥50,000,000, Profit: ¥49,985,000
+        # - April 6 start: 10*10 = 100 GDD, needs 10 days (all fast)
+        #   Cost: 10 * ¥1000 = ¥10,000, Revenue: ¥50,000,000, Profit: ¥49,990,000 (BETTER!)
+        
+        # Optimal should be April 6 (higher profit due to lower cost)
+        assert response.crop_name == "Tomato"
+        assert response.variety == "Momotaro"
+        assert response.optimal_start_date == datetime(2024, 4, 6)
+        assert response.growth_days == 10
+        assert response.total_cost == 10000.0
+        
+        # Verify candidates include both options
+        valid_candidates = [c for c in response.candidates if c.total_cost is not None]
+        assert len(valid_candidates) >= 2
+        
+        # Verify that optimal candidate maximizes profit
+        optimal = [c for c in valid_candidates if c.is_optimal][0]
+        expected_profit = (1000.0 * 50000.0) - (optimal.growth_days * 1000.0)
+        assert optimal.get_metrics().profit == expected_profit
+

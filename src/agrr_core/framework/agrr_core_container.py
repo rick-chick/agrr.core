@@ -144,6 +144,13 @@ class AgrrCoreContainer:
             self._instances['prediction_arima_service'] = PredictionARIMAService(time_series_service)
         return self._instances['prediction_arima_service']
     
+    def get_prediction_lightgbm_service(self):
+        """Get LightGBM prediction service instance."""
+        if 'prediction_lightgbm_service' not in self._instances:
+            from agrr_core.framework.services.lightgbm_prediction_service import LightGBMPredictionService
+            self._instances['prediction_lightgbm_service'] = LightGBMPredictionService()
+        return self._instances['prediction_lightgbm_service']
+    
     def get_weather_api_repository(self) -> WeatherAPIOpenMeteoRepository:
         """Get weather API repository instance."""
         if 'weather_api_repository' not in self._instances:
@@ -187,16 +194,25 @@ class AgrrCoreContainer:
             )
         return self._instances['weather_gateway']
     
-    def get_prediction_gateway(self) -> PredictionGatewayImpl:
-        """Get prediction gateway instance."""
-        if 'prediction_gateway' not in self._instances:
-            file_repository = self.get_weather_file_repository()
+    def get_prediction_gateway(self, model_type: str = 'arima') -> PredictionGatewayImpl:
+        """
+        Get prediction gateway instance with specified model.
+        
+        Args:
+            model_type: 'arima' or 'lightgbm' (default: 'arima')
+        """
+        # Don't cache - create new instance based on model_type
+        file_repository = self.get_weather_file_repository()
+        
+        if model_type == 'lightgbm':
+            prediction_service = self.get_prediction_lightgbm_service()
+        else:  # default to arima
             prediction_service = self.get_prediction_arima_service()
-            self._instances['prediction_gateway'] = PredictionGatewayImpl(
-                file_repository=file_repository,
-                prediction_service=prediction_service
-            )
-        return self._instances['prediction_gateway']
+        
+        return PredictionGatewayImpl(
+            file_repository=file_repository,
+            prediction_service=prediction_service
+        )
     
     def get_weather_predict_interactor(self) -> WeatherPredictInteractor:
         """Get weather prediction interactor instance."""
@@ -291,8 +307,39 @@ class AgrrCoreContainer:
         await controller.run(args)
     
     async def run_prediction_cli(self, args: list = None) -> None:
-        """Run file-based prediction CLI application with dependency injection."""
-        controller = self.get_file_predict_cli_controller()
+        """
+        Run file-based prediction CLI application with dependency injection.
+        
+        Extracts --model option from args and injects appropriate service.
+        """
+        # Extract model type from args
+        model_type = 'arima'  # default
+        if args and '--model' in args:
+            try:
+                model_index = args.index('--model')
+                if model_index + 1 < len(args):
+                    model_type = args[model_index + 1]
+            except (ValueError, IndexError):
+                pass
+        elif args and '-m' in args:
+            try:
+                model_index = args.index('-m')
+                if model_index + 1 < len(args):
+                    model_type = args[model_index + 1]
+            except (ValueError, IndexError):
+                pass
+        
+        # Create controller with appropriate service injected
+        weather_gateway = self.get_weather_gateway()
+        prediction_gateway = self.get_prediction_gateway(model_type=model_type)  # ← モデルを指定
+        cli_presenter = self.get_cli_presenter()
+        
+        controller = WeatherCliPredictController(
+            weather_gateway=weather_gateway,
+            prediction_gateway=prediction_gateway,
+            cli_presenter=cli_presenter
+        )
+        
         await controller.run(args)
     
 

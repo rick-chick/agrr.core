@@ -34,13 +34,15 @@ class TestWeatherCliPredictController:
         parser = self.controller.create_argument_parser()
         
         # Check parser attributes
-        assert parser.description == "Weather Prediction CLI - Predict future weather using ARIMA time series model"
+        assert parser.description == "Weather Prediction CLI - Predict future weather using machine learning models"
         
-        # Check that required arguments exist (no subcommands anymore)
+        # Check that required arguments exist
         actions = [action.dest for action in parser._actions]
         assert 'input' in actions
         assert 'output' in actions
         assert 'days' in actions
+        assert 'model' in actions  # New: model selection option
+        assert 'confidence' in actions  # New: confidence level option
     
     # ===== Input Validation Tests =====
     
@@ -60,6 +62,7 @@ class TestWeatherCliPredictController:
         args.input = "input.json"
         args.output = "output.json"
         args.days = 7
+        args.model = 'arima'  # Add model type
         
         # Execute
         await self.controller.handle_predict_command(args)
@@ -83,6 +86,7 @@ class TestWeatherCliPredictController:
         args.input = "input.xyz"
         args.output = "output.json"
         args.days = 7
+        args.model = 'arima'
         
         await self.controller.handle_predict_command(args)
         
@@ -101,6 +105,7 @@ class TestWeatherCliPredictController:
         args.input = "input.json"
         args.output = "output.json"
         args.days = 7
+        args.model = 'arima'
         
         await self.controller.handle_predict_command(args)
         

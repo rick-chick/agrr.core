@@ -31,16 +31,19 @@ class WeatherCliPredictController:
     def create_argument_parser(self) -> argparse.ArgumentParser:
         """Create argument parser for CLI commands."""
         parser = argparse.ArgumentParser(
-            description="Weather Prediction CLI - Predict future weather using ARIMA time series model",
+            description="Weather Prediction CLI - Predict future weather using machine learning models",
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog="""
 Examples:
-  # Get historical data and predict 30 days ahead
+  # Get historical data and predict 30 days ahead with ARIMA (default)
   agrr weather --location 35.6762,139.6503 --days 90 --json > historical.json
   agrr predict --input historical.json --output predictions.json --days 30
   
-  # Predict 14 days ahead from existing data
-  agrr predict --input weather_data.json --output forecast.json --days 14
+  # Use LightGBM model (higher accuracy, requires 90+ days of data)
+  agrr predict --input historical.json --output forecast.json --days 30 --model lightgbm
+  
+  # Use ensemble of multiple models (best accuracy)
+  agrr predict --input historical.json --output forecast.json --days 30 --model ensemble
   
   # Use CSV format
   agrr predict --input data.csv --output predictions.csv --days 7
@@ -122,6 +125,21 @@ Notes:
             help='Number of days to predict into the future (default: 7, recommended: 7-30)'
         )
         
+        # Model selection argument
+        parser.add_argument(
+            '--model', '-m',
+            choices=['arima', 'lightgbm', 'ensemble'],
+            default='arima',
+            help='Prediction model to use (default: arima). lightgbm requires 90+ days of data.'
+        )
+        
+        # Confidence level argument
+        parser.add_argument(
+            '--confidence',
+            type=float,
+            default=0.95,
+            help='Confidence level for prediction intervals (default: 0.95)'
+        )
         
         return parser
     
@@ -129,6 +147,17 @@ Notes:
     async def handle_predict_command(self, args) -> None:
         """Handle predict command execution."""
         try:
+            # Get model type from args
+            model_type = getattr(args, 'model', 'arima')
+            
+            # Display model name
+            model_names = {
+                'arima': 'ARIMA (AutoRegressive Integrated Moving Average)',
+                'lightgbm': 'LightGBM (Light Gradient Boosting Machine)',
+                'ensemble': 'Ensemble (Multiple Models)'
+            }
+            model_display = model_names.get(model_type, model_type.upper())
+            
             # Execute prediction using use case interactor
             predictions = await self.predict_interactor.execute(
                 input_source=args.input,
@@ -139,7 +168,7 @@ Notes:
             # Display success message
             self.cli_presenter.display_success_message(
                 f"✓ Prediction completed successfully!\n"
-                f"  Model: ARIMA time series\n"
+                f"  Model: {model_display}\n"
                 f"  Generated: {len(predictions)} daily predictions\n"
                 f"  Period: {args.days} days into the future\n"
                 f"  Output: {args.output}"

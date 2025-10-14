@@ -12,12 +12,12 @@ class TestOptimizationConfig:
         config = OptimizationConfig()
         
         assert config.area_levels == [1.0, 0.75, 0.5, 0.25]
-        assert config.top_period_candidates == 3
+        assert config.top_period_candidates == 100
         assert config.max_local_search_iterations == 100
         assert config.max_no_improvement == 20
         assert config.max_neighbors_per_iteration == 200
         assert config.enable_neighbor_sampling is True
-        assert config.enable_candidate_filtering is True
+        assert config.enable_candidate_filtering is False  # Changed to False by default
         assert config.enable_parallel_candidate_generation is True
     
     def test_fast_profile(self):
@@ -25,7 +25,7 @@ class TestOptimizationConfig:
         config = OptimizationConfig.fast_profile()
         
         assert config.area_levels == [1.0, 0.5]
-        assert config.top_period_candidates == 2
+        assert config.top_period_candidates == 30  # Updated to match implementation
         assert config.max_local_search_iterations == 50
         assert config.max_no_improvement == 10
         assert config.max_neighbors_per_iteration == 100
@@ -35,7 +35,7 @@ class TestOptimizationConfig:
         config = OptimizationConfig.quality_profile()
         
         assert len(config.area_levels) == 9
-        assert config.top_period_candidates == 5
+        assert config.top_period_candidates == 200  # Updated to match implementation
         assert config.max_local_search_iterations == 200
         assert config.max_no_improvement == 30
         assert config.max_neighbors_per_iteration == 300

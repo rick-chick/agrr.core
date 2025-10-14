@@ -46,8 +46,10 @@ class FieldSchedule:
         if self.total_revenue < 0:
             raise ValueError(f"total_revenue must be non-negative, got {self.total_revenue}")
         
-        if self.utilization_rate < 0 or self.utilization_rate > 100:
-            raise ValueError(f"utilization_rate must be between 0 and 100, got {self.utilization_rate}")
+        # Note: utilization_rate can exceed 100% when multiple crops are grown sequentially
+        # (time-integrated utilization), so we only check for non-negative
+        if self.utilization_rate < 0:
+            raise ValueError(f"utilization_rate must be non-negative, got {self.utilization_rate}")
         
         # Verify all allocations belong to this field
         for allocation in self.allocations:

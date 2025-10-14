@@ -36,8 +36,15 @@ class OptimizationConfig:
     min_revenue_cost_ratio: float = 0.5
     """Minimum revenue/cost ratio to accept a candidate."""
     
-    enable_candidate_filtering: bool = True
-    """Enable quality-based candidate filtering."""
+    enable_candidate_filtering: bool = False
+    """Enable quality-based candidate filtering.
+    
+    NOTE: Disabled by default as economic filtering often excludes all viable candidates
+    in real-world scenarios. The optimizer can handle unprofitable options and will
+    select the best available solution regardless of absolute profitability.
+    
+    Enable this only if you want to strictly filter out economically poor candidates.
+    """
     
     max_candidates_per_field_crop: int = 10
     """Maximum number of candidates to keep per field×crop combination."""

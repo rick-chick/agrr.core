@@ -614,6 +614,11 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         
         Uses unified optimization objective (profit maximization).
         """
+        # Skip local search if initial solution is too small
+        # (prevents deletion of valid small solutions)
+        if len(initial_solution) < 2:
+            return initial_solution
+        
         start_time = time.time()
         current_solution = initial_solution
         current_profit = self._calculate_total_profit(current_solution)

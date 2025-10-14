@@ -1,10 +1,4 @@
-"""ARIMA-based weather prediction service implementation.
-
-DEPRECATED: This file is kept for backward compatibility only.
-New code should use:
-  - src/agrr_core/framework/services/arima_prediction_service.py (Framework layer)
-  - src/agrr_core/adapter/gateways/prediction_model_gateway_impl.py (Gateway)
-"""
+"""ARIMA-based weather prediction service implementation (Framework layer)."""
 
 from typing import List, Dict, Any
 import numpy as np
@@ -13,16 +7,57 @@ from datetime import datetime, timedelta
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.prediction_error import PredictionError
 from agrr_core.adapter.services.interpolation_utils import LinearInterpolationService
-from agrr_core.usecase.gateways.prediction_model_gateway import PredictionModelGateway
+from agrr_core.adapter.interfaces.prediction_service_interface import PredictionServiceInterface
 from agrr_core.adapter.interfaces.time_series_interface import TimeSeriesInterface
 
 
-class PredictionARIMAService(PredictionModelGateway):
-    """ARIMA-based implementation of weather prediction service."""
+class ARIMAPredictionService(PredictionServiceInterface):
+    """ARIMA-based prediction service (Framework layer implementation)."""
     
     def __init__(self, time_series_service: TimeSeriesInterface):
-        """Initialize prediction service with time series interface."""
+        """
+        Initialize ARIMA prediction service.
+        
+        Args:
+            time_series_service: Time series service for ARIMA operations
+        """
         self.time_series_service = time_series_service
+    
+    async def predict(
+        self,
+        historical_data: List[WeatherData],
+        metric: str,
+        prediction_days: int,
+        model_config: Dict[str, Any]
+    ) -> List[Forecast]:
+        """Predict future values using ARIMA model (implements PredictionModelInterface)."""
+        config = {**model_config, 'prediction_days': prediction_days}
+        return await self._predict_single_metric(historical_data, metric, config)
+    
+    async def evaluate(
+        self,
+        test_data: List[WeatherData],
+        predictions: List[Forecast],
+        metric: str
+    ) -> Dict[str, float]:
+        """Evaluate model accuracy (implements PredictionModelInterface)."""
+        return await self.evaluate_model_accuracy(test_data, predictions, metric)
+    
+    def get_model_info(self) -> Dict[str, Any]:
+        """Get ARIMA model information (implements PredictionModelInterface)."""
+        return {
+            'model_type': 'arima',
+            'model_name': 'ARIMA',
+            'description': 'AutoRegressive Integrated Moving Average',
+            'supports_confidence_intervals': True,
+            'min_training_samples': 30,
+            'recommended_prediction_days': 30,
+            'max_prediction_days': 90,
+        }
+    
+    def get_required_data_days(self) -> int:
+        """Get minimum required data days (implements PredictionModelInterface)."""
+        return 30
     
     async def predict_multiple_metrics(
         self, 

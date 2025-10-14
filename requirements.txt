@@ -11,8 +11,13 @@ lxml>=4.6.0
 scipy>=1.10.0,<1.12.0
 statsmodels>=0.13.0
 
+# Machine learning dependencies
+lightgbm>=4.0.0
+scikit-learn>=1.3.0
+
 # Optional dependencies (install separately if needed)
 # prophet>=1.1.0  # Commented out due to Windows path length issues
+# pmdarima>=2.0.0  # For Auto ARIMA (optional)
 
 # LLM (optional)
 openai>=1.50.0

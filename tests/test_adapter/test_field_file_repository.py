@@ -252,3 +252,62 @@ class TestFieldFileRepository:
         # Assert
         assert result is False
 
+    async def test_get_method_with_file_path(self, file_repository, temp_dir):
+        """Test get method (FieldRepositoryInterface implementation)."""
+        # Arrange
+        test_file = temp_dir / "test_fields.json"
+        fields_data = {
+            "fields": [
+                {
+                    "field_id": "field_01",
+                    "name": "北圃場",
+                    "area": 1000.0,
+                    "daily_fixed_cost": 5000.0
+                },
+                {
+                    "field_id": "field_02",
+                    "name": "南圃場",
+                    "area": 1500.0,
+                    "daily_fixed_cost": 7000.0
+                }
+            ]
+        }
+        test_file.write_text(json.dumps(fields_data, ensure_ascii=False), encoding='utf-8')
+        
+        # Create repository with file_path
+        repository = FieldFileRepository(file_repository=file_repository, file_path=str(test_file))
+
+        # Act
+        field = await repository.get("field_02")
+
+        # Assert
+        assert field is not None
+        assert field.field_id == "field_02"
+        assert field.name == "南圃場"
+        assert field.daily_fixed_cost == 7000.0
+
+    async def test_get_method_not_found(self, file_repository, temp_dir):
+        """Test get method returns None for non-existent field."""
+        # Arrange
+        test_file = temp_dir / "test_fields.json"
+        fields_data = {
+            "fields": [
+                {
+                    "field_id": "field_01",
+                    "name": "北圃場",
+                    "area": 1000.0,
+                    "daily_fixed_cost": 5000.0
+                }
+            ]
+        }
+        test_file.write_text(json.dumps(fields_data, ensure_ascii=False), encoding='utf-8')
+        
+        # Create repository with file_path
+        repository = FieldFileRepository(file_repository=file_repository, file_path=str(test_file))
+
+        # Act
+        field = await repository.get("field_99")
+
+        # Assert
+        assert field is None
+

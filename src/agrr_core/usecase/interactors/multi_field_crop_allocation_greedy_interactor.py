@@ -32,14 +32,13 @@ from agrr_core.entity.entities.field_schedule_entity import FieldSchedule
 from agrr_core.entity.entities.multi_field_optimization_result_entity import MultiFieldOptimizationResult
 from agrr_core.usecase.dto.multi_field_crop_allocation_request_dto import (
     MultiFieldCropAllocationRequestDTO,
-    CropRequirementSpec,
 )
 from agrr_core.usecase.dto.multi_field_crop_allocation_response_dto import (
     MultiFieldCropAllocationResponseDTO,
 )
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 from agrr_core.usecase.gateways.field_gateway import FieldGateway
-from agrr_core.usecase.gateways.crop_requirement_gateway import CropRequirementGateway
+from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.interactors.growth_period_optimize_interactor import GrowthPeriodOptimizeInteractor
 from agrr_core.usecase.dto.growth_period_optimize_request_dto import OptimalGrowthPeriodRequestDTO
@@ -132,20 +131,29 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
     def __init__(
         self,
         field_gateway: FieldGateway,
-        crop_requirement_gateway: CropRequirementGateway,
+        crop_gateway: CropProfileGateway,
         weather_gateway: WeatherGateway,
         config: Optional[OptimizationConfig] = None,
         interaction_rules: Optional[List[InteractionRule]] = None,
     ):
         super().__init__()  # Initialize BaseOptimizer
         self.field_gateway = field_gateway
-        self.crop_requirement_gateway = crop_requirement_gateway
+        self.crop_gateway = crop_gateway
         self.weather_gateway = weather_gateway
         self.config = config or OptimizationConfig()
         
+        # Create in-memory crop_profile_gateway for growth period optimizer
+        from agrr_core.adapter.gateways.crop_profile_gateway_impl import CropProfileGatewayImpl
+        from agrr_core.framework.repositories.inmemory_crop_profile_repository import InMemoryCropProfileRepository
+        
+        crop_profile_repository = InMemoryCropProfileRepository()
+        self.crop_profile_gateway_internal = CropProfileGatewayImpl(
+            profile_repository=crop_profile_repository
+        )
+        
         # Create growth period optimizer for candidate generation
         self.growth_period_optimizer = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=crop_requirement_gateway,
+            crop_profile_gateway=self.crop_profile_gateway_internal,
             weather_gateway=weather_gateway,
         )
         
@@ -184,18 +192,20 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         if max_local_search_iterations is not None:
             optimization_config.max_local_search_iterations = max_local_search_iterations
         
-        # Phase 1: Generate candidates (with parallel generation if enabled)
+        # Phase 1: Load crops and fields
         fields = await self._load_fields(request.field_ids)
+        crops = await self.crop_gateway.get_all()
         
+        # Phase 1: Generate candidates (with parallel generation if enabled)
         if optimization_config.enable_parallel_candidate_generation:
-            candidates = await self._generate_candidates_parallel(fields, request, optimization_config)
+            candidates = await self._generate_candidates_parallel(fields, crops, request, optimization_config)
         else:
-            candidates = await self._generate_candidates(fields, request, optimization_config)
+            candidates = await self._generate_candidates(fields, crops, request, optimization_config)
         
         # Phase 2: Greedy allocation
         allocations = self._greedy_allocation(
             candidates, 
-            request.crop_requirements,
+            crops,
             request.optimization_objective
         )
         
@@ -233,6 +243,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
     async def _generate_candidates(
         self,
         fields: List[Field],
+        crops: List,
         request: MultiFieldCropAllocationRequestDTO,
         config: Optional[OptimizationConfig] = None,
     ) -> List[AllocationCandidate]:
@@ -247,25 +258,25 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         candidates = []
         
         for field in fields:
-            for crop_spec in request.crop_requirements:
+            for crop_aggregate in crops:
+                crop = crop_aggregate.crop
+                
                 # Use GrowthPeriodOptimizeInteractor to find all viable periods (DP)
                 optimization_request = OptimalGrowthPeriodRequestDTO(
-                    crop_id=crop_spec.crop_id,
-                    variety=crop_spec.variety,
+                    crop_id=crop.crop_id,
+                    variety=crop.variety,
                     evaluation_period_start=request.planning_period_start,
                     evaluation_period_end=request.planning_period_end,
-                    weather_data_file=request.weather_data_file,
                     field=field,
-                    crop_requirement_file=crop_spec.crop_requirement_file,
                 )
+                
+                # Set crop requirement in growth period optimizer gateway
+                await self.crop_profile_gateway_internal.save(crop_aggregate)
                 
                 optimization_result = await self.growth_period_optimizer.execute(optimization_request)
                 
-                # Get crop info
-                crop_requirement = await self.crop_requirement_gateway.craft(
-                    crop_query=f"{crop_spec.crop_id} {crop_spec.variety}" if crop_spec.variety else crop_spec.crop_id
-                )
-                crop = crop_requirement.crop
+                # Clean up
+                await self.crop_profile_gateway_internal.delete()
                 
                 # Calculate maximum area that can fit in the field
                 field_max_area = field.area
@@ -305,10 +316,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                             # Filter 3: Minimum absolute profit (for profit maximization)
                             if request.optimization_objective == "maximize_profit":
                                 if candidate.profit is not None and candidate.profit < 0:
-                                    # Only keep profitable candidates unless min area required
-                                    crop_req = next((r for r in request.crop_requirements if r.crop_id == crop.crop_id), None)
-                                    if not (crop_req and crop_req.min_area and crop_req.min_area > 0):
-                                        continue
+                                    continue  # Skip unprofitable candidates
                         
                         candidates.append(candidate)
         
@@ -321,6 +329,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
     async def _generate_candidates_parallel(
         self,
         fields: List[Field],
+        crops: List,
         request: MultiFieldCropAllocationRequestDTO,
         config: OptimizationConfig,
     ) -> List[AllocationCandidate]:
@@ -333,9 +342,9 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         # Create tasks for all field × crop combinations
         tasks = []
         for field in fields:
-            for crop_spec in request.crop_requirements:
+            for crop_aggregate in crops:
                 task = self._generate_candidates_for_field_crop(
-                    field, crop_spec, request, config
+                    field, crop_aggregate, request, config
                 )
                 tasks.append(task)
         
@@ -356,7 +365,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
     async def _generate_candidates_for_field_crop(
         self,
         field: Field,
-        crop_spec: CropRequirementSpec,
+        crop_aggregate,
         request: MultiFieldCropAllocationRequestDTO,
         config: OptimizationConfig,
     ) -> List[AllocationCandidate]:
@@ -364,23 +373,24 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         
         This is used by parallel candidate generation.
         """
+        crop = crop_aggregate.crop
         
         # DP optimization for this field×crop
         optimization_request = OptimalGrowthPeriodRequestDTO(
-            crop_id=crop_spec.crop_id,
-            variety=crop_spec.variety,
+            crop_id=crop.crop_id,
+            variety=crop.variety,
             evaluation_period_start=request.planning_period_start,
             evaluation_period_end=request.planning_period_end,
             field=field,
         )
         
+        # Set crop requirement in growth period optimizer gateway
+        await self.crop_profile_gateway_internal.save(crop_aggregate)
+        
         optimization_result = await self.growth_period_optimizer.execute(optimization_request)
         
-        # Get crop info
-        crop_requirement = await self.crop_requirement_gateway.craft(
-            crop_query=f"{crop_spec.crop_id} {crop_spec.variety}" if crop_spec.variety else crop_spec.crop_id
-        )
-        crop = crop_requirement.crop
+        # Clean up
+        await self.crop_profile_gateway_internal.delete()
         
         # Generate area×period candidates
         candidates = []
@@ -412,9 +422,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                         if candidate.revenue / candidate.cost < config.min_revenue_cost_ratio:
                             continue
                     if request.optimization_objective == "maximize_profit" and candidate.profit is not None and candidate.profit < 0:
-                        crop_req = next((r for r in request.crop_requirements if r.crop_id == crop.crop_id), None)
-                        if not (crop_req and crop_req.min_area and crop_req.min_area > 0):
-                            continue
+                        continue  # Skip unprofitable candidates
                 
                 candidates.append(candidate)
         
@@ -524,10 +532,10 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
     def _greedy_allocation(
         self,
         candidates: List[AllocationCandidate],
-        crop_requirements: List[CropRequirementSpec],
+        crops: List,
         optimization_objective: str,
     ) -> List[CropAllocation]:
-        """Select allocations using greedy algorithm.
+        """Select allocations using greedy allocation.
         
         Strategy: Sort candidates by profit (using unified objective) and select
         greedily while respecting constraints.
@@ -539,8 +547,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         """
         # Track allocated resources
         field_schedules: Dict[str, List[CropAllocation]] = {}  # field_id -> allocations
-        crop_areas: Dict[str, float] = {spec.crop_id: 0.0 for spec in crop_requirements}
-        crop_targets: Dict[str, Optional[float]] = {spec.crop_id: spec.target_area for spec in crop_requirements}
+        crop_areas: Dict[str, float] = {c.crop.crop_id: 0.0 for c in crops}
         
         # Sort candidates using BaseOptimizer (unified objective)
         sorted_candidates = self.sort_candidates(candidates, reverse=True)
@@ -552,12 +559,8 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             # Apply interaction rules dynamically based on current field schedules
             updated_candidate = self._apply_interaction_rules(candidate, field_schedules)
             
-            # Check if we should consider this candidate
-            crop_id = updated_candidate.crop.crop_id
-            if crop_targets.get(crop_id) is not None:
-                if crop_areas[crop_id] >= crop_targets[crop_id]:
-                    continue  # Target already met
-            
+            # Track crop allocation
+            crop_id = updated_candidate.crop.crop_id            
             # Check time overlap with existing allocations in the same field
             field_id = updated_candidate.field.field_id
             if field_id not in field_schedules:
@@ -579,6 +582,25 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             crop_areas[crop_id] += allocation.area_used
         
         return allocations
+    
+    def _time_overlaps(self, alloc1, alloc2) -> bool:
+        """Check if two allocations overlap in time.
+        
+        Args:
+            alloc1: First allocation
+            alloc2: Second allocation
+            
+        Returns:
+            True if they overlap, False otherwise
+        """
+        # Get dates from allocations
+        start1 = alloc1.start_date if hasattr(alloc1, 'start_date') else alloc1.start_date
+        end1 = alloc1.completion_date if hasattr(alloc1, 'completion_date') else alloc1.completion_date
+        start2 = alloc2.start_date if hasattr(alloc2, 'start_date') else alloc2.start_date
+        end2 = alloc2.completion_date if hasattr(alloc2, 'completion_date') else alloc2.completion_date
+        
+        # Check overlap: allocations overlap if one starts before the other ends
+        return not (end1 < start2 or end2 < start1)
 
     def _local_search(
         self,
@@ -604,9 +626,12 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         best_profit_so_far = current_profit
         consecutive_near_optimal = 0
         
-        # Extract crops from candidates
-        crops_set = {c.crop for c in candidates}
-        crops_list = list(crops_set)
+        # Extract unique crops from candidates (using crop_id for uniqueness)
+        crops_dict = {}
+        for c in candidates:
+            if c.crop.crop_id not in crops_dict:
+                crops_dict[c.crop.crop_id] = c.crop
+        crops_list = list(crops_dict.values())
         
         # Phase 3: Adaptive parameters
         problem_size = len(initial_solution)

@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any
 
 
-class CropRequirementCraftOutputPort(ABC):
+class CropProfileCraftOutputPort(ABC):
     """Interface for formatting crop requirement crafting responses."""
 
     @abstractmethod

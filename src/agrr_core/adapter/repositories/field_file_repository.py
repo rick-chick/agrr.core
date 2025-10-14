@@ -32,18 +32,48 @@ from typing import List, Dict, Any, Optional
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
+from agrr_core.adapter.interfaces.field_repository_interface import FieldRepositoryInterface
 
 
-class FieldFileRepository:
+class FieldFileRepository(FieldRepositoryInterface):
     """Repository for reading field data from files."""
     
-    def __init__(self, file_repository: FileRepositoryInterface):
+    def __init__(self, file_repository: FileRepositoryInterface, file_path: str = ""):
         """Initialize field file repository.
         
         Args:
             file_repository: File repository interface for file I/O operations
+            file_path: Path to the fields JSON file
         """
         self.file_repository = file_repository
+        self.file_path = file_path
+        self._fields_cache: Optional[Dict[str, Field]] = None
+    
+    async def get(self, field_id: str) -> Optional[Field]:
+        """Get field by ID.
+        
+        Implementation of FieldRepositoryInterface.
+        
+        Args:
+            field_id: Field identifier
+            
+        Returns:
+            Field entity if found, None otherwise
+        """
+        # Load fields into cache if not already loaded
+        if self._fields_cache is None:
+            await self._load_fields_cache()
+        
+        return self._fields_cache.get(field_id) if self._fields_cache else None
+    
+    async def _load_fields_cache(self) -> None:
+        """Load all fields from file into cache."""
+        if not self.file_path:
+            self._fields_cache = {}
+            return
+        
+        fields = await self.read_fields_from_file(self.file_path)
+        self._fields_cache = {field.field_id: field for field in fields}
     
     async def read_fields_from_file(self, file_path: str) -> List[Field]:
         """Read field data from JSON file.

@@ -1,25 +1,23 @@
-"""Mapper for CropRequirement entities and DTOs.
+"""Mapper for CropProfile entities and DTOs.
 
 This module provides mappers to convert between domain entities and data
-transfer objects (DTOs) for crop requirements.
+transfer objects (DTOs) for crop profiles.
 """
 
 from typing import Dict, Any
 
-from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
-    CropRequirementAggregate,
-)
+from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
 from agrr_core.entity.entities.temperature_profile_entity import TemperatureProfile
 from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
 
 
-class CropRequirementMapper:
-    """Map between CropRequirement domain entities and data transfer objects.
+class CropProfileMapper:
+    """Map between CropProfile domain entities and data transfer objects.
     
     Responsibilities:
-    - Convert CropRequirementAggregate to response payload
+    - Convert CropProfile to response payload
     - Convert StageRequirement to dictionary
     - Handle nested entity structures
     
@@ -30,14 +28,58 @@ class CropRequirementMapper:
     """
     
     @staticmethod
-    def aggregate_to_payload(aggregate: CropRequirementAggregate) -> Dict[str, Any]:
-        """Convert CropRequirementAggregate to response payload.
+    def to_crop_profile_format(profile: CropProfile) -> Dict[str, Any]:
+        """Convert CropProfile to standard file format.
         
-        This method transforms a domain aggregate into a dictionary suitable
+        This method transforms a domain profile into the standard format
+        used by progress and optimize-period commands.
+        
+        Args:
+            profile: CropProfile domain entity
+            
+        Returns:
+            Dictionary in standard crop profile file format
+            
+        Example:
+            >>> crop = Crop("rice", "Rice", 0.25, variety="Koshihikari")
+            >>> profile = CropProfile(crop, stage_reqs)
+            >>> result = CropProfileMapper.to_crop_profile_format(profile)
+            >>> result["crop"]["crop_id"]
+            'rice'
+        """
+        return {
+            "crop": {
+                "crop_id": profile.crop.crop_id,
+                "name": profile.crop.name,
+                "variety": profile.crop.variety,
+                "area_per_unit": profile.crop.area_per_unit,
+                "revenue_per_area": profile.crop.revenue_per_area,
+                "max_revenue": profile.crop.max_revenue,
+                "groups": profile.crop.groups,
+            },
+            "stage_requirements": [
+                {
+                    "stage": {
+                        "name": sr.stage.name,
+                        "order": sr.stage.order,
+                    },
+                    "temperature": CropProfileMapper._temperature_to_dict(sr.temperature),
+                    "thermal": CropProfileMapper._thermal_to_dict(sr.thermal),
+                    "sunshine": CropProfileMapper._sunshine_to_dict(sr.sunshine),
+                }
+                for sr in profile.stage_requirements
+            ],
+        }
+    
+    @staticmethod
+    def aggregate_to_payload(profile: CropProfile) -> Dict[str, Any]:
+        """Convert CropProfile to response payload.
+        
+        This method transforms a domain profile into a dictionary suitable
         for API responses or presenter layers.
         
         Args:
-            aggregate: CropRequirementAggregate domain entity
+            profile: CropProfile domain entity
             
         Returns:
             Dictionary representation suitable for response
@@ -45,22 +87,22 @@ class CropRequirementMapper:
         Example:
             >>> crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
             >>> stage_reqs = [...]
-            >>> aggregate = CropRequirementAggregate(crop, stage_reqs)
-            >>> payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+            >>> profile = CropProfile(crop, stage_reqs)
+            >>> payload = CropProfileMapper.aggregate_to_payload(profile)
             >>> payload["crop_id"]
             'rice'
         """
         return {
-            "crop_id": aggregate.crop.crop_id,
-            "crop_name": aggregate.crop.name,
-            "variety": aggregate.crop.variety,
-            "area_per_unit": aggregate.crop.area_per_unit,
-            "revenue_per_area": aggregate.crop.revenue_per_area,
-            "max_revenue": aggregate.crop.max_revenue,
-            "groups": aggregate.crop.groups,
+            "crop_id": profile.crop.crop_id,
+            "crop_name": profile.crop.name,
+            "variety": profile.crop.variety,
+            "area_per_unit": profile.crop.area_per_unit,
+            "revenue_per_area": profile.crop.revenue_per_area,
+            "max_revenue": profile.crop.max_revenue,
+            "groups": profile.crop.groups,
             "stages": [
-                CropRequirementMapper.stage_requirement_to_dict(sr)
-                for sr in aggregate.stage_requirements
+                CropProfileMapper.stage_requirement_to_dict(sr)
+                for sr in profile.stage_requirements
             ],
         }
     
@@ -80,20 +122,20 @@ class CropRequirementMapper:
             >>> sun = SunshineProfile(3.0, 6.0)
             >>> thermal = ThermalRequirement(400.0)
             >>> stage_req = StageRequirement(stage, temp, sun, thermal)
-            >>> result = CropRequirementMapper.stage_requirement_to_dict(stage_req)
+            >>> result = CropProfileMapper.stage_requirement_to_dict(stage_req)
             >>> result["name"]
             'Growth'
         """
         return {
             "name": stage_req.stage.name,
             "order": stage_req.stage.order,
-            "temperature": CropRequirementMapper._temperature_to_dict(
+            "temperature": CropProfileMapper._temperature_to_dict(
                 stage_req.temperature
             ),
-            "sunshine": CropRequirementMapper._sunshine_to_dict(
+            "sunshine": CropProfileMapper._sunshine_to_dict(
                 stage_req.sunshine
             ),
-            "thermal": CropRequirementMapper._thermal_to_dict(
+            "thermal": CropProfileMapper._thermal_to_dict(
                 stage_req.thermal
             ),
         }
@@ -146,4 +188,9 @@ class CropRequirementMapper:
         return {
             "required_gdd": thermal.required_gdd,
         }
+
+
+# Backward compatibility alias
+CropRequirementMapper = CropProfileMapper
+
 

@@ -1,100 +1,117 @@
-"""CLI controller for crafting crop requirements (adapter layer)."""
+"""CLI controller for crafting crop profiles (adapter layer)."""
 
 import argparse
 import asyncio
 import json
 from typing import Optional
 
-from agrr_core.adapter.gateways.crop_requirement_gateway_impl import (
-    CropRequirementGatewayImpl,
+from agrr_core.adapter.gateways.crop_profile_gateway_impl import (
+    CropProfileGatewayImpl,
 )
-from agrr_core.adapter.presenters.crop_requirement_craft_presenter import (
-    CropRequirementCraftPresenter,
+from agrr_core.adapter.presenters.crop_profile_craft_presenter import (
+    CropProfileCraftPresenter,
 )
-from agrr_core.usecase.interactors.crop_requirement_craft_interactor import (
-    CropRequirementCraftInteractor,
+from agrr_core.usecase.interactors.crop_profile_craft_interactor import (
+    CropProfileCraftInteractor,
 )
-from agrr_core.usecase.dto.crop_requirement_craft_request_dto import (
-    CropRequirementCraftRequestDTO,
+from agrr_core.usecase.dto.crop_profile_craft_request_dto import (
+    CropProfileCraftRequestDTO,
 )
 
 
 class CropCliCraftController:
-    """CLI controller orchestrating the crop requirement craft use case."""
+    """CLI controller orchestrating the crop profile craft use case."""
 
     def __init__(
         self,
-        gateway: CropRequirementGatewayImpl,
-        presenter: CropRequirementCraftPresenter,
+        gateway: CropProfileGatewayImpl,
+        presenter: CropProfileCraftPresenter,
     ) -> None:
         """Initialize with injected gateway and presenter."""
         self.gateway = gateway
         self.presenter = presenter
         # Instantiate interactor inside controller per project rule
-        self.interactor = CropRequirementCraftInteractor(
+        self.interactor = CropProfileCraftInteractor(
             gateway=self.gateway, presenter=self.presenter
         )
 
     def create_argument_parser(self) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(
-            description="Crop Requirement CLI - Get crop growth requirements using AI",
+            description="Crop Profile CLI - Get crop growth profiles using AI",
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog="""
 Examples:
-  # Get crop requirements for tomato (in Japanese)
-  agrr crop crop --query "トマト"
+  # Get crop profile for tomato (in Japanese)
+  agrr crop --query "トマト"
   
-  # Get requirements for a specific variety
-  agrr crop crop --query "アイコトマト"
+  # Get profile for a specific variety
+  agrr crop --query "アイコトマト"
   
-  # Get requirements for rice
-  agrr crop crop --query "稲"
+  # Get profile for rice
+  agrr crop --query "稲"
   
-  # Save crop requirements to file
-  agrr crop crop --query "トマト" > crop_requirements.json
+  # Save crop profile to file
+  agrr crop --query "トマト" > crop_profile.json
 
 Output Format (JSON):
   {
-    "success": true,
-    "data": {
-      "crop_name": "tomato",
+    "crop": {
+      "crop_id": "tomato",
+      "name": "Tomato",
       "variety": "general",
-      "base_temperature": 10.0,
-      "gdd_requirement": 2000.0,
-      "stages": [
-        {
-          "name": "germination",
-          "gdd_requirement": 150.0,
-          "optimal_temp_min": 20.0,
-          "optimal_temp_max": 30.0,
-          "description": "種子発芽期"
+      "area_per_unit": 0.25,
+      "revenue_per_area": 5000.0,
+      "max_revenue": 250000.0,
+      "groups": ["Solanaceae", "fruiting_vegetables"]
+    },
+    "stage_requirements": [
+      {
+        "stage": {"name": "germination", "order": 1},
+        "temperature": {
+          "base_temperature": 10.0,
+          "optimal_min": 20.0,
+          "optimal_max": 30.0,
+          "low_stress_threshold": 15.0,
+          "high_stress_threshold": 35.0,
+          "frost_threshold": 2.0
         },
-        {
-          "name": "vegetative",
-          "gdd_requirement": 800.0,
-          "optimal_temp_min": 18.0,
-          "optimal_temp_max": 28.0,
-          "description": "栄養成長期"
+        "thermal": {"required_gdd": 150.0},
+        "sunshine": {
+          "minimum_sunshine_hours": 3.0,
+          "target_sunshine_hours": 6.0
         }
-      ]
-    }
+      },
+      {
+        "stage": {"name": "vegetative", "order": 2},
+        "temperature": {
+          "base_temperature": 10.0,
+          "optimal_min": 18.0,
+          "optimal_max": 28.0,
+          "low_stress_threshold": 13.0,
+          "high_stress_threshold": 33.0,
+          "frost_threshold": 2.0
+        },
+        "thermal": {"required_gdd": 800.0},
+        "sunshine": {
+          "minimum_sunshine_hours": 4.0,
+          "target_sunshine_hours": 8.0
+        }
+      }
+    ]
   }
 
-Note: This command uses AI (LLM) to generate crop growth requirements.
-      The output can be used as input for 'agrr progress' and 'agrr optimize-period' commands.
+Note: This command uses AI (LLM) to generate crop growth profiles.
+      The output format is ready to use directly with 'agrr progress' and 'agrr optimize-period' commands.
             """
         )
 
-        subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
-        craft_parser = subparsers.add_parser("crop", help="Get crop growth requirements")
-        craft_parser.add_argument(
+        parser.add_argument(
             "--query",
             "-q",
             required=True,
             help='Crop query string (e.g., "トマト", "アイコトマト", "稲")',
         )
-        craft_parser.add_argument(
+        parser.add_argument(
             "--json",
             action="store_true",
             help="Output as JSON (default: True)",
@@ -103,7 +120,7 @@ Note: This command uses AI (LLM) to generate crop growth requirements.
         return parser
 
     async def handle_craft_command(self, args) -> None:
-        request = CropRequirementCraftRequestDTO(crop_query=args.query)
+        request = CropProfileCraftRequestDTO(crop_query=args.query)
         result = await self.interactor.execute(request)
 
         # Always print JSON; the presenter already wraps success/error
@@ -113,13 +130,7 @@ Note: This command uses AI (LLM) to generate crop growth requirements.
         parser = self.create_argument_parser()
         parsed_args = parser.parse_args(args)
 
-        if not parsed_args.command:
-            parser.print_help()
-            return
-
-        if parsed_args.command == "crop":
-            await self.handle_craft_command(parsed_args)
-        else:
-            parser.print_help()
+        # No subcommands - directly handle the craft command
+        await self.handle_craft_command(parsed_args)
 
 

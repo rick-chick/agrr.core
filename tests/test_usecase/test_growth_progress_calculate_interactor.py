@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock
 from datetime import datetime
 
 from agrr_core.entity.entities.crop_entity import Crop
-from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
-    CropRequirementAggregate,
+from agrr_core.entity.entities.crop_profile_entity import (
+    CropProfile,
 )
 from agrr_core.entity.entities.growth_stage_entity import GrowthStage
 from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
@@ -29,14 +29,14 @@ class TestGrowthProgressCalculateInteractor:
     @pytest.fixture(autouse=True)
     def setup(
         self,
-        gateway_crop_requirement,
+        gateway_crop_profile,
         gateway_weather,
     ):
         """Set up test fixtures using conftest mocks."""
-        self.mock_crop_requirement_gateway = gateway_crop_requirement
+        self.mock_crop_profile_gateway = gateway_crop_profile
         self.mock_weather_gateway = gateway_weather
         self.interactor = GrowthProgressCalculateInteractor(
-            crop_requirement_gateway=self.mock_crop_requirement_gateway,
+            crop_profile_gateway=self.mock_crop_profile_gateway,
             weather_gateway=self.mock_weather_gateway,
         )
 
@@ -73,7 +73,7 @@ class TestGrowthProgressCalculateInteractor:
             thermal=ThermalRequirement(required_gdd=500.0),
         )
 
-        crop_requirement = CropRequirementAggregate(
+        crop_profile = CropProfile(
             crop=crop, stage_requirements=[stage_req1, stage_req2]
         )
 
@@ -97,8 +97,8 @@ class TestGrowthProgressCalculateInteractor:
             weather_data_list=weather_data, location=None
         )
 
-        self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
-        self.mock_crop_requirement_gateway.get.return_value = crop_requirement
+        # self.mock_crop_profile_gateway.craft.return_value = crop_profile
+        self.mock_crop_profile_gateway.get.return_value = crop_profile
         self.mock_weather_gateway.get.return_value = weather_data
 
         # Execute
@@ -156,7 +156,7 @@ class TestGrowthProgressCalculateInteractor:
             thermal=ThermalRequirement(required_gdd=10.0),  # Small requirement
         )
 
-        crop_requirement = CropRequirementAggregate(
+        crop_profile = CropProfile(
             crop=crop, stage_requirements=[stage_req]
         )
 
@@ -174,8 +174,8 @@ class TestGrowthProgressCalculateInteractor:
             weather_data_list=weather_data, location=None
         )
 
-        self.mock_crop_requirement_gateway.craft.return_value = crop_requirement
-        self.mock_crop_requirement_gateway.get.return_value = crop_requirement
+        # self.mock_crop_profile_gateway.craft.return_value = crop_profile
+        self.mock_crop_profile_gateway.get.return_value = crop_profile
         self.mock_weather_gateway.get.return_value = weather_data
 
         # Execute

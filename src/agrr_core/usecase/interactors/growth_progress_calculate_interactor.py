@@ -11,9 +11,7 @@ The calculation follows a simple linear GDD accumulation model:
 from datetime import timedelta
 from typing import List
 
-from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
-    CropRequirementAggregate,
-)
+from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.entity.entities.growth_progress_entity import GrowthProgress
 from agrr_core.entity.entities.growth_progress_timeline_entity import (
     GrowthProgressTimeline,
@@ -28,7 +26,7 @@ from agrr_core.usecase.dto.growth_progress_calculate_response_dto import (
     GrowthProgressCalculateResponseDTO,
     GrowthProgressRecordDTO,
 )
-from agrr_core.usecase.gateways.crop_requirement_gateway import CropRequirementGateway
+from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.ports.input.growth_progress_calculate_input_port import (
     GrowthProgressCalculateInputPort,
@@ -40,10 +38,10 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
 
     def __init__(
         self,
-        crop_requirement_gateway: CropRequirementGateway,
+        crop_profile_gateway: CropProfileGateway,
         weather_gateway: WeatherGateway,
     ):
-        self.crop_requirement_gateway = crop_requirement_gateway
+        self.crop_profile_gateway = crop_profile_gateway
         self.weather_gateway = weather_gateway
 
     async def execute(
@@ -57,8 +55,8 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
         Returns:
             Response DTO containing daily growth progress records
         """
-        # Step 1: Get crop requirements (via LLM)
-        crop_requirement = await self._get_crop_requirements(
+        # Step 1: Get crop profile
+        crop_profile = await self._get_crop_profile(
             request.crop_id, request.variety
         )
 
@@ -67,28 +65,28 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
 
         # Step 3: Calculate growth progress timeline
         timeline = self._calculate_growth_progress(
-            crop_requirement, request.start_date, weather_data_list
+            crop_profile, request.start_date, weather_data_list
         )
 
         # Step 4: Convert to response DTO
         return self._to_response_dto(timeline)
 
-    async def _get_crop_requirements(
+    async def _get_crop_profile(
         self, crop_id: str, variety: str
-    ) -> CropRequirementAggregate:
-        """Get crop requirements from gateway."""
-        return await self.crop_requirement_gateway.get()
+    ) -> CropProfile:
+        """Get crop profile from gateway."""
+        return await self.crop_profile_gateway.get()
 
     def _calculate_growth_progress(
         self,
-        crop_requirement: CropRequirementAggregate,
+        crop_profile: CropProfile,
         start_date,
         weather_data_list: List[WeatherData],
     ) -> GrowthProgressTimeline:
         """Calculate growth progress based on GDD accumulation."""
         # Calculate total required GDD
         total_required_gdd = sum(
-            sr.thermal.required_gdd for sr in crop_requirement.stage_requirements
+            sr.thermal.required_gdd for sr in crop_profile.stage_requirements
         )
 
         if total_required_gdd <= 0:
@@ -100,7 +98,7 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
         for weather_data in weather_data_list:
             # Determine current stage based on cumulative GDD
             current_stage = self._determine_current_stage(
-                cumulative_gdd, crop_requirement.stage_requirements
+                cumulative_gdd, crop_profile.stage_requirements
             )
 
             # Calculate daily GDD using the current stage's temperature profile
@@ -124,7 +122,7 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
             progress_list.append(progress)
 
         return GrowthProgressTimeline(
-            crop=crop_requirement.crop,
+            crop=crop_profile.crop,
             start_date=start_date,
             progress_list=progress_list,
         )

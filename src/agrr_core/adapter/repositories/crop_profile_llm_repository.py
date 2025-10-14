@@ -1,6 +1,6 @@
-"""LLM-based implementation for crop requirement extraction.
+"""LLM-based implementation for crop profile generation.
 
-This repository uses LLM client to generate crop requirements dynamically.
+This repository uses LLM client to generate crop profiles dynamically.
 It encapsulates all crop-specific prompts and data transformations.
 """
 
@@ -16,9 +16,7 @@ from agrr_core.entity import (
     ThermalRequirement,
     StageRequirement,
 )
-from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
-    CropRequirementAggregate,
-)
+from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.adapter.interfaces.llm_client import LLMClient
 
 
@@ -112,10 +110,10 @@ def extract_prompt_section(content: str, section_name: str) -> str:
     return result
 
 
-class CropRequirementLLMRepository:
-    """LLM-based repository for crop requirement extraction.
+class CropProfileLLMRepository:
+    """LLM-based repository for crop profile generation.
     
-    Uses LLM client's generic struct() method to extract crop requirements.
+    Uses LLM client's generic struct() method to generate crop profiles.
     Encapsulates all crop-specific prompts and data transformations.
     """
     

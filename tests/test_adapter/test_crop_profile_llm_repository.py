@@ -1,11 +1,11 @@
-"""Tests for CropRequirementLLMRepository."""
+"""Tests for CropProfileLLMRepository."""
 
 import pytest
 from unittest.mock import AsyncMock
 from typing import Dict, Any
 
-from agrr_core.adapter.repositories.crop_requirement_llm_repository import (
-    CropRequirementLLMRepository,
+from agrr_core.adapter.repositories.crop_profile_llm_repository import (
+    CropProfileLLMRepository,
 )
 from agrr_core.adapter.interfaces.llm_client import LLMClient
 
@@ -21,13 +21,13 @@ class MockLLMClient(LLMClient):
         pass
 
 
-class TestCropRequirementLLMRepository:
-    """Test cases for CropRequirementLLMRepository."""
+class TestCropProfileLLMRepository:
+    """Test cases for CropProfileLLMRepository."""
     
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_llm_client = MockLLMClient()
-        self.repository = CropRequirementLLMRepository(self.mock_llm_client)
+        self.repository = CropProfileLLMRepository(self.mock_llm_client)
     
     @pytest.mark.asyncio
     async def test_extract_crop_variety(self):

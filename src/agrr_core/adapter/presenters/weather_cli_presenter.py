@@ -129,10 +129,17 @@ class WeatherCLIPresenter(WeatherPresenterOutputPort):
         self.output_stream.write("="*80 + "\n\n")
     
     def display_weather_data_json(self, weather_data_list: WeatherDataListResponseDTO) -> None:
-        """Display weather data in JSON format."""
+        """Display weather data in JSON format.
+        
+        Output format matches the documented format in CLI help:
+        {
+          "data": [...],
+          "total_count": N,
+          "location": {...}
+        }
+        """
         data = self.format_weather_data_list_dto(weather_data_list)
-        output = self.format_success(data)
-        json_output = json.dumps(output, indent=2, ensure_ascii=False)
+        json_output = json.dumps(data, indent=2, ensure_ascii=False)
         self.output_stream.write(json_output + "\n")
     
     def display_error(self, error_message: str, error_code: str = "WEATHER_ERROR", json_output: bool = False) -> None:

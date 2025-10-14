@@ -1,4 +1,4 @@
-"""Tests for CropRequirementMapper."""
+"""Tests for CropProfileMapper."""
 
 import pytest
 
@@ -8,10 +8,8 @@ from agrr_core.entity.entities.temperature_profile_entity import TemperatureProf
 from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
 from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
-from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
-    CropRequirementAggregate,
-)
-from agrr_core.adapter.mappers.crop_requirement_mapper import CropRequirementMapper
+from agrr_core.entity.entities.crop_profile_entity import CropProfile
+from agrr_core.adapter.mappers.crop_profile_mapper import CropProfileMapper
 
 
 @pytest.mark.unit
@@ -52,13 +50,13 @@ class TestAggregateToPayload:
             thermal=thermal
         )
         
-        aggregate = CropRequirementAggregate(
+        aggregate = CropProfile(
             crop=crop,
             stage_requirements=[stage_req]
         )
         
         # Convert to payload
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         # Verify crop fields
         assert payload["crop_id"] == "rice"
@@ -86,8 +84,8 @@ class TestAggregateToPayload:
             stage_req = StageRequirement(stage, temperature, sunshine, thermal)
             stages.append(stage_req)
         
-        aggregate = CropRequirementAggregate(crop, stages)
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        aggregate = CropProfile(crop, stages)
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         assert len(payload["stages"]) == 3
         assert payload["stages"][0]["name"] == "Stage1"
@@ -102,9 +100,9 @@ class TestAggregateToPayload:
         sunshine = SunshineProfile(3.0, 6.0)
         thermal = ThermalRequirement(400.0)
         stage_req = StageRequirement(stage, temperature, sunshine, thermal)
-        aggregate = CropRequirementAggregate(crop, [stage_req])
+        aggregate = CropProfile(crop, [stage_req])
         
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         assert payload["variety"] is None
     
@@ -116,9 +114,9 @@ class TestAggregateToPayload:
         sunshine = SunshineProfile(3.0, 6.0)
         thermal = ThermalRequirement(400.0)
         stage_req = StageRequirement(stage, temperature, sunshine, thermal)
-        aggregate = CropRequirementAggregate(crop, [stage_req])
+        aggregate = CropProfile(crop, [stage_req])
         
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         assert payload["revenue_per_area"] is None
 
@@ -130,9 +128,9 @@ class TestAggregateToPayload:
         sunshine = SunshineProfile(3.0, 6.0)
         thermal = ThermalRequirement(400.0)
         stage_req = StageRequirement(stage, temperature, sunshine, thermal)
-        aggregate = CropRequirementAggregate(crop, [stage_req])
+        aggregate = CropProfile(crop, [stage_req])
         
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         assert payload["max_revenue"] is None
 
@@ -149,9 +147,9 @@ class TestAggregateToPayload:
         sunshine = SunshineProfile(3.0, 6.0)
         thermal = ThermalRequirement(400.0)
         stage_req = StageRequirement(stage, temperature, sunshine, thermal)
-        aggregate = CropRequirementAggregate(crop, [stage_req])
+        aggregate = CropProfile(crop, [stage_req])
         
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         assert payload["max_revenue"] == 800000.0
 
@@ -179,7 +177,7 @@ class TestStageRequirementToDict:
         thermal = ThermalRequirement(required_gdd=400.0)
         
         stage_req = StageRequirement(stage, temperature, sunshine, thermal)
-        result = CropRequirementMapper.stage_requirement_to_dict(stage_req)
+        result = CropProfileMapper.stage_requirement_to_dict(stage_req)
         
         # Verify stage info
         assert result["name"] == "Vegetative"
@@ -209,7 +207,7 @@ class TestStageRequirementToDict:
         thermal = ThermalRequirement(400.0)
         stage_req = StageRequirement(stage, temperature, sunshine, thermal)
         
-        result = CropRequirementMapper.stage_requirement_to_dict(stage_req)
+        result = CropProfileMapper.stage_requirement_to_dict(stage_req)
         
         # Check top-level keys
         assert "name" in result
@@ -248,7 +246,7 @@ class TestPrivateMethods:
             sterility_risk_threshold=38.0
         )
         
-        result = CropRequirementMapper._temperature_to_dict(temperature)
+        result = CropProfileMapper._temperature_to_dict(temperature)
         
         assert result["base_temperature"] == 15.0
         assert result["optimal_min"] == 22.0
@@ -265,7 +263,7 @@ class TestPrivateMethods:
             target_sunshine_hours=8.0
         )
         
-        result = CropRequirementMapper._sunshine_to_dict(sunshine)
+        result = CropProfileMapper._sunshine_to_dict(sunshine)
         
         assert result["minimum_sunshine_hours"] == 4.0
         assert result["target_sunshine_hours"] == 8.0
@@ -274,7 +272,7 @@ class TestPrivateMethods:
         """Test _thermal_to_dict method."""
         thermal = ThermalRequirement(required_gdd=500.0)
         
-        result = CropRequirementMapper._thermal_to_dict(thermal)
+        result = CropProfileMapper._thermal_to_dict(thermal)
         
         assert result["required_gdd"] == 500.0
 
@@ -298,9 +296,9 @@ class TestGroupsFieldHandling:
         sunshine = SunshineProfile(3.0, 6.0)
         thermal = ThermalRequirement(400.0)
         stage_req = StageRequirement(stage, temperature, sunshine, thermal)
-        aggregate = CropRequirementAggregate(crop, [stage_req])
+        aggregate = CropProfile(crop, [stage_req])
         
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         # Verify groups field is present and correct
         assert "groups" in payload
@@ -322,9 +320,9 @@ class TestGroupsFieldHandling:
         sunshine = SunshineProfile(3.0, 6.0)
         thermal = ThermalRequirement(400.0)
         stage_req = StageRequirement(stage, temperature, sunshine, thermal)
-        aggregate = CropRequirementAggregate(crop, [stage_req])
+        aggregate = CropProfile(crop, [stage_req])
         
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         # Verify groups field with single element
         assert "groups" in payload
@@ -345,9 +343,9 @@ class TestGroupsFieldHandling:
         sunshine = SunshineProfile(3.0, 6.0)
         thermal = ThermalRequirement(400.0)
         stage_req = StageRequirement(stage, temperature, sunshine, thermal)
-        aggregate = CropRequirementAggregate(crop, [stage_req])
+        aggregate = CropProfile(crop, [stage_req])
         
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         # Verify groups field is None
         assert "groups" in payload
@@ -367,9 +365,9 @@ class TestGroupsFieldHandling:
         sunshine = SunshineProfile(3.0, 6.0)
         thermal = ThermalRequirement(400.0)
         stage_req = StageRequirement(stage, temperature, sunshine, thermal)
-        aggregate = CropRequirementAggregate(crop, [stage_req])
+        aggregate = CropProfile(crop, [stage_req])
         
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         # Verify groups field is empty list
         assert "groups" in payload

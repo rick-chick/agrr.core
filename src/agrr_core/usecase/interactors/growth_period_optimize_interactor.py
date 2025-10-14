@@ -19,9 +19,7 @@ The evaluation period has dual meaning:
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
-    CropRequirementAggregate,
-)
+from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.usecase.dto.growth_period_optimize_request_dto import (
@@ -34,7 +32,7 @@ from agrr_core.usecase.dto.growth_period_optimize_response_dto import (
 from agrr_core.usecase.dto.growth_progress_calculate_request_dto import (
     GrowthProgressCalculateRequestDTO,
 )
-from agrr_core.usecase.gateways.crop_requirement_gateway import CropRequirementGateway
+from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.optimization_result_gateway import (
     OptimizationResultGateway,
@@ -61,14 +59,14 @@ class GrowthPeriodOptimizeInteractor(
 
     def __init__(
         self,
-        crop_requirement_gateway: CropRequirementGateway,
+        crop_profile_gateway: CropProfileGateway,
         weather_gateway: WeatherGateway,
         optimization_result_gateway: OptimizationResultGateway = None,
         interaction_rule_gateway: InteractionRuleGateway = None,
         weather_interpolator: Optional[WeatherInterpolator] = None,
     ):
         super().__init__()  # Initialize BaseOptimizer
-        self.crop_requirement_gateway = crop_requirement_gateway
+        self.crop_profile_gateway = crop_profile_gateway
         self.weather_gateway = weather_gateway
         self.optimization_result_gateway = optimization_result_gateway
         self.interaction_rule_gateway = interaction_rule_gateway
@@ -76,7 +74,7 @@ class GrowthPeriodOptimizeInteractor(
         
         # Use existing growth progress calculator
         self.growth_progress_interactor = GrowthProgressCalculateInteractor(
-            crop_requirement_gateway=crop_requirement_gateway,
+            crop_profile_gateway=crop_profile_gateway,
             weather_gateway=weather_gateway,
         )
 
@@ -99,8 +97,8 @@ class GrowthPeriodOptimizeInteractor(
         if self.interaction_rule_gateway:
             try:
                 interaction_rules = await self.interaction_rule_gateway.get_rules()
-            except ValueError:
-                # Gateway not configured with file path - no rules to apply
+            except (ValueError, Exception):
+                # Gateway not configured with file path or file not found - no rules to apply
                 pass
         
         # Get daily_fixed_cost from field entity
@@ -138,13 +136,13 @@ class GrowthPeriodOptimizeInteractor(
                 object.__setattr__(candidate, 'is_optimal', True)
         
         # Get crop info for response
-        crop_requirement = await self._get_crop_requirements(
+        crop_profile = await self._get_crop_profile(
             request.crop_id, request.variety
         )
         
         return OptimalGrowthPeriodResponseDTO(
-            crop_name=crop_requirement.crop.name,
-            variety=crop_requirement.crop.variety,
+            crop_name=crop_profile.crop.name,
+            variety=crop_profile.crop.variety,
             optimal_start_date=optimal_candidate.start_date,
             completion_date=optimal_candidate.completion_date,
             growth_days=optimal_candidate.growth_days,
@@ -174,7 +172,7 @@ class GrowthPeriodOptimizeInteractor(
             List of candidate results
         """
         # Get crop requirements via gateway
-        crop_requirement = await self.crop_requirement_gateway.get()
+        crop_profile = await self.crop_profile_gateway.get()
         
         # Get weather data via gateway (file path configured at initialization)
         weather_data = await self.weather_gateway.get()
@@ -182,11 +180,11 @@ class GrowthPeriodOptimizeInteractor(
         # Calculate total required GDD
         total_required_gdd = sum(
             stage_req.thermal.required_gdd 
-            for stage_req in crop_requirement.stage_requirements
+            for stage_req in crop_profile.stage_requirements
         )
         
         # Get base temperature from first stage (assuming same for all stages)
-        base_temp = crop_requirement.stage_requirements[0].temperature.base_temperature
+        base_temp = crop_profile.stage_requirements[0].temperature.base_temperature
         
         # Create weather data lookup by date
         weather_by_date = {w.time.date(): w for w in weather_data}
@@ -395,9 +393,9 @@ class GrowthPeriodOptimizeInteractor(
             is_optimal=False,  # Will be updated later
         )
 
-    async def _get_crop_requirements(
+    async def _get_crop_profile(
         self, crop_id: str, variety: Optional[str]
-    ) -> CropRequirementAggregate:
-        """Get crop requirements from gateway."""
-        return await self.crop_requirement_gateway.get()
+    ) -> CropProfile:
+        """Get crop profile from gateway."""
+        return await self.crop_profile_gateway.get()
 

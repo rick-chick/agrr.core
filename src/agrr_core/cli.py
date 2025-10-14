@@ -6,14 +6,17 @@ import sys
 from typing import Optional
 
 from agrr_core.framework.agrr_core_container import WeatherCliContainer
-from agrr_core.adapter.gateways.crop_requirement_gateway_impl import CropRequirementGatewayImpl
+from agrr_core.adapter.gateways.crop_profile_gateway_impl import CropProfileGatewayImpl
 from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
 from agrr_core.adapter.gateways.optimization_result_gateway_impl import OptimizationResultGatewayImpl
 from agrr_core.adapter.gateways.interaction_rule_gateway_impl import InteractionRuleGatewayImpl
-from agrr_core.adapter.presenters.crop_requirement_craft_presenter import CropRequirementCraftPresenter
+from agrr_core.adapter.gateways.field_gateway_impl import FieldGatewayImpl
+from agrr_core.adapter.presenters.crop_profile_craft_presenter import CropProfileCraftPresenter
+from agrr_core.adapter.presenters.multi_field_crop_allocation_cli_presenter import MultiFieldCropAllocationCliPresenter
 from agrr_core.adapter.controllers.crop_cli_craft_controller import CropCliCraftController
 from agrr_core.adapter.controllers.growth_progress_cli_controller import GrowthProgressCliController
 from agrr_core.adapter.controllers.growth_period_optimize_cli_controller import GrowthPeriodOptimizeCliController
+from agrr_core.adapter.controllers.multi_field_crop_allocation_cli_controller import MultiFieldCropAllocationCliController
 from agrr_core.framework.services.llm_client_impl import FrameworkLLMClient
 from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
 from agrr_core.adapter.repositories.field_file_repository import FieldFileRepository
@@ -33,9 +36,9 @@ Usage:
 Available Commands:
   weather           Get historical weather data from Open-Meteo or JMA
   forecast          Get 16-day weather forecast from tomorrow
-  crop              Get crop growth requirements using AI
+  crop              Get crop growth profiles using AI
   progress          Calculate crop growth progress based on weather data
-  optimize-period   Find optimal cultivation period to minimize costs
+  optimize          Optimization tools (period, allocate)
   predict           Predict future weather using ARIMA time series model
 
 Examples:
@@ -48,22 +51,30 @@ Examples:
   # Get 16-day weather forecast
   agrr forecast --location 35.6762,139.6503
 
-  # Get crop requirements with AI
-  agrr crop crop --query "トマト"
+  # Get crop profile with AI
+  agrr crop --query "トマト"
 
-  # Calculate growth progress
-  agrr progress --crop rice --variety Koshihikari --start-date 2024-05-01 --weather-file weather.json
+  # Calculate growth progress (requires pre-generated crop profile)
+  agrr crop --query "rice Koshihikari" > rice_profile.json
+  agrr progress --crop-file rice_profile.json --start-date 2024-05-01 --weather-file weather.json
 
   # Find optimal planting date
-  agrr optimize-period optimize --crop rice --variety Koshihikari \\
+  agrr crop --query "rice Koshihikari" > rice_profile.json
+  agrr optimize period --crop-file rice_profile.json \\
     --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
-    --weather-file weather.json --field-config field_01.json
+    --weather-file weather.json --field-file field_01.json
 
   # Find optimal planting date with continuous cultivation consideration
-  agrr optimize-period optimize --crop tomato --variety Aiko \\
+  agrr crop --query "tomato Aiko" > tomato_profile.json
+  agrr optimize period --crop-file tomato_profile.json \\
     --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
-    --weather-file weather.json --field-config field_01.json \\
-    --interaction-rules interaction_rules.json
+    --weather-file weather.json --field-file field_01.json \\
+    --interaction-rules-file interaction_rules.json
+
+  # Optimize crop allocation across multiple fields
+  agrr optimize allocate --fields-file fields.json --crops-file crops.json \\
+    --planning-start 2024-04-01 --planning-end 2024-10-31 \\
+    --weather-file weather.json
 
   # Predict future weather with ARIMA model
   agrr weather --location 35.6762,139.6503 --days 90 --json > historical.json
@@ -92,7 +103,7 @@ Input File Formats:
      ]
    }
 
-2. Crop Requirement File (JSON):
+2. Crop Profile File (JSON):
    {
      "crop": {
        "crop_id": "rice",
@@ -143,9 +154,8 @@ Input File Formats:
 
 Notes:
   - You can generate weather data using 'agrr weather' command with --json flag.
-  - Crop requirements can be auto-generated using 'agrr crop crop' command, but the
-    output format is different. Extract the 'data' field and restructure it to match
-    the Crop Requirement File Format above if you want to use it as a file input.
+  - Crop profiles can be auto-generated using 'agrr crop' command and used directly
+    as input for 'agrr progress' and 'agrr optimize period' commands.
   - The 'groups' field is essential for interaction rules (e.g., continuous cultivation).
   - Interaction rules allow you to model continuous cultivation impacts,
     crop rotation benefits, and field-crop compatibility.
@@ -188,83 +198,38 @@ def main() -> None:
             # Run ARIMA prediction CLI
             asyncio.run(container.run_prediction_cli(args))
         elif args and args[0] == 'crop':
-            # Run crop requirement craft CLI (direct wiring per project rules)
+            # Run crop profile craft CLI (direct wiring per project rules)
             llm_client = FrameworkLLMClient()
-            gateway = CropRequirementGatewayImpl(llm_client=llm_client)
-            presenter = CropRequirementCraftPresenter()
+            gateway = CropProfileGatewayImpl(llm_client=llm_client)
+            presenter = CropProfileCraftPresenter()
             controller = CropCliCraftController(gateway=gateway, presenter=presenter)
             asyncio.run(controller.run(args[1:]))
         elif args and args[0] == 'progress':
             # Run growth progress calculation CLI
-            # Setup file-based repositories
+            # Parse args to extract crop-file and weather-file paths
             file_repository = FileRepository()
+            from agrr_core.adapter.repositories.crop_profile_file_repository import CropProfileFileRepository
             
-            # Parse args to extract crop-file path
-            from agrr_core.adapter.repositories.crop_requirement_file_repository import CropRequirementFileRepository
-            crop_file_path = None
-            if '--crop-file' in args or '-cf' in args:
+            # Extract crop-file path
+            crop_file_path = ""
+            if '--crop-file' in args or '-c' in args:
                 try:
-                    cf_index = args.index('--crop-file') if '--crop-file' in args else args.index('-cf')
+                    cf_index = args.index('--crop-file') if '--crop-file' in args else args.index('-c')
                     if cf_index + 1 < len(args):
                         crop_file_path = args[cf_index + 1]
                 except (ValueError, IndexError):
                     pass
             
-            if not crop_file_path:
-                print("Error: --crop-file is required for progress command")
-                sys.exit(1)
-            
-            crop_requirement_repository = CropRequirementFileRepository(
+            crop_profile_repository = CropProfileFileRepository(
                 file_repository=file_repository,
                 file_path=crop_file_path
             )
-            crop_requirement_gateway = CropRequirementGatewayImpl(
-                crop_requirement_repository=crop_requirement_repository
+            crop_profile_gateway = CropProfileGatewayImpl(
+                profile_repository=crop_profile_repository
             )
             
-            weather_file_repository = WeatherFileRepository(file_repository=file_repository)
-            weather_gateway = WeatherGatewayImpl(weather_file_repository=weather_file_repository)
-            
-            # Setup presenter
-            from agrr_core.adapter.presenters.growth_progress_cli_presenter import GrowthProgressCLIPresenter
-            presenter = GrowthProgressCLIPresenter(output_format="table")
-            
-            controller = GrowthProgressCliController(
-                crop_requirement_gateway=crop_requirement_gateway,
-                weather_gateway=weather_gateway,
-                presenter=presenter,
-            )
-            asyncio.run(controller.run(args[1:]))
-        elif args and args[0] == 'optimize-period':
-            # Run optimal growth period calculation CLI
-            # Setup file-based repositories
-            file_repository = FileRepository()
-            
-            # Parse args to extract crop-file path
-            from agrr_core.adapter.repositories.crop_requirement_file_repository import CropRequirementFileRepository
-            crop_file_path = None
-            if '--crop-file' in args or '-cf' in args:
-                try:
-                    cf_index = args.index('--crop-file') if '--crop-file' in args else args.index('-cf')
-                    if cf_index + 1 < len(args):
-                        crop_file_path = args[cf_index + 1]
-                except (ValueError, IndexError):
-                    pass
-            
-            if not crop_file_path:
-                print("Error: --crop-file is required for optimize-period command")
-                sys.exit(1)
-            
-            crop_requirement_repository = CropRequirementFileRepository(
-                file_repository=file_repository,
-                file_path=crop_file_path
-            )
-            crop_requirement_gateway = CropRequirementGatewayImpl(
-                crop_requirement_repository=crop_requirement_repository
-            )
-            
-            # Parse args to extract weather-file path
-            weather_file_path = None
+            # Extract weather-file path
+            weather_file_path = ""
             if '--weather-file' in args or '-w' in args:
                 try:
                     wf_index = args.index('--weather-file') if '--weather-file' in args else args.index('-w')
@@ -273,75 +238,277 @@ def main() -> None:
                 except (ValueError, IndexError):
                     pass
             
-            if not weather_file_path:
-                print("Error: --weather-file is required for optimize-period command")
-                sys.exit(1)
+            weather_file_repository = WeatherFileRepository(file_repository=file_repository, file_path=weather_file_path)
+            weather_gateway = WeatherGatewayImpl(weather_repository=weather_file_repository)
             
-            weather_file_repository = WeatherFileRepository(
-                file_repository=file_repository,
-                file_path=weather_file_path
-            )
-            weather_gateway = WeatherGatewayImpl(weather_file_repository=weather_file_repository)
+            from agrr_core.adapter.presenters.growth_progress_cli_presenter import GrowthProgressCLIPresenter
+            presenter = GrowthProgressCLIPresenter(output_format="table")
             
-            # Load field configuration
-            # Parse args to extract field-config path
-            field = None
-            if '--field-config' in args or '-fc' in args:
-                try:
-                    fc_index = args.index('--field-config') if '--field-config' in args else args.index('-fc')
-                    if fc_index + 1 < len(args):
-                        field_config_path = args[fc_index + 1]
-                        # Read field configuration from JSON file
-                        field_file_repository = FieldFileRepository(file_repository=file_repository)
-                        fields = asyncio.run(field_file_repository.read_fields_from_file(field_config_path))
-                        if fields:
-                            field = fields[0]  # Use first field (single field format)
-                except (ValueError, IndexError) as e:
-                    print(f"Error loading field configuration: {e}")
-            
-            # Setup optimization result storage (in-memory)
-            optimization_result_repository = InMemoryOptimizationResultRepository()
-            optimization_result_gateway = OptimizationResultGatewayImpl(
-                repository=optimization_result_repository
-            )
-            
-            # Parse args to extract interaction-rules path
-            from agrr_core.adapter.repositories.interaction_rule_file_repository import InteractionRuleFileRepository
-            interaction_rules_path = ""
-            if '--interaction-rules' in args or '-ir' in args:
-                try:
-                    ir_index = args.index('--interaction-rules') if '--interaction-rules' in args else args.index('-ir')
-                    if ir_index + 1 < len(args):
-                        interaction_rules_path = args[ir_index + 1]
-                except (ValueError, IndexError):
-                    pass
-            
-            # Setup interaction rule gateway
-            interaction_rule_repository = InteractionRuleFileRepository(
-                file_repository=file_repository,
-                file_path=interaction_rules_path
-            )
-            interaction_rule_gateway = InteractionRuleGatewayImpl(
-                interaction_rule_repository=interaction_rule_repository
-            )
-            
-            # Setup weather interpolator
-            weather_interpolator = WeatherLinearInterpolator()
-            
-            # Setup presenter
-            from agrr_core.adapter.presenters.growth_period_optimize_cli_presenter import GrowthPeriodOptimizeCliPresenter
-            presenter = GrowthPeriodOptimizeCliPresenter(output_format="table")
-            
-            controller = GrowthPeriodOptimizeCliController(
-                crop_requirement_gateway=crop_requirement_gateway,
+            controller = GrowthProgressCliController(
+                crop_profile_gateway=crop_profile_gateway,
                 weather_gateway=weather_gateway,
                 presenter=presenter,
-                field=field,
-                optimization_result_gateway=optimization_result_gateway,
-                interaction_rule_gateway=interaction_rule_gateway,
-                weather_interpolator=weather_interpolator,
             )
             asyncio.run(controller.run(args[1:]))
+        elif args and args[0] == 'optimize':
+            # Unified optimize command with subcommands: period, allocate
+            if len(args) < 2 or args[1] in ['--help', '-h', 'help']:
+                print("""
+agrr optimize - Optimization Tools
+
+Usage:
+  agrr optimize <subcommand> [options]
+
+Available Subcommands:
+  period      Find optimal cultivation period to minimize costs
+  allocate    Optimize crop allocation across multiple fields
+
+Examples:
+  # Find optimal planting date
+  agrr optimize period --crop-file rice.json \\
+    --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
+    --weather-file weather.json --field-file field.json
+
+  # Optimize crop allocation
+  agrr optimize allocate --fields-file fields.json --crops-file crops.json \\
+    --planning-start 2024-04-01 --planning-end 2024-10-31 \\
+    --weather-file weather.json
+
+For detailed help on each subcommand:
+  agrr optimize period --help
+  agrr optimize allocate --help
+""")
+                sys.exit(0)
+            
+            subcommand = args[1]
+            
+            if subcommand == 'period':
+                # Run optimal growth period calculation CLI
+                # Setup file-based repositories
+                file_repository = FileRepository()
+            
+                # Parse args to extract crop-file path
+                from agrr_core.adapter.repositories.crop_profile_file_repository import CropProfileFileRepository
+                crop_file_path = ""
+                if '--crop-file' in args or '-c' in args:
+                    try:
+                        cf_index = args.index('--crop-file') if '--crop-file' in args else args.index('-c')
+                        if cf_index + 1 < len(args):
+                            crop_file_path = args[cf_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+            
+                crop_profile_repository = CropProfileFileRepository(
+                    file_repository=file_repository,
+                    file_path=crop_file_path
+                )
+                crop_profile_gateway = CropProfileGatewayImpl(
+                    profile_repository=crop_profile_repository
+                )
+            
+                # Parse args to extract weather-file path
+                weather_file_path = ""
+                if '--weather-file' in args or '-w' in args:
+                    try:
+                        wf_index = args.index('--weather-file') if '--weather-file' in args else args.index('-w')
+                        if wf_index + 1 < len(args):
+                            weather_file_path = args[wf_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+            
+                weather_file_repository = WeatherFileRepository(
+                    file_repository=file_repository,
+                    file_path=weather_file_path
+                )
+                weather_gateway = WeatherGatewayImpl(weather_repository=weather_file_repository)
+            
+                # Load field configuration
+                # Parse args to extract field-config path
+                field = None
+                if '--field-file' in args or '-f' in args:
+                    try:
+                        fc_index = args.index('--field-file') if '--field-file' in args else args.index('-f')
+                        if fc_index + 1 < len(args):
+                            field_config_path = args[fc_index + 1]
+                            # Read field configuration from JSON file
+                            field_file_repository = FieldFileRepository(file_repository=file_repository)
+                            fields = asyncio.run(field_file_repository.read_fields_from_file(field_config_path))
+                            if fields:
+                                field = fields[0]  # Use first field (single field format)
+                    except (ValueError, IndexError) as e:
+                        print(f"Error loading field configuration: {e}")
+            
+            
+                # Parse args to extract interaction-rules path
+                from agrr_core.adapter.repositories.interaction_rule_file_repository import InteractionRuleFileRepository
+                interaction_rules_path = ""
+                if '--interaction-rules-file' in args or '-irf' in args:
+                    try:
+                        ir_index = args.index('--interaction-rules-file') if '--interaction-rules-file' in args else args.index('-irf')
+                        if ir_index + 1 < len(args):
+                            interaction_rules_path = args[ir_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+            
+                # Setup interaction rule gateway
+                interaction_rule_repository = InteractionRuleFileRepository(
+                    file_repository=file_repository,
+                    file_path=interaction_rules_path
+                )
+                interaction_rule_gateway = InteractionRuleGatewayImpl(
+                    interaction_rule_repository=interaction_rule_repository
+                )
+            
+                # Setup weather interpolator
+                weather_interpolator = WeatherLinearInterpolator()
+            
+                # Setup presenter
+                from agrr_core.adapter.presenters.growth_period_optimize_cli_presenter import GrowthPeriodOptimizeCliPresenter
+                presenter = GrowthPeriodOptimizeCliPresenter(output_format="table")
+            
+                controller = GrowthPeriodOptimizeCliController(
+                    crop_profile_gateway=crop_profile_gateway,
+                    weather_gateway=weather_gateway,
+                    presenter=presenter,
+                    field=field,
+                    interaction_rule_gateway=interaction_rule_gateway,
+                    weather_interpolator=weather_interpolator,
+                )
+                asyncio.run(controller.run(args[2:]))  # Skip 'optimize' and 'period'
+            
+            elif subcommand == 'allocate':
+                # Run multi-field crop allocation optimization CLI
+            
+                # Check if help is requested
+                if '--help' in args or '-h' in args:
+                    # Create minimal controller just to show help
+                    file_repository = FileRepository()
+                    field_repository = FieldFileRepository(file_repository=file_repository, file_path="")
+                    field_gateway = FieldGatewayImpl(field_repository=field_repository)
+                
+                    weather_file_repository = WeatherFileRepository(file_repository=file_repository, file_path="")
+                    weather_gateway = WeatherGatewayImpl(weather_repository=weather_file_repository)
+                
+                    # Create dummy crop gateway for help
+                    from agrr_core.adapter.repositories.crop_profile_file_repository import CropProfileFileRepository
+                    crop_profile_repo = CropProfileFileRepository(file_repository=file_repository, file_path="")
+                    crop_profile_gateway = CropProfileGatewayImpl(profile_repository=crop_profile_repo)
+                
+                    presenter = MultiFieldCropAllocationCliPresenter(output_format="table")
+                
+                    controller = MultiFieldCropAllocationCliController(
+                        field_gateway=field_gateway,
+                        crop_gateway=crop_profile_gateway,
+                        weather_gateway=weather_gateway,
+                        presenter=presenter,
+                    )
+                    asyncio.run(controller.run(args[2:]))  # Skip 'optimize' and 'allocate'
+                    return
+            
+                # Setup file-based repositories
+                file_repository = FileRepository()
+            
+                # Parse args to extract weather-file path
+                weather_file_path = None
+                if '--weather-file' in args or '-w' in args:
+                    try:
+                        wf_index = args.index('--weather-file') if '--weather-file' in args else args.index('-w')
+                        if wf_index + 1 < len(args):
+                            weather_file_path = args[wf_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+            
+                if not weather_file_path:
+                    print("Error: --weather-file is required for allocate command")
+                    sys.exit(1)
+            
+                # Setup weather gateway
+                weather_file_repository = WeatherFileRepository(
+                    file_repository=file_repository,
+                    file_path=weather_file_path
+                )
+                weather_gateway = WeatherGatewayImpl(weather_repository=weather_file_repository)
+            
+                # Parse args to extract fields-file path
+                fields_file_path = None
+                if '--fields-file' in args or '-fls' in args:
+                    try:
+                        ff_index = args.index('--fields-file') if '--fields-file' in args else args.index('-fls')
+                        if ff_index + 1 < len(args):
+                            fields_file_path = args[ff_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+            
+                if not fields_file_path:
+                    print("Error: --fields-file is required for allocate command")
+                    sys.exit(1)
+            
+                # Setup field gateway
+                field_repository = FieldFileRepository(
+                    file_repository=file_repository,
+                    file_path=fields_file_path
+                )
+                field_gateway = FieldGatewayImpl(field_repository=field_repository)
+            
+                # Parse args to extract crops-file path
+                crops_file_path = None
+                if '--crops-file' in args or '-c' in args:
+                    try:
+                        cf_index = args.index('--crops-file') if '--crops-file' in args else args.index('-c')
+                        if cf_index + 1 < len(args):
+                            crops_file_path = args[cf_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+            
+                if not crops_file_path:
+                    print("Error: --crops-file is required for allocate command")
+                    sys.exit(1)
+            
+                # Setup crop gateway
+                from agrr_core.adapter.repositories.crop_profile_file_repository import CropProfileFileRepository
+                crop_profile_repository = CropProfileFileRepository(
+                    file_repository=file_repository,
+                    file_path=crops_file_path
+                )
+                crop_profile_gateway = CropProfileGatewayImpl(profile_repository=crop_profile_repository)
+            
+                # Setup interaction rule gateway (optional)
+                interaction_rules_path = ""
+                if '--interaction-rules-file' in args or '-irf' in args:
+                    try:
+                        irf_index = args.index('--interaction-rules-file') if '--interaction-rules-file' in args else args.index('-irf')
+                        if irf_index + 1 < len(args):
+                            interaction_rules_path = args[irf_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+            
+                from agrr_core.adapter.repositories.interaction_rule_file_repository import InteractionRuleFileRepository
+                interaction_rule_repository = InteractionRuleFileRepository(
+                    file_repository=file_repository,
+                    file_path=interaction_rules_path
+                )
+                interaction_rule_gateway = InteractionRuleGatewayImpl(
+                    interaction_rule_repository=interaction_rule_repository
+                )
+            
+                # Setup presenter
+                presenter = MultiFieldCropAllocationCliPresenter(output_format="table")
+            
+                # Create controller
+                controller = MultiFieldCropAllocationCliController(
+                    field_gateway=field_gateway,
+                    crop_gateway=crop_profile_gateway,
+                    weather_gateway=weather_gateway,
+                    presenter=presenter,
+                    interaction_rule_gateway=interaction_rule_gateway,
+                )
+                asyncio.run(controller.run(args[2:]))  # Skip 'optimize' and 'allocate'
+            
+            else:
+                print(f"Error: Unknown optimize subcommand '{subcommand}'")
+                print("Available: period, allocate")
+                print("Run 'agrr optimize --help' for more information")
+                sys.exit(1)
         else:
             # Run standard weather CLI
             asyncio.run(container.run_cli(args))

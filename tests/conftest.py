@@ -20,9 +20,7 @@ from agrr_core.entity import (
     ThermalRequirement,
     StageRequirement,
 )
-from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
-    CropRequirementAggregate,
-)
+from agrr_core.entity.entities.crop_profile_entity import CropProfile
 
 
 # ============================================================================
@@ -100,7 +98,7 @@ def entity_location():
 
 
 @pytest.fixture
-def entity_crop_requirement_aggregate() -> CropRequirementAggregate:
+def entity_crop_profile() -> CropProfile:
     """Crop requirement aggregate entity for testing."""
     crop = Crop(crop_id="tomato", name="Tomato", area_per_unit=0.5, variety=None)
     stage = GrowthStage(name="Vegetative", order=1)
@@ -116,11 +114,11 @@ def entity_crop_requirement_aggregate() -> CropRequirementAggregate:
     sun = SunshineProfile(minimum_sunshine_hours=3.0, target_sunshine_hours=6.0)
     thermal = ThermalRequirement(required_gdd=400.0)
     sr = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
-    return CropRequirementAggregate(crop=crop, stage_requirements=[sr])
+    return CropProfile(crop=crop, stage_requirements=[sr])
 
 
 @pytest.fixture
-def entity_crop_requirement_aggregate_rice() -> CropRequirementAggregate:
+def entity_crop_profile_rice() -> CropProfile:
     """Rice crop requirement aggregate for growth progress tests."""
     crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
     stage = GrowthStage(name="Vegetative", order=1)
@@ -135,7 +133,7 @@ def entity_crop_requirement_aggregate_rice() -> CropRequirementAggregate:
     sun = SunshineProfile(minimum_sunshine_hours=4.0, target_sunshine_hours=8.0)
     thermal = ThermalRequirement(required_gdd=500.0)
     sr = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
-    return CropRequirementAggregate(crop=crop, stage_requirements=[sr])
+    return CropProfile(crop=crop, stage_requirements=[sr])
 
 
 # ============================================================================
@@ -152,10 +150,10 @@ def gateway_weather(entity_weather_data_list):
 
 
 @pytest.fixture
-def gateway_crop_requirement(entity_crop_requirement_aggregate):
-    """Mock CropRequirementGateway (UseCase layer interface)."""
+def gateway_crop_profile(entity_crop_profile):
+    """Mock CropProfileGateway (UseCase layer interface)."""
     gateway = AsyncMock()
-    gateway.craft.return_value = entity_crop_requirement_aggregate
+    gateway.craft.return_value = entity_crop_profile
     
     # Mock 3-step LLM methods
     gateway.extract_crop_variety.return_value = {
@@ -218,7 +216,7 @@ def gateway_interaction_rule():
 # ============================================================================
 
 @pytest.fixture
-def output_port_crop_requirement():
+def output_port_crop_profile():
     """Mock CropRequirementOutputPort (presenter interface)."""
     port = MagicMock()
     port.format_success.side_effect = lambda data: {"success": True, "data": data}

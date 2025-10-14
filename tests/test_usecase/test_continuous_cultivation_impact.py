@@ -113,7 +113,7 @@ class TestInteractionRuleServiceIntegration:
         
         interactor = MultiFieldCropAllocationGreedyInteractor(
             field_gateway=None,  # Mock
-            crop_requirement_gateway=None,  # Mock
+            crop_gateway=None,  # Mock
             weather_gateway=None,  # Mock
             interaction_rules=rules
         )
@@ -132,7 +132,7 @@ class TestInteractionRuleServiceIntegration:
         rules = []
         interactor = MultiFieldCropAllocationGreedyInteractor(
             field_gateway=None,
-            crop_requirement_gateway=None,
+            crop_gateway=None,
             weather_gateway=None,
             interaction_rules=rules
         )
@@ -179,7 +179,7 @@ class TestInteractionRuleServiceIntegration:
         
         interactor = MultiFieldCropAllocationGreedyInteractor(
             field_gateway=None,
-            crop_requirement_gateway=None,
+            crop_gateway=None,
             weather_gateway=None,
             interaction_rules=rules
         )
@@ -221,7 +221,7 @@ class TestInteractionRuleServiceIntegration:
         
         interactor = MultiFieldCropAllocationGreedyInteractor(
             field_gateway=None,
-            crop_requirement_gateway=None,
+            crop_gateway=None,
             weather_gateway=None,
             interaction_rules=rules
         )
@@ -278,7 +278,7 @@ class TestInteractionRuleServiceIntegration:
         
         interactor = MultiFieldCropAllocationGreedyInteractor(
             field_gateway=None,
-            crop_requirement_gateway=None,
+            crop_gateway=None,
             weather_gateway=None,
             interaction_rules=rules
         )

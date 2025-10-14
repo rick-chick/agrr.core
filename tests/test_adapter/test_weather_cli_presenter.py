@@ -166,7 +166,15 @@ class TestWeatherCLIPresenter:
         assert self.presenter._format_sunshine(None) == "N/A"
     
     def test_display_weather_data_json(self):
-        """Test displaying weather data in JSON format."""
+        """Test displaying weather data in JSON format.
+        
+        Format matches CLI help documentation:
+        {
+          "data": [...],
+          "total_count": N,
+          "location": {...}  // optional
+        }
+        """
         dto = WeatherDataResponseDTO(
             time="2024-01-15T00:00:00Z",
             temperature_2m_max=15.5,
@@ -185,14 +193,14 @@ class TestWeatherCLIPresenter:
         # Parse JSON output
         result = json.loads(output)
         
-        assert result["success"] is True
+        # Direct format without success wrapper
         assert "data" in result
-        assert len(result["data"]["data"]) == 1
-        assert result["data"]["total_count"] == 1
-        assert result["data"]["data"][0]["time"] == "2024-01-15T00:00:00Z"
-        assert result["data"]["data"][0]["temperature_2m_max"] == 15.5
-        assert result["data"]["data"][0]["temperature_2m_min"] == 8.2
-        assert result["data"]["data"][0]["temperature_2m_mean"] == 11.8
+        assert len(result["data"]) == 1
+        assert result["total_count"] == 1
+        assert result["data"][0]["time"] == "2024-01-15T00:00:00Z"
+        assert result["data"][0]["temperature_2m_max"] == 15.5
+        assert result["data"][0]["temperature_2m_min"] == 8.2
+        assert result["data"][0]["temperature_2m_mean"] == 11.8
     
     def test_display_weather_data_json_empty(self):
         """Test displaying empty weather data in JSON format."""
@@ -204,10 +212,10 @@ class TestWeatherCLIPresenter:
         # Parse JSON output
         result = json.loads(output)
         
-        assert result["success"] is True
+        # Direct format without success wrapper
         assert "data" in result
-        assert len(result["data"]["data"]) == 0
-        assert result["data"]["total_count"] == 0
+        assert len(result["data"]) == 0
+        assert result["total_count"] == 0
     
     def test_display_error_json(self):
         """Test displaying error message in JSON format."""
@@ -294,9 +302,9 @@ class TestWeatherCLIPresenter:
         # Parse JSON output
         result = json.loads(output)
         
-        assert result["success"] is True
-        assert "location" in result["data"]
-        assert result["data"]["location"]["latitude"] == 35.6762
-        assert result["data"]["location"]["longitude"] == 139.6911
-        assert result["data"]["location"]["elevation"] == 37.0
-        assert result["data"]["location"]["timezone"] == "Asia/Tokyo"
+        # Direct format without success wrapper
+        assert "location" in result
+        assert result["location"]["latitude"] == 35.6762
+        assert result["location"]["longitude"] == 139.6911
+        assert result["location"]["elevation"] == 37.0
+        assert result["location"]["timezone"] == "Asia/Tokyo"

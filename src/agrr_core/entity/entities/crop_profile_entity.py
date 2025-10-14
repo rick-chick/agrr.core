@@ -14,7 +14,7 @@ from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
 
 
 @dataclass(frozen=True)
-class CropRequirementAggregate:
+class CropProfile:
     """Associates a crop with an ordered list of stage requirements.
 
     Invariants
@@ -28,5 +28,6 @@ class CropRequirementAggregate:
     def by_stage_name(self) -> Dict[str, StageRequirement]:
         """Return a mapping from stage name to its requirement."""
         return {sr.stage.name: sr for sr in self.stage_requirements}
+
 
 

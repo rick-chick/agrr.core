@@ -12,8 +12,8 @@ from agrr_core.adapter.controllers.multi_field_crop_allocation_cli_controller im
     MultiFieldCropAllocationCliController,
 )
 from agrr_core.entity.entities.crop_entity import Crop
-from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
-    CropRequirementAggregate,
+from agrr_core.entity.entities.crop_profile_entity import (
+    CropProfile,
 )
 from agrr_core.entity.entities.growth_stage_entity import GrowthStage
 from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
@@ -40,7 +40,7 @@ class TestMultiFieldCropAllocationCliController:
         """Test that basic optimization command works correctly."""
         # Setup mocks
         mock_field_gateway = AsyncMock()
-        mock_crop_requirement_gateway = AsyncMock()
+        mock_crop_gateway = AsyncMock()
         mock_weather_gateway = AsyncMock()
         mock_presenter = MagicMock()
         mock_presenter.output_format = "table"
@@ -90,34 +90,15 @@ class TestMultiFieldCropAllocationCliController:
             thermal=ThermalRequirement(required_gdd=100.0),
         )
 
-        crop_req1 = CropRequirementAggregate(
+        crop_req1 = CropProfile(
             crop=crop1, stage_requirements=[stage_req]
         )
-        crop_req2 = CropRequirementAggregate(
+        crop_req2 = CropProfile(
             crop=crop2, stage_requirements=[stage_req]
         )
 
-        # Set up side_effect to handle both string and DTO inputs
-        async def crop_requirement_side_effect(crop_query=None):
-            if crop_query is None:
-                # get() called without arguments - return first requirement
-                return crop_req1
-            if hasattr(crop_query, 'crop_query'):
-                # It's a DTO
-                query = crop_query.crop_query
-            else:
-                # It's a string
-                query = crop_query
-            
-            mapping = {
-                "rice Koshihikari": crop_req1,
-                "tomato Momotaro": crop_req2,
-            }
-            return mapping.get(query)
-        
-        mock_crop_requirement_gateway.craft.side_effect = crop_requirement_side_effect
-        # gateway.get() called without arguments - return crop requirement
-        mock_crop_requirement_gateway.get.side_effect = crop_requirement_side_effect
+        # Setup crop gateway to return all crops
+        mock_crop_gateway.get_all.return_value = [crop_req1, crop_req2]
 
         # Weather data - generate for full planning period (Apr-Oct)
         weather_data = [
@@ -135,7 +116,7 @@ class TestMultiFieldCropAllocationCliController:
         # Create controller
         controller = MultiFieldCropAllocationCliController(
             field_gateway=mock_field_gateway,
-            crop_requirement_gateway=mock_crop_requirement_gateway,
+            crop_gateway=mock_crop_gateway,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
         )
@@ -167,7 +148,6 @@ class TestMultiFieldCropAllocationCliController:
 
             # Simulate CLI arguments
             args = [
-                "optimize",
                 "--fields-file", str(fields_file),
                 "--crops-file", str(crops_file),
                 "--planning-start", "2024-04-01",
@@ -185,7 +165,7 @@ class TestMultiFieldCropAllocationCliController:
         """Test optimization with target area specification."""
         # Setup mocks
         mock_field_gateway = AsyncMock()
-        mock_crop_requirement_gateway = AsyncMock()
+        mock_crop_gateway = AsyncMock()
         mock_weather_gateway = AsyncMock()
         mock_presenter = MagicMock()
         mock_presenter.output_format = "table"
@@ -217,11 +197,10 @@ class TestMultiFieldCropAllocationCliController:
             sunshine=sunshine_profile,
             thermal=ThermalRequirement(required_gdd=100.0),
         )
-        crop_req1 = CropRequirementAggregate(
+        crop_req1 = CropProfile(
             crop=crop1, stage_requirements=[stage_req]
         )
-        mock_crop_requirement_gateway.craft.return_value = crop_req1
-        mock_crop_requirement_gateway.get.return_value = crop_req1
+        mock_crop_gateway.get_all.return_value = [crop_req1]
 
         # Weather data - generate for full planning period (Apr-Oct)
         weather_data = [
@@ -239,7 +218,7 @@ class TestMultiFieldCropAllocationCliController:
         # Create controller
         controller = MultiFieldCropAllocationCliController(
             field_gateway=mock_field_gateway,
-            crop_requirement_gateway=mock_crop_requirement_gateway,
+            crop_gateway=mock_crop_gateway,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
         )
@@ -267,7 +246,6 @@ class TestMultiFieldCropAllocationCliController:
 
             # Simulate CLI arguments with target area
             args = [
-                "optimize",
                 "--fields-file", str(fields_file),
                 "--crops-file", str(crops_file),
                 "--planning-start", "2024-04-01",
@@ -285,7 +263,7 @@ class TestMultiFieldCropAllocationCliController:
         """Test optimization with JSON output format."""
         # Setup mocks
         mock_field_gateway = AsyncMock()
-        mock_crop_requirement_gateway = AsyncMock()
+        mock_crop_gateway = AsyncMock()
         mock_weather_gateway = AsyncMock()
         mock_presenter = MagicMock()
         mock_presenter.output_format = "table"
@@ -317,12 +295,10 @@ class TestMultiFieldCropAllocationCliController:
             sunshine=sunshine_profile,
             thermal=ThermalRequirement(required_gdd=100.0),
         )
-        crop_req1 = CropRequirementAggregate(
+        crop_req1 = CropProfile(
             crop=crop1, stage_requirements=[stage_req]
         )
-        mock_crop_requirement_gateway.craft.return_value = crop_req1
-
-        mock_crop_requirement_gateway.get.return_value = crop_req1
+        mock_crop_gateway.get_all.return_value = [crop_req1]
 
 
         # Weather data - generate for full planning period (Apr-Oct)
@@ -341,7 +317,7 @@ class TestMultiFieldCropAllocationCliController:
         # Create controller
         controller = MultiFieldCropAllocationCliController(
             field_gateway=mock_field_gateway,
-            crop_requirement_gateway=mock_crop_requirement_gateway,
+            crop_gateway=mock_crop_gateway,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
         )
@@ -367,7 +343,6 @@ class TestMultiFieldCropAllocationCliController:
 
             # Simulate CLI arguments with JSON format
             args = [
-                "optimize",
                 "--fields-file", str(fields_file),
                 "--crops-file", str(crops_file),
                 "--planning-start", "2024-04-01",
@@ -387,7 +362,7 @@ class TestMultiFieldCropAllocationCliController:
         """Test optimization with interaction rules."""
         # Setup mocks
         mock_field_gateway = AsyncMock()
-        mock_crop_requirement_gateway = AsyncMock()
+        mock_crop_gateway = AsyncMock()
         mock_weather_gateway = AsyncMock()
         mock_interaction_rule_gateway = AsyncMock()
         mock_presenter = MagicMock()
@@ -420,12 +395,10 @@ class TestMultiFieldCropAllocationCliController:
             sunshine=sunshine_profile,
             thermal=ThermalRequirement(required_gdd=100.0),
         )
-        crop_req1 = CropRequirementAggregate(
+        crop_req1 = CropProfile(
             crop=crop1, stage_requirements=[stage_req]
         )
-        mock_crop_requirement_gateway.craft.return_value = crop_req1
-
-        mock_crop_requirement_gateway.get.return_value = crop_req1
+        mock_crop_gateway.get_all.return_value = [crop_req1]
 
 
         # Weather data - generate for full planning period (Apr-Oct)
@@ -447,7 +420,7 @@ class TestMultiFieldCropAllocationCliController:
         # Create controller
         controller = MultiFieldCropAllocationCliController(
             field_gateway=mock_field_gateway,
-            crop_requirement_gateway=mock_crop_requirement_gateway,
+            crop_gateway=mock_crop_gateway,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
             interaction_rule_gateway=mock_interaction_rule_gateway,
@@ -474,7 +447,6 @@ class TestMultiFieldCropAllocationCliController:
 
             # Simulate CLI arguments with interaction rules
             args = [
-                "optimize",
                 "--fields-file", str(fields_file),
                 "--crops-file", str(crops_file),
                 "--planning-start", "2024-04-01",
@@ -492,60 +464,11 @@ class TestMultiFieldCropAllocationCliController:
         )
         mock_presenter.present.assert_called_once()
 
-    async def test_load_crops_from_file(self):
-        """Test crop loading from JSON file."""
-        # Setup minimal mocks
-        mock_field_gateway = AsyncMock()
-        mock_crop_requirement_gateway = AsyncMock()
-        mock_weather_gateway = AsyncMock()
-        mock_presenter = MagicMock()
-
-        controller = MultiFieldCropAllocationCliController(
-            field_gateway=mock_field_gateway,
-            crop_requirement_gateway=mock_crop_requirement_gateway,
-            weather_gateway=mock_weather_gateway,
-            presenter=mock_presenter,
-        )
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            crops_file = Path(tmpdir) / "crops.json"
-            
-            # Test basic crop specification
-            crops_data = {
-                "crops": [
-                    {"crop_id": "rice"},
-                    {"crop_id": "rice", "variety": "Koshihikari"},
-                    {"crop_id": "rice", "variety": "Koshihikari", "target_area": 1000.0},
-                    {"crop_id": "tomato", "target_area": 500.0, "crop_requirement_file": "tomato.json"}
-                ]
-            }
-            with open(crops_file, 'w') as f:
-                json.dump(crops_data, f)
-            
-            specs = controller._load_crops_from_file(str(crops_file))
-            
-            assert len(specs) == 4
-            assert specs[0].crop_id == "rice"
-            assert specs[0].variety is None
-            assert specs[0].target_area is None
-            
-            assert specs[1].crop_id == "rice"
-            assert specs[1].variety == "Koshihikari"
-            assert specs[1].target_area is None
-            
-            assert specs[2].crop_id == "rice"
-            assert specs[2].variety == "Koshihikari"
-            assert specs[2].target_area == 1000.0
-            
-            assert specs[3].crop_id == "tomato"
-            assert specs[3].target_area == 500.0
-            assert specs[3].crop_requirement_file == "tomato.json"
-
     async def test_optimize_command_with_parallel_enabled(self):
         """Test optimization with parallel candidate generation enabled."""
         # Setup mocks
         mock_field_gateway = AsyncMock()
-        mock_crop_requirement_gateway = AsyncMock()
+        mock_crop_gateway = AsyncMock()
         mock_weather_gateway = AsyncMock()
         mock_presenter = MagicMock()
         mock_presenter.output_format = "table"
@@ -577,12 +500,10 @@ class TestMultiFieldCropAllocationCliController:
             sunshine=sunshine_profile,
             thermal=ThermalRequirement(required_gdd=100.0),
         )
-        crop_req1 = CropRequirementAggregate(
+        crop_req1 = CropProfile(
             crop=crop1, stage_requirements=[stage_req]
         )
-        mock_crop_requirement_gateway.craft.return_value = crop_req1
-
-        mock_crop_requirement_gateway.get.return_value = crop_req1
+        mock_crop_gateway.get_all.return_value = [crop_req1]
 
 
         # Weather data - generate for full planning period (Apr-Oct)
@@ -601,7 +522,7 @@ class TestMultiFieldCropAllocationCliController:
         # Create controller
         controller = MultiFieldCropAllocationCliController(
             field_gateway=mock_field_gateway,
-            crop_requirement_gateway=mock_crop_requirement_gateway,
+            crop_gateway=mock_crop_gateway,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
         )
@@ -627,7 +548,6 @@ class TestMultiFieldCropAllocationCliController:
 
             # Simulate CLI arguments with parallel enabled
             args = [
-                "optimize",
                 "--fields-file", str(fields_file),
                 "--crops-file", str(crops_file),
                 "--planning-start", "2024-04-01",
@@ -646,7 +566,7 @@ class TestMultiFieldCropAllocationCliController:
         """Test optimization with local search disabled."""
         # Setup mocks
         mock_field_gateway = AsyncMock()
-        mock_crop_requirement_gateway = AsyncMock()
+        mock_crop_gateway = AsyncMock()
         mock_weather_gateway = AsyncMock()
         mock_presenter = MagicMock()
         mock_presenter.output_format = "table"
@@ -678,12 +598,10 @@ class TestMultiFieldCropAllocationCliController:
             sunshine=sunshine_profile,
             thermal=ThermalRequirement(required_gdd=100.0),
         )
-        crop_req1 = CropRequirementAggregate(
+        crop_req1 = CropProfile(
             crop=crop1, stage_requirements=[stage_req]
         )
-        mock_crop_requirement_gateway.craft.return_value = crop_req1
-
-        mock_crop_requirement_gateway.get.return_value = crop_req1
+        mock_crop_gateway.get_all.return_value = [crop_req1]
 
 
         # Weather data - generate for full planning period (Apr-Oct)
@@ -702,7 +620,7 @@ class TestMultiFieldCropAllocationCliController:
         # Create controller
         controller = MultiFieldCropAllocationCliController(
             field_gateway=mock_field_gateway,
-            crop_requirement_gateway=mock_crop_requirement_gateway,
+            crop_gateway=mock_crop_gateway,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
         )
@@ -728,7 +646,6 @@ class TestMultiFieldCropAllocationCliController:
 
             # Simulate CLI arguments with local search disabled
             args = [
-                "optimize",
                 "--fields-file", str(fields_file),
                 "--crops-file", str(crops_file),
                 "--planning-start", "2024-04-01",

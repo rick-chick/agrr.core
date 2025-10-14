@@ -18,27 +18,10 @@ from typing import List, Dict, Any, Optional
 
 
 @dataclass
-class CropRequirementSpec:
-    """Specification for a single crop's requirements.
-    
-    Note: Areas are specified in square meters (m²).
-    max_revenue is defined in Crop entity (not here) as it represents
-    business constraints (market demand, contracts) that are inherent to the crop.
-    """
-    
-    crop_id: str
-    variety: Optional[str] = None
-    min_area: Optional[float] = None
-    target_area: Optional[float] = None
-    crop_requirement_file: Optional[str] = None  # Path to pre-generated requirement file
-
-
-@dataclass
 class MultiFieldCropAllocationRequestDTO:
     """Request DTO for multi-field, multi-crop allocation optimization."""
 
     field_ids: List[str]
-    crop_requirements: List[CropRequirementSpec]
     planning_period_start: datetime
     planning_period_end: datetime
     optimization_objective: str = "maximize_profit"  # or "minimize_cost"
@@ -48,9 +31,6 @@ class MultiFieldCropAllocationRequestDTO:
         """Validate request parameters."""
         if not self.field_ids:
             raise ValueError("field_ids must not be empty")
-        
-        if not self.crop_requirements:
-            raise ValueError("crop_requirements must not be empty")
         
         if self.planning_period_start >= self.planning_period_end:
             raise ValueError(
@@ -68,21 +48,4 @@ class MultiFieldCropAllocationRequestDTO:
             raise ValueError(
                 f"max_computation_time must be positive, got {self.max_computation_time}"
             )
-        
-        # Validate crop requirements
-        for crop_req in self.crop_requirements:
-            if crop_req.min_area is not None and crop_req.min_area < 0:
-                raise ValueError(f"min_area must be non-negative for {crop_req.crop_id}")
-            
-            if crop_req.target_area is not None and crop_req.target_area < 0:
-                raise ValueError(f"target_area must be non-negative for {crop_req.crop_id}")
-            
-            # Validate area ordering
-            if (crop_req.min_area is not None and 
-                crop_req.target_area is not None and 
-                crop_req.min_area > crop_req.target_area):
-                raise ValueError(
-                    f"min_area ({crop_req.min_area}) must be <= "
-                    f"target_area ({crop_req.target_area}) for {crop_req.crop_id}"
-                )
 

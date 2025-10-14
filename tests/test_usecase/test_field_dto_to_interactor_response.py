@@ -49,7 +49,7 @@ class TestFieldDTOToInteractorResponse:
         mock_weather_gateway = AsyncMock()
 
         interactor = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=mock_crop_gateway,
+            crop_profile_gateway=mock_crop_gateway,
             weather_gateway=mock_weather_gateway,
         )
 

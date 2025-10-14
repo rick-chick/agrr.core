@@ -5,7 +5,7 @@ import asyncio
 from datetime import datetime
 from typing import Optional, List
 
-from agrr_core.usecase.gateways.crop_requirement_gateway import CropRequirementGateway
+from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.optimization_result_gateway import (
     OptimizationResultGateway,
@@ -35,38 +35,35 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
 
     def __init__(
         self,
-        crop_requirement_gateway: CropRequirementGateway,
+        crop_profile_gateway: CropProfileGateway,
         weather_gateway: WeatherGateway,
         presenter: GrowthPeriodOptimizeOutputPort,
         field: Optional['Field'] = None,
-        optimization_result_gateway: Optional[OptimizationResultGateway] = None,
         interaction_rule_gateway: Optional[InteractionRuleGateway] = None,
         weather_interpolator: Optional[WeatherInterpolator] = None,
     ) -> None:
         """Initialize with injected dependencies.
         
         Args:
-            crop_requirement_gateway: Gateway for crop requirement operations
+            crop_profile_gateway: Gateway for crop profile operations
             weather_gateway: Gateway for weather data operations
             presenter: Presenter for output formatting
             field: Field entity (read from field config file)
-            optimization_result_gateway: Optional gateway for saving optimization results
             interaction_rule_gateway: Optional gateway for loading interaction rules
             weather_interpolator: Optional interpolator for missing weather data
         """
-        self.crop_requirement_gateway = crop_requirement_gateway
+        self.crop_profile_gateway = crop_profile_gateway
         self.weather_gateway = weather_gateway
         self.presenter = presenter
         self.field = field
-        self.optimization_result_gateway = optimization_result_gateway
         self.interaction_rule_gateway = interaction_rule_gateway
         self.weather_interpolator = weather_interpolator
         
         # Instantiate interactor inside controller
         self.interactor = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=self.crop_requirement_gateway,
+            crop_profile_gateway=self.crop_profile_gateway,
             weather_gateway=self.weather_gateway,
-            optimization_result_gateway=self.optimization_result_gateway,
+            optimization_result_gateway=None,  # No persistence in CLI
             interaction_rule_gateway=self.interaction_rule_gateway,
             weather_interpolator=self.weather_interpolator,
         )
@@ -92,32 +89,25 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog="""
 Examples:
-  # Find optimal planting date for rice
-  agrr optimize-period optimize --crop rice --variety Koshihikari \\
+  # Step 1: Generate crop profile
+  agrr crop --query "rice Koshihikari" > rice_profile.json
+
+  # Step 2: Find optimal planting date for rice
+  agrr optimize period --crop-file rice_profile.json \\
     --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
-    --weather-file weather.json --field-config field_01.json
+    --weather-file weather.json --field-file field_01.json
 
   # Find optimal date with JSON output
-  agrr optimize-period optimize --crop tomato \\
+  agrr optimize period --crop-file tomato_profile.json \\
     --evaluation-start 2024-04-01 --evaluation-end 2024-08-31 \\
-    --weather-file weather.json --field-config field_01.json --format json
+    --weather-file weather.json --field-file field_01.json --format json
 
   # Find optimal date considering continuous cultivation impact
-  agrr optimize-period optimize --crop tomato \\
+  agrr optimize period --crop-file tomato_profile.json \\
     --evaluation-start 2024-04-01 --evaluation-end 2024-08-31 \\
-    --weather-file weather.json --field-config field_01.json \\
-    --interaction-rules interaction_rules.json
+    --weather-file weather.json --field-file field_01.json \\
+    --interaction-rules-file interaction_rules.json
 
-  # Save optimization results for later analysis
-  agrr optimize-period optimize --crop rice --variety Koshihikari \\
-    --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
-    --weather-file weather.json --field-config field_01.json --save-results
-
-  # List all saved optimization results
-  agrr optimize-period list-results
-
-  # Show details of a saved result
-  agrr optimize-period show-result rice_Koshihikari_2024-04-01_2024-09-30
 
 Weather File Format (JSON):
   {
@@ -142,7 +132,7 @@ Field Configuration File Format (JSON):
     "location": "北区画"
   }
 
-Crop Requirement File Format (JSON, optional):
+Crop Profile File Format (JSON):
   {
     "crop": {
       "crop_id": "rice",
@@ -164,7 +154,11 @@ Crop Requirement File Format (JSON, optional):
           "high_stress_threshold": 35.0,
           "frost_threshold": 0.0
         },
-        "thermal": {"required_gdd": 200.0}
+        "thermal": {"required_gdd": 200.0},
+        "sunshine": {
+          "minimum_sunshine_hours": 3.0,
+          "target_sunshine_hours": 6.0
+        }
       }
     ]
   }
@@ -192,102 +186,50 @@ Notes:
   - Only candidates that complete before the evaluation-end deadline are considered
   - The optimal start date minimizes total cultivation cost
   - Daily cost includes fixed costs like field rent, but not variable costs
-  - Weather file can be generated using 'agrr weather' command
-  - Crop requirements are auto-generated using AI if not provided
+  - Weather file can be generated using 'agrr weather' command with --json flag
+  - Crop profile file must be generated first using 'agrr crop' command
+  - The output from 'agrr crop' can be used directly as --crop-file input
   - The 'groups' field in crop data is essential for interaction rules (continuous cultivation, etc.)
-  - Note: 'agrr crop crop' output format differs from the file format shown above
             """
         )
 
-        subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
-        optimize_parser = subparsers.add_parser(
-            "optimize", 
-            help="Find optimal start date that minimizes cost while meeting completion deadline"
-        )
-        optimize_parser.add_argument(
-            "--crop",
+        parser.add_argument(
+            "--crop-file",
             "-c",
             required=True,
-            help='Crop name (e.g., "rice", "tomato")',
+            help='Path to crop profile file (JSON, generated by "agrr crop")',
         )
-        optimize_parser.add_argument(
-            "--variety",
-            "-v",
-            help='Variety/cultivar (e.g., "Koshihikari")',
-        )
-        optimize_parser.add_argument(
+        parser.add_argument(
             "--evaluation-start",
             "-s",
             required=True,
             help='Earliest possible start date in YYYY-MM-DD format (e.g., "2024-04-01")',
         )
-        optimize_parser.add_argument(
+        parser.add_argument(
             "--evaluation-end",
             "-e",
             required=True,
             help='Completion deadline in YYYY-MM-DD format - cultivation must finish by this date (e.g., "2024-06-30")',
         )
-        optimize_parser.add_argument(
+        parser.add_argument(
             "--weather-file",
             "-w",
             required=True,
             help='Path to weather data file (JSON or CSV)',
         )
-        optimize_parser.add_argument(
-            "--crop-requirement-file",
-            "-r",
-            required=False,
-            help='Path to crop requirement file (JSON). If not provided, will use LLM to generate requirements.',
-        )
-        optimize_parser.add_argument(
-            "--field-config",
-            "-fc",
+        parser.add_argument(
+            "--field-file",
+            "-f",
             required=True,
             help='Path to field configuration file (JSON containing field information including daily_fixed_cost)',
         )
-        optimize_parser.add_argument(
-            "--interaction-rules",
-            "-ir",
+        parser.add_argument(
+            "--interaction-rules-file",
+            "-irf",
             required=False,
             help='Path to interaction rules JSON file (optional, for continuous cultivation impact)',
         )
-        optimize_parser.add_argument(
-            "--format",
-            "-fmt",
-            choices=["table", "json"],
-            default="table",
-            help="Output format (default: table)",
-        )
-        optimize_parser.add_argument(
-            "--save-results",
-            action="store_true",
-            help="Save intermediate optimization results for later analysis",
-        )
-
-        # Add 'list-results' subcommand
-        list_parser = subparsers.add_parser(
-            "list-results",
-            help="List all saved optimization results"
-        )
-        list_parser.add_argument(
-            "--format",
-            "-fmt",
-            choices=["table", "json"],
-            default="table",
-            help="Output format (default: table)",
-        )
-
-        # Add 'show-result' subcommand
-        show_parser = subparsers.add_parser(
-            "show-result",
-            help="Show details of a specific optimization result"
-        )
-        show_parser.add_argument(
-            "optimization_id",
-            help="Optimization ID to show (format: crop_variety_startdate_enddate)",
-        )
-        show_parser.add_argument(
+        parser.add_argument(
             "--format",
             "-fmt",
             choices=["table", "json"],
@@ -316,19 +258,14 @@ Notes:
                 f'Invalid date format: "{date_str}". Use YYYY-MM-DD (e.g., "2024-04-01")'
             )
 
-    async def handle_optimize_command(self, args) -> None:
-        """Handle the optimize calculation command.
+    async def handle_period_command(self, args) -> None:
+        """Handle the period optimization command.
         
         Finds the optimal cultivation start date that:
         - Starts on or after evaluation_start
         - Completes by evaluation_end (deadline)
         - Minimizes total cost
         """
-        # Check if saving results is requested but gateway is not available
-        if getattr(args, 'save_results', False) and self.optimization_result_gateway is None:
-            print("Warning: --save-results specified but optimization result storage is not enabled.")
-            print("Results will be calculated but not saved.")
-        
         # Parse evaluation period dates
         try:
             evaluation_start = self._parse_date(args.evaluation_start)
@@ -340,14 +277,20 @@ Notes:
         # Update presenter format
         self.presenter.output_format = args.format
 
-        # Validate that field-config is provided
-        if not getattr(args, 'field_config', None):
-            print('Error: --field-config is required')
-            return
-        
         # Check if field entity was loaded
         if not self.field:
-            print('Error: Field configuration not loaded. Make sure --field-config is a valid field JSON file.')
+            print('Error: Field configuration not loaded. Make sure --field-file is a valid field JSON file.')
+            return
+        
+        # Load crop profile from file
+        try:
+            from agrr_core.adapter.repositories.crop_profile_file_repository import CropProfileFileRepository
+            from agrr_core.framework.repositories.file_repository import FileRepository
+            file_repo = FileRepository()
+            profile_repo = CropProfileFileRepository(file_repository=file_repo, file_path=args.crop_file)
+            crop_profile = await profile_repo.get()
+        except Exception as e:
+            print(f"Error loading crop profile from {args.crop_file}: {str(e)}")
             return
         
         # Note: File paths are NOT passed to Interactor
@@ -356,8 +299,8 @@ Notes:
         
         # Create request DTO (no file paths, no entities - just business data)
         request = OptimalGrowthPeriodRequestDTO(
-            crop_id=args.crop,
-            variety=args.variety,
+            crop_id=crop_profile.crop.crop_id,
+            variety=crop_profile.crop.variety,
             evaluation_period_start=evaluation_start,
             evaluation_period_end=evaluation_end,
             field=self.field,
@@ -367,103 +310,8 @@ Notes:
         try:
             response = await self.execute(request)
             self.presenter.present(response)
-            
-            # Show saved message if results were saved
-            if getattr(args, 'save_results', False) and self.optimization_result_gateway is not None:
-                optimization_id = f"{args.crop}_{args.variety or 'default'}_{evaluation_start.date()}_{evaluation_end.date()}"
-                print(f"\n✓ Results saved with ID: {optimization_id}")
-                print(f"  Use 'agrr optimize-period show-result {optimization_id}' to view saved results")
         except Exception as e:
             print(f"Error calculating optimal growth period: {str(e)}")
-            import traceback
-            traceback.print_exc()
-
-    async def handle_list_results_command(self, args) -> None:
-        """Handle the list-results command."""
-        if self.optimization_result_gateway is None:
-            print("Error: Optimization result storage is not enabled.")
-            return
-        
-        try:
-            all_results = await self.optimization_result_gateway.get_all()
-            
-            if not all_results:
-                print("No saved optimization results found.")
-                return
-            
-            if args.format == "json":
-                import json
-                results_data = [
-                    {"optimization_id": opt_id, "num_candidates": len(results)}
-                    for opt_id, results in all_results
-                ]
-                print(json.dumps(results_data, indent=2))
-            else:
-                # Table format
-                print("\n" + "="*80)
-                print("Saved Optimization Results")
-                print("="*80)
-                print(f"{'Optimization ID':<50} {'Candidates':<10}")
-                print("-"*80)
-                for opt_id, results in all_results:
-                    print(f"{opt_id:<50} {len(results):<10}")
-                print("="*80)
-                print(f"\nTotal: {len(all_results)} optimization result(s)")
-                print("\nUse 'agrr optimize-period show-result <optimization_id>' to view details")
-        except Exception as e:
-            print(f"Error listing optimization results: {str(e)}")
-            import traceback
-            traceback.print_exc()
-
-    async def handle_show_result_command(self, args) -> None:
-        """Handle the show-result command."""
-        if self.optimization_result_gateway is None:
-            print("Error: Optimization result storage is not enabled.")
-            return
-        
-        try:
-            results = await self.optimization_result_gateway.get(args.optimization_id)
-            
-            if results is None:
-                print(f"No optimization result found with ID: {args.optimization_id}")
-                return
-            
-            if args.format == "json":
-                import json
-                results_data = [
-                    {
-                        "start_date": r.start_date.isoformat(),
-                        "completion_date": r.completion_date.isoformat() if r.completion_date else None,
-                        "growth_days": r.growth_days,
-                        "accumulated_gdd": r.accumulated_gdd,
-                        "total_cost": r.total_cost,
-                        "is_optimal": r.is_optimal,
-                        "base_temperature": r.base_temperature,
-                    }
-                    for r in results
-                ]
-                print(json.dumps(results_data, indent=2))
-            else:
-                # Table format
-                print("\n" + "="*100)
-                print(f"Optimization Result: {args.optimization_id}")
-                print("="*100)
-                print(f"{'Start Date':<12} {'Completion':<12} {'Days':<6} {'GDD':<10} {'Cost':<12} {'Optimal':<8}")
-                print("-"*100)
-                for r in results:
-                    completion = r.completion_date.strftime("%Y-%m-%d") if r.completion_date else "N/A"
-                    days = str(r.growth_days) if r.growth_days else "N/A"
-                    cost_str = f"¥{r.total_cost:,.0f}" if r.total_cost else "N/A"
-                    optimal_mark = "★" if r.is_optimal else ""
-                    print(f"{r.start_date.strftime('%Y-%m-%d'):<12} {completion:<12} {days:<6} "
-                          f"{r.accumulated_gdd:<10.1f} {cost_str:<12} {optimal_mark:<8}")
-                print("="*100)
-                print(f"\nTotal candidates: {len(results)}")
-                optimal_count = sum(1 for r in results if r.is_optimal)
-                if optimal_count > 0:
-                    print(f"Optimal candidates: {optimal_count} (marked with ★)")
-        except Exception as e:
-            print(f"Error showing optimization result: {str(e)}")
             import traceback
             traceback.print_exc()
 
@@ -472,16 +320,6 @@ Notes:
         parser = self.create_argument_parser()
         parsed_args = parser.parse_args(args)
 
-        if not parsed_args.command:
-            parser.print_help()
-            return
-
-        if parsed_args.command == "optimize":
-            await self.handle_optimize_command(parsed_args)
-        elif parsed_args.command == "list-results":
-            await self.handle_list_results_command(parsed_args)
-        elif parsed_args.command == "show-result":
-            await self.handle_show_result_command(parsed_args)
-        else:
-            parser.print_help()
+        # No subcommands - directly handle the period optimization
+        await self.handle_period_command(parsed_args)
 

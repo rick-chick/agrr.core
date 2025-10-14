@@ -2,12 +2,12 @@
 
 from typing import Dict, Any
 
-from agrr_core.usecase.ports.output.crop_requirement_craft_output_port import (
-    CropRequirementCraftOutputPort,
+from agrr_core.usecase.ports.output.crop_profile_craft_output_port import (
+    CropProfileCraftOutputPort,
 )
 
 
-class CropRequirementCraftPresenter(CropRequirementCraftOutputPort):
+class CropProfileCraftPresenter(CropProfileCraftOutputPort):
     """Thin presenter that wraps success/error payloads."""
 
     def format_error(self, error_message: str, error_code: str = "CROP_REQUIREMENT_ERROR") -> Dict[str, Any]:

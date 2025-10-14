@@ -6,8 +6,8 @@ from io import StringIO
 import json
 
 from agrr_core.adapter.controllers.crop_cli_craft_controller import CropCliCraftController
-from agrr_core.adapter.gateways.crop_requirement_gateway_impl import CropRequirementGatewayImpl
-from agrr_core.adapter.presenters.crop_requirement_craft_presenter import CropRequirementCraftPresenter
+from agrr_core.adapter.gateways.crop_profile_gateway_impl import CropProfileGatewayImpl
+from agrr_core.adapter.presenters.crop_profile_craft_presenter import CropProfileCraftPresenter
 
 
 class TestCropCliCraftController:
@@ -16,8 +16,8 @@ class TestCropCliCraftController:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Set up test fixtures."""
-        self.mock_gateway = Mock(spec=CropRequirementGatewayImpl)
-        self.mock_presenter = Mock(spec=CropRequirementCraftPresenter)
+        self.mock_gateway = Mock(spec=CropProfileGatewayImpl)
+        self.mock_presenter = Mock(spec=CropProfileCraftPresenter)
         
         self.controller = CropCliCraftController(
             gateway=self.mock_gateway,
@@ -31,20 +31,19 @@ class TestCropCliCraftController:
         parser = self.controller.create_argument_parser()
         
         # Check parser attributes
-        assert parser.description == "Crop Requirement CLI - Get crop growth requirements using AI"
+        assert parser.description == "Crop Profile CLI - Get crop growth profiles using AI"
         
-        # Check that subcommands exist
+        # Check that required arguments exist
         actions = [action.dest for action in parser._actions]
-        assert 'command' in actions
+        assert 'query' in actions
     
-    def test_create_argument_parser_crop_subcommand(self):
-        """Test crop subcommand configuration."""
+    def test_create_argument_parser_with_query(self):
+        """Test parser with query argument."""
         parser = self.controller.create_argument_parser()
         
-        # Parse crop command with required query argument
-        args = parser.parse_args(['crop', '--query', 'トマト'])
+        # Parse with required query argument
+        args = parser.parse_args(['--query', 'トマト'])
         
-        assert args.command == 'crop'
         assert args.query == 'トマト'
     
     # ===== Data Transfer Tests: CLI Args → RequestDTO =====
@@ -266,19 +265,20 @@ class TestCropCliCraftController:
     # ===== Run Method Tests =====
     
     @pytest.mark.asyncio
-    async def test_run_no_command(self):
-        """Test run method with no command provided."""
-        with patch('sys.stdout', new=StringIO()):
+    async def test_run_no_query(self):
+        """Test run method with no query argument provided."""
+        # Should raise SystemExit because --query is required
+        with pytest.raises(SystemExit):
             await self.controller.run([])
     
     @pytest.mark.asyncio
-    async def test_run_crop_command(self):
-        """Test run method with crop command."""
+    async def test_run_with_query(self):
+        """Test run method with query argument."""
         self.controller.interactor.execute = AsyncMock(
-            return_value={"success": True, "data": {"crop_name": "tomato"}}
+            return_value={"crop": {"crop_id": "tomato", "name": "Tomato"}, "stage_requirements": []}
         )
         
-        args = ['crop', '--query', 'トマト']
+        args = ['--query', 'トマト']
         
         with patch('sys.stdout', new=StringIO()):
             await self.controller.run(args)
@@ -286,11 +286,11 @@ class TestCropCliCraftController:
         self.controller.interactor.execute.assert_called_once()
     
     @pytest.mark.asyncio
-    async def test_run_unknown_command(self):
-        """Test run method with unknown command."""
-        # Unknown command should raise SystemExit
+    async def test_run_with_invalid_argument(self):
+        """Test run method with invalid argument."""
+        # Invalid argument should raise SystemExit
         with pytest.raises(SystemExit):
-            await self.controller.run(['unknown-command'])
+            await self.controller.run(['--invalid-arg'])
     
     # ===== Integration Tests with Gateway and Presenter =====
     
@@ -302,12 +302,12 @@ class TestCropCliCraftController:
     
     def test_interactor_instantiated_in_controller(self):
         """Test that interactor is instantiated inside controller."""
-        from agrr_core.usecase.interactors.crop_requirement_craft_interactor import (
-            CropRequirementCraftInteractor,
+        from agrr_core.usecase.interactors.crop_profile_craft_interactor import (
+            CropProfileCraftInteractor,
         )
         
         # Interactor should be an instance created by controller
-        assert isinstance(self.controller.interactor, CropRequirementCraftInteractor)
+        assert isinstance(self.controller.interactor, CropProfileCraftInteractor)
         
         # Interactor should have the same gateway and presenter
         assert self.controller.interactor.gateway == self.controller.gateway

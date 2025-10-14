@@ -4,8 +4,8 @@ import pytest
 from datetime import datetime
 
 from agrr_core.entity.entities.crop_entity import Crop
-from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
-    CropRequirementAggregate,
+from agrr_core.entity.entities.crop_profile_entity import (
+    CropProfile,
 )
 from agrr_core.entity.entities.growth_stage_entity import GrowthStage
 from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
@@ -30,14 +30,14 @@ class TestGrowthPeriodOptimizeInteractor:
     @pytest.fixture(autouse=True)
     def setup(
         self,
-        gateway_crop_requirement,
+        gateway_crop_profile,
         gateway_weather,
     ):
         """Set up test fixtures using conftest mocks."""
-        self.gateway_crop_requirement = gateway_crop_requirement
+        self.gateway_crop_profile = gateway_crop_profile
         self.gateway_weather = gateway_weather
         self.interactor = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=self.gateway_crop_requirement,
+            crop_profile_gateway=self.gateway_crop_profile,
             weather_gateway=self.gateway_weather,
         )
 
@@ -65,7 +65,7 @@ class TestGrowthPeriodOptimizeInteractor:
             thermal=ThermalRequirement(required_gdd=100.0),
         )
 
-        crop_requirement = CropRequirementAggregate(
+        crop_profile = CropProfile(
             crop=crop, stage_requirements=[stage_req]
         )
 
@@ -95,7 +95,7 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 4, 20), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
         ]
 
-        self.gateway_crop_requirement.get.return_value = crop_requirement
+        self.gateway_crop_profile.get.return_value = crop_profile
         self.gateway_weather.get.return_value = weather_data
 
         # Request: Start between April 1-5, must complete by April 15 (completion deadline)
@@ -161,7 +161,7 @@ class TestGrowthPeriodOptimizeInteractor:
             thermal=ThermalRequirement(required_gdd=1000.0),
         )
 
-        crop_requirement = CropRequirementAggregate(
+        crop_profile = CropProfile(
             crop=crop, stage_requirements=[stage_req]
         )
 
@@ -174,7 +174,7 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 4, 5), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
         ]
 
-        self.gateway_crop_requirement.get.return_value = crop_requirement
+        self.gateway_crop_profile.get.return_value = crop_profile
         self.gateway_weather.get.return_value = weather_data
 
         # Evaluation period with only 1 day
@@ -221,7 +221,7 @@ class TestGrowthPeriodOptimizeInteractor:
             thermal=ThermalRequirement(required_gdd=50.0),
         )
 
-        crop_requirement = CropRequirementAggregate(
+        crop_profile = CropProfile(
             crop=crop, stage_requirements=[stage_req]
         )
 
@@ -232,7 +232,7 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 5, 4), temperature_2m_mean=25.0, temperature_2m_max=30.0, temperature_2m_min=20.0),
         ]
 
-        self.gateway_crop_requirement.get.return_value = crop_requirement
+        self.gateway_crop_profile.get.return_value = crop_profile
         self.gateway_weather.get.return_value = weather_data
 
         # Start on May 1, must complete by May 5 (deadline)
@@ -287,7 +287,7 @@ class TestGrowthPeriodOptimizeInteractor:
             thermal=ThermalRequirement(required_gdd=100.0),
         )
 
-        crop_requirement = CropRequirementAggregate(
+        crop_profile = CropProfile(
             crop=crop, stage_requirements=[stage_req]
         )
 
@@ -310,7 +310,7 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 4, 15), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
         ]
 
-        self.gateway_crop_requirement.get.return_value = crop_requirement
+        self.gateway_crop_profile.get.return_value = crop_profile
         self.gateway_weather.get.return_value = weather_data
 
         # Evaluation period: April 1-3 as start date candidates
@@ -371,7 +371,7 @@ class TestGrowthPeriodOptimizeInteractor:
             thermal=ThermalRequirement(required_gdd=100.0),
         )
 
-        crop_requirement = CropRequirementAggregate(
+        crop_profile = CropProfile(
             crop=crop, stage_requirements=[stage_req]
         )
 
@@ -389,7 +389,7 @@ class TestGrowthPeriodOptimizeInteractor:
             WeatherData(time=datetime(2024, 4, 10), temperature_2m_mean=20.0, temperature_2m_max=25.0, temperature_2m_min=15.0),
         ]
 
-        self.gateway_crop_requirement.get.return_value = crop_requirement
+        self.gateway_crop_profile.get.return_value = crop_profile
         self.gateway_weather.get.return_value = weather_data
 
         # Start on April 1, needs 10 days -> completes April 10
@@ -422,7 +422,7 @@ class TestGrowthPeriodOptimizeInteractor:
         
         # Setup interactor with interaction rule gateway
         interactor = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=self.gateway_crop_requirement,
+            crop_profile_gateway=self.gateway_crop_profile,
             weather_gateway=self.gateway_weather,
             interaction_rule_gateway=gateway_interaction_rule,
         )
@@ -454,7 +454,7 @@ class TestGrowthPeriodOptimizeInteractor:
             thermal=ThermalRequirement(required_gdd=100.0),
         )
 
-        crop_requirement = CropRequirementAggregate(
+        crop_profile = CropProfile(
             crop=crop, stage_requirements=[stage_req]
         )
 
@@ -469,7 +469,7 @@ class TestGrowthPeriodOptimizeInteractor:
             for day in range(1, 21)
         ]
 
-        self.gateway_crop_requirement.get.return_value = crop_requirement
+        self.gateway_crop_profile.get.return_value = crop_profile
         self.gateway_weather.get.return_value = weather_data
 
         # Setup interaction rules

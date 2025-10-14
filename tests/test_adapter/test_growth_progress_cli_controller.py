@@ -22,18 +22,18 @@ class TestGrowthProgressCliController:
     @pytest.fixture(autouse=True)
     def setup(
         self,
-        gateway_crop_requirement,
+        gateway_crop_profile,
         gateway_weather,
         output_port_growth_progress,
     ):
         """Set up test fixtures using conftest mocks."""
         # Create controller with mocked dependencies from conftest
         self.controller = GrowthProgressCliController(
-            crop_requirement_gateway=gateway_crop_requirement,
+            crop_profile_gateway=gateway_crop_profile,
             weather_gateway=gateway_weather,
             presenter=output_port_growth_progress,
         )
-        self.mock_crop_requirement_gateway = gateway_crop_requirement
+        self.mock_crop_profile_gateway = gateway_crop_profile
         self.mock_weather_gateway = gateway_weather
         self.mock_presenter = output_port_growth_progress
 
@@ -66,12 +66,35 @@ class TestGrowthProgressCliController:
         self.controller.interactor.execute.assert_called_once_with(request)
 
     @pytest.mark.asyncio
-    async def test_handle_progress_command_success(self):
+    async def test_handle_progress_command_success(self, tmp_path):
         """Test successful progress command handling."""
+        # Create a temporary crop profile file
+        from agrr_core.entity.entities.crop_entity import Crop
+        from agrr_core.entity.entities.crop_profile_entity import CropProfile
+        from agrr_core.entity.entities.growth_stage_entity import GrowthStage
+        from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
+        from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
+        import json
+        
+        # Write crop profile to file
+        crop_file = tmp_path / "crop_profile.json"
+        crop_data = {
+            "crop": {"crop_id": "rice", "name": "Rice", "variety": "Koshihikari", "area_per_unit": 1.0},
+            "stage_requirements": [{
+                "stage": {"name": "Vegetative", "order": 1},
+                "temperature": {
+                    "base_temperature": 10.0,
+                    "optimal_min": 20.0,
+                    "optimal_max": 30.0
+                },
+                "thermal": {"required_gdd": 1000.0}
+            }]
+        }
+        crop_file.write_text(json.dumps(crop_data))
+        
         # Create mock args
         args = Mock()
-        args.crop = "rice"
-        args.variety = "Koshihikari"
+        args.crop_file = str(crop_file)
         args.start_date = "2024-05-01"
         args.weather_file = "weather.json"
         args.format = "table"
@@ -104,12 +127,28 @@ class TestGrowthProgressCliController:
         self.mock_presenter.present.assert_called_once_with(mock_response)
 
     @pytest.mark.asyncio
-    async def test_handle_progress_command_invalid_date(self, capsys):
+    async def test_handle_progress_command_invalid_date(self, capsys, tmp_path):
         """Test error handling for invalid date format."""
+        # Create a temporary crop profile file
+        import json
+        crop_file = tmp_path / "crop_profile.json"
+        crop_data = {
+            "crop": {"crop_id": "rice", "name": "Rice", "variety": "Koshihikari", "area_per_unit": 1.0},
+            "stage_requirements": [{
+                "stage": {"name": "Vegetative", "order": 1},
+                "temperature": {
+                    "base_temperature": 10.0,
+                    "optimal_min": 20.0,
+                    "optimal_max": 30.0
+                },
+                "thermal": {"required_gdd": 1000.0}
+            }]
+        }
+        crop_file.write_text(json.dumps(crop_data))
+        
         # Create mock args with invalid date
         args = Mock()
-        args.crop = "rice"
-        args.variety = "Koshihikari"
+        args.crop_file = str(crop_file)
         args.start_date = "invalid-date"
         args.weather_file = "weather.json"
         args.format = "table"
@@ -136,7 +175,7 @@ class TestGrowthProgressCliController:
 
     def test_controller_has_required_dependencies(self):
         """Test that controller has all required dependencies injected."""
-        assert self.controller.crop_requirement_gateway is not None
+        assert self.controller.crop_profile_gateway is not None
         assert self.controller.weather_gateway is not None
         assert self.controller.presenter is not None
         assert self.controller.interactor is not None

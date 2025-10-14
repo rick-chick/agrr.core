@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional, List
 
 from agrr_core.usecase.gateways.field_gateway import FieldGateway
-from agrr_core.usecase.gateways.crop_requirement_gateway import CropRequirementGateway
+from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.interaction_rule_gateway import InteractionRuleGateway
 from agrr_core.usecase.ports.input.multi_field_crop_allocation_input_port import (
@@ -21,7 +21,6 @@ from agrr_core.usecase.interactors.multi_field_crop_allocation_greedy_interactor
 )
 from agrr_core.usecase.dto.multi_field_crop_allocation_request_dto import (
     MultiFieldCropAllocationRequestDTO,
-    CropRequirementSpec,
 )
 from agrr_core.usecase.dto.multi_field_crop_allocation_response_dto import (
     MultiFieldCropAllocationResponseDTO,
@@ -36,7 +35,7 @@ class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
     def __init__(
         self,
         field_gateway: FieldGateway,
-        crop_requirement_gateway: CropRequirementGateway,
+        crop_gateway: CropProfileGateway,
         weather_gateway: WeatherGateway,
         presenter: MultiFieldCropAllocationOutputPort,
         interaction_rule_gateway: Optional[InteractionRuleGateway] = None,
@@ -46,14 +45,14 @@ class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
         
         Args:
             field_gateway: Gateway for field operations
-            crop_requirement_gateway: Gateway for crop requirement operations
+            crop_gateway: Gateway for crop operations
             weather_gateway: Gateway for weather data operations
             presenter: Presenter for output formatting
             interaction_rule_gateway: Optional gateway for loading interaction rules
             config: Optional optimization configuration
         """
         self.field_gateway = field_gateway
-        self.crop_requirement_gateway = crop_requirement_gateway
+        self.crop_gateway = crop_gateway
         self.weather_gateway = weather_gateway
         self.presenter = presenter
         self.interaction_rule_gateway = interaction_rule_gateway
@@ -65,7 +64,7 @@ class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
         # Instantiate interactor inside controller
         self.interactor = MultiFieldCropAllocationGreedyInteractor(
             field_gateway=self.field_gateway,
-            crop_requirement_gateway=self.crop_requirement_gateway,
+            crop_gateway=self.crop_gateway,
             weather_gateway=self.weather_gateway,
             config=self.config,
             interaction_rules=self.interaction_rules,
@@ -93,14 +92,14 @@ class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
             epilog="""
 Examples:
   # Basic optimization
-  agrr allocate optimize \\
+  agrr optimize allocate \\
     --fields-file fields.json \\
     --crops-file crops.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31 \\
     --weather-file weather.json
 
   # With interaction rules (continuous cultivation impact)
-  agrr allocate optimize \\
+  agrr optimize allocate \\
     --fields-file fields.json \\
     --crops-file crops.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31 \\
@@ -108,14 +107,14 @@ Examples:
     --interaction-rules-file interaction_rules.json
 
   # With JSON output
-  agrr allocate optimize \\
+  agrr optimize allocate \\
     --fields-file fields.json \\
     --crops-file crops.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31 \\
     --weather-file weather.json --format json
 
   # With optimization options
-  agrr allocate optimize \\
+  agrr optimize allocate \\
     --fields-file fields.json \\
     --crops-file crops.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31 \\
@@ -145,40 +144,71 @@ Fields File Format (JSON):
   }
 
 Crops File Format (JSON):
-  Based on Crop entity structure (extended with optimization parameters):
   {
     "crops": [
       {
-        "crop_id": "rice",                        // Required: Crop identifier
-        "name": "Rice",                           // Required: Human-readable name
-        "area_per_unit": 0.25,                    // Required: Area per unit in m²
-        "variety": "Koshihikari",                 // Optional: Variety/cultivar
-        "revenue_per_area": 30000.0,              // Optional: Revenue per m² in ¥
-        "max_revenue": 1000000.0,                 // Optional: Max revenue cap in ¥
-        "groups": ["Poaceae", "grain_crops"],     // Optional: Crop groups for interaction rules
-        "target_area": 1000.0                     // Optional: Optimization target area in m²
+        "crop": {
+          "crop_id": "rice",
+          "name": "Rice",
+          "area_per_unit": 0.25,
+          "variety": "Koshihikari",
+          "revenue_per_area": 30000.0,
+          "max_revenue": 1200000.0,
+          "groups": ["Poaceae", "grain_crops"]
+        },
+        "stage_requirements": [
+          {
+            "stage": {"name": "growth", "order": 1},
+            "temperature": {
+              "base_temperature": 10.0,
+              "optimal_min": 20.0,
+              "optimal_max": 30.0,
+              "low_stress_threshold": 15.0,
+              "high_stress_threshold": 35.0,
+              "frost_threshold": 5.0
+            },
+            "thermal": {"required_gdd": 1500.0},
+            "sunshine": {
+              "minimum_sunshine_hours": 5.0,
+              "target_sunshine_hours": 8.0
+            }
+          }
+        ]
       },
       {
-        "crop_id": "tomato",
-        "name": "Tomato",
-        "area_per_unit": 0.5,
-        "variety": "Momotaro",
-        "revenue_per_area": 50000.0,
-        "groups": ["Solanaceae", "fruiting_vegetables"],
-        "target_area": 500.0
+        "crop": {
+          "crop_id": "tomato",
+          "name": "Tomato",
+          "area_per_unit": 0.5,
+          "variety": "Momotaro",
+          "revenue_per_area": 50000.0,
+          "max_revenue": 800000.0,
+          "groups": ["Solanaceae", "fruiting_vegetables"]
+        },
+        "stage_requirements": [
+          {
+            "stage": {"name": "growth", "order": 1},
+            "temperature": {
+              "base_temperature": 10.0,
+              "optimal_min": 18.0,
+              "optimal_max": 28.0,
+              "low_stress_threshold": 13.0,
+              "high_stress_threshold": 32.0,
+              "frost_threshold": 2.0
+            },
+            "thermal": {"required_gdd": 1200.0},
+            "sunshine": {
+              "minimum_sunshine_hours": 4.0,
+              "target_sunshine_hours": 8.0
+            }
+          }
+        ]
       }
     ]
   }
   
-  Crop Entity Fields:
-    - crop_id (required): Stable identifier (e.g., "rice", "tomato")
-    - name (required): Human-readable crop name
-    - area_per_unit (required): Area occupied per unit in m²
-    - variety (optional): Variety/cultivar label (e.g., "Koshihikari")
-    - revenue_per_area (optional): Revenue per square meter (¥/m²)
-    - max_revenue (optional): Maximum revenue constraint (¥) - represents market limits
-    - groups (optional): List of group identifiers for interaction rules
-    - target_area (optional): Optimization parameter - target cultivation area in m²
+  Note: Each crop entry combines crop info with its growth stage requirements.
+        You can generate individual crop profiles using 'agrr crop' command.
 
 Weather File Format (JSON):
   {
@@ -265,82 +295,76 @@ Output (JSON):
 
 Notes:
   - The algorithm uses Greedy + Local Search (Hill Climbing)
-  - Target area is optional; if not specified, optimizer will determine optimal area
-  - Weather file can be generated using 'agrr weather' command
-  - Crop requirements are auto-generated using AI if not provided via --crop-requirement-file
+  - Weather file can be generated using 'agrr weather' command with --json flag
+  - Crop profiles can be generated using 'agrr crop' command
   - Interaction rules allow modeling continuous cultivation impacts
+  - The optimizer automatically determines optimal cultivation areas for each crop
             """
         )
 
-        subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
-        optimize_parser = subparsers.add_parser(
-            "optimize", 
-            help="Optimize crop allocation across multiple fields"
-        )
-        optimize_parser.add_argument(
+        parser.add_argument(
             "--fields-file",
-            "-ff",
+            "-fs",
             required=True,
             help='Path to fields configuration file (JSON)',
         )
-        optimize_parser.add_argument(
+        parser.add_argument(
             "--crops-file",
-            "-cf",
+            "-cs",
             required=True,
             help='Path to crops configuration file (JSON)',
         )
-        optimize_parser.add_argument(
+        parser.add_argument(
             "--planning-start",
             "-s",
             required=True,
             help='Planning period start date in YYYY-MM-DD format (e.g., "2024-04-01")',
         )
-        optimize_parser.add_argument(
+        parser.add_argument(
             "--planning-end",
             "-e",
             required=True,
             help='Planning period end date in YYYY-MM-DD format (e.g., "2024-10-31")',
         )
-        optimize_parser.add_argument(
+        parser.add_argument(
             "--weather-file",
             "-w",
             required=True,
             help='Path to weather data file (JSON or CSV)',
         )
-        optimize_parser.add_argument(
+        parser.add_argument(
             "--objective",
             "-obj",
             choices=["maximize_profit", "minimize_cost"],
             default="maximize_profit",
             help="Optimization objective (default: maximize_profit)",
         )
-        optimize_parser.add_argument(
+        parser.add_argument(
             "--interaction-rules-file",
             "-irf",
             required=False,
             help='Path to interaction rules JSON file (optional, for continuous cultivation impact)',
         )
-        optimize_parser.add_argument(
+        parser.add_argument(
             "--max-time",
             "-mt",
             type=float,
             required=False,
             help="Maximum computation time in seconds (optional)",
         )
-        optimize_parser.add_argument(
+        parser.add_argument(
             "--format",
             "-fmt",
             choices=["table", "json"],
             default="table",
             help="Output format (default: table)",
         )
-        optimize_parser.add_argument(
+        parser.add_argument(
             "--enable-parallel",
             action="store_true",
             help="Enable parallel candidate generation for faster computation",
         )
-        optimize_parser.add_argument(
+        parser.add_argument(
             "--disable-local-search",
             action="store_true",
             help="Disable local search (greedy only)",
@@ -398,43 +422,6 @@ Notes:
         except FileNotFoundError:
             raise ValueError(f"Fields file not found: {fields_file}")
 
-    def _load_crops_from_file(self, crops_file: str) -> List[CropRequirementSpec]:
-        """Load crop requirements from JSON file.
-        
-        Args:
-            crops_file: Path to crops configuration file (JSON)
-            
-        Returns:
-            List of CropRequirementSpec objects
-            
-        Raises:
-            ValueError: If file format is invalid
-        """
-        try:
-            with open(crops_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            
-            if 'crops' not in data:
-                raise ValueError("Crops file must contain 'crops' array")
-            
-            crop_requirements = []
-            for crop_data in data['crops']:
-                if 'crop_id' not in crop_data:
-                    raise ValueError("Each crop must have 'crop_id'")
-                
-                crop_req = CropRequirementSpec(
-                    crop_id=crop_data['crop_id'],
-                    variety=crop_data.get('variety'),
-                    target_area=crop_data.get('target_area'),
-                    crop_requirement_file=crop_data.get('crop_requirement_file'),
-                )
-                crop_requirements.append(crop_req)
-            
-            return crop_requirements
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON in crops file: {str(e)}")
-        except FileNotFoundError:
-            raise ValueError(f"Crops file not found: {crops_file}")
 
     async def _load_interaction_rules(self, interaction_rules_file: str) -> List[InteractionRule]:
         """Load interaction rules from file.
@@ -470,13 +457,6 @@ Notes:
             print(f'Error loading fields: {str(e)}')
             return
 
-        # Load crops from file
-        try:
-            crop_requirements = self._load_crops_from_file(args.crops_file)
-        except ValueError as e:
-            print(f'Error loading crops: {str(e)}')
-            return
-
         # Load interaction rules if specified
         if getattr(args, 'interaction_rules_file', None):
             try:
@@ -496,11 +476,9 @@ Notes:
             config.enable_parallel_candidate_generation = True
         
         # Create request DTO
-        # Note: weather_data_file is NOT passed to DTO
-        # It is configured at Gateway initialization (done at CLI startup)
+        # Note: crops are loaded by Interactor via CropProfileGateway
         request = MultiFieldCropAllocationRequestDTO(
             field_ids=field_ids,
-            crop_requirements=crop_requirements,
             planning_period_start=planning_start,
             planning_period_end=planning_end,
             optimization_objective=args.objective,
@@ -527,12 +505,6 @@ Notes:
         parser = self.create_argument_parser()
         parsed_args = parser.parse_args(args)
 
-        if not parsed_args.command:
-            parser.print_help()
-            return
-
-        if parsed_args.command == "optimize":
-            await self.handle_optimize_command(parsed_args)
-        else:
-            parser.print_help()
+        # No subcommands - directly handle the optimize command
+        await self.handle_optimize_command(parsed_args)
 

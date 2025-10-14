@@ -14,23 +14,23 @@ Expected request payload (via DTO, referenced under TYPE_CHECKING):
 
 The interactor should validate inputs, call the gateway(s) that drive the LLM
 to infer thresholds for TemperatureProfile, SunshineProfile, and ThermalRequirement
-per stage, and return those via an output port as a `CropRequirementAggregate`.
+per stage, and return those via an output port as a `CropProfile`.
 """
 
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # avoid runtime dependency until DTO is introduced
-    from agrr_core.usecase.dto.crop_requirement_craft_request_dto import (
-        CropRequirementCraftRequestDTO,
+    from agrr_core.usecase.dto.crop_profile_craft_request_dto import (
+        CropProfileCraftRequestDTO,
     )
 
 
-class CropRequirementCraftInputPort(ABC):
+class CropProfileCraftInputPort(ABC):
     """Interface for crafting crop stage requirement profiles (LLM-backed)."""
 
     @abstractmethod
-    async def execute(self, request: "CropRequirementCraftRequestDTO") -> None:
+    async def execute(self, request: "CropProfileCraftRequestDTO") -> None:
         """Craft stage requirements for the specified crop.
 
         The implementing interactor should pass the result to its output port.

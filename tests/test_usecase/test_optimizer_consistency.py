@@ -64,12 +64,12 @@ class TestAllOptimizersUseSameDefaultObjective:
     
     def test_growth_period_uses_default_objective(
         self,
-        gateway_crop_requirement,
+        gateway_crop_profile,
         gateway_weather,
     ):
         """GrowthPeriodOptimizeInteractor uses DEFAULT_OBJECTIVE."""
         interactor = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=gateway_crop_requirement,
+            crop_profile_gateway=gateway_crop_profile,
             weather_gateway=gateway_weather,
         )
         
@@ -90,13 +90,13 @@ class TestUnifiedObjectiveFunctionSignature:
     
     def test_all_optimizers_calculate_same_profit(
         self,
-        gateway_crop_requirement,
+        gateway_crop_profile,
         gateway_weather,
     ):
         """All optimizers MUST calculate the same objective value from same metrics."""
         # Create optimizers
         period_optimizer = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=gateway_crop_requirement,
+            crop_profile_gateway=gateway_crop_profile,
             weather_gateway=gateway_weather,
         )
         schedule_optimizer = OptimizationIntermediateResultScheduleInteractor()
@@ -122,13 +122,13 @@ class TestUnifiedObjectiveFunctionSignature:
     
     def test_all_optimizers_handle_cost_only_same_way(
         self,
-        gateway_crop_requirement,
+        gateway_crop_profile,
         gateway_weather,
     ):
         """All optimizers MUST handle cost-only case the same way."""
         # Create optimizers
         period_optimizer = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=gateway_crop_requirement,
+            crop_profile_gateway=gateway_crop_profile,
             weather_gateway=gateway_weather,
         )
         schedule_optimizer = OptimizationIntermediateResultScheduleInteractor()

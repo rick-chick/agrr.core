@@ -11,15 +11,15 @@ from pathlib import Path
 import pytest
 
 from agrr_core.entity.entities.crop_entity import Crop
-from agrr_core.entity.entities.crop_requirement_aggregate_entity import CropRequirementAggregate
+from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.entity.entities.growth_stage_entity import GrowthStage
 from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
 from agrr_core.entity.entities.temperature_profile_entity import TemperatureProfile
 from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
-from agrr_core.adapter.mappers.crop_requirement_mapper import CropRequirementMapper
-from agrr_core.adapter.gateways.crop_requirement_gateway_impl import CropRequirementGatewayImpl
-from agrr_core.adapter.repositories.crop_requirement_file_repository import CropRequirementFileRepository
+from agrr_core.adapter.mappers.crop_profile_mapper import CropProfileMapper
+from agrr_core.adapter.gateways.crop_profile_gateway_impl import CropProfileGatewayImpl
+from agrr_core.adapter.repositories.crop_profile_file_repository import CropProfileFileRepository
 from agrr_core.framework.repositories.file_repository import FileRepository
 
 
@@ -53,10 +53,10 @@ class TestCropGroupsDataFlowThroughMapper:
         thermal = ThermalRequirement(required_gdd=2000.0)
         stage_req = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
         
-        aggregate = CropRequirementAggregate(crop=crop, stage_requirements=[stage_req])
+        aggregate = CropProfile(crop=crop, stage_requirements=[stage_req])
         
         # Adapter layer: Convert to payload using Mapper
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         # Verify groups field is present and correct in payload
         assert "groups" in payload
@@ -81,8 +81,8 @@ class TestCropGroupsDataFlowThroughMapper:
         thermal = ThermalRequirement(2000.0)
         stage_req = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
         
-        aggregate = CropRequirementAggregate(crop=crop, stage_requirements=[stage_req])
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        aggregate = CropProfile(crop=crop, stage_requirements=[stage_req])
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         # groups should be None (not missing)
         assert "groups" in payload
@@ -103,8 +103,8 @@ class TestCropGroupsDataFlowThroughMapper:
         thermal = ThermalRequirement(2000.0)
         stage_req = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
         
-        aggregate = CropRequirementAggregate(crop=crop, stage_requirements=[stage_req])
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        aggregate = CropProfile(crop=crop, stage_requirements=[stage_req])
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         assert "groups" in payload
         assert payload["groups"] == []
@@ -163,13 +163,13 @@ class TestCropGroupsDataFlowThroughGateway:
         try:
             # Load using Gateway
             file_repository = FileRepository()
-            crop_requirement_repository = CropRequirementFileRepository(
+            crop_profile_repository = CropProfileFileRepository(
                 file_repository=file_repository,
                 file_path=str(temp_file)
             )
-            gateway = CropRequirementGatewayImpl(
+            gateway = CropProfileGatewayImpl(
                 llm_client=None,
-                crop_requirement_repository=crop_requirement_repository
+                profile_repository=crop_profile_repository
             )
             
             aggregate = await gateway.get()
@@ -233,13 +233,13 @@ class TestCropGroupsDataFlowThroughGateway:
         
         try:
             file_repository = FileRepository()
-            crop_requirement_repository = CropRequirementFileRepository(
+            crop_profile_repository = CropProfileFileRepository(
                 file_repository=file_repository,
                 file_path=str(temp_file)
             )
-            gateway = CropRequirementGatewayImpl(
+            gateway = CropProfileGatewayImpl(
                 llm_client=None,
-                crop_requirement_repository=crop_requirement_repository
+                profile_repository=crop_profile_repository
             )
             
             aggregate = await gateway.get()
@@ -310,13 +310,13 @@ class TestCropGroupsDataFlowThroughGateway:
         try:
             # 4. Load back using Gateway
             file_repository = FileRepository()
-            crop_requirement_repository = CropRequirementFileRepository(
+            crop_profile_repository = CropProfileFileRepository(
                 file_repository=file_repository,
                 file_path=str(temp_file)
             )
-            gateway = CropRequirementGatewayImpl(
+            gateway = CropProfileGatewayImpl(
                 llm_client=None,
-                crop_requirement_repository=crop_requirement_repository
+                profile_repository=crop_profile_repository
             )
             
             loaded_aggregate = await gateway.get()
@@ -355,8 +355,8 @@ class TestCropGroupsJSONSerializationFormat:
         thermal = ThermalRequirement(1500.0)
         stage_req = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
         
-        aggregate = CropRequirementAggregate(crop=crop, stage_requirements=[stage_req])
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        aggregate = CropProfile(crop=crop, stage_requirements=[stage_req])
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         # Serialize to JSON string
         json_str = json.dumps(payload, ensure_ascii=False)
@@ -383,8 +383,8 @@ class TestCropGroupsJSONSerializationFormat:
         thermal = ThermalRequirement(2000.0)
         stage_req = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
         
-        aggregate = CropRequirementAggregate(crop=crop, stage_requirements=[stage_req])
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        aggregate = CropProfile(crop=crop, stage_requirements=[stage_req])
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         json_str = json.dumps(payload, ensure_ascii=False)
         parsed = json.loads(json_str)
@@ -407,8 +407,8 @@ class TestCropGroupsJSONSerializationFormat:
         thermal = ThermalRequirement(2000.0)
         stage_req = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
         
-        aggregate = CropRequirementAggregate(crop=crop, stage_requirements=[stage_req])
-        payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+        aggregate = CropProfile(crop=crop, stage_requirements=[stage_req])
+        payload = CropProfileMapper.aggregate_to_payload(aggregate)
         
         json_str = json.dumps(payload, ensure_ascii=False)
         parsed = json.loads(json_str)
@@ -468,8 +468,8 @@ class TestRealWorldCropGroupsScenarios:
             thermal = ThermalRequirement(2000.0)
             stage_req = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
             
-            aggregate = CropRequirementAggregate(crop=crop, stage_requirements=[stage_req])
-            payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+            aggregate = CropProfile(crop=crop, stage_requirements=[stage_req])
+            payload = CropProfileMapper.aggregate_to_payload(aggregate)
             
             assert payload["groups"] == crop_data.get("groups")
     

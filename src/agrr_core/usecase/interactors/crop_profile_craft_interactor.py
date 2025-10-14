@@ -1,14 +1,14 @@
-"""Use case interactor for crafting crop stage requirements via LLM gateway."""
+"""Use case interactor for crafting crop profiles via LLM gateway."""
 
-from agrr_core.usecase.ports.input.crop_requirement_craft_input_port import (
-    CropRequirementCraftInputPort,
+from agrr_core.usecase.ports.input.crop_profile_craft_input_port import (
+    CropProfileCraftInputPort,
 )
-from agrr_core.usecase.gateways.crop_requirement_gateway import CropRequirementGateway
-from agrr_core.usecase.ports.output.crop_requirement_craft_output_port import (
-    CropRequirementCraftOutputPort,
+from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
+from agrr_core.usecase.ports.output.crop_profile_craft_output_port import (
+    CropProfileCraftOutputPort,
 )
-from agrr_core.usecase.dto.crop_requirement_craft_request_dto import (
-    CropRequirementCraftRequestDTO,
+from agrr_core.usecase.dto.crop_profile_craft_request_dto import (
+    CropProfileCraftRequestDTO,
 )
 from agrr_core.entity import (
     Crop,
@@ -18,22 +18,20 @@ from agrr_core.entity import (
     ThermalRequirement,
     StageRequirement,
 )
-from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
-    CropRequirementAggregate,
-)
+from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.adapter.mappers.llm_response_normalizer import LLMResponseNormalizer
-from agrr_core.adapter.mappers.crop_requirement_mapper import CropRequirementMapper
+from agrr_core.adapter.mappers.crop_profile_mapper import CropProfileMapper
 
 
-class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
-    """Interactor: orchestrates gateway and presenter to craft requirements."""
+class CropProfileCraftInteractor(CropProfileCraftInputPort):
+    """Interactor: orchestrates gateway and presenter to craft crop profiles."""
 
-    def __init__(self, gateway: CropRequirementGateway, presenter: CropRequirementCraftOutputPort):
+    def __init__(self, gateway: CropProfileGateway, presenter: CropProfileCraftOutputPort):
         self.gateway = gateway
         self.presenter = presenter
 
-    async def execute(self, request: CropRequirementCraftRequestDTO) -> dict:
-        """Craft crop stage requirements from a minimal crop query.
+    async def execute(self, request: CropProfileCraftRequestDTO) -> dict:
+        """Craft crop profile from a minimal crop query.
         
         This method orchestrates the 3-step flow:
         1. Extract crop variety from query
@@ -123,14 +121,15 @@ class CropRequirementCraftInteractor(CropRequirementCraftInputPort):
                 )
                 stage_requirements.append(stage_req)
             
-            # Build aggregate
-            aggregate = CropRequirementAggregate(crop=crop, stage_requirements=stage_requirements)
+            # Build profile
+            profile = CropProfile(crop=crop, stage_requirements=stage_requirements)
             
-            # Convert aggregate to payload (Phase 2: use Mapper)
-            payload = CropRequirementMapper.aggregate_to_payload(aggregate)
+            # Convert profile to standard file format (directly usable by progress/optimize-period)
+            crop_profile_data = CropProfileMapper.to_crop_profile_format(profile)
             
-            return self.presenter.format_success(payload)
+            return crop_profile_data
         except Exception as e:
             return self.presenter.format_error(f"Crafting failed: {e}")
+
 
 

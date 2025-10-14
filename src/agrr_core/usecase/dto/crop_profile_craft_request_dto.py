@@ -9,7 +9,7 @@ from typing import Optional
 
 
 @dataclass
-class CropRequirementCraftRequestDTO:
+class CropProfileCraftRequestDTO:
     """DTO for crafting crop stage requirement profiles via LLM."""
 
     crop_query: str

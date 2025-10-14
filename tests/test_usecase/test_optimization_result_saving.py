@@ -5,8 +5,8 @@ from datetime import datetime
 from unittest.mock import AsyncMock
 
 from agrr_core.entity.entities.crop_entity import Crop
-from agrr_core.entity.entities.crop_requirement_aggregate_entity import (
-    CropRequirementAggregate,
+from agrr_core.entity.entities.crop_profile_entity import (
+    CropProfile,
 )
 from agrr_core.entity.entities.growth_stage_entity import GrowthStage
 from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
@@ -30,7 +30,7 @@ class TestOptimizationResultSaving:
     async def test_saves_intermediate_results_when_gateway_provided(self):
         """Test that intermediate results are saved when gateway is provided."""
         # Setup mocks
-        gateway_crop_requirement = AsyncMock()
+        gateway_crop_profile = AsyncMock()
         mock_weather_gateway = AsyncMock()
         mock_optimization_result_gateway = AsyncMock()
 
@@ -55,7 +55,7 @@ class TestOptimizationResultSaving:
             thermal=ThermalRequirement(required_gdd=100.0),
         )
 
-        crop_requirement = CropRequirementAggregate(
+        crop_profile = CropProfile(
             crop=crop, stage_requirements=[stage_req]
         )
 
@@ -70,12 +70,12 @@ class TestOptimizationResultSaving:
             for day in range(1, 21)
         ]
 
-        gateway_crop_requirement.get.return_value = crop_requirement
+        gateway_crop_profile.get.return_value = crop_profile
         mock_weather_gateway.get.return_value = weather_data
 
         # Create interactor with optimization result gateway
         interactor = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=gateway_crop_requirement,
+            crop_profile_gateway=gateway_crop_profile,
             weather_gateway=mock_weather_gateway,
             optimization_result_gateway=mock_optimization_result_gateway,
         )
@@ -124,7 +124,7 @@ class TestOptimizationResultSaving:
     async def test_does_not_save_when_gateway_not_provided(self):
         """Test that no saving occurs when gateway is not provided."""
         # Setup mocks
-        gateway_crop_requirement = AsyncMock()
+        gateway_crop_profile = AsyncMock()
         mock_weather_gateway = AsyncMock()
 
         # Setup crop requirements (total 100 GDD)
@@ -148,7 +148,7 @@ class TestOptimizationResultSaving:
             thermal=ThermalRequirement(required_gdd=100.0),
         )
 
-        crop_requirement = CropRequirementAggregate(
+        crop_profile = CropProfile(
             crop=crop, stage_requirements=[stage_req]
         )
 
@@ -163,12 +163,12 @@ class TestOptimizationResultSaving:
             for day in range(1, 21)
         ]
 
-        gateway_crop_requirement.get.return_value = crop_requirement
+        gateway_crop_profile.get.return_value = crop_profile
         mock_weather_gateway.get.return_value = weather_data
 
         # Create interactor without optimization result gateway
         interactor = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=gateway_crop_requirement,
+            crop_profile_gateway=gateway_crop_profile,
             weather_gateway=mock_weather_gateway,
             optimization_result_gateway=None,
         )
@@ -199,7 +199,7 @@ class TestOptimizationResultSaving:
     async def test_saved_results_contain_accumulated_gdd(self):
         """Test that saved results contain accurate accumulated GDD."""
         # Setup mocks
-        gateway_crop_requirement = AsyncMock()
+        gateway_crop_profile = AsyncMock()
         mock_weather_gateway = AsyncMock()
         mock_optimization_result_gateway = AsyncMock()
 
@@ -224,7 +224,7 @@ class TestOptimizationResultSaving:
             thermal=ThermalRequirement(required_gdd=100.0),
         )
 
-        crop_requirement = CropRequirementAggregate(
+        crop_profile = CropProfile(
             crop=crop, stage_requirements=[stage_req]
         )
 
@@ -239,12 +239,12 @@ class TestOptimizationResultSaving:
             for day in range(1, 21)
         ]
 
-        gateway_crop_requirement.get.return_value = crop_requirement
+        gateway_crop_profile.get.return_value = crop_profile
         mock_weather_gateway.get.return_value = weather_data
 
         # Create interactor with optimization result gateway
         interactor = GrowthPeriodOptimizeInteractor(
-            crop_requirement_gateway=gateway_crop_requirement,
+            crop_profile_gateway=gateway_crop_profile,
             weather_gateway=mock_weather_gateway,
             optimization_result_gateway=mock_optimization_result_gateway,
         )

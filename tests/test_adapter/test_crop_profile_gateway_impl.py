@@ -1,19 +1,19 @@
-"""Tests for CropRequirementGatewayImpl."""
+"""Tests for CropProfileGatewayImpl."""
 
 import pytest
 from unittest.mock import Mock, AsyncMock
 
-from agrr_core.adapter.gateways.crop_requirement_gateway_impl import CropRequirementGatewayImpl
-from agrr_core.entity.entities.crop_requirement_aggregate_entity import CropRequirementAggregate
+from agrr_core.adapter.gateways.crop_profile_gateway_impl import CropProfileGatewayImpl
+from agrr_core.entity.entities.crop_profile_entity import CropProfile
 
 
-class TestCropRequirementGatewayImpl:
-    """Test cases for CropRequirementGatewayImpl."""
+class TestCropProfileGatewayImpl:
+    """Test cases for CropProfileGatewayImpl."""
     
     def test_init_with_llm_client(self):
         """Test initialization with LLM client."""
         mock_llm = Mock()
-        gateway = CropRequirementGatewayImpl(llm_client=mock_llm)
+        gateway = CropProfileGatewayImpl(llm_client=mock_llm)
         assert gateway.llm_client is mock_llm
         assert gateway.llm_repo is not None
     
@@ -25,7 +25,7 @@ class TestCropRequirementGatewayImpl:
             "data": {"crop_name": "トマト", "variety": "アイコ"}
         })
         
-        gateway = CropRequirementGatewayImpl(llm_client=mock_llm)
+        gateway = CropProfileGatewayImpl(llm_client=mock_llm)
         result = await gateway.extract_crop_variety("トマト アイコ")
         
         assert result["crop_name"] == "トマト"
@@ -43,7 +43,7 @@ class TestCropRequirementGatewayImpl:
             }
         })
         
-        gateway = CropRequirementGatewayImpl(llm_client=mock_llm)
+        gateway = CropProfileGatewayImpl(llm_client=mock_llm)
         result = await gateway.define_growth_stages("トマト", "アイコ")
         
         assert result["crop_info"]["name"] == "トマト"
@@ -62,7 +62,7 @@ class TestCropRequirementGatewayImpl:
             }
         })
         
-        gateway = CropRequirementGatewayImpl(llm_client=mock_llm)
+        gateway = CropProfileGatewayImpl(llm_client=mock_llm)
         result = await gateway.research_stage_requirements("トマト", "アイコ", "生育期", "test description")
         
         assert result["temperature"]["base_temperature"] == 10.0
@@ -78,7 +78,7 @@ class TestCropRequirementGatewayImpl:
             "data": {"area_per_unit": 0.5, "revenue_per_area": 3000.0}
         })
         
-        gateway = CropRequirementGatewayImpl(llm_client=mock_llm)
+        gateway = CropProfileGatewayImpl(llm_client=mock_llm)
         result = await gateway.extract_crop_economics("トマト", "アイコ")
         
         assert result["area_per_unit"] == 0.5
@@ -93,7 +93,7 @@ class TestCropRequirementGatewayImpl:
             "data": {"family_ja": "ナス科", "family_scientific": "Solanaceae"}
         })
         
-        gateway = CropRequirementGatewayImpl(llm_client=mock_llm)
+        gateway = CropProfileGatewayImpl(llm_client=mock_llm)
         result = await gateway.extract_crop_family("トマト", "アイコ")
         
         assert result["family_ja"] == "ナス科"
@@ -103,7 +103,7 @@ class TestCropRequirementGatewayImpl:
     @pytest.mark.asyncio
     async def test_extract_crop_variety_without_llm_client(self):
         """Test methods without LLM client (should raise error)."""
-        gateway = CropRequirementGatewayImpl()
+        gateway = CropProfileGatewayImpl()
         
         with pytest.raises(ValueError, match="LLM client not provided"):
             await gateway.extract_crop_variety("トマト")
@@ -113,11 +113,11 @@ class TestCropRequirementGatewayImpl:
         """Test get method with repository configured."""
         # Mock repository
         mock_repo = Mock()
-        mock_aggregate = Mock(spec=CropRequirementAggregate)
+        mock_aggregate = Mock(spec=CropProfile)
         mock_repo.get = AsyncMock(return_value=mock_aggregate)
         
         # Setup gateway with repository
-        gateway = CropRequirementGatewayImpl(crop_requirement_repository=mock_repo)
+        gateway = CropProfileGatewayImpl(profile_repository=mock_repo)
         
         # Execute
         result = await gateway.get()
@@ -129,8 +129,8 @@ class TestCropRequirementGatewayImpl:
     @pytest.mark.asyncio
     async def test_get_without_repository(self):
         """Test get method without repository (should raise error)."""
-        gateway = CropRequirementGatewayImpl()
+        gateway = CropProfileGatewayImpl(llm_client=None, profile_repository=None)
         
         # Execute and verify exception
-        with pytest.raises(ValueError, match="CropRequirementRepository not provided"):
+        with pytest.raises(ValueError, match="Profile repository not provided"):
             await gateway.get()

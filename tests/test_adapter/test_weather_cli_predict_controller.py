@@ -36,9 +36,11 @@ class TestWeatherCliPredictController:
         # Check parser attributes
         assert parser.description == "Weather Prediction CLI - Predict future weather using ARIMA time series model"
         
-        # Check that subcommands exist
+        # Check that required arguments exist (no subcommands anymore)
         actions = [action.dest for action in parser._actions]
-        assert 'command' in actions
+        assert 'input' in actions
+        assert 'output' in actions
+        assert 'days' in actions
     
     # ===== Input Validation Tests =====
     
@@ -110,24 +112,24 @@ class TestWeatherCliPredictController:
     
     @pytest.mark.asyncio
     async def test_run_no_command(self):
-        """Test run method with no command provided."""
-        with patch('sys.stdout'):
+        """Test run method with no command (missing required args) should exit."""
+        with pytest.raises(SystemExit):
             await self.controller.run([])
     
     @pytest.mark.asyncio
     async def test_run_predict_file_command(self):
-        """Test run method with predict command."""
+        """Test run method with predict command (no subcommand needed)."""
         predictions = [Forecast(date=datetime(2024, 2, 1), predicted_value=17.0)]
         self.controller.predict_interactor.execute = AsyncMock(return_value=predictions)
         
-        args = ['predict', '--input', 'input.json', '--output', 'output.json', '--days', '7']
+        args = ['--input', 'input.json', '--output', 'output.json', '--days', '7']
         
         await self.controller.run(args)
         
         self.controller.predict_interactor.execute.assert_called_once()
     
     @pytest.mark.asyncio
-    async def test_run_unknown_command(self):
-        """Test run method with unknown command."""
+    async def test_run_unknown_argument(self):
+        """Test run method with unknown argument."""
         with pytest.raises(SystemExit):
-            await self.controller.run(['unknown-command'])
+            await self.controller.run(['--unknown-arg', 'value'])

@@ -21,6 +21,16 @@ class PredictionGatewayImpl(PredictionGateway):
         self.file_repository = file_repository
         self.prediction_service = prediction_service
     
+    async def read_historical_data(self, source: str) -> List[WeatherData]:
+        """Read historical weather data from source file.
+        
+        Args:
+            source: Path to historical weather data file
+            
+        Returns:
+            List of WeatherData entities
+        """
+        return await self.file_repository.read_weather_data_from_file(source)
     
     async def create(self, predictions: List[Forecast], destination: str) -> None:
         """Create predictions at destination."""

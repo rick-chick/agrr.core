@@ -195,8 +195,8 @@ def main() -> None:
         
         # Check subcommands
         if args[0] == 'predict':
-            # Run ARIMA prediction CLI
-            asyncio.run(container.run_prediction_cli(args))
+            # Run ARIMA prediction CLI (skip 'predict' command itself)
+            asyncio.run(container.run_prediction_cli(args[1:]))
         elif args and args[0] == 'crop':
             # Run crop profile craft CLI (direct wiring per project rules)
             llm_client = FrameworkLLMClient()

@@ -100,71 +100,22 @@ Notes:
             """
         )
         
-        # Subcommands
-        subparsers = parser.add_subparsers(dest='command', help='Available commands')
-        
-        # Predict command (renamed from predict-file)
-        predict_parser = subparsers.add_parser(
-            'predict', 
-            help='Predict future weather using ARIMA model from historical data',
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog="""
-Examples:
-  # Get historical data and predict 30 days ahead
-  agrr weather --location 35.6762,139.6503 --days 90 --json > historical.json
-  agrr predict --input historical.json --output predictions.json --days 30
-  
-  # Predict 14 days ahead from existing data
-  agrr predict --input weather_data.json --output forecast.json --days 14
-
-Input File Format (JSON):
-  {
-    "data": [
-      {"time": "2024-10-01", "temperature_2m_max": 25.5, "temperature_2m_min": 15.2},
-      // ... minimum 30 days (90+ days recommended)
-    ]
-  }
-
-Output Format (JSON):
-  {
-    "predictions": [
-      {
-        "date": "2024-11-01",
-        "predicted_value": 18.5,
-        "confidence_lower": 16.2,
-        "confidence_upper": 20.8
-      }
-    ],
-    "model_type": "ARIMA"
-  }
-
-Model Details:
-  - Algorithm: ARIMA (AutoRegressive Integrated Moving Average)
-  - Seasonal patterns: Automatic detection and modeling
-  - Confidence intervals: 95% prediction intervals
-  - Best for: 7-30 day predictions
-  - Minimum data: 30 days (90+ recommended)
-
-Note: Statistical model based on historical patterns. Accuracy decreases for longer periods.
-            """
-        )
-        
         # Input file argument (required)
-        predict_parser.add_argument(
+        parser.add_argument(
             '--input', '-i',
             required=True,
             help='Path to historical weather data file (JSON or CSV, minimum 30 days)'
         )
         
         # Output file argument (required)
-        predict_parser.add_argument(
+        parser.add_argument(
             '--output', '-o',
             required=True,
             help='Path to save prediction results (JSON or CSV format)'
         )
         
         # Prediction days argument
-        predict_parser.add_argument(
+        parser.add_argument(
             '--days', '-d',
             type=int,
             default=7,
@@ -204,11 +155,5 @@ Note: Statistical model based on historical patterns. Accuracy decreases for lon
         parser = self.create_argument_parser()
         parsed_args = parser.parse_args(args)
         
-        if not parsed_args.command:
-            parser.print_help()
-            return
-        
-        if parsed_args.command == 'predict':
-            await self.handle_predict_command(parsed_args)
-        else:
-            parser.print_help()
+        # Execute predict command directly (no subcommand needed)
+        await self.handle_predict_command(parsed_args)

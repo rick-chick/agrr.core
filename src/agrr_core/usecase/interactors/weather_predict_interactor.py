@@ -49,8 +49,8 @@ class WeatherPredictInteractor:
         if not WeatherValidator.validate_destination_format(output_destination):
             raise ValueError("Invalid output destination format")
         
-        # Get weather data
-        historical_data = await self.weather_gateway.get(input_source)
+        # Get weather data from input source
+        historical_data = await self.prediction_gateway.read_historical_data(input_source)
         
         # Validate weather data quality with detailed error information
         is_valid, error_message = WeatherValidator.validate_weather_data_detailed(historical_data)

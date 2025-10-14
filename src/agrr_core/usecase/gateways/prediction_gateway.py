@@ -11,6 +11,18 @@ class PredictionGateway(ABC):
     """Gateway interface for prediction domain operations."""
     
     @abstractmethod
+    async def read_historical_data(self, source: str) -> List[WeatherData]:
+        """Read historical weather data from source.
+        
+        Args:
+            source: Path to historical weather data file
+            
+        Returns:
+            List of WeatherData entities
+        """
+        pass
+    
+    @abstractmethod
     async def create(self, predictions: List[Forecast], destination: str) -> None:
         """Create predictions at destination."""
         pass

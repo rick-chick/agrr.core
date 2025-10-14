@@ -83,23 +83,46 @@ Output Format (JSON):
   }
 
 How it works:
-  1. Reads historical weather data from input file (minimum 30 days)
-  2. Applies ARIMA time series model with automatic stationarity checking
+  1. Reads historical weather data from input file
+  2. Applies selected prediction model (ARIMA or LightGBM)
   3. Generates predictions with 95% confidence intervals
   4. Saves predictions to output file
 
 Model Details:
-  - Algorithm: ARIMA (AutoRegressive Integrated Moving Average)
-  - Includes seasonal components for annual patterns
-  - Automatic fallback to simpler model if needed
-  - Best for: 7-30 day predictions
-  - Minimum data: 30 days (90+ days recommended for better accuracy)
+
+  ARIMA (AutoRegressive Integrated Moving Average):
+    - Statistical time series model
+    - Best for: Short-term predictions (7-90 days)
+    - Minimum data: 30 days
+    - Recommended data: 90+ days
+    - Accuracy: MAE ~1.5°C (30 days)
+    - Includes seasonal components
+
+  LightGBM (Light Gradient Boosting Machine):
+    - Machine learning model with 50+ features
+    - Best for: Medium to long-term (90-365 days)
+    - Minimum data: 90 days
+    - Recommended data: 365+ days (multi-year preferred)
+    - Accuracy: MAE ~2.2°C (90-365 days)
+    - Uses climatological approach (past same-period data)
+    - Higher accuracy for long-term predictions
+
+  Ensemble (Future):
+    - Combines ARIMA + LightGBM
+    - Expected accuracy: Best of both models
+    - Currently under development
+
+Model Selection Guide:
+  - Short-term (7-30 days): Use ARIMA
+  - Medium-term (30-90 days): Either model works
+  - Long-term (90-365 days): Use LightGBM
+  - Very long-term (365+ days): Use LightGBM with multi-year data
 
 Notes:
-  - This is a statistical model, not real-time forecast
-  - Accuracy decreases for longer prediction periods
+  - These are statistical/ML models, not real-time forecasts
+  - LightGBM uses historical climate patterns for long-term prediction
+  - For crop planning (1+ year), use LightGBM with 20 years of historical data
   - Data quality significantly affects prediction accuracy
-  - Currently predicts temperature (extensible to other metrics)
             """
         )
         

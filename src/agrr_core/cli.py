@@ -39,7 +39,7 @@ Available Commands:
   crop              Get crop growth profiles using AI
   progress          Calculate crop growth progress based on weather data
   optimize          Optimization tools (period, allocate)
-  predict           Predict future weather using ARIMA time series model
+  predict           Predict future weather using ML models (ARIMA, LightGBM)
 
 Examples:
   # Get historical weather data for Tokyo (last 7 days) - OpenMeteo
@@ -76,9 +76,13 @@ Examples:
     --planning-start 2024-04-01 --planning-end 2024-10-31 \\
     --weather-file weather.json
 
-  # Predict future weather with ARIMA model
+  # Predict future weather with ARIMA model (short-term, 30-90 days)
   agrr weather --location 35.6762,139.6503 --days 90 --json > historical.json
   agrr predict --input historical.json --output predictions.json --days 30
+  
+  # Predict with LightGBM model (long-term, up to 1 year, requires 90+ days data)
+  agrr weather --location 35.6762,139.6503 --days 365 --data-source jma --json > historical_20y.json
+  agrr predict --input historical_20y.json --output predictions.json --days 365 --model lightgbm
 
 For detailed help on each command:
   agrr <command> --help

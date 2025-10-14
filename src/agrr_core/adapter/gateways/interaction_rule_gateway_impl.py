@@ -7,6 +7,7 @@ from agrr_core.usecase.gateways.interaction_rule_gateway import InteractionRuleG
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.entity.value_objects.rule_type import RuleType
 from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
+from agrr_core.adapter.interfaces.interaction_rule_repository_interface import InteractionRuleRepositoryInterface
 from agrr_core.entity.exceptions.file_error import FileError
 
 
@@ -17,7 +18,7 @@ class InteractionRuleGatewayImpl(InteractionRuleGateway):
     not specific implementations (file, SQL, memory, etc.).
     """
     
-    def __init__(self, interaction_rule_repository):
+    def __init__(self, interaction_rule_repository: InteractionRuleRepositoryInterface):
         """Initialize with interaction rule repository abstraction.
         
         Args:

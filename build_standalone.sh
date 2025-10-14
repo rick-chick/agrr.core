@@ -70,6 +70,10 @@ $PYTHON_CMD -m PyInstaller \
     --collect-all agrr_core \
     --add-data "prompts:prompts" \
     --paths src \
+    --exclude-module matplotlib \
+    --exclude-module pytest \
+    --exclude-module pygments \
+    --exclude-module py \
     src/agrr_core/cli.py
 
 # Note: Python 3.12 with shared library is required for PyInstaller and LightGBM

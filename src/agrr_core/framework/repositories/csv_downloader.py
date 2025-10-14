@@ -6,7 +6,7 @@ from io import StringIO
 from typing import Optional
 
 from agrr_core.entity.exceptions.csv_download_error import CsvDownloadError
-from agrr_core.adapter.interfaces.csv_service_interface import CsvServiceInterface
+from agrr_core.framework.interfaces.csv_service_interface import CsvServiceInterface
 
 
 class CsvDownloader(CsvServiceInterface):

@@ -8,6 +8,9 @@ when the application terminates.
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 
+from agrr_core.adapter.interfaces.optimization_result_repository_interface import (
+    OptimizationResultRepositoryInterface,
+)
 from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
@@ -23,7 +26,7 @@ class StoredOptimizationResult:
     total_cost: Optional[float] = None
 
 
-class InMemoryOptimizationResultRepository:
+class InMemoryOptimizationResultRepository(OptimizationResultRepositoryInterface):
     """In-memory repository for storing optimization intermediate results."""
 
     def __init__(self):

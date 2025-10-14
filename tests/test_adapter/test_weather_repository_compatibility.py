@@ -11,9 +11,9 @@ import pandas as pd
 
 from agrr_core.framework.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
 from agrr_core.framework.repositories.weather_jma_repository import WeatherJMARepository
-from agrr_core.adapter.interfaces.http_service_interface import HttpServiceInterface
-from agrr_core.adapter.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
-from agrr_core.adapter.interfaces.html_table_structures import HtmlTable, TableRow
+from agrr_core.framework.interfaces.http_service_interface import HttpServiceInterface
+from agrr_core.framework.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
+from agrr_core.framework.interfaces.html_table_structures import HtmlTable, TableRow
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 
 

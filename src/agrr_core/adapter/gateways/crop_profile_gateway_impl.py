@@ -11,10 +11,8 @@ from typing import Optional, Dict, Any, List
 
 from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 from agrr_core.entity.entities.crop_profile_entity import CropProfile
-from agrr_core.adapter.interfaces.llm_client import LLMClient
-from agrr_core.framework.repositories.crop_profile_llm_repository import (
-    CropProfileLLMRepository,
-)
+from agrr_core.adapter.interfaces.crop_profile_repository_interface import CropProfileRepositoryInterface
+from agrr_core.adapter.interfaces.crop_profile_llm_repository_interface import CropProfileLLMRepositoryInterface
 
 
 class CropProfileGatewayImpl(CropProfileGateway):
@@ -28,18 +26,17 @@ class CropProfileGatewayImpl(CropProfileGateway):
 
     def __init__(
         self,
-        llm_client: Optional[LLMClient] = None,
-        profile_repository = None
+        llm_repository: Optional[CropProfileLLMRepositoryInterface] = None,
+        profile_repository: Optional[CropProfileRepositoryInterface] = None
     ):
-        """Initialize with optional LLM client and repository.
+        """Initialize with optional LLM repository and profile repository.
         
         Args:
-            llm_client: Optional LLM client for generation operations
+            llm_repository: Optional LLM repository for generation operations
             profile_repository: Optional repository for data retrieval operations
-                Can be CropProfileFileRepository, InMemoryCropProfileRepository, etc.
+                (CropProfileRepositoryInterface - file, memory, DB, etc.)
         """
-        self.llm_client = llm_client
-        self.llm_repo = CropProfileLLMRepository(llm_client) if llm_client else None
+        self.llm_repo = llm_repository
         self.profile_repository = profile_repository
 
     async def get_all(self) -> List[CropProfile]:

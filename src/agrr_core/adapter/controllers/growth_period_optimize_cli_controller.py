@@ -28,6 +28,7 @@ from agrr_core.usecase.dto.growth_period_optimize_response_dto import (
     OptimalGrowthPeriodResponseDTO,
 )
 from agrr_core.usecase.gateways.weather_interpolator import WeatherInterpolator
+from agrr_core.adapter.interfaces.crop_profile_repository_interface import CropProfileRepositoryInterface
 
 
 class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
@@ -38,6 +39,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
         crop_profile_gateway: CropProfileGateway,
         weather_gateway: WeatherGateway,
         presenter: GrowthPeriodOptimizeOutputPort,
+        crop_profile_repository: CropProfileRepositoryInterface,
         field: Optional['Field'] = None,
         interaction_rule_gateway: Optional[InteractionRuleGateway] = None,
         weather_interpolator: Optional[WeatherInterpolator] = None,
@@ -48,6 +50,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
             crop_profile_gateway: Gateway for crop profile operations
             weather_gateway: Gateway for weather data operations
             presenter: Presenter for output formatting
+            crop_profile_repository: Repository for loading crop profiles from files
             field: Field entity (read from field config file)
             interaction_rule_gateway: Optional gateway for loading interaction rules
             weather_interpolator: Optional interpolator for missing weather data
@@ -55,6 +58,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
         self.crop_profile_gateway = crop_profile_gateway
         self.weather_gateway = weather_gateway
         self.presenter = presenter
+        self.crop_profile_repository = crop_profile_repository
         self.field = field
         self.interaction_rule_gateway = interaction_rule_gateway
         self.weather_interpolator = weather_interpolator
@@ -282,15 +286,11 @@ Notes:
             print('Error: Field configuration not loaded. Make sure --field-file is a valid field JSON file.')
             return
         
-        # Load crop profile from file
+        # Load crop profile from repository
         try:
-            from agrr_core.framework.repositories.crop_profile_file_repository import CropProfileFileRepository
-            from agrr_core.framework.repositories.file_repository import FileRepository
-            file_repo = FileRepository()
-            profile_repo = CropProfileFileRepository(file_repository=file_repo, file_path=args.crop_file)
-            crop_profile = await profile_repo.get()
+            crop_profile = await self.crop_profile_repository.get()
         except Exception as e:
-            print(f"Error loading crop profile from {args.crop_file}: {str(e)}")
+            print(f"Error loading crop profile: {str(e)}")
             return
         
         # Note: File paths are NOT passed to Interactor

@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from abc import ABC
 
-from agrr_core.adapter.interfaces.time_series_interface import (
+from agrr_core.framework.interfaces.time_series_interface import (
     TimeSeriesInterface,
     TimeSeriesModel,
     FittedTimeSeriesModel

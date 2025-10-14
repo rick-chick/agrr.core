@@ -22,6 +22,8 @@ from agrr_core.framework.repositories.weather_file_repository import WeatherFile
 from agrr_core.framework.repositories.field_file_repository import FieldFileRepository
 from agrr_core.framework.repositories.file_repository import FileRepository
 from agrr_core.framework.repositories.inmemory_optimization_result_repository import InMemoryOptimizationResultRepository
+from agrr_core.framework.repositories.inmemory_crop_profile_repository import InMemoryCropProfileRepository
+from agrr_core.framework.repositories.crop_profile_llm_repository import CropProfileLLMRepository
 from agrr_core.adapter.services.weather_linear_interpolator import WeatherLinearInterpolator
 
 
@@ -204,7 +206,8 @@ def main() -> None:
         elif args and args[0] == 'crop':
             # Run crop profile craft CLI (direct wiring per project rules)
             llm_client = FrameworkLLMClient()
-            gateway = CropProfileGatewayImpl(llm_client=llm_client)
+            llm_repository = CropProfileLLMRepository(llm_client=llm_client)
+            gateway = CropProfileGatewayImpl(llm_repository=llm_repository)
             presenter = CropProfileCraftPresenter()
             controller = CropCliCraftController(gateway=gateway, presenter=presenter)
             asyncio.run(controller.run(args[1:]))
@@ -374,6 +377,7 @@ For detailed help on each subcommand:
                     crop_profile_gateway=crop_profile_gateway,
                     weather_gateway=weather_gateway,
                     presenter=presenter,
+                    crop_profile_repository=crop_profile_repository,
                     field=field,
                     interaction_rule_gateway=interaction_rule_gateway,
                     weather_interpolator=weather_interpolator,
@@ -398,6 +402,10 @@ For detailed help on each subcommand:
                     crop_profile_repo = CropProfileFileRepository(file_repository=file_repository, file_path="")
                     crop_profile_gateway = CropProfileGatewayImpl(profile_repository=crop_profile_repo)
                 
+                    # Create internal crop profile gateway for growth period optimizer
+                    inmemory_crop_profile_repo = InMemoryCropProfileRepository()
+                    crop_profile_gateway_internal = CropProfileGatewayImpl(profile_repository=inmemory_crop_profile_repo)
+                
                     presenter = MultiFieldCropAllocationCliPresenter(output_format="table")
                 
                     controller = MultiFieldCropAllocationCliController(
@@ -405,6 +413,7 @@ For detailed help on each subcommand:
                         crop_gateway=crop_profile_gateway,
                         weather_gateway=weather_gateway,
                         presenter=presenter,
+                        crop_profile_gateway_internal=crop_profile_gateway_internal,
                     )
                     asyncio.run(controller.run(args[2:]))  # Skip 'optimize' and 'allocate'
                     return
@@ -495,6 +504,10 @@ For detailed help on each subcommand:
                     interaction_rule_repository=interaction_rule_repository
                 )
             
+                # Setup internal crop profile gateway for growth period optimizer
+                inmemory_crop_profile_repo = InMemoryCropProfileRepository()
+                crop_profile_gateway_internal = CropProfileGatewayImpl(profile_repository=inmemory_crop_profile_repo)
+            
                 # Setup presenter
                 presenter = MultiFieldCropAllocationCliPresenter(output_format="table")
             
@@ -504,6 +517,7 @@ For detailed help on each subcommand:
                     crop_gateway=crop_profile_gateway,
                     weather_gateway=weather_gateway,
                     presenter=presenter,
+                    crop_profile_gateway_internal=crop_profile_gateway_internal,
                     interaction_rule_gateway=interaction_rule_gateway,
                 )
                 asyncio.run(controller.run(args[2:]))  # Skip 'optimize' and 'allocate'

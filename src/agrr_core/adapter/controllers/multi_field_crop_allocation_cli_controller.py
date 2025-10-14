@@ -27,8 +27,7 @@ from agrr_core.usecase.dto.multi_field_crop_allocation_response_dto import (
 )
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
-from agrr_core.adapter.gateways.crop_profile_gateway_impl import CropProfileGatewayImpl
-from agrr_core.framework.repositories.inmemory_crop_profile_repository import InMemoryCropProfileRepository
+from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 
 
 class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
@@ -40,6 +39,7 @@ class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
         crop_gateway: CropProfileGateway,
         weather_gateway: WeatherGateway,
         presenter: MultiFieldCropAllocationOutputPort,
+        crop_profile_gateway_internal: CropProfileGateway,
         interaction_rule_gateway: Optional[InteractionRuleGateway] = None,
         config: Optional[OptimizationConfig] = None,
     ) -> None:
@@ -50,6 +50,7 @@ class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
             crop_gateway: Gateway for crop operations
             weather_gateway: Gateway for weather data operations
             presenter: Presenter for output formatting
+            crop_profile_gateway_internal: Internal gateway for crop profile operations in growth period optimization
             interaction_rule_gateway: Optional gateway for loading interaction rules
             config: Optional optimization configuration
         """
@@ -62,13 +63,6 @@ class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
         
         # Load interaction rules if gateway is provided
         self.interaction_rules: List[InteractionRule] = []
-        
-        # Create in-memory crop_profile_gateway for growth period optimizer
-        # (Controller layer instantiates Adapter/Framework implementations)
-        crop_profile_repository = InMemoryCropProfileRepository()
-        crop_profile_gateway_internal = CropProfileGatewayImpl(
-            profile_repository=crop_profile_repository
-        )
         
         # Instantiate interactor inside controller
         self.interactor = MultiFieldCropAllocationGreedyInteractor(

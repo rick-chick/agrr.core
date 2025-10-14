@@ -29,7 +29,7 @@ except ImportError:
         def __call__(data):
             return [0, 0.05, 0, {}, {}]  # Mock stationary result
 
-from agrr_core.adapter.interfaces.time_series_interface import (
+from agrr_core.framework.interfaces.time_series_interface import (
     TimeSeriesInterface, 
     TimeSeriesModel, 
     FittedTimeSeriesModel

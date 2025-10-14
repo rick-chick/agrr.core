@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional
 from urllib.parse import urljoin
 
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
-from agrr_core.adapter.interfaces.http_service_interface import HttpServiceInterface
+from agrr_core.framework.interfaces.http_service_interface import HttpServiceInterface
 
 
 class HttpClient(HttpServiceInterface):

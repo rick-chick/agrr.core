@@ -1,37 +1,30 @@
-"""Optimization result gateway implementation.
+"""Optimization result repository interface for adapter layer.
 
-This gateway implementation provides access to optimization intermediate results
-through a repository interface (e.g., InMemoryRepository).
+This interface defines the contract for optimization result data storage,
+allowing different implementations (in-memory, file-based, database, etc.).
 """
 
-from typing import List, Optional, Tuple
+from abc import ABC, abstractmethod
+from typing import List, Optional
 
-from agrr_core.adapter.interfaces.optimization_result_repository_interface import (
-    OptimizationResultRepositoryInterface,
-)
 from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
 from agrr_core.entity.entities.optimization_schedule_entity import (
     OptimizationSchedule,
 )
-from agrr_core.usecase.gateways.optimization_result_gateway import (
-    OptimizationResultGateway,
-)
 
 
-class OptimizationResultGatewayImpl(OptimizationResultGateway):
-    """Implementation of optimization result gateway."""
-
-    def __init__(self, repository: OptimizationResultRepositoryInterface):
-        """Initialize optimization result gateway.
-        
-        Args:
-            repository: Repository abstraction for optimization results
-                (OptimizationResultRepositoryInterface - memory, file, DB, etc.)
-        """
-        self.repository = repository
-
+class OptimizationResultRepositoryInterface(ABC):
+    """Abstract interface for optimization result repository.
+    
+    Implementations can be:
+    - InMemoryOptimizationResultRepository (for testing/runtime storage)
+    - FileOptimizationResultRepository (for persistent storage)
+    - DatabaseOptimizationResultRepository (for production use)
+    """
+    
+    @abstractmethod
     async def save(
         self, 
         optimization_id: str,
@@ -45,15 +38,14 @@ class OptimizationResultGatewayImpl(OptimizationResultGateway):
             results: List of intermediate results to save
             total_cost: Optional total cost metadata (used for schedules)
         """
-        await self.repository.save(optimization_id, results, total_cost)
-
+        pass
+    
+    @abstractmethod
     async def get(
         self, 
         optimization_id: str
     ) -> Optional[OptimizationSchedule]:
         """Retrieve optimization results by ID.
-        
-        Returns a unified OptimizationSchedule entity.
         
         Args:
             optimization_id: Unique identifier for the optimization run
@@ -61,16 +53,18 @@ class OptimizationResultGatewayImpl(OptimizationResultGateway):
         Returns:
             OptimizationSchedule entity, or None if not found
         """
-        return await self.repository.get(optimization_id)
-
+        pass
+    
+    @abstractmethod
     async def get_all(self) -> List[OptimizationSchedule]:
         """Retrieve all stored optimization results.
         
         Returns:
             List of OptimizationSchedule entities
         """
-        return await self.repository.get_all()
-
+        pass
+    
+    @abstractmethod
     async def delete(self, optimization_id: str) -> bool:
         """Delete optimization intermediate results by ID.
         
@@ -80,13 +74,15 @@ class OptimizationResultGatewayImpl(OptimizationResultGateway):
         Returns:
             True if deleted, False if not found
         """
-        return await self.repository.delete(optimization_id)
-
+        pass
+    
+    @abstractmethod
     async def clear(self) -> None:
         """Clear all stored optimization results."""
-        await self.repository.clear()
-
+        pass
+    
+    @abstractmethod
     async def clear_schedules(self) -> None:
         """Clear all stored optimization schedules."""
-        await self.repository.clear_schedules()
+        pass
 

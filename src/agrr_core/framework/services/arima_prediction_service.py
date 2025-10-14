@@ -8,7 +8,7 @@ from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.prediction_error import PredictionError
 from agrr_core.adapter.services.interpolation_utils import LinearInterpolationService
 from agrr_core.adapter.interfaces.prediction_service_interface import PredictionServiceInterface
-from agrr_core.adapter.interfaces.time_series_interface import TimeSeriesInterface
+from agrr_core.framework.interfaces.time_series_interface import TimeSeriesInterface
 
 
 class ARIMAPredictionService(PredictionServiceInterface):

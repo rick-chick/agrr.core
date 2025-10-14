@@ -6,7 +6,7 @@ from datetime import datetime
 from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
-from agrr_core.adapter.interfaces.http_service_interface import HttpServiceInterface
+from agrr_core.framework.interfaces.http_service_interface import HttpServiceInterface
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 
 

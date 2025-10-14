@@ -158,6 +158,7 @@ class CropProfileMapper:
             "high_stress_threshold": temperature.high_stress_threshold,
             "frost_threshold": temperature.frost_threshold,
             "sterility_risk_threshold": temperature.sterility_risk_threshold,
+            "max_temperature": temperature.max_temperature,
         }
     
     @staticmethod

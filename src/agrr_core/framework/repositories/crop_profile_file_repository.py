@@ -176,6 +176,7 @@ class CropProfileFileRepository(CropProfileRepositoryInterface):
             )
             
             temp_data = stage_data['temperature']
+            
             temperature = TemperatureProfile(
                 base_temperature=temp_data['base_temperature'],
                 optimal_min=temp_data['optimal_min'],
@@ -183,6 +184,7 @@ class CropProfileFileRepository(CropProfileRepositoryInterface):
                 low_stress_threshold=temp_data.get('low_stress_threshold', temp_data['optimal_min']),
                 high_stress_threshold=temp_data.get('high_stress_threshold', temp_data['optimal_max']),
                 frost_threshold=temp_data.get('frost_threshold', 0.0),
+                max_temperature=temp_data['max_temperature'],  # Required field
                 sterility_risk_threshold=temp_data.get('sterility_risk_threshold')
             )
             

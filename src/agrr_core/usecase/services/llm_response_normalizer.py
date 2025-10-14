@@ -180,6 +180,12 @@ class LLMResponseNormalizer:
                 temp_data.get("frost_damage_risk_temperature") or 
                 temp_data.get("frost_threshold", 0.0)
             ),
+            "max_temperature": (
+                temp_data.get("max_temperature") or
+                temp_data.get("maximum_temperature") or
+                temp_data.get("developmental_arrest_temperature") or
+                temp_data["max_temperature"]  # Required - raises KeyError if missing
+            ),
             "sterility_risk_threshold": (
                 temp_data.get("high_temperature_damage_threshold") or
                 temp_data.get("high_temperature_disability_threshold") or

@@ -47,7 +47,8 @@ class TestCropGroupsDataFlowThroughMapper:
             low_stress_threshold=12.0,
             high_stress_threshold=32.0,
             frost_threshold=0.0,
-            sterility_risk_threshold=35.0
+            sterility_risk_threshold=35.0,
+            max_temperature=40.0
         )
         sun = SunshineProfile(minimum_sunshine_hours=4.0, target_sunshine_hours=8.0)
         thermal = ThermalRequirement(required_gdd=2000.0)
@@ -76,7 +77,7 @@ class TestCropGroupsDataFlowThroughMapper:
         )
         
         stage = GrowthStage(name="growth", order=1)
-        temp = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0)
+        temp = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0, 40.0)
         sun = SunshineProfile(4.0, 8.0)
         thermal = ThermalRequirement(2000.0)
         stage_req = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
@@ -98,7 +99,7 @@ class TestCropGroupsDataFlowThroughMapper:
         )
         
         stage = GrowthStage(name="growth", order=1)
-        temp = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0)
+        temp = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0, 40.0)
         sun = SunshineProfile(4.0, 8.0)
         thermal = ThermalRequirement(2000.0)
         stage_req = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
@@ -144,6 +145,7 @@ class TestCropGroupsDataFlowThroughGateway:
                             "low_stress_threshold": 15.0,
                             "high_stress_threshold": 35.0,
                             "frost_threshold": 0.0,
+                            "max_temperature": 42.0,
                             "sterility_risk_threshold": 40.0
                         },
                         "sunshine": {
@@ -168,7 +170,7 @@ class TestCropGroupsDataFlowThroughGateway:
                 file_path=str(temp_file)
             )
             gateway = CropProfileGatewayImpl(
-                llm_client=None,
+                llm_repository=None,
                 profile_repository=crop_profile_repository
             )
             
@@ -216,6 +218,7 @@ class TestCropGroupsDataFlowThroughGateway:
                             "low_stress_threshold": 15.0,
                             "high_stress_threshold": 35.0,
                             "frost_threshold": 0.0,
+                            "max_temperature": 42.0,
                             "sterility_risk_threshold": 40.0
                         },
                         "sunshine": {
@@ -238,7 +241,7 @@ class TestCropGroupsDataFlowThroughGateway:
                 file_path=str(temp_file)
             )
             gateway = CropProfileGatewayImpl(
-                llm_client=None,
+                llm_repository=None,
                 profile_repository=crop_profile_repository
             )
             
@@ -289,6 +292,7 @@ class TestCropGroupsDataFlowThroughGateway:
                         "low_stress_threshold": 15.0,
                         "high_stress_threshold": 32.0,
                         "frost_threshold": 5.0,
+                        "max_temperature": 40.0,
                         "sterility_risk_threshold": 35.0
                     },
                     "sunshine": {
@@ -315,7 +319,7 @@ class TestCropGroupsDataFlowThroughGateway:
                 file_path=str(temp_file)
             )
             gateway = CropProfileGatewayImpl(
-                llm_client=None,
+                llm_repository=None,
                 profile_repository=crop_profile_repository
             )
             
@@ -350,7 +354,7 @@ class TestCropGroupsJSONSerializationFormat:
         )
         
         stage = GrowthStage(name="growth", order=1)
-        temp = TemperatureProfile(5.0, 15.0, 20.0, 10.0, 25.0, -2.0, 30.0)
+        temp = TemperatureProfile(5.0, 15.0, 20.0, 10.0, 25.0, -2.0, 30.0, 35.0)
         sun = SunshineProfile(4.0, 6.0)
         thermal = ThermalRequirement(1500.0)
         stage_req = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
@@ -378,7 +382,7 @@ class TestCropGroupsJSONSerializationFormat:
         )
         
         stage = GrowthStage(name="growth", order=1)
-        temp = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0)
+        temp = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0, 40.0)
         sun = SunshineProfile(4.0, 8.0)
         thermal = ThermalRequirement(2000.0)
         stage_req = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
@@ -402,7 +406,7 @@ class TestCropGroupsJSONSerializationFormat:
         )
         
         stage = GrowthStage(name="growth", order=1)
-        temp = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0)
+        temp = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0, 40.0)
         sun = SunshineProfile(4.0, 8.0)
         thermal = ThermalRequirement(2000.0)
         stage_req = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
@@ -463,7 +467,7 @@ class TestRealWorldCropGroupsScenarios:
             
             # Test mapper conversion
             stage = GrowthStage(name="growth", order=1)
-            temp = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0)
+            temp = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0, 40.0)
             sun = SunshineProfile(4.0, 8.0)
             thermal = ThermalRequirement(2000.0)
             stage_req = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)

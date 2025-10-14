@@ -36,7 +36,8 @@ class TestAggregateToPayload:
             low_stress_threshold=12.0,
             high_stress_threshold=32.0,
             frost_threshold=0.0,
-            sterility_risk_threshold=35.0
+            sterility_risk_threshold=35.0,
+            max_temperature=40.0
         )
         sunshine = SunshineProfile(
             minimum_sunshine_hours=3.0,
@@ -78,7 +79,7 @@ class TestAggregateToPayload:
         stages = []
         for i in range(3):
             stage = GrowthStage(name=f"Stage{i+1}", order=i+1)
-            temperature = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0)
+            temperature = TemperatureProfile(10.0, 20.0, 26.0, 12.0, 32.0, 0.0, 35.0, 40.0)
             sunshine = SunshineProfile(3.0, 6.0)
             thermal = ThermalRequirement(400.0)
             stage_req = StageRequirement(stage, temperature, sunshine, thermal)
@@ -168,6 +169,7 @@ class TestStageRequirementToDict:
             low_stress_threshold=12.0,
             high_stress_threshold=32.0,
             frost_threshold=0.0,
+            max_temperature=40.0,
             sterility_risk_threshold=35.0
         )
         sunshine = SunshineProfile(
@@ -243,7 +245,8 @@ class TestPrivateMethods:
             low_stress_threshold=14.0,
             high_stress_threshold=34.0,
             frost_threshold=-2.0,
-            sterility_risk_threshold=38.0
+            sterility_risk_threshold=38.0,
+            max_temperature=42.0
         )
         
         result = CropProfileMapper._temperature_to_dict(temperature)

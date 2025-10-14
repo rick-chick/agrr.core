@@ -81,6 +81,7 @@ class TestMultiFieldCropAllocationCliController:
             low_stress_threshold=15.0,
             high_stress_threshold=35.0,
             frost_threshold=0.0,
+            max_temperature=42.0,
         )
         sunshine_profile = SunshineProfile()
         stage_req = StageRequirement(
@@ -99,6 +100,17 @@ class TestMultiFieldCropAllocationCliController:
 
         # Setup crop gateway to return all crops
         mock_crop_gateway.get_all.return_value = [crop_req1, crop_req2]
+        
+        # Setup internal state for save/get operations (used by growth_period_optimizer)
+        saved_profile = None
+        async def save_profile(profile):
+            nonlocal saved_profile
+            saved_profile = profile
+        async def get_profile():
+            return saved_profile if saved_profile else crop_req1
+        
+        mock_crop_gateway.save.side_effect = save_profile
+        mock_crop_gateway.get.side_effect = get_profile
 
         # Weather data - generate for full planning period (Apr-Oct)
         weather_data = [
@@ -119,6 +131,7 @@ class TestMultiFieldCropAllocationCliController:
             crop_gateway=mock_crop_gateway,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
+            crop_profile_gateway_internal=mock_crop_gateway,
         )
 
         # Create temporary files for fields and crops
@@ -189,6 +202,7 @@ class TestMultiFieldCropAllocationCliController:
             low_stress_threshold=15.0,
             high_stress_threshold=35.0,
             frost_threshold=0.0,
+            max_temperature=42.0,
         )
         sunshine_profile = SunshineProfile()
         stage_req = StageRequirement(
@@ -201,6 +215,17 @@ class TestMultiFieldCropAllocationCliController:
             crop=crop1, stage_requirements=[stage_req]
         )
         mock_crop_gateway.get_all.return_value = [crop_req1]
+        
+        # Setup internal state for save/get operations (used by growth_period_optimizer)
+        saved_profile = None
+        async def save_profile(profile):
+            nonlocal saved_profile
+            saved_profile = profile
+        async def get_profile():
+            return saved_profile if saved_profile else crop_req1
+        
+        mock_crop_gateway.save.side_effect = save_profile
+        mock_crop_gateway.get.side_effect = get_profile
 
         # Weather data - generate for full planning period (Apr-Oct)
         weather_data = [
@@ -221,6 +246,7 @@ class TestMultiFieldCropAllocationCliController:
             crop_gateway=mock_crop_gateway,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
+            crop_profile_gateway_internal=mock_crop_gateway,
         )
 
         # Create temporary files for fields and crops
@@ -287,6 +313,7 @@ class TestMultiFieldCropAllocationCliController:
             low_stress_threshold=15.0,
             high_stress_threshold=35.0,
             frost_threshold=0.0,
+            max_temperature=42.0,
         )
         sunshine_profile = SunshineProfile()
         stage_req = StageRequirement(
@@ -299,7 +326,17 @@ class TestMultiFieldCropAllocationCliController:
             crop=crop1, stage_requirements=[stage_req]
         )
         mock_crop_gateway.get_all.return_value = [crop_req1]
-
+        
+        # Setup internal state for save/get operations (used by growth_period_optimizer)
+        saved_profile = None
+        async def save_profile(profile):
+            nonlocal saved_profile
+            saved_profile = profile
+        async def get_profile():
+            return saved_profile if saved_profile else crop_req1
+        
+        mock_crop_gateway.save.side_effect = save_profile
+        mock_crop_gateway.get.side_effect = get_profile
 
         # Weather data - generate for full planning period (Apr-Oct)
         weather_data = [
@@ -320,6 +357,7 @@ class TestMultiFieldCropAllocationCliController:
             crop_gateway=mock_crop_gateway,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
+            crop_profile_gateway_internal=mock_crop_gateway,
         )
 
         # Create temporary files for fields and crops
@@ -387,6 +425,7 @@ class TestMultiFieldCropAllocationCliController:
             low_stress_threshold=15.0,
             high_stress_threshold=35.0,
             frost_threshold=0.0,
+            max_temperature=42.0,
         )
         sunshine_profile = SunshineProfile()
         stage_req = StageRequirement(
@@ -399,7 +438,17 @@ class TestMultiFieldCropAllocationCliController:
             crop=crop1, stage_requirements=[stage_req]
         )
         mock_crop_gateway.get_all.return_value = [crop_req1]
-
+        
+        # Setup internal state for save/get operations (used by growth_period_optimizer)
+        saved_profile = None
+        async def save_profile(profile):
+            nonlocal saved_profile
+            saved_profile = profile
+        async def get_profile():
+            return saved_profile if saved_profile else crop_req1
+        
+        mock_crop_gateway.save.side_effect = save_profile
+        mock_crop_gateway.get.side_effect = get_profile
 
         # Weather data - generate for full planning period (Apr-Oct)
         weather_data = [
@@ -423,6 +472,7 @@ class TestMultiFieldCropAllocationCliController:
             crop_gateway=mock_crop_gateway,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
+            crop_profile_gateway_internal=mock_crop_gateway,
             interaction_rule_gateway=mock_interaction_rule_gateway,
         )
 
@@ -492,6 +542,7 @@ class TestMultiFieldCropAllocationCliController:
             low_stress_threshold=15.0,
             high_stress_threshold=35.0,
             frost_threshold=0.0,
+            max_temperature=42.0,
         )
         sunshine_profile = SunshineProfile()
         stage_req = StageRequirement(
@@ -504,7 +555,17 @@ class TestMultiFieldCropAllocationCliController:
             crop=crop1, stage_requirements=[stage_req]
         )
         mock_crop_gateway.get_all.return_value = [crop_req1]
-
+        
+        # Setup internal state for save/get operations (used by growth_period_optimizer)
+        saved_profile = None
+        async def save_profile(profile):
+            nonlocal saved_profile
+            saved_profile = profile
+        async def get_profile():
+            return saved_profile if saved_profile else crop_req1
+        
+        mock_crop_gateway.save.side_effect = save_profile
+        mock_crop_gateway.get.side_effect = get_profile
 
         # Weather data - generate for full planning period (Apr-Oct)
         weather_data = [
@@ -525,6 +586,7 @@ class TestMultiFieldCropAllocationCliController:
             crop_gateway=mock_crop_gateway,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
+            crop_profile_gateway_internal=mock_crop_gateway,
         )
 
         # Create temporary files for fields and crops
@@ -590,6 +652,7 @@ class TestMultiFieldCropAllocationCliController:
             low_stress_threshold=15.0,
             high_stress_threshold=35.0,
             frost_threshold=0.0,
+            max_temperature=42.0,
         )
         sunshine_profile = SunshineProfile()
         stage_req = StageRequirement(
@@ -602,7 +665,17 @@ class TestMultiFieldCropAllocationCliController:
             crop=crop1, stage_requirements=[stage_req]
         )
         mock_crop_gateway.get_all.return_value = [crop_req1]
-
+        
+        # Setup internal state for save/get operations (used by growth_period_optimizer)
+        saved_profile = None
+        async def save_profile(profile):
+            nonlocal saved_profile
+            saved_profile = profile
+        async def get_profile():
+            return saved_profile if saved_profile else crop_req1
+        
+        mock_crop_gateway.save.side_effect = save_profile
+        mock_crop_gateway.get.side_effect = get_profile
 
         # Weather data - generate for full planning period (Apr-Oct)
         weather_data = [
@@ -623,6 +696,7 @@ class TestMultiFieldCropAllocationCliController:
             crop_gateway=mock_crop_gateway,
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
+            crop_profile_gateway_internal=mock_crop_gateway,
         )
 
         # Create temporary files for fields and crops

@@ -35,6 +35,15 @@
 - **高温ストレス閾値（high_stress_threshold）**: 生育阻害を受ける最高温度
   - 定義：生育に悪影響が出始める高温側の温度
   - 通常、最適温度範囲の上限よりも高い値
+- **最高限界温度（max_temperature）**: 発育が停止する最高温度（発育停止温度）
+  - 定義：この温度以上では発育が完全に停止する（積算温度がゼロ）
+  - 生理学的限界温度（酵素活性の失活、細胞膜損傷の開始温度）
+  - 推定方法：文献に明示的な記載がない場合は、以下の作物分類に基づき推定：
+    - イネ・穀物類：high_stress_threshold + 7°C（例：35 + 7 = 42°C）
+    - 小麦類：high_stress_threshold + 5°C（例：30 + 5 = 35°C）
+    - 野菜類（トマト・ナス・ピーマン等）：high_stress_threshold + 3°C（例：32 + 3 = 35°C）
+    - 一般作物：high_stress_threshold + 6°C
+  - 注意：base_temperature < optimal_min <= optimal_max < max_temperature の関係が成り立つこと
 - **霜害リスク温度（frost_threshold）**: 霜害を受ける危険温度
   - 定義：凍害により組織が損傷する温度
 - **高温障害（sterility_risk_threshold）**: 不稔リスク温度（開花・結実期を含む期間の場合）
@@ -63,7 +72,8 @@
     "low_stress_threshold": 0.0,
     "high_stress_threshold": 0.0,
     "frost_threshold": 0.0,
-    "sterility_risk_threshold": null
+    "sterility_risk_threshold": null,
+    "max_temperature": 0.0
   },
   "sunshine": {
     "minimum_sunshine_hours": 0.0,

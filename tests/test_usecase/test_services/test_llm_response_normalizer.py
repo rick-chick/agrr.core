@@ -121,6 +121,7 @@ class TestNormalizeTemperatureField:
                 "low_stress_threshold": 12.0,
                 "high_stress_threshold": 32.0,
                 "frost_threshold": 0.0,
+                "max_temperature": 40.0,
                 "sterility_risk_threshold": 35.0,
             }
         }
@@ -131,6 +132,7 @@ class TestNormalizeTemperatureField:
         assert result["low_stress_threshold"] == 12.0
         assert result["high_stress_threshold"] == 32.0
         assert result["frost_threshold"] == 0.0
+        assert result["max_temperature"] == 40.0
         assert result["sterility_risk_threshold"] == 35.0
     
     def test_normalize_nested_temperature_range(self):
@@ -145,6 +147,7 @@ class TestNormalizeTemperatureField:
                 "low_temperature_stress_threshold": 12.0,
                 "high_temperature_stress_threshold": 32.0,
                 "frost_damage_risk_temperature": 0.0,
+                "max_temperature": 40.0,
                 "high_temperature_damage_threshold": 35.0,
             }
         }
@@ -155,11 +158,12 @@ class TestNormalizeTemperatureField:
         assert result["low_stress_threshold"] == 12.0
         assert result["high_stress_threshold"] == 32.0
         assert result["frost_threshold"] == 0.0
+        assert result["max_temperature"] == 40.0
         assert result["sterility_risk_threshold"] == 35.0
     
     def test_normalize_default_values(self):
-        """Test that default values are used when fields are missing."""
-        data = {"temperature": {}}
+        """Test that default values are used when fields are missing (except max_temperature)."""
+        data = {"temperature": {"max_temperature": 40.0}}  # max_temperature is required
         result = LLMResponseNormalizer.normalize_temperature_field(data)
         assert result["base_temperature"] == 10.0
         assert result["optimal_min"] == 20.0
@@ -167,15 +171,29 @@ class TestNormalizeTemperatureField:
         assert result["low_stress_threshold"] == 12.0
         assert result["high_stress_threshold"] == 32.0
         assert result["frost_threshold"] == 0.0
+        assert result["max_temperature"] == 40.0
         assert result["sterility_risk_threshold"] == 35.0
     
     def test_normalize_missing_temperature_key(self):
-        """Test when temperature key is completely missing."""
-        data = {}
+        """Test when temperature key is completely missing but max_temperature provided."""
+        data = {"temperature": {"max_temperature": 42.0}}
         result = LLMResponseNormalizer.normalize_temperature_field(data)
-        # Should return defaults
+        # Should return defaults (except max_temperature which is required)
         assert result["base_temperature"] == 10.0
         assert result["optimal_min"] == 20.0
+        assert result["max_temperature"] == 42.0
+    
+    def test_normalize_missing_max_temperature_raises_error(self):
+        """Test that missing max_temperature raises KeyError."""
+        data = {
+            "temperature": {
+                "base_temperature": 10.0,
+                "optimal_min": 20.0,
+                "optimal_max": 26.0,
+            }
+        }
+        with pytest.raises(KeyError, match="max_temperature"):
+            LLMResponseNormalizer.normalize_temperature_field(data)
 
 
 @pytest.mark.unit

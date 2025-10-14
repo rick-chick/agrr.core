@@ -110,6 +110,7 @@ def entity_crop_profile() -> CropProfile:
         high_stress_threshold=32.0,
         frost_threshold=0.0,
         sterility_risk_threshold=None,
+        max_temperature=40.0,
     )
     sun = SunshineProfile(minimum_sunshine_hours=3.0, target_sunshine_hours=6.0)
     thermal = ThermalRequirement(required_gdd=400.0)
@@ -129,6 +130,7 @@ def entity_crop_profile_rice() -> CropProfile:
         low_stress_threshold=15.0,
         high_stress_threshold=35.0,
         frost_threshold=0.0,
+        max_temperature=42.0,
     )
     sun = SunshineProfile(minimum_sunshine_hours=4.0, target_sunshine_hours=8.0)
     thermal = ThermalRequirement(required_gdd=500.0)
@@ -182,6 +184,7 @@ def gateway_crop_profile(entity_crop_profile):
             "low_stress_threshold": 12.0,
             "high_stress_threshold": 32.0,
             "frost_threshold": 0.0,
+            "max_temperature": 40.0,
             "sterility_risk_threshold": 35.0
         },
         "sunshine": {

@@ -32,6 +32,7 @@ def build_stage_requirement_structure() -> Dict[str, Any]:
                     "high_stress_threshold": None,
                     "frost_threshold": None,
                     "sterility_risk_threshold": None,
+                    "max_temperature": None,
                 },
                 "sunshine": {
                     "minimum_sunshine_hours": None,
@@ -63,6 +64,7 @@ def build_stage_requirement_descriptions() -> Dict[str, Any]:
                     "high_stress_threshold": "Daily mean above this implies high-temperature stress (°C)",
                     "frost_threshold": "Daily minimum at or below this implies frost risk (°C)",
                     "sterility_risk_threshold": "Daily maximum at or above this implies sterility risk (°C)",
+                    "max_temperature": "Maximum temperature above which development stops (developmental arrest temperature) (°C)",
                 },
                 "sunshine": {
                     "minimum_sunshine_hours": "Minimum sunshine hours per day (h)",

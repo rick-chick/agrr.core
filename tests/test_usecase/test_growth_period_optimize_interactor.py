@@ -55,6 +55,7 @@ class TestGrowthPeriodOptimizeInteractor:
             low_stress_threshold=15.0,
             high_stress_threshold=35.0,
             frost_threshold=0.0,
+            max_temperature=42.0,
         )
         sunshine_profile = SunshineProfile()
 
@@ -151,6 +152,7 @@ class TestGrowthPeriodOptimizeInteractor:
             low_stress_threshold=15.0,
             high_stress_threshold=35.0,
             frost_threshold=0.0,
+            max_temperature=42.0,
         )
         sunshine_profile = SunshineProfile()
 
@@ -211,6 +213,7 @@ class TestGrowthPeriodOptimizeInteractor:
             low_stress_threshold=15.0,
             high_stress_threshold=35.0,
             frost_threshold=0.0,
+            max_temperature=42.0,
         )
         sunshine_profile = SunshineProfile()
 
@@ -277,6 +280,7 @@ class TestGrowthPeriodOptimizeInteractor:
             low_stress_threshold=15.0,
             high_stress_threshold=35.0,
             frost_threshold=0.0,
+            max_temperature=42.0,
         )
         sunshine_profile = SunshineProfile()
 
@@ -361,6 +365,7 @@ class TestGrowthPeriodOptimizeInteractor:
             low_stress_threshold=15.0,
             high_stress_threshold=35.0,
             frost_threshold=0.0,
+            max_temperature=42.0,
         )
         sunshine_profile = SunshineProfile()
 
@@ -444,6 +449,7 @@ class TestGrowthPeriodOptimizeInteractor:
             low_stress_threshold=15.0,
             high_stress_threshold=35.0,
             frost_threshold=0.0,
+            max_temperature=42.0,
         )
         sunshine_profile = SunshineProfile()
 
@@ -534,6 +540,7 @@ class TestGrowthPeriodOptimizeInteractor:
             low_stress_threshold=15.0,
             high_stress_threshold=35.0,
             frost_threshold=0.0,
+            max_temperature=42.0,
         )
         sunshine_profile = SunshineProfile()
 

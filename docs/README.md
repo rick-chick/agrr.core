@@ -4,9 +4,23 @@
 
 ## ドキュメント構成
 
+### 基本ドキュメント
+
 - **[API Reference](api/README.md)** - CLI APIの詳細なリファレンス
 - **[Architecture](../ARCHITECTURE.md)** - プロジェクトのアーキテクチャ設計
 - **[README](../README.md)** - プロジェクトの概要とセットアップ
+
+### 最適化・モデリング
+
+- **[Algorithm Selection Guide](algorithm_selection_guide.md)** - 最適化アルゴリズムの選択ガイド
+- **[Optimization Design](optimization_design_multi_field_crop_allocation.md)** - 複数圃場作物配置の最適化設計
+- **[Interaction Rule Usage](INTERACTION_RULE_USAGE.md)** - 相互作用ルール（連作影響）の使用方法
+
+### 温度ストレスモデリング（New! 2025-10-14）
+
+- **[Temperature Stress Model Research](TEMPERATURE_STRESS_MODEL_RESEARCH.md)** - 温度ストレスモデルの研究調査レポート
+- **[Temperature Stress Implementation Example](TEMPERATURE_STRESS_IMPLEMENTATION_EXAMPLE.md)** - 実装例とコードサンプル
+- **[Temperature Stress Visual Summary](TEMPERATURE_STRESS_VISUAL_SUMMARY.md)** - ビジュアルサマリーと図表
 
 ## アーキテクチャ概要
 

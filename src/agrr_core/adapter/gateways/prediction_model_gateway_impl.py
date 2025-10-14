@@ -2,16 +2,27 @@
 
 This gateway receives Framework layer services (via interface injection)
 and provides prediction operations to UseCase layer.
+
+NOTE: This gateway is currently not used in CLI commands.
+      It is designed for future advanced prediction features:
+      - MultiMetricPredictionInteractor (multi-metric forecasting)
+      - ModelEvaluationInteractor (model accuracy evaluation)
+      - BatchPredictionInteractor (batch processing)
+      - ModelManagementInteractor (model information management)
+      
+      Current CLI uses PredictionGatewayImpl instead for simple file-based predictions.
+      When implementing these advanced features, update agrr_core_container.py to use this gateway.
 """
 
 from typing import List, Dict, Any, Optional
 
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.prediction_error import PredictionError
+from agrr_core.usecase.gateways.prediction_model_gateway import PredictionModelGateway
 from agrr_core.adapter.interfaces.prediction_service_interface import PredictionServiceInterface
 
 
-class PredictionModelGatewayImpl:
+class PredictionModelGatewayImpl(PredictionModelGateway):
     """
     Gateway implementation for prediction models (Adapter layer).
     
@@ -236,4 +247,166 @@ class PredictionModelGatewayImpl:
             ensemble_forecasts.append(forecast)
         
         return ensemble_forecasts
+    
+    # Implement PredictionModelGateway interface methods
+    
+    async def predict_multiple_metrics(
+        self, 
+        historical_data: List[WeatherData], 
+        metrics: List[str],
+        model_config: Dict[str, Any]
+    ) -> Dict[str, List[Forecast]]:
+        """Predict multiple weather metrics using specified model.
+        
+        Args:
+            historical_data: Historical weather data
+            metrics: List of metrics to predict
+            model_config: Model configuration including 'model_type' and 'prediction_days'
+            
+        Returns:
+            Dictionary mapping metric names to forecast lists
+        """
+        model_type = model_config.get('model_type', self.default_model)
+        prediction_days = model_config.get('prediction_days', 30)
+        
+        results = {}
+        for metric in metrics:
+            forecasts = await self.predict(
+                historical_data=historical_data,
+                metric=metric,
+                prediction_days=prediction_days,
+                model_type=model_type,
+                model_config=model_config
+            )
+            results[metric] = forecasts
+        
+        return results
+    
+    async def evaluate_model_accuracy(
+        self,
+        test_data: List[WeatherData],
+        predictions: List[Forecast],
+        metric: str
+    ) -> Dict[str, float]:
+        """Evaluate model accuracy using test data.
+        
+        Args:
+            test_data: Actual weather data
+            predictions: Model predictions
+            metric: Metric being evaluated
+            
+        Returns:
+            Dictionary with evaluation metrics
+        """
+        # Use default model for evaluation
+        return await self.evaluate(
+            test_data=test_data,
+            predictions=predictions,
+            metric=metric,
+            model_type=self.default_model
+        )
+    
+    async def train_model(
+        self,
+        training_data: List[WeatherData],
+        model_config: Dict[str, Any],
+        metric: str
+    ) -> Dict[str, Any]:
+        """Train prediction model with given configuration.
+        
+        Note: Current implementation uses pre-trained models,
+        so this method returns model information.
+        
+        Args:
+            training_data: Training data
+            model_config: Model configuration
+            metric: Metric to train for
+            
+        Returns:
+            Model training information
+        """
+        model_type = model_config.get('model_type', self.default_model)
+        
+        return {
+            'model_type': model_type,
+            'metric': metric,
+            'training_samples': len(training_data),
+            'status': 'trained'
+        }
+    
+    async def get_model_info(self, model_type: str) -> Dict[str, Any]:
+        """Get information about specific model.
+        
+        Args:
+            model_type: Model type to get info for
+            
+        Returns:
+            Model information dictionary
+        """
+        if model_type not in self.models:
+            raise PredictionError(f"Model '{model_type}' not available")
+        
+        return self.models[model_type].get_model_info()
+    
+    async def predict_with_confidence_intervals(
+        self,
+        historical_data: List[WeatherData],
+        prediction_days: int,
+        confidence_level: float,
+        model_config: Dict[str, Any]
+    ) -> List[Forecast]:
+        """Predict with custom confidence intervals.
+        
+        Args:
+            historical_data: Historical weather data
+            prediction_days: Number of days to predict
+            confidence_level: Confidence level (e.g., 0.95 for 95%)
+            model_config: Model configuration
+            
+        Returns:
+            List of forecasts with confidence intervals
+        """
+        model_type = model_config.get('model_type', self.default_model)
+        metric = model_config.get('metric', 'temperature')
+        
+        # Add confidence level to config
+        config = {**model_config, 'confidence_level': confidence_level}
+        
+        return await self.predict(
+            historical_data=historical_data,
+            metric=metric,
+            prediction_days=prediction_days,
+            model_type=model_type,
+            model_config=config
+        )
+    
+    async def batch_predict(
+        self,
+        historical_data_list: List[List[WeatherData]],
+        model_config: Dict[str, Any],
+        metrics: List[str]
+    ) -> List[Dict[str, List[Forecast]]]:
+        """Perform batch prediction for multiple datasets.
+        
+        Args:
+            historical_data_list: List of historical data sets
+            model_config: Model configuration
+            metrics: Metrics to predict
+            
+        Returns:
+            List of prediction results for each dataset
+        """
+        results = []
+        
+        for historical_data in historical_data_list:
+            try:
+                result = await self.predict_multiple_metrics(
+                    historical_data, metrics, model_config
+                )
+                results.append(result)
+            except Exception as e:
+                # Add error result
+                results.append({'error': str(e)})
+        
+        return results
 

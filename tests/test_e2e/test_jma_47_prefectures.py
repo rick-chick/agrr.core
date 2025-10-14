@@ -10,7 +10,7 @@ import pytest
 from datetime import datetime
 
 from agrr_core.framework.repositories.html_table_fetcher import HtmlTableFetcher
-from agrr_core.adapter.repositories.weather_jma_repository import (
+from agrr_core.framework.repositories.weather_jma_repository import (
     WeatherJMARepository,
     LOCATION_MAPPING
 )

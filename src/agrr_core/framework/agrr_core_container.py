@@ -3,8 +3,8 @@
 import asyncio
 from typing import Dict, Any, Optional
 
-from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
-from agrr_core.adapter.repositories.weather_jma_repository import WeatherJMARepository
+from agrr_core.framework.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
+from agrr_core.framework.repositories.weather_jma_repository import WeatherJMARepository
 from agrr_core.framework.repositories.file_repository import FileRepository
 from agrr_core.framework.repositories.http_client import HttpClient
 from agrr_core.framework.repositories.html_table_fetcher import HtmlTableFetcher
@@ -13,10 +13,10 @@ from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
 from agrr_core.adapter.controllers.weather_cli_predict_controller import WeatherCliPredictController
-from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
+from agrr_core.framework.repositories.weather_file_repository import WeatherFileRepository
 from agrr_core.usecase.interactors.weather_predict_interactor import WeatherPredictInteractor
 from agrr_core.adapter.gateways.prediction_gateway_impl import PredictionGatewayImpl
-from agrr_core.adapter.services.prediction_arima_service import PredictionARIMAService
+from agrr_core.framework.services.arima_prediction_service import ARIMAPredictionService
 from agrr_core.adapter.interfaces.time_series_interface import TimeSeriesInterface
 from agrr_core.framework.services.time_series_arima_service import TimeSeriesARIMAService
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
@@ -137,11 +137,11 @@ class AgrrCoreContainer:
             self._instances['time_series_service'] = TimeSeriesARIMAService()
         return self._instances['time_series_service']
     
-    def get_prediction_arima_service(self) -> PredictionARIMAService:
-        """Get ARIMA prediction service instance."""
+    def get_prediction_arima_service(self) -> ARIMAPredictionService:
+        """Get ARIMA prediction service instance (Framework layer)."""
         if 'prediction_arima_service' not in self._instances:
             time_series_service = self.get_time_series_service()
-            self._instances['prediction_arima_service'] = PredictionARIMAService(time_series_service)
+            self._instances['prediction_arima_service'] = ARIMAPredictionService(time_series_service)
         return self._instances['prediction_arima_service']
     
     def get_prediction_lightgbm_service(self):

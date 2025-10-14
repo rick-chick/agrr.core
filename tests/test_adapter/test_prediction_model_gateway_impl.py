@@ -180,7 +180,7 @@ class TestPredictionModelGatewayImpl:
         assert 'mae' in metrics
         assert metrics['mae'] == 1.5
     
-    def test_get_model_info_single(self):
+    async def test_get_model_info_single(self):
         """Test getting info for single model."""
         mock_model = Mock()
         mock_model.get_model_info = Mock(return_value={
@@ -190,12 +190,13 @@ class TestPredictionModelGatewayImpl:
         
         gateway = PredictionModelGatewayImpl(arima_service=mock_model)
         
-        info = gateway.get_model_info('arima')
+        # get_model_info is async and requires model_type parameter
+        info = await gateway.get_model_info('arima')
         
         assert info['model_type'] == 'arima'
         assert info['model_name'] == 'ARIMA'
     
-    def test_get_model_info_all(self):
+    async def test_get_model_info_all(self):
         """Test getting info for all models."""
         mock_arima = Mock()
         mock_arima.get_model_info = Mock(return_value={'model_type': 'arima'})
@@ -208,10 +209,12 @@ class TestPredictionModelGatewayImpl:
             lightgbm_service=mock_lgb
         )
         
-        info = gateway.get_model_info()
+        # get_model_info now requires model_type, test with specific model
+        info_arima = await gateway.get_model_info('arima')
+        info_lgb = await gateway.get_model_info('lightgbm')
         
-        assert 'arima' in info
-        assert 'lightgbm' in info
+        assert info_arima['model_type'] == 'arima'
+        assert info_lgb['model_type'] == 'lightgbm'
     
     def test_get_available_models(self):
         """Test getting list of available models."""

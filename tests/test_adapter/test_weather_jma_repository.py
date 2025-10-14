@@ -4,7 +4,7 @@ import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock
 
-from agrr_core.adapter.repositories.weather_jma_repository import WeatherJMARepository, LOCATION_MAPPING
+from agrr_core.framework.repositories.weather_jma_repository import WeatherJMARepository, LOCATION_MAPPING
 from agrr_core.adapter.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 

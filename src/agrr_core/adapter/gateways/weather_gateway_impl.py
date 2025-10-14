@@ -1,31 +1,31 @@
 """Weather gateway implementation."""
 
-from typing import List
+from typing import List, Optional
 
 from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 from agrr_core.adapter.interfaces.weather_repository_interface import WeatherRepositoryInterface
-from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
 
 
 class WeatherGatewayImpl(WeatherGateway):
     """Implementation of weather gateway.
     
     This gateway depends on WeatherRepositoryInterface abstraction,
-    not specific implementations (file, SQL, memory, etc.).
+    not specific implementations (file, SQL, memory, API, etc.).
+    All dependencies are injected as interfaces, following the Dependency Inversion Principle.
     """
 
     def __init__(
         self, 
-        weather_repository: WeatherRepositoryInterface = None,
-        weather_api_repository: WeatherAPIOpenMeteoRepository = None
+        weather_repository: Optional[WeatherRepositoryInterface] = None,
+        weather_api_repository: Optional[WeatherRepositoryInterface] = None
     ):
-        """Initialize weather gateway with repository abstraction.
+        """Initialize weather gateway with repository abstractions.
         
         Args:
             weather_repository: Repository abstraction for weather data (file, SQL, memory, etc.)
-            weather_api_repository: API repository for external weather data
+            weather_api_repository: API repository abstraction for external weather data
         """
         self.weather_repository = weather_repository
         self.weather_api_repository = weather_api_repository

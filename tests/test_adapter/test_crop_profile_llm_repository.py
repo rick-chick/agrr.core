@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import AsyncMock
 from typing import Dict, Any
 
-from agrr_core.adapter.repositories.crop_profile_llm_repository import (
+from agrr_core.framework.repositories.crop_profile_llm_repository import (
     CropProfileLLMRepository,
 )
 from agrr_core.adapter.interfaces.llm_client import LLMClient

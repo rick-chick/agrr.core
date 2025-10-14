@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, Mock, patch
 import pandas as pd
 
 from agrr_core.framework.agrr_core_container import WeatherCliContainer, AgrrCoreContainer
-from agrr_core.adapter.repositories.weather_jma_repository import WeatherJMARepository
-from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
+from agrr_core.framework.repositories.weather_jma_repository import WeatherJMARepository
+from agrr_core.framework.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
 
 
 class TestWeatherCLIWithJMA:
@@ -89,7 +89,7 @@ class TestCLIArgumentParsing:
         from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
         from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
         from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
-        from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
+        from agrr_core.framework.repositories.weather_file_repository import WeatherFileRepository
         from agrr_core.framework.repositories.file_repository import FileRepository
         from agrr_core.framework.repositories.csv_downloader import CsvDownloader
         
@@ -132,9 +132,9 @@ class TestCLIArgumentParsing:
         from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
         from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
         from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
-        from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
+        from agrr_core.framework.repositories.weather_file_repository import WeatherFileRepository
         from agrr_core.framework.repositories.file_repository import FileRepository
-        from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
+        from agrr_core.framework.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
         from agrr_core.framework.repositories.http_client import HttpClient
         
         # Create mocked components
@@ -171,10 +171,10 @@ class TestCLIArgumentParsing:
         from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
         from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
         from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
-        from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
+        from agrr_core.framework.repositories.weather_file_repository import WeatherFileRepository
         from agrr_core.framework.repositories.file_repository import FileRepository
         from agrr_core.framework.repositories.http_client import HttpClient
-        from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
+        from agrr_core.framework.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
         
         # Create mocked components
         file_repo = FileRepository()

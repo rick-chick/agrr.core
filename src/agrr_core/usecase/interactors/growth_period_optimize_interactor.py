@@ -49,7 +49,7 @@ from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
 from agrr_core.usecase.interactors.base_optimizer import BaseOptimizer
-from agrr_core.usecase.interfaces.weather_interpolator import WeatherInterpolator
+from agrr_core.usecase.gateways.weather_interpolator import WeatherInterpolator
 
 
 class GrowthPeriodOptimizeInteractor(

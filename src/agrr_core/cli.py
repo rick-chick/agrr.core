@@ -18,8 +18,8 @@ from agrr_core.adapter.controllers.growth_progress_cli_controller import GrowthP
 from agrr_core.adapter.controllers.growth_period_optimize_cli_controller import GrowthPeriodOptimizeCliController
 from agrr_core.adapter.controllers.multi_field_crop_allocation_cli_controller import MultiFieldCropAllocationCliController
 from agrr_core.framework.services.llm_client_impl import FrameworkLLMClient
-from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
-from agrr_core.adapter.repositories.field_file_repository import FieldFileRepository
+from agrr_core.framework.repositories.weather_file_repository import WeatherFileRepository
+from agrr_core.framework.repositories.field_file_repository import FieldFileRepository
 from agrr_core.framework.repositories.file_repository import FileRepository
 from agrr_core.framework.repositories.inmemory_optimization_result_repository import InMemoryOptimizationResultRepository
 from agrr_core.adapter.services.weather_linear_interpolator import WeatherLinearInterpolator
@@ -212,7 +212,7 @@ def main() -> None:
             # Run growth progress calculation CLI
             # Parse args to extract crop-file and weather-file paths
             file_repository = FileRepository()
-            from agrr_core.adapter.repositories.crop_profile_file_repository import CropProfileFileRepository
+            from agrr_core.framework.repositories.crop_profile_file_repository import CropProfileFileRepository
             
             # Extract crop-file path
             crop_file_path = ""
@@ -292,7 +292,7 @@ For detailed help on each subcommand:
                 file_repository = FileRepository()
             
                 # Parse args to extract crop-file path
-                from agrr_core.adapter.repositories.crop_profile_file_repository import CropProfileFileRepository
+                from agrr_core.framework.repositories.crop_profile_file_repository import CropProfileFileRepository
                 crop_file_path = ""
                 if '--crop-file' in args or '-c' in args:
                     try:
@@ -344,7 +344,7 @@ For detailed help on each subcommand:
             
             
                 # Parse args to extract interaction-rules path
-                from agrr_core.adapter.repositories.interaction_rule_file_repository import InteractionRuleFileRepository
+                from agrr_core.framework.repositories.interaction_rule_file_repository import InteractionRuleFileRepository
                 interaction_rules_path = ""
                 if '--interaction-rules-file' in args or '-irf' in args:
                     try:
@@ -394,7 +394,7 @@ For detailed help on each subcommand:
                     weather_gateway = WeatherGatewayImpl(weather_repository=weather_file_repository)
                 
                     # Create dummy crop gateway for help
-                    from agrr_core.adapter.repositories.crop_profile_file_repository import CropProfileFileRepository
+                    from agrr_core.framework.repositories.crop_profile_file_repository import CropProfileFileRepository
                     crop_profile_repo = CropProfileFileRepository(file_repository=file_repository, file_path="")
                     crop_profile_gateway = CropProfileGatewayImpl(profile_repository=crop_profile_repo)
                 
@@ -469,7 +469,7 @@ For detailed help on each subcommand:
                     sys.exit(1)
             
                 # Setup crop gateway
-                from agrr_core.adapter.repositories.crop_profile_file_repository import CropProfileFileRepository
+                from agrr_core.framework.repositories.crop_profile_file_repository import CropProfileFileRepository
                 crop_profile_repository = CropProfileFileRepository(
                     file_repository=file_repository,
                     file_path=crops_file_path
@@ -486,7 +486,7 @@ For detailed help on each subcommand:
                     except (ValueError, IndexError):
                         pass
             
-                from agrr_core.adapter.repositories.interaction_rule_file_repository import InteractionRuleFileRepository
+                from agrr_core.framework.repositories.interaction_rule_file_repository import InteractionRuleFileRepository
                 interaction_rule_repository = InteractionRuleFileRepository(
                     file_repository=file_repository,
                     file_path=interaction_rules_path

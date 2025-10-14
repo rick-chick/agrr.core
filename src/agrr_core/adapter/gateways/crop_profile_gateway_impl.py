@@ -12,7 +12,7 @@ from typing import Optional, Dict, Any, List
 from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.adapter.interfaces.llm_client import LLMClient
-from agrr_core.adapter.repositories.crop_profile_llm_repository import (
+from agrr_core.framework.repositories.crop_profile_llm_repository import (
     CropProfileLLMRepository,
 )
 

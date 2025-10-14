@@ -11,11 +11,13 @@ from .usecase import (
     PredictionRequestDTO,
 )
 from .adapter import (
-    WeatherAPIOpenMeteoRepository,
-    PredictionStorageRepository,
     WeatherMapper,
     WeatherPresenter,
     PredictionPresenter,
+)
+from .framework.repositories import (
+    WeatherAPIOpenMeteoRepository,
+    PredictionStorageRepository,
 )
 
 __version__ = "0.1.0"

@@ -75,64 +75,80 @@ src/agrr.core/usecase/
 └── __init__.py
 ```
 
-### 3. Adapter Layer (アダプター層)
-**責任**: 外部システムとの接続とデータ変換
+### 3. Adapter Layer (アダプター層 / Interface Adapters)
+**責任**: UseCase層とFramework層の間のインターフェース変換
 
 #### 構成要素:
-- **Repository** - リポジトリの実装（Gatewayの実装）
-  - SqlUserRepository, MongoUserRepository, InMemoryUserRepository, SqlTaskRepository
-- **Gateway** - ゲートウェイの実装（UseCase層のGatewayインターフェースの実装）
-  - WeatherDataGatewayImpl, PredictionServiceGatewayImpl, UserRepositoryGatewayImpl
+- **Gateway** - ゲートウェイ実装（UseCase層のGatewayインターフェースの実装）
+  - WeatherGatewayImpl, PredictionGatewayImpl, CropProfileGatewayImpl
+  - Framework層のRepositoryを注入してUseCaseに提供
 - **Presenter** - プレゼンター（Output Portの実装）
-  - UserPresenter, TaskPresenter, ErrorPresenter, JsonPresenter, AdvancedPredictionPresenter
+  - WeatherPresenter, PredictionPresenter, CropProfilePresenter
+  - UseCaseの出力を外部形式（JSON, Table等）に変換
 - **Controller** - コントローラー（Input Portの実装）
-  - UserController, TaskController, HealthController, AdvancedPredictionController
+  - WeatherCliController, PredictionCliController
+  - 外部からの入力をUseCaseのDTOに変換
 - **Mapper** - データマッパー
-  - UserMapper, TaskMapper, EntityToDtoMapper, DtoToEntityMapper
+  - WeatherMapper, EntityToDtoMapper
+  - Entity ↔ DTO変換
+- **Interfaces** - インターフェース定義
+  - PredictionServiceInterface, HttpServiceInterface, FileRepositoryInterface
+  - Framework層が実装すべきインターフェースを定義
 - **Adapter Exception** - アダプター例外
-  - DatabaseConnectionError, ExternalServiceError, DataMappingError
+  - ExternalServiceError, DataMappingError
 
 #### ディレクトリ構造:
 ```
 src/agrr.core/adapter/
-├── repositories/     # リポジトリ実装（Gatewayの実装）
-├── gateways/         # ゲートウェイ実装（UseCase層のGatewayインターフェースの実装）
+├── gateways/         # ゲートウェイ実装（Framework層のRepositoryを抽象化）
 ├── presenters/       # プレゼンター（Output Portの実装）
 ├── controllers/      # コントローラー（Input Portの実装）
-├── services/         # サービス実装（Gatewayから呼び出される）
 ├── mappers/          # データマッパー
+├── interfaces/       # Framework層向けインターフェース定義
 ├── exceptions/       # アダプター例外
 └── __init__.py
 ```
 
-### 4. Framework Layer (フレームワーク層)
-**責任**: 外部フレームワークとの統合
+
+### 4. Framework Layer (フレームワーク層 / Frameworks & Drivers)
+**責任**: 外部システムとの直接的な通信、技術的実装詳細、外部ライブラリの使用
 
 #### 構成要素:
-- **Web Framework** - Webフレームワーク
-  - FastAPI Router, Middleware, Authentication, Rate Limiting
-- **Database** - データベース設定・接続
-  - Database Connection, Migration, Connection Pool, Transaction Manager
-- **External APIs** - 外部API統合
-  - HTTP Client, API Client, Retry Logic, Circuit Breaker
-- **Message Queue** - メッセージキュー
-  - Producer, Consumer, Message Handler, Dead Letter Queue
-- **Configuration** - 設定管理
-  - Environment Config, Secret Management, Feature Flags, Logging Config
+- **Repository実装** - 外部システムとの直接通信（データアクセス層）
+  - WeatherAPIOpenMeteoRepository - Open-Meteo API通信
+  - WeatherJMARepository - JMA API通信
+  - WeatherFileRepository - ファイルベースの天気データ
+  - CropProfileFileRepository - 作物プロファイルファイル
+  - 外部API、データベース、ファイルシステムとの直接I/O
+  - Adapter層のインターフェースを実装
+- **Technical Services** - 技術的サービス実装
+  - HttpClient - HTTP通信（requestsライブラリ使用）
+  - FileRepository - ファイルI/O基本実装
+  - HtmlTableFetcher - HTMLパース（BeautifulSoup使用）
+  - ARIMAPredictionService - 時系列予測（statsmodels使用）
+  - LightGBMPredictionService - 機械学習予測（lightgbm使用）
+  - TimeSeriesARIMAService - ARIMA実装
+  - FeatureEngineeringService - 特徴量エンジニアリング
+- **InMemory Repositories** - テスト用メモリ実装
+  - InMemoryCropProfileRepository
+  - InMemoryFieldRepository
+  - InMemoryOptimizationResultRepository
+- **Configuration** - 設定管理とDI
+  - AgrrCoreContainer - 依存性注入コンテナ
+  - Environment Config, Logging Config
 - **Framework Exception** - フレームワーク例外
-  - ConfigurationError, InfrastructureError, TimeoutError
+  - ConfigurationError, InfrastructureError
 
 #### ディレクトリ構造:
 ```
 src/agrr.core/framework/
-├── web/              # Webフレームワーク
-├── database/         # データベース設定
-├── external/         # 外部API
-├── messaging/        # メッセージキュー
-├── config/           # 設定管理
+├── repositories/     # Repository実装（外部システムとの直接通信）
+├── services/         # 技術的サービス実装（ML、HTTP、File等）
+├── config/           # 設定管理、DIコンテナ
 ├── exceptions/       # フレームワーク例外
 └── __init__.py
 ```
+
 
 ## データフロー
 
@@ -168,3 +184,24 @@ src/agrr.core/framework/
 - **E2E Tests**: Framework Layer から全体のテスト
 
 各層でモックを使用して依存関係を分離し、テストの独立性を保つ。
+
+---
+
+## 補足: Repository実装の配置
+
+✅ **2025-10-14 更新:** すべてのRepository実装を標準的なClean Architectureに従い`framework/repositories/`に配置しました。
+
+**配置されているRepository実装:**
+- WeatherAPIOpenMeteoRepository - Open-Meteo API通信
+- WeatherJMARepository - JMA API通信
+- WeatherFileRepository - ファイルベースの天気データ
+- CropProfileFileRepository - 作物プロファイルファイル
+- CropProfileLLMRepository - LLMベースの作物プロファイル
+- FieldFileRepository - 圃場ファイル
+- InteractionRuleFileRepository - 相互作用ルールファイル
+- PredictionStorageRepository - 予測結果ストレージ
+- InMemory*Repository - テスト用メモリ実装
+
+これにより、標準的なClean Architectureの定義に完全準拠しました。
+
+---

@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from agrr_core.adapter.gateways.interaction_rule_gateway_impl import InteractionRuleGatewayImpl
-from agrr_core.adapter.repositories.interaction_rule_file_repository import InteractionRuleFileRepository
+from agrr_core.framework.repositories.interaction_rule_file_repository import InteractionRuleFileRepository
 from agrr_core.framework.repositories.file_repository import FileRepository
 from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.entity.value_objects.rule_type import RuleType

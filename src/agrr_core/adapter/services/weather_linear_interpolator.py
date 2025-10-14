@@ -9,7 +9,7 @@ from typing import Dict, List
 from datetime import date, timedelta
 
 from agrr_core.entity.entities.weather_entity import WeatherData
-from agrr_core.usecase.interfaces.weather_interpolator import WeatherInterpolator
+from agrr_core.usecase.gateways.weather_interpolator import WeatherInterpolator
 from agrr_core.adapter.services.interpolation_utils import LinearInterpolationService
 
 

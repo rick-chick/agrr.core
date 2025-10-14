@@ -11,7 +11,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 import asyncio
 
-from agrr_core.adapter.repositories.weather_jma_repository import WeatherJMARepository
+from agrr_core.framework.repositories.weather_jma_repository import WeatherJMARepository
 from agrr_core.adapter.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
 from agrr_core.adapter.interfaces.html_table_structures import HtmlTable, TableRow
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError

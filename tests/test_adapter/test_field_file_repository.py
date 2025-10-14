@@ -5,7 +5,7 @@ from pathlib import Path
 import tempfile
 import json
 
-from agrr_core.adapter.repositories.field_file_repository import FieldFileRepository
+from agrr_core.framework.repositories.field_file_repository import FieldFileRepository
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.exceptions.file_error import FileError
 

@@ -27,7 +27,7 @@ from agrr_core.usecase.dto.growth_period_optimize_request_dto import (
 from agrr_core.usecase.dto.growth_period_optimize_response_dto import (
     OptimalGrowthPeriodResponseDTO,
 )
-from agrr_core.usecase.interfaces.weather_interpolator import WeatherInterpolator
+from agrr_core.usecase.gateways.weather_interpolator import WeatherInterpolator
 
 
 class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
@@ -284,7 +284,7 @@ Notes:
         
         # Load crop profile from file
         try:
-            from agrr_core.adapter.repositories.crop_profile_file_repository import CropProfileFileRepository
+            from agrr_core.framework.repositories.crop_profile_file_repository import CropProfileFileRepository
             from agrr_core.framework.repositories.file_repository import FileRepository
             file_repo = FileRepository()
             profile_repo = CropProfileFileRepository(file_repository=file_repo, file_path=args.crop_file)

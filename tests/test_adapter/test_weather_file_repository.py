@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch, mock_open
 
-from agrr_core.adapter.repositories.weather_file_repository import WeatherFileRepository
+from agrr_core.framework.repositories.weather_file_repository import WeatherFileRepository
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.file_error import FileError
 

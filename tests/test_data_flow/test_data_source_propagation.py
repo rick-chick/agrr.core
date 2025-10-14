@@ -9,8 +9,8 @@ from unittest.mock import AsyncMock, patch, MagicMock
 import pandas as pd
 
 from agrr_core.framework.agrr_core_container import WeatherCliContainer, AgrrCoreContainer
-from agrr_core.adapter.repositories.weather_jma_repository import WeatherJMARepository
-from agrr_core.adapter.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
+from agrr_core.framework.repositories.weather_jma_repository import WeatherJMARepository
+from agrr_core.framework.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
 from agrr_core.adapter.interfaces.html_table_structures import HtmlTable, TableRow
 
 

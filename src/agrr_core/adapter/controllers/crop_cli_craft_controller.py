@@ -68,12 +68,14 @@ Output Format (JSON):
       {
         "stage": {"name": "germination", "order": 1},
         "temperature": {
-          "base_temperature": 10.0,
-          "optimal_min": 20.0,
-          "optimal_max": 30.0,
-          "low_stress_threshold": 15.0,
-          "high_stress_threshold": 35.0,
-          "frost_threshold": 2.0
+          "base_temperature": 10.0,      // 発育下限温度（これより低いと発育しない）
+          "optimal_min": 20.0,            // 最適温度範囲の下限
+          "optimal_max": 30.0,            // 最適温度範囲の上限
+          "low_stress_threshold": 15.0,  // 低温ストレス閾値
+          "high_stress_threshold": 35.0, // 高温ストレス閾値
+          "frost_threshold": 2.0,        // 霜害リスク温度
+          "max_temperature": 38.0,       // 発育上限温度（これより高いと発育停止）
+          "sterility_risk_threshold": 40.0  // 不稔リスク温度（開花期のみ）
         },
         "thermal": {"required_gdd": 150.0},
         "sunshine": {
@@ -89,7 +91,8 @@ Output Format (JSON):
           "optimal_max": 28.0,
           "low_stress_threshold": 13.0,
           "high_stress_threshold": 33.0,
-          "frost_threshold": 2.0
+          "frost_threshold": 2.0,
+          "max_temperature": 36.0
         },
         "thermal": {"required_gdd": 800.0},
         "sunshine": {
@@ -99,6 +102,18 @@ Output Format (JSON):
       }
     ]
   }
+
+Temperature Parameters Explained:
+  base_temperature       - Lower threshold: no growth below this (GDD = 0)
+  optimal_min/max        - Optimal temperature range for best growth
+  low_stress_threshold   - Low temperature stress begins
+  high_stress_threshold  - High temperature stress begins
+  frost_threshold        - Frost damage risk temperature
+  max_temperature        - Upper threshold: no growth above this (GDD = 0)
+  sterility_risk_threshold - Sterility risk (flowering stage only, optional)
+
+Temperature constraints:
+  base_temperature < optimal_min ≤ optimal_max < max_temperature
 
 Note: This command uses AI (LLM) to generate crop growth profiles.
       The output format is ready to use directly with 'agrr progress' and 'agrr optimize-period' commands.

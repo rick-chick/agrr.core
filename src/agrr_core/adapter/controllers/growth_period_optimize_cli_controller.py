@@ -156,7 +156,8 @@ Crop Profile File Format (JSON):
           "optimal_max": 30.0,
           "low_stress_threshold": 15.0,
           "high_stress_threshold": 35.0,
-          "frost_threshold": 0.0
+          "frost_threshold": 0.0,
+          "max_temperature": 42.0
         },
         "thermal": {"required_gdd": 200.0},
         "sunshine": {
@@ -194,6 +195,10 @@ Notes:
   - Crop profile file must be generated first using 'agrr crop' command
   - The output from 'agrr crop' can be used directly as --crop-file input
   - The 'groups' field in crop data is essential for interaction rules (continuous cultivation, etc.)
+  - Crop profile JSON must include 'max_temperature' (developmental arrest temperature)
+  - Old JSON files without 'max_temperature' will fail with KeyError
+  - Recommended values: Rice +7°C, Wheat +5°C, Vegetables +3°C above high_stress_threshold
+  - See docs/MIGRATION_GUIDE_MAX_TEMPERATURE.md for migration steps
             """
         )
 

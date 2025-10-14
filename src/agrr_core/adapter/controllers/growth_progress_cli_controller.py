@@ -126,6 +126,16 @@ Note:
   - Weather file can be generated using 'agrr weather' command with --json flag.
   - Crop profile file must be generated first using 'agrr crop' command.
   - The crop profile file contains all growth stage requirements for the specified crop.
+
+⚠️  IMPORTANT (v0.2.0):
+  - Crop profile JSON must include 'max_temperature' in each stage's temperature section.
+  - Old JSON files without 'max_temperature' will fail with KeyError.
+  - To update old files, add 'max_temperature' to temperature section:
+    • Rice/cereals: high_stress_threshold + 7°C (e.g., 35 + 7 = 42)
+    • Wheat: high_stress_threshold + 5°C (e.g., 30 + 5 = 35)
+    • Vegetables: high_stress_threshold + 3°C (e.g., 32 + 3 = 35)
+  - Or regenerate with: agrr crop --query "crop name" > new_profile.json
+  - See docs/MIGRATION_GUIDE_MAX_TEMPERATURE.md for details.
             """
         )
 

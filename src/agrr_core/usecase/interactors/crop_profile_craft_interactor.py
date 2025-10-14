@@ -19,8 +19,8 @@ from agrr_core.entity import (
     StageRequirement,
 )
 from agrr_core.entity.entities.crop_profile_entity import CropProfile
-from agrr_core.adapter.mappers.llm_response_normalizer import LLMResponseNormalizer
-from agrr_core.adapter.mappers.crop_profile_mapper import CropProfileMapper
+from agrr_core.usecase.services.llm_response_normalizer import LLMResponseNormalizer
+from agrr_core.usecase.services.crop_profile_mapper import CropProfileMapper
 
 
 class CropProfileCraftInteractor(CropProfileCraftInputPort):

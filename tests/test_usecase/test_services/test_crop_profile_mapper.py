@@ -9,7 +9,7 @@ from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
 from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
 from agrr_core.entity.entities.crop_profile_entity import CropProfile
-from agrr_core.adapter.mappers.crop_profile_mapper import CropProfileMapper
+from agrr_core.usecase.services.crop_profile_mapper import CropProfileMapper
 
 
 @pytest.mark.unit

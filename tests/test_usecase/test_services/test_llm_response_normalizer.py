@@ -2,7 +2,7 @@
 
 import pytest
 
-from agrr_core.adapter.mappers.llm_response_normalizer import LLMResponseNormalizer
+from agrr_core.usecase.services.llm_response_normalizer import LLMResponseNormalizer
 
 
 @pytest.mark.unit

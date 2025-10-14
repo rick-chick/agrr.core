@@ -1,13 +1,13 @@
 """Gateway interfaces for usecase layer."""
 
 from .weather_data_gateway import WeatherDataGateway
-from .weather_data_repository_gateway import WeatherDataRepositoryGateway
-from .prediction_service_gateway import PredictionServiceGateway
-from .prediction_repository_gateway import PredictionRepositoryGateway
+from .model_config_gateway import ModelConfigGateway
+from .prediction_model_gateway import PredictionModelGateway
+from .forecast_gateway import ForecastGateway
 
 __all__ = [
     "WeatherDataGateway",
-    "WeatherDataRepositoryGateway", 
-    "PredictionServiceGateway",
-    "PredictionRepositoryGateway"
+    "ModelConfigGateway", 
+    "PredictionModelGateway",
+    "ForecastGateway"
 ]

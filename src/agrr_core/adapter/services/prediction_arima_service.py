@@ -7,11 +7,11 @@ from datetime import datetime, timedelta
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.prediction_error import PredictionError
 from agrr_core.adapter.services.interpolation_utils import LinearInterpolationService
-from agrr_core.usecase.gateways.prediction_service_gateway import PredictionServiceGateway
+from agrr_core.usecase.gateways.prediction_model_gateway import PredictionModelGateway
 from agrr_core.adapter.interfaces.time_series_interface import TimeSeriesInterface
 
 
-class PredictionARIMAService(PredictionServiceGateway):
+class PredictionARIMAService(PredictionModelGateway):
     """ARIMA-based implementation of weather prediction service."""
     
     def __init__(self, time_series_service: TimeSeriesInterface):

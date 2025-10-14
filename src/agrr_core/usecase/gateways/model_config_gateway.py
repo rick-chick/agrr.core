@@ -1,4 +1,4 @@
-"""Weather data repository gateway interface for usecase layer."""
+"""Model configuration gateway interface for usecase layer."""
 
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any
@@ -6,8 +6,8 @@ from typing import List, Dict, Any
 from agrr_core.entity import WeatherData, Location
 
 
-class WeatherDataRepositoryGateway(ABC):
-    """Gateway interface for weather data repository operations."""
+class ModelConfigGateway(ABC):
+    """Gateway interface for prediction model configuration and management operations."""
     
     @abstractmethod
     async def save_prediction_config(self, config: Dict[str, Any]) -> None:

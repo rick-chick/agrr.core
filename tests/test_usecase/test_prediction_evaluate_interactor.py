@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 from agrr_core.entity import WeatherData, Forecast, Location
 from agrr_core.usecase.interactors.prediction_evaluate_interactor import ModelEvaluationInteractor
 from agrr_core.usecase.gateways.weather_data_gateway import WeatherDataGateway
-from agrr_core.usecase.gateways.weather_data_repository_gateway import WeatherDataRepositoryGateway
-from agrr_core.usecase.gateways.prediction_service_gateway import PredictionServiceGateway
+from agrr_core.usecase.gateways.model_config_gateway import ModelConfigGateway
+from agrr_core.usecase.gateways.prediction_model_gateway import PredictionModelGateway
 from agrr_core.usecase.dto.prediction_config_dto import PredictionConfigDTO
 from agrr_core.usecase.dto.model_evaluation_request_dto import ModelEvaluationRequestDTO
 from agrr_core.entity.exceptions.prediction_error import PredictionError
@@ -60,13 +60,13 @@ def sample_training_data():
 def mock_gateways():
     """Mock gateways for testing."""
     weather_data_gateway = AsyncMock(spec=WeatherDataGateway)
-    weather_data_repository_gateway = AsyncMock(spec=WeatherDataRepositoryGateway)
-    prediction_service_gateway = AsyncMock(spec=PredictionServiceGateway)
+    model_config_gateway = AsyncMock(spec=ModelConfigGateway)
+    prediction_model_gateway = AsyncMock(spec=PredictionModelGateway)
     
     return {
         'weather_data_gateway': weather_data_gateway,
-        'weather_data_repository_gateway': weather_data_repository_gateway,
-        'prediction_service_gateway': prediction_service_gateway
+        'model_config_gateway': model_config_gateway,
+        'prediction_model_gateway': prediction_model_gateway
     }
 
 
@@ -75,8 +75,8 @@ def interactor(mock_gateways):
     """Create interactor with mocked dependencies."""
     return ModelEvaluationInteractor(
         weather_data_gateway=mock_gateways['weather_data_gateway'],
-        weather_data_repository_gateway=mock_gateways['weather_data_repository_gateway'],
-        prediction_service_gateway=mock_gateways['prediction_service_gateway']
+        model_config_gateway=mock_gateways['model_config_gateway'],
+        prediction_model_gateway=mock_gateways['prediction_model_gateway']
     )
 
 
@@ -119,7 +119,7 @@ async def test_execute_success(interactor, sample_request, sample_test_data, sam
         ]
     }
     
-    mock_gateways['prediction_service_gateway'].predict_multiple_metrics.return_value = forecasts
+    mock_gateways['prediction_model_gateway'].predict_multiple_metrics.return_value = forecasts
     
     # Mock accuracy results
     accuracy_results = {
@@ -130,8 +130,8 @@ async def test_execute_success(interactor, sample_request, sample_test_data, sam
         'r2_score': 0.85
     }
     
-    mock_gateways['prediction_service_gateway'].evaluate_model_accuracy.return_value = accuracy_results
-    mock_gateways['weather_data_repository_gateway'].save_model_evaluation.return_value = None
+    mock_gateways['prediction_model_gateway'].evaluate_model_accuracy.return_value = accuracy_results
+    mock_gateways['model_config_gateway'].save_model_evaluation.return_value = None
     
     # Execute
     result = await interactor.execute(sample_request)
@@ -149,9 +149,9 @@ async def test_execute_success(interactor, sample_request, sample_test_data, sam
     
     # Verify gateway calls
     assert mock_gateways['weather_data_gateway'].get_weather_data_by_location_and_date_range.call_count == 2
-    mock_gateways['prediction_service_gateway'].predict_multiple_metrics.assert_called_once()
-    mock_gateways['prediction_service_gateway'].evaluate_model_accuracy.assert_called_once()
-    mock_gateways['weather_data_repository_gateway'].save_model_evaluation.assert_called_once()
+    mock_gateways['prediction_model_gateway'].predict_multiple_metrics.assert_called_once()
+    mock_gateways['prediction_model_gateway'].evaluate_model_accuracy.assert_called_once()
+    mock_gateways['model_config_gateway'].save_model_evaluation.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -174,7 +174,7 @@ async def test_execute_prediction_error(interactor, sample_request, sample_test_
     ]
     
     # Mock prediction service to raise exception
-    mock_gateways['prediction_service_gateway'].predict_multiple_metrics.side_effect = Exception("Prediction error")
+    mock_gateways['prediction_model_gateway'].predict_multiple_metrics.side_effect = Exception("Prediction error")
     
     with pytest.raises(PredictionError, match="Model evaluation failed"):
         await interactor.execute(sample_request)

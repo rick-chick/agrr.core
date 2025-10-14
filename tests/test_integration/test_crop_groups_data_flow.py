@@ -17,7 +17,7 @@ from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
 from agrr_core.entity.entities.temperature_profile_entity import TemperatureProfile
 from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
-from agrr_core.adapter.mappers.crop_profile_mapper import CropProfileMapper
+from agrr_core.usecase.services.crop_profile_mapper import CropProfileMapper
 from agrr_core.adapter.gateways.crop_profile_gateway_impl import CropProfileGatewayImpl
 from agrr_core.adapter.repositories.crop_profile_file_repository import CropProfileFileRepository
 from agrr_core.framework.repositories.file_repository import FileRepository

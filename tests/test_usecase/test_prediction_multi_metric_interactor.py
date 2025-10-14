@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 from agrr_core.entity import WeatherData, Forecast, Location
 from agrr_core.usecase.interactors.prediction_multi_metric_interactor import MultiMetricPredictionInteractor
 from agrr_core.usecase.gateways.weather_data_gateway import WeatherDataGateway
-from agrr_core.usecase.gateways.weather_data_repository_gateway import WeatherDataRepositoryGateway
-from agrr_core.usecase.gateways.prediction_service_gateway import PredictionServiceGateway
+from agrr_core.usecase.gateways.model_config_gateway import ModelConfigGateway
+from agrr_core.usecase.gateways.prediction_model_gateway import PredictionModelGateway
 from agrr_core.usecase.ports.output.prediction_presenter_output_port import PredictionPresenterOutputPort
 from agrr_core.usecase.dto.prediction_config_dto import PredictionConfigDTO
 from agrr_core.usecase.dto.multi_metric_prediction_request_dto import MultiMetricPredictionRequestDTO
@@ -40,14 +40,14 @@ def sample_weather_data():
 def mock_gateways():
     """Mock gateways for testing."""
     weather_data_gateway = AsyncMock(spec=WeatherDataGateway)
-    weather_data_repository_gateway = AsyncMock(spec=WeatherDataRepositoryGateway)
-    prediction_service_gateway = AsyncMock(spec=PredictionServiceGateway)
+    model_config_gateway = AsyncMock(spec=ModelConfigGateway)
+    prediction_model_gateway = AsyncMock(spec=PredictionModelGateway)
     prediction_presenter_port = AsyncMock(spec=PredictionPresenterOutputPort)
     
     return {
         'weather_data_gateway': weather_data_gateway,
-        'weather_data_repository_gateway': weather_data_repository_gateway,
-        'prediction_service_gateway': prediction_service_gateway,
+        'model_config_gateway': model_config_gateway,
+        'prediction_model_gateway': prediction_model_gateway,
         'prediction_presenter_port': prediction_presenter_port
     }
 
@@ -57,8 +57,8 @@ def interactor(mock_gateways):
     """Create interactor with mocked dependencies."""
     return MultiMetricPredictionInteractor(
         weather_data_gateway=mock_gateways['weather_data_gateway'],
-        weather_data_repository_gateway=mock_gateways['weather_data_repository_gateway'],
-        prediction_service_gateway=mock_gateways['prediction_service_gateway'],
+        model_config_gateway=mock_gateways['model_config_gateway'],
+        prediction_model_gateway=mock_gateways['prediction_model_gateway'],
         prediction_presenter_output_port=mock_gateways['prediction_presenter_port']
     )
 
@@ -107,8 +107,8 @@ async def test_execute_success(interactor, sample_request, sample_weather_data, 
         ]
     }
     
-    mock_gateways['prediction_service_gateway'].predict_multiple_metrics.return_value = forecasts
-    mock_gateways['weather_data_repository_gateway'].save_forecast_with_metadata.return_value = None
+    mock_gateways['prediction_model_gateway'].predict_multiple_metrics.return_value = forecasts
+    mock_gateways['model_config_gateway'].save_forecast_with_metadata.return_value = None
     
     # Execute
     result = await interactor.execute(sample_request)
@@ -122,8 +122,8 @@ async def test_execute_success(interactor, sample_request, sample_weather_data, 
     
     # Verify gateway calls
     mock_gateways['weather_data_gateway'].get_weather_data_by_location_and_date_range.assert_called_once()
-    mock_gateways['prediction_service_gateway'].predict_multiple_metrics.assert_called_once()
-    mock_gateways['weather_data_repository_gateway'].save_forecast_with_metadata.assert_called_once()
+    mock_gateways['prediction_model_gateway'].predict_multiple_metrics.assert_called_once()
+    mock_gateways['model_config_gateway'].save_forecast_with_metadata.assert_called_once()
 
 
 @pytest.mark.asyncio

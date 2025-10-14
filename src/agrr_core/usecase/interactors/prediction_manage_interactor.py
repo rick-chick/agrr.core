@@ -3,8 +3,8 @@
 from typing import Dict, Any, List
 
 from agrr_core.entity.exceptions.prediction_error import PredictionError
-from agrr_core.usecase.gateways.weather_data_repository_gateway import WeatherDataRepositoryGateway
-from agrr_core.usecase.gateways.prediction_service_gateway import PredictionServiceGateway
+from agrr_core.usecase.gateways.model_config_gateway import ModelConfigGateway
+from agrr_core.usecase.gateways.prediction_model_gateway import PredictionModelGateway
 from agrr_core.usecase.ports.input.model_management_input_port import ModelManagementInputPort
 
 
@@ -13,16 +13,16 @@ class ModelManagementInteractor(ModelManagementInputPort):
     
     def __init__(
         self, 
-        weather_data_repository_gateway: WeatherDataRepositoryGateway,
-        prediction_service_gateway: PredictionServiceGateway
+        model_config_gateway: ModelConfigGateway,
+        prediction_model_gateway: PredictionModelGateway
     ):
-        self.weather_data_repository_gateway = weather_data_repository_gateway
-        self.prediction_service_gateway = prediction_service_gateway
+        self.model_config_gateway = model_config_gateway
+        self.prediction_model_gateway = prediction_model_gateway
     
     async def get_available_models(self) -> List[Dict[str, Any]]:
         """Get available prediction models."""
         try:
-            models = await self.weather_data_repository_gateway.get_available_models()
+            models = await self.model_config_gateway.get_available_models()
             return [{"name": model, "type": model} for model in models]
         except Exception as e:
             raise PredictionError(f"Failed to get available models: {e}")
@@ -30,7 +30,7 @@ class ModelManagementInteractor(ModelManagementInputPort):
     async def get_model_info(self, model_type: str) -> Dict[str, Any]:
         """Get information about specific model."""
         try:
-            return await self.prediction_service_gateway.get_model_info(model_type)
+            return await self.prediction_model_gateway.get_model_info(model_type)
         except Exception as e:
             raise PredictionError(f"Failed to get model info for {model_type}: {e}")
     

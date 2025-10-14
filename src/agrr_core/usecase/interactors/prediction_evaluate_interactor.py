@@ -4,8 +4,8 @@ from datetime import datetime
 
 from agrr_core.entity.exceptions.prediction_error import PredictionError
 from agrr_core.usecase.gateways.weather_data_gateway import WeatherDataGateway
-from agrr_core.usecase.gateways.weather_data_repository_gateway import WeatherDataRepositoryGateway
-from agrr_core.usecase.gateways.prediction_service_gateway import PredictionServiceGateway
+from agrr_core.usecase.gateways.model_config_gateway import ModelConfigGateway
+from agrr_core.usecase.gateways.prediction_model_gateway import PredictionModelGateway
 from agrr_core.usecase.ports.input.model_evaluation_input_port import ModelEvaluationInputPort
 from agrr_core.usecase.dto.model_evaluation_request_dto import ModelEvaluationRequestDTO
 from agrr_core.usecase.dto.model_accuracy_dto import ModelAccuracyDTO
@@ -17,12 +17,12 @@ class ModelEvaluationInteractor(ModelEvaluationInputPort):
     def __init__(
         self, 
         weather_data_gateway: WeatherDataGateway,
-        weather_data_repository_gateway: WeatherDataRepositoryGateway,
-        prediction_service_gateway: PredictionServiceGateway
+        model_config_gateway: ModelConfigGateway,
+        prediction_model_gateway: PredictionModelGateway
     ):
         self.weather_data_gateway = weather_data_gateway
-        self.weather_data_repository_gateway = weather_data_repository_gateway
-        self.prediction_service_gateway = prediction_service_gateway
+        self.model_config_gateway = model_config_gateway
+        self.prediction_model_gateway = prediction_model_gateway
     
     async def execute(self, request: ModelEvaluationRequestDTO) -> ModelAccuracyDTO:
         """Execute model evaluation."""
@@ -55,13 +55,13 @@ class ModelEvaluationInteractor(ModelEvaluationInputPort):
             accuracy_results = {}
             for metric in request.metrics:
                 # Make predictions
-                forecasts_dict = await self.prediction_service_gateway.predict_multiple_metrics(
+                forecasts_dict = await self.prediction_model_gateway.predict_multiple_metrics(
                     training_data, [metric], model_config
                 )
                 
                 if metric in forecasts_dict:
                     # Evaluate accuracy
-                    accuracy = await self.prediction_service_gateway.evaluate_model_accuracy(
+                    accuracy = await self.prediction_model_gateway.evaluate_model_accuracy(
                         test_data, forecasts_dict[metric], metric
                     )
                     accuracy_results[metric] = accuracy
@@ -77,7 +77,7 @@ class ModelEvaluationInteractor(ModelEvaluationInputPort):
                 'evaluation_date': datetime.now().isoformat()
             }
             
-            await self.weather_data_repository_gateway.save_model_evaluation(
+            await self.model_config_gateway.save_model_evaluation(
                 request.model_type, evaluation_results
             )
             

@@ -1,4 +1,4 @@
-"""Prediction service gateway interface for usecase layer."""
+"""Prediction model gateway interface for usecase layer."""
 
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any
@@ -6,8 +6,8 @@ from typing import List, Dict, Any
 from agrr_core.entity import WeatherData, Forecast
 
 
-class PredictionServiceGateway(ABC):
-    """Gateway interface for prediction service operations."""
+class PredictionModelGateway(ABC):
+    """Gateway interface for prediction model operations."""
     
     @abstractmethod
     async def predict_multiple_metrics(

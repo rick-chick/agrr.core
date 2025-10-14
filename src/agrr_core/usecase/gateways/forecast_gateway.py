@@ -1,4 +1,4 @@
-"""Prediction repository gateway interface for usecase layer."""
+"""Forecast gateway interface for usecase layer."""
 
 from abc import ABC, abstractmethod
 from typing import List
@@ -6,8 +6,8 @@ from typing import List
 from agrr_core.entity import Forecast
 
 
-class PredictionRepositoryGateway(ABC):
-    """Gateway interface for weather prediction repository operations."""
+class ForecastGateway(ABC):
+    """Gateway interface for forecast storage and retrieval operations."""
     
     @abstractmethod
     async def save_forecast(self, forecasts: List[Forecast]) -> None:

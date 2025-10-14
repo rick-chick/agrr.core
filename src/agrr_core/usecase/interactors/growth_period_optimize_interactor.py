@@ -308,7 +308,17 @@ class GrowthPeriodOptimizeInteractor(
             optimization_id = f"{request.crop_id}_{request.variety or 'default'}_{request.evaluation_period_start.date()}_{request.evaluation_period_end.date()}"
             await self.optimization_result_gateway.save(optimization_id, intermediate_results)
         
-        return results
+        # Sort candidates by cost (ascending: lower cost is better)
+        # Valid candidates (with cost) come first, sorted by cost
+        # Invalid candidates (without cost) come last, maintaining chronological order
+        valid_results = [r for r in results if r.total_cost is not None]
+        invalid_results = [r for r in results if r.total_cost is None]
+        
+        # Sort valid candidates by cost (ascending)
+        valid_results.sort(key=lambda r: r.total_cost)
+        
+        # Return sorted valid candidates followed by invalid candidates
+        return valid_results + invalid_results
 
     async def _evaluate_candidates(
         self, request: OptimalGrowthPeriodRequestDTO, candidate_start_dates: List[datetime]

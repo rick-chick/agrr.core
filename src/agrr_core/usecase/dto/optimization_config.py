@@ -23,8 +23,12 @@ class OptimizationConfig:
     Example: [1.0, 0.75, 0.5, 0.25] generates candidates using 100%, 75%, 50%, 25% of field area.
     """
     
-    top_period_candidates: int = 3
-    """Number of top period candidates to use from DP results."""
+    top_period_candidates: int = 100
+    """Number of top period candidates to use from DP results.
+    
+    Since candidates are now sorted by cost (ascending), this allows the algorithm
+    to consider a wide range of cultivation periods including the most cost-effective ones.
+    """
     
     min_profit_rate_threshold: float = -0.5
     """Minimum profit rate to accept a candidate (-0.5 = loss up to 50%)."""
@@ -111,7 +115,7 @@ class OptimizationConfig:
         """
         return cls(
             area_levels=[1.0, 0.5],
-            top_period_candidates=2,
+            top_period_candidates=30,  # Increased to ensure best candidates are included
             max_local_search_iterations=50,
             max_no_improvement=10,
             max_neighbors_per_iteration=100,
@@ -128,7 +132,7 @@ class OptimizationConfig:
         """
         return cls(
             area_levels=[1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25],
-            top_period_candidates=5,
+            top_period_candidates=200,  # Use more candidates for higher quality
             max_local_search_iterations=200,
             max_no_improvement=30,
             max_neighbors_per_iteration=300,

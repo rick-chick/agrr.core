@@ -167,13 +167,7 @@ Notes:
   - Interaction rules allow you to model continuous cultivation impacts,
     crop rotation benefits, and field-crop compatibility.
   - See INTERACTION_RULE_USAGE.md for detailed rule types and examples.
-
-⚠️  BREAKING CHANGE (v0.2.0):
-  - Crop profile JSON now requires 'max_temperature' parameter (developmental arrest temp)
-  - Old JSON files without 'max_temperature' will fail with KeyError
-  - Update: Add "max_temperature": <value> to each temperature section
-  - Quick fix: Regenerate profiles with 'agrr crop --query "crop name"'
-  - Migration guide: docs/MIGRATION_GUIDE_MAX_TEMPERATURE.md
+  - Crop profile JSON requires 'max_temperature' - see 'agrr crop --help' for format.
 
 """
     print(help_text)

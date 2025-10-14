@@ -192,13 +192,9 @@ Notes:
   - The optimal start date minimizes total cultivation cost
   - Daily cost includes fixed costs like field rent, but not variable costs
   - Weather file can be generated using 'agrr weather' command with --json flag
-  - Crop profile file must be generated first using 'agrr crop' command
+  - Crop profile file must be generated using 'agrr crop' command
   - The output from 'agrr crop' can be used directly as --crop-file input
   - The 'groups' field in crop data is essential for interaction rules (continuous cultivation, etc.)
-  - Crop profile JSON must include 'max_temperature' (developmental arrest temperature)
-  - Old JSON files without 'max_temperature' will fail with KeyError
-  - Recommended values: Rice +7°C, Wheat +5°C, Vegetables +3°C above high_stress_threshold
-  - See docs/MIGRATION_GUIDE_MAX_TEMPERATURE.md for migration steps
             """
         )
 

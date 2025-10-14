@@ -68,14 +68,14 @@ Output Format (JSON):
       {
         "stage": {"name": "germination", "order": 1},
         "temperature": {
-          "base_temperature": 10.0,      // 発育下限温度（これより低いと発育しない）
-          "optimal_min": 20.0,            // 最適温度範囲の下限
-          "optimal_max": 30.0,            // 最適温度範囲の上限
-          "low_stress_threshold": 15.0,  // 低温ストレス閾値
-          "high_stress_threshold": 35.0, // 高温ストレス閾値
-          "frost_threshold": 2.0,        // 霜害リスク温度
-          "max_temperature": 38.0,       // 発育上限温度（これより高いと発育停止）
-          "sterility_risk_threshold": 40.0  // 不稔リスク温度（開花期のみ）
+          "base_temperature": 10.0,
+          "optimal_min": 20.0,
+          "optimal_max": 30.0,
+          "low_stress_threshold": 15.0,
+          "high_stress_threshold": 35.0,
+          "frost_threshold": 2.0,
+          "max_temperature": 38.0,
+          "sterility_risk_threshold": 40.0
         },
         "thermal": {"required_gdd": 150.0},
         "sunshine": {

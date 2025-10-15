@@ -6,11 +6,12 @@ import sys
 from typing import Optional
 
 from agrr_core.framework.agrr_core_container import WeatherCliContainer
-from agrr_core.adapter.gateways.crop_profile_gateway_impl import CropProfileGatewayImpl
-from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
-from agrr_core.adapter.gateways.optimization_result_gateway_impl import OptimizationResultGatewayImpl
-from agrr_core.adapter.gateways.interaction_rule_gateway_impl import InteractionRuleGatewayImpl
-from agrr_core.adapter.gateways.field_gateway_impl import FieldGatewayImpl
+from agrr_core.adapter.gateways.crop_profile_file_gateway import CropProfileFileGateway
+from agrr_core.adapter.gateways.crop_profile_inmemory_gateway import CropProfileInMemoryGateway
+from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway
+from agrr_core.adapter.gateways.optimization_result_inmemory_gateway import OptimizationResultInMemoryGateway
+from agrr_core.adapter.gateways.interaction_rule_file_gateway import InteractionRuleFileGateway
+from agrr_core.adapter.gateways.field_file_gateway import FieldFileGateway
 from agrr_core.adapter.presenters.crop_profile_craft_presenter import CropProfileCraftPresenter
 from agrr_core.adapter.presenters.multi_field_crop_allocation_cli_presenter import MultiFieldCropAllocationCliPresenter
 from agrr_core.adapter.controllers.crop_cli_craft_controller import CropCliCraftController
@@ -18,11 +19,7 @@ from agrr_core.adapter.controllers.growth_progress_cli_controller import GrowthP
 from agrr_core.adapter.controllers.growth_period_optimize_cli_controller import GrowthPeriodOptimizeCliController
 from agrr_core.adapter.controllers.multi_field_crop_allocation_cli_controller import MultiFieldCropAllocationCliController
 from agrr_core.framework.services.llm_client_impl import FrameworkLLMClient
-from agrr_core.framework.repositories.weather_file_repository import WeatherFileRepository
-from agrr_core.framework.repositories.field_file_repository import FieldFileRepository
 from agrr_core.framework.repositories.file_repository import FileRepository
-from agrr_core.framework.repositories.inmemory_optimization_result_repository import InMemoryOptimizationResultRepository
-from agrr_core.framework.repositories.inmemory_crop_profile_repository import InMemoryCropProfileRepository
 from agrr_core.framework.repositories.crop_profile_llm_repository import CropProfileLLMRepository
 from agrr_core.adapter.services.weather_linear_interpolator import WeatherLinearInterpolator
 
@@ -209,7 +206,7 @@ def main() -> None:
             # Run crop profile craft CLI (direct wiring per project rules)
             llm_client = FrameworkLLMClient()
             llm_repository = CropProfileLLMRepository(llm_client=llm_client)
-            gateway = CropProfileGatewayImpl(llm_repository=llm_repository)
+            gateway = CropProfileInMemoryGateway()  # TODO: Add LLM gateway adapter
             presenter = CropProfileCraftPresenter()
             controller = CropCliCraftController(gateway=gateway, presenter=presenter)
             asyncio.run(controller.run(args[1:]))
@@ -217,8 +214,6 @@ def main() -> None:
             # Run growth progress calculation CLI
             # Parse args to extract crop-file and weather-file paths
             file_repository = FileRepository()
-            from agrr_core.framework.repositories.crop_profile_file_repository import CropProfileFileRepository
-            
             # Extract crop-file path
             crop_file_path = ""
             if '--crop-file' in args or '-c' in args:
@@ -229,12 +224,9 @@ def main() -> None:
                 except (ValueError, IndexError):
                     pass
             
-            crop_profile_repository = CropProfileFileRepository(
+            crop_profile_gateway = CropProfileFileGateway(
                 file_repository=file_repository,
                 file_path=crop_file_path
-            )
-            crop_profile_gateway = CropProfileGatewayImpl(
-                profile_repository=crop_profile_repository
             )
             
             # Extract weather-file path
@@ -247,8 +239,7 @@ def main() -> None:
                 except (ValueError, IndexError):
                     pass
             
-            weather_file_repository = WeatherFileRepository(file_repository=file_repository, file_path=weather_file_path)
-            weather_gateway = WeatherGatewayImpl(weather_repository=weather_file_repository)
+            weather_gateway = WeatherFileGateway(file_repository=file_repository, file_path=weather_file_path)
             
             from agrr_core.adapter.presenters.growth_progress_cli_presenter import GrowthProgressCLIPresenter
             presenter = GrowthProgressCLIPresenter(output_format="table")
@@ -297,7 +288,6 @@ For detailed help on each subcommand:
                 file_repository = FileRepository()
             
                 # Parse args to extract crop-file path
-                from agrr_core.framework.repositories.crop_profile_file_repository import CropProfileFileRepository
                 crop_file_path = ""
                 if '--crop-file' in args or '-c' in args:
                     try:
@@ -307,12 +297,9 @@ For detailed help on each subcommand:
                     except (ValueError, IndexError):
                         pass
             
-                crop_profile_repository = CropProfileFileRepository(
+                crop_profile_gateway = CropProfileFileGateway(
                     file_repository=file_repository,
                     file_path=crop_file_path
-                )
-                crop_profile_gateway = CropProfileGatewayImpl(
-                    profile_repository=crop_profile_repository
                 )
             
                 # Parse args to extract weather-file path
@@ -325,11 +312,10 @@ For detailed help on each subcommand:
                     except (ValueError, IndexError):
                         pass
             
-                weather_file_repository = WeatherFileRepository(
+                weather_gateway = WeatherFileGateway(
                     file_repository=file_repository,
                     file_path=weather_file_path
                 )
-                weather_gateway = WeatherGatewayImpl(weather_repository=weather_file_repository)
             
                 # Load field configuration
                 # Parse args to extract field-config path
@@ -340,7 +326,7 @@ For detailed help on each subcommand:
                         if fc_index + 1 < len(args):
                             field_config_path = args[fc_index + 1]
                             # Read field configuration from JSON file
-                            field_file_repository = FieldFileRepository(file_repository=file_repository)
+                            field_file_repository = FieldFileGateway(file_repository=file_repository)
                             fields = asyncio.run(field_file_repository.read_fields_from_file(field_config_path))
                             if fields:
                                 field = fields[0]  # Use first field (single field format)
@@ -349,7 +335,7 @@ For detailed help on each subcommand:
             
             
                 # Parse args to extract interaction-rules path
-                from agrr_core.framework.repositories.interaction_rule_file_repository import InteractionRuleFileRepository
+                # InteractionRuleFileGateway already imported at top
                 interaction_rules_path = ""
                 if '--interaction-rules-file' in args or '-irf' in args:
                     try:
@@ -360,12 +346,9 @@ For detailed help on each subcommand:
                         pass
             
                 # Setup interaction rule gateway
-                interaction_rule_repository = InteractionRuleFileRepository(
+                interaction_rule_gateway = InteractionRuleFileGateway(
                     file_repository=file_repository,
                     file_path=interaction_rules_path
-                )
-                interaction_rule_gateway = InteractionRuleGatewayImpl(
-                    interaction_rule_repository=interaction_rule_repository
                 )
             
                 # Setup weather interpolator
@@ -379,7 +362,6 @@ For detailed help on each subcommand:
                     crop_profile_gateway=crop_profile_gateway,
                     weather_gateway=weather_gateway,
                     presenter=presenter,
-                    crop_profile_repository=crop_profile_repository,
                     field=field,
                     interaction_rule_gateway=interaction_rule_gateway,
                     weather_interpolator=weather_interpolator,
@@ -393,20 +375,17 @@ For detailed help on each subcommand:
                 if '--help' in args or '-h' in args:
                     # Create minimal controller just to show help
                     file_repository = FileRepository()
-                    field_repository = FieldFileRepository(file_repository=file_repository, file_path="")
-                    field_gateway = FieldGatewayImpl(field_repository=field_repository)
+                    field_gateway = FieldFileGateway(file_repository=file_repository, file_path="")
                 
-                    weather_file_repository = WeatherFileRepository(file_repository=file_repository, file_path="")
-                    weather_gateway = WeatherGatewayImpl(weather_repository=weather_file_repository)
+                    weather_gateway = WeatherFileGateway(file_repository=file_repository, file_path="")
                 
                     # Create dummy crop gateway for help
-                    from agrr_core.framework.repositories.crop_profile_file_repository import CropProfileFileRepository
-                    crop_profile_repo = CropProfileFileRepository(file_repository=file_repository, file_path="")
-                    crop_profile_gateway = CropProfileGatewayImpl(profile_repository=crop_profile_repo)
+                    crop_profile_repo = CropProfileFileGateway(file_repository=file_repository, file_path="")
+                    crop_profile_gateway = crop_profile_repo
                 
                     # Create internal crop profile gateway for growth period optimizer
-                    inmemory_crop_profile_repo = InMemoryCropProfileRepository()
-                    crop_profile_gateway_internal = CropProfileGatewayImpl(profile_repository=inmemory_crop_profile_repo)
+                    inmemory_crop_profile_repo = CropProfileInMemoryGateway()
+                    crop_profile_gateway_internal = CropProfileInMemoryGateway()
                 
                     presenter = MultiFieldCropAllocationCliPresenter(output_format="table")
                 
@@ -438,11 +417,10 @@ For detailed help on each subcommand:
                     sys.exit(1)
             
                 # Setup weather gateway
-                weather_file_repository = WeatherFileRepository(
+                weather_gateway = WeatherFileGateway(
                     file_repository=file_repository,
                     file_path=weather_file_path
                 )
-                weather_gateway = WeatherGatewayImpl(weather_repository=weather_file_repository)
             
                 # Parse args to extract fields-file path
                 fields_file_path = None
@@ -459,11 +437,10 @@ For detailed help on each subcommand:
                     sys.exit(1)
             
                 # Setup field gateway
-                field_repository = FieldFileRepository(
+                field_gateway = FieldFileGateway(
                     file_repository=file_repository,
                     file_path=fields_file_path
                 )
-                field_gateway = FieldGatewayImpl(field_repository=field_repository)
             
                 # Parse args to extract crops-file path
                 crops_file_path = None
@@ -480,12 +457,7 @@ For detailed help on each subcommand:
                     sys.exit(1)
             
                 # Setup crop gateway
-                from agrr_core.framework.repositories.crop_profile_file_repository import CropProfileFileRepository
-                crop_profile_repository = CropProfileFileRepository(
-                    file_repository=file_repository,
-                    file_path=crops_file_path
-                )
-                crop_profile_gateway = CropProfileGatewayImpl(profile_repository=crop_profile_repository)
+                crop_profile_gateway = CropProfileFileGateway(file_repository=file_repository, file_path=crop_file_path)
             
                 # Setup interaction rule gateway (optional)
                 interaction_rules_path = ""
@@ -497,18 +469,15 @@ For detailed help on each subcommand:
                     except (ValueError, IndexError):
                         pass
             
-                from agrr_core.framework.repositories.interaction_rule_file_repository import InteractionRuleFileRepository
-                interaction_rule_repository = InteractionRuleFileRepository(
+                # InteractionRuleFileGateway already imported at top
+                interaction_rule_gateway = InteractionRuleFileGateway(
                     file_repository=file_repository,
                     file_path=interaction_rules_path
                 )
-                interaction_rule_gateway = InteractionRuleGatewayImpl(
-                    interaction_rule_repository=interaction_rule_repository
-                )
             
                 # Setup internal crop profile gateway for growth period optimizer
-                inmemory_crop_profile_repo = InMemoryCropProfileRepository()
-                crop_profile_gateway_internal = CropProfileGatewayImpl(profile_repository=inmemory_crop_profile_repo)
+                inmemory_crop_profile_repo = CropProfileInMemoryGateway()
+                crop_profile_gateway_internal = CropProfileInMemoryGateway()
             
                 # Setup presenter
                 presenter = MultiFieldCropAllocationCliPresenter(output_format="table")

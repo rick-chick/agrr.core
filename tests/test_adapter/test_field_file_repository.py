@@ -20,8 +20,8 @@ def temp_dir():
 @pytest.fixture
 def file_repository():
     """Create a file repository for testing."""
-    from agrr_core.framework.repositories.file_repository import FileRepository
-    return FileRepository()
+    from agrr_core.framework.services.io.file_service import FileService
+    return FileService()
 
 
 @pytest.fixture

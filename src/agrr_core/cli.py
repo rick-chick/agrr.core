@@ -19,9 +19,8 @@ from agrr_core.adapter.controllers.crop_cli_craft_controller import CropCliCraft
 from agrr_core.adapter.controllers.growth_progress_cli_controller import GrowthProgressCliController
 from agrr_core.adapter.controllers.growth_period_optimize_cli_controller import GrowthPeriodOptimizeCliController
 from agrr_core.adapter.controllers.multi_field_crop_allocation_cli_controller import MultiFieldCropAllocationCliController
-from agrr_core.framework.services.llm_client_impl import FrameworkLLMClient
-from agrr_core.framework.repositories.file_repository import FileRepository
-from agrr_core.framework.repositories.crop_profile_llm_repository import CropProfileLLMRepository
+from agrr_core.framework.services.clients.llm_client import LLMClient
+from agrr_core.framework.services.io.file_service import FileService
 from agrr_core.adapter.services.weather_linear_interpolator import WeatherLinearInterpolator
 
 
@@ -205,16 +204,15 @@ def main() -> None:
             asyncio.run(container.run_prediction_cli(args[1:]))
         elif args and args[0] == 'crop':
             # Run crop profile craft CLI (direct wiring per project rules)
-            llm_client = FrameworkLLMClient()
-            llm_repository = CropProfileLLMRepository(llm_client=llm_client)
-            gateway = CropProfileLLMGateway(llm_repository=llm_repository)
+            llm_client = LLMClient()
+            gateway = CropProfileLLMGateway(llm_client=llm_client)
             presenter = CropProfileCraftPresenter()
             controller = CropCliCraftController(gateway=gateway, presenter=presenter)
             asyncio.run(controller.run(args[1:]))
         elif args and args[0] == 'progress':
             # Run growth progress calculation CLI
             # Parse args to extract crop-file and weather-file paths
-            file_repository = FileRepository()
+            file_repository = FileService()
             # Extract crop-file path
             crop_file_path = ""
             if '--crop-file' in args or '-c' in args:
@@ -286,7 +284,7 @@ For detailed help on each subcommand:
             if subcommand == 'period':
                 # Run optimal growth period calculation CLI
                 # Setup file-based repositories
-                file_repository = FileRepository()
+                file_repository = FileService()
             
                 # Parse args to extract crop-file path
                 crop_file_path = ""
@@ -375,7 +373,7 @@ For detailed help on each subcommand:
                 # Check if help is requested
                 if '--help' in args or '-h' in args:
                     # Create minimal controller just to show help
-                    file_repository = FileRepository()
+                    file_repository = FileService()
                     field_gateway = FieldFileGateway(file_repository=file_repository, file_path="")
                 
                     weather_gateway = WeatherFileGateway(file_repository=file_repository, file_path="")
@@ -401,7 +399,7 @@ For detailed help on each subcommand:
                     return
             
                 # Setup file-based repositories
-                file_repository = FileRepository()
+                file_repository = FileService()
             
                 # Parse args to extract weather-file path
                 weather_file_path = None

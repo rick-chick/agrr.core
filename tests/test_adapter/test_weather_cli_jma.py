@@ -90,13 +90,13 @@ class TestCLIArgumentParsing:
         from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
         from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAdapter as WeatherGatewayAdapter
         from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway as WeatherFileGateway
-        from agrr_core.framework.repositories.file_repository import FileRepository
-        from agrr_core.framework.repositories.csv_downloader import CsvDownloader
+        from agrr_core.framework.services.io.file_service import FileService
+        from agrr_core.framework.services.io.csv_service import CsvService
         
         # Create mocked components
-        file_repo = FileRepository()
+        file_repo = FileService()
         weather_file_repo = WeatherFileGateway(file_repo, "test_weather.json")
-        csv_downloader = CsvDownloader()
+        csv_downloader = CsvService()
         jma_gateway = WeatherJMAGateway(csv_downloader)
         
         weather_gateway = WeatherGatewayAdapter(
@@ -133,12 +133,12 @@ class TestCLIArgumentParsing:
         from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
         from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAdapter as WeatherGatewayAdapter
         from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway as WeatherFileGateway
-        from agrr_core.framework.repositories.file_repository import FileRepository
+        from agrr_core.framework.services.io.file_service import FileService
         from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway as WeatherAPIGateway
-        from agrr_core.framework.repositories.http_client import HttpClient
+        from agrr_core.framework.services.clients.http_client import HttpClient
         
         # Create mocked components
-        file_repo = FileRepository()
+        file_repo = FileService()
         weather_file_repo = WeatherFileGateway(file_repo, "test_weather.json")
         http_client = HttpClient("https://test.com")
         openmeteo_gateway = WeatherAPIGateway(http_client)
@@ -172,12 +172,12 @@ class TestCLIArgumentParsing:
         from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
         from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAdapter as WeatherGatewayAdapter
         from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway as WeatherFileGateway
-        from agrr_core.framework.repositories.file_repository import FileRepository
-        from agrr_core.framework.repositories.http_client import HttpClient
+        from agrr_core.framework.services.io.file_service import FileService
+        from agrr_core.framework.services.clients.http_client import HttpClient
         from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway as WeatherAPIGateway
         
         # Create mocked components
-        file_repo = FileRepository()
+        file_repo = FileService()
         weather_file_repo = WeatherFileGateway(file_repo, "test_weather.json")
         http_client = HttpClient("https://test.com")
         openmeteo_gateway = WeatherAPIGateway(http_client)

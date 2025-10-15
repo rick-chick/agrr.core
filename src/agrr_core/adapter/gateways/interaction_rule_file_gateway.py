@@ -8,7 +8,7 @@ from typing import List
 
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.entity.value_objects.rule_type import RuleType
-from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
+from agrr_core.adapter.interfaces.io.file_service_interface import FileServiceInterface
 from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.usecase.gateways.interaction_rule_gateway import InteractionRuleGateway
 
@@ -21,7 +21,7 @@ class InteractionRuleFileGateway(InteractionRuleGateway):
     File path is configured at initialization.
     """
     
-    def __init__(self, file_repository: FileRepositoryInterface, file_path: str):
+    def __init__(self, file_repository: FileServiceInterface, file_path: str):
         """Initialize interaction rule file gateway.
         
         Args:

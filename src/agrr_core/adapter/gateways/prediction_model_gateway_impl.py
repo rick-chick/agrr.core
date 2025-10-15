@@ -19,7 +19,7 @@ from typing import List, Dict, Any, Optional
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.prediction_error import PredictionError
 from agrr_core.usecase.gateways.prediction_model_gateway import PredictionModelGateway
-from agrr_core.adapter.interfaces.prediction_service_interface import PredictionServiceInterface
+from agrr_core.adapter.interfaces.ml.prediction_service_interface import PredictionServiceInterface
 
 
 class PredictionModelGatewayImpl(PredictionModelGateway):

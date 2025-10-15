@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from unittest.mock import Mock, patch, MagicMock
 
-from agrr_core.framework.services.time_series_arima_service import (
+from agrr_core.framework.services.ml.time_series_arima_service import (
     TimeSeriesARIMAService,
     ARIMAModel,
     FittedARIMAModel,
@@ -50,7 +50,7 @@ class TestTimeSeriesARIMAService:
     @pytest.mark.skipif(not STATSMODELS_AVAILABLE, reason="statsmodels not available")
     def test_create_model_statsmodels_not_available(self):
         """Test creating model when statsmodels is not available."""
-        with patch('agrr_core.framework.services.time_series_arima_service.STATSMODELS_AVAILABLE', False):
+        with patch('agrr_core.framework.services.ml.time_series_arima_service.STATSMODELS_AVAILABLE', False):
             service = TimeSeriesARIMAService()
             
             with pytest.raises(RuntimeError, match="Statsmodels is not available"):
@@ -80,7 +80,7 @@ class TestTimeSeriesARIMAService:
     
     def test_check_stationarity_statsmodels_not_available(self):
         """Test checking stationarity when statsmodels is not available."""
-        with patch('agrr_core.framework.services.time_series_arima_service.STATSMODELS_AVAILABLE', False):
+        with patch('agrr_core.framework.services.ml.time_series_arima_service.STATSMODELS_AVAILABLE', False):
             service = TimeSeriesARIMAService()
             
             result = service.check_stationarity(self.sample_data)
@@ -160,7 +160,7 @@ class TestARIMAModel:
     @pytest.mark.skipif(not STATSMODELS_AVAILABLE, reason="statsmodels not available")
     def test_fit_statsmodels_not_available(self):
         """Test fitting when statsmodels is not available."""
-        with patch('agrr_core.framework.services.time_series_arima_service.STATSMODELS_AVAILABLE', False):
+        with patch('agrr_core.framework.services.ml.time_series_arima_service.STATSMODELS_AVAILABLE', False):
             model = ARIMAModel(self.data, self.order)
             
             with pytest.raises(RuntimeError, match="Statsmodels is not available"):

@@ -1,22 +1,33 @@
 """Adapter interfaces package."""
 
-from .file_repository_interface import FileRepositoryInterface
-from .llm_client import LLMClient
-from .prediction_service_interface import PredictionServiceInterface
-from .http_service_interface import HttpServiceInterface
-from .html_table_fetch_interface import HtmlTableFetchInterface
-from .html_table_structures import HtmlTable, TableRow
-from .time_series_interface import TimeSeriesInterface
-from .csv_service_interface import CsvServiceInterface
+# Clients
+from .clients.http_client_interface import HttpClientInterface
+from .clients.llm_client_interface import LLMClientInterface
+
+# I/O Services
+from .io.file_service_interface import FileServiceInterface
+from .io.csv_service_interface import CsvServiceInterface
+from .io.html_table_service_interface import HtmlTableServiceInterface
+
+# ML Services
+from .ml.prediction_service_interface import PredictionServiceInterface
+from .ml.time_series_service_interface import TimeSeriesServiceInterface
+
+# Structures
+from .structures.html_table_structures import HtmlTable, TableRow
 
 __all__ = [
-    'FileRepositoryInterface',
-    'LLMClient',
+    # Clients
+    'HttpClientInterface',
+    'LLMClientInterface',
+    # I/O Services
+    'FileServiceInterface',
+    'CsvServiceInterface',
+    'HtmlTableServiceInterface',
+    # ML Services
     'PredictionServiceInterface',
-    'HttpServiceInterface',
-    'HtmlTableFetchInterface',
+    'TimeSeriesServiceInterface',
+    # Structures
     'HtmlTable',
     'TableRow',
-    'TimeSeriesInterface',
-    'CsvServiceInterface',
 ]

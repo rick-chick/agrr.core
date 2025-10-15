@@ -1,4 +1,4 @@
-"""CSV downloader implementation for framework layer."""
+"""CSV service implementation for framework layer."""
 
 import requests
 import pandas as pd
@@ -6,15 +6,15 @@ from io import StringIO
 from typing import Optional
 
 from agrr_core.entity.exceptions.csv_download_error import CsvDownloadError
-from agrr_core.adapter.interfaces.csv_service_interface import CsvServiceInterface
+from agrr_core.adapter.interfaces.io.csv_service_interface import CsvServiceInterface
 
 
-class CsvDownloader(CsvServiceInterface):
-    """CSV downloader for fetching CSV data from URLs."""
+class CsvService(CsvServiceInterface):
+    """CSV service for fetching CSV data from URLs."""
     
     def __init__(self, timeout: int = 30):
         """
-        Initialize CSV downloader.
+        Initialize CSV service.
         
         Args:
             timeout: Request timeout in seconds

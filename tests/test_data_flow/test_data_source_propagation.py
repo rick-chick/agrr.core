@@ -11,7 +11,7 @@ import pandas as pd
 from agrr_core.framework.agrr_core_container import WeatherCliContainer, AgrrCoreContainer
 from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway as WeatherJMAGateway
 from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway as WeatherAPIGateway
-from agrr_core.adapter.interfaces.html_table_structures import HtmlTable, TableRow
+from agrr_core.adapter.interfaces.structures.html_table_structures import HtmlTable, TableRow
 
 
 class TestDataSourcePropagation:
@@ -424,8 +424,8 @@ class TestDataSourcePropagationTrace:
         Verifies:
         1. Config contains 'jma'
         2. Container reads 'jma'
-        3. CsvDownloader is created
-        4. WeatherJMAGateway is created with CsvDownloader
+        3. CsvService is created
+        4. WeatherJMAGateway is created with CsvService
         5. Gateway receives WeatherJMAGateway
         """
         # Step 1: Config
@@ -450,7 +450,7 @@ class TestDataSourcePropagationTrace:
         assert gateway.api_gateway is jma_repo, "Step 5: Repository injection to Gateway failed"
         
         print("\n✅ All propagation steps verified:")
-        print("   Config → Container → CsvDownloader → JMARepository → Gateway")
+        print("   Config → Container → CsvService → JMARepository → Gateway")
     
     def test_trace_openmeteo_propagation(self):
         """

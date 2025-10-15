@@ -18,7 +18,7 @@ from agrr_core.entity.entities.temperature_profile_entity import TemperatureProf
 from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
 from agrr_core.adapter.gateways.crop_profile_file_gateway import CropProfileFileGateway as CropProfileFileGateway
-from agrr_core.framework.repositories.file_repository import FileRepository
+from agrr_core.framework.services.io.file_service import FileService
 from agrr_core.usecase.services.crop_profile_mapper import CropProfileMapper
 
 
@@ -92,7 +92,7 @@ class TestHarvestStartGddDataFlow:
         
         try:
             # Load profile from file
-            file_repo = FileRepository()
+            file_repo = FileService()
             crop_profile_repo = CropProfileFileGateway(file_repo, temp_file)
             profile = await crop_profile_repo.get()
             
@@ -215,7 +215,7 @@ class TestHarvestStartGddDataFlow:
         
         try:
             # Load profile from file (JSON → Entity)
-            file_repo = FileRepository()
+            file_repo = FileService()
             crop_profile_repo = CropProfileFileGateway(file_repo, temp_file)
             profile = await crop_profile_repo.get()
             

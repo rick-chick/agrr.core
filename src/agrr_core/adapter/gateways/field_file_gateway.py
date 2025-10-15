@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Optional
 
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.exceptions.file_error import FileError
-from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
+from agrr_core.adapter.interfaces.io.file_service_interface import FileServiceInterface
 from agrr_core.usecase.gateways.field_gateway import FieldGateway
 
 
@@ -42,7 +42,7 @@ class FieldFileGateway(FieldGateway):
         }
     """
     
-    def __init__(self, file_repository: FileRepositoryInterface, file_path: str = ""):
+    def __init__(self, file_repository: FileServiceInterface, file_path: str = ""):
         """Initialize field file gateway.
         
         Args:

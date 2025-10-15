@@ -20,7 +20,7 @@ from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirem
 from agrr_core.usecase.services.crop_profile_mapper import CropProfileMapper
 from agrr_core.adapter.gateways.crop_profile_file_gateway import CropProfileFileGateway
 # CropProfileFileRepository is now CropProfileFileGateway
-from agrr_core.framework.repositories.file_repository import FileRepository
+from agrr_core.framework.services.io.file_service import FileService
 
 
 class TestCropGroupsDataFlowThroughMapper:
@@ -164,7 +164,7 @@ class TestCropGroupsDataFlowThroughGateway:
         
         try:
             # Load using Gateway
-            file_repository = FileRepository()
+            file_repository = FileService()
             gateway = CropProfileFileGateway(
                 file_repository=file_repository,
                 file_path=str(temp_file)
@@ -231,7 +231,7 @@ class TestCropGroupsDataFlowThroughGateway:
             json.dump(crop_data, f, ensure_ascii=False, indent=2)
         
         try:
-            file_repository = FileRepository()
+            file_repository = FileService()
             gateway = CropProfileFileGateway(
                 file_repository=file_repository,
                 file_path=str(temp_file)
@@ -305,7 +305,7 @@ class TestCropGroupsDataFlowThroughGateway:
         
         try:
             # 4. Load back using Gateway
-            file_repository = FileRepository()
+            file_repository = FileService()
             gateway = CropProfileFileGateway(
                 file_repository=file_repository,
                 file_path=str(temp_file)

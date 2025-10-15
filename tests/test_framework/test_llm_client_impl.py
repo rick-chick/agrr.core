@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import Mock, patch, AsyncMock
 from typing import Dict, Any
 
-from agrr_core.framework.services.llm_client_impl import FrameworkLLMClient
+from agrr_core.framework.services.clients.llm_client import LLMClient as FrameworkLLMClient
 
 
 class TestFrameworkLLMClient:

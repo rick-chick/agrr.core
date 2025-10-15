@@ -12,8 +12,8 @@ from unittest.mock import AsyncMock, Mock, patch
 import asyncio
 
 from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway as WeatherJMARepository
-from agrr_core.adapter.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
-from agrr_core.adapter.interfaces.html_table_structures import HtmlTable, TableRow
+from agrr_core.adapter.interfaces.io.html_table_service_interface import HtmlTableServiceInterface
+from agrr_core.adapter.interfaces.structures.html_table_structures import HtmlTable, TableRow
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 from agrr_core.entity.exceptions.html_fetch_error import HtmlFetchError
@@ -71,7 +71,7 @@ class TestWeatherJMARepositoryCritical:
     @pytest.fixture
     def mock_html_fetcher(self):
         """Create mock HTML table fetcher."""
-        service = AsyncMock(spec=HtmlTableFetchInterface)
+        service = AsyncMock(spec=HtmlTableServiceInterface)
         return service
     
     @pytest.fixture
@@ -337,9 +337,9 @@ class TestWeatherJMARepositoryCritical:
         The downloader should properly cleanup its session using context manager
         or explicit close() call, preventing resource leaks.
         """
-        from agrr_core.framework.repositories.csv_downloader import CsvDownloader
+        from agrr_core.framework.services.io.csv_service import CsvService
         
-        downloader = CsvDownloader(timeout=1)
+        downloader = CsvService(timeout=1)
         
         # Test that session exists initially
         assert downloader.session is not None
@@ -349,7 +349,7 @@ class TestWeatherJMARepositoryCritical:
         assert downloader.session is None
         
         # Test context manager cleanup
-        with CsvDownloader(timeout=1) as downloader2:
+        with CsvService(timeout=1) as downloader2:
             assert downloader2.session is not None
         
         # After context manager exit, session should be None
@@ -452,7 +452,7 @@ class TestWeatherJMARepositoryEdgeCases:
     
     @pytest.fixture
     def mock_html_fetcher(self):
-        service = AsyncMock(spec=HtmlTableFetchInterface)
+        service = AsyncMock(spec=HtmlTableServiceInterface)
         return service
     
     @pytest.fixture

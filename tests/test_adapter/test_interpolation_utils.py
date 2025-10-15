@@ -1,13 +1,13 @@
-"""Tests for LinearInterpolationService."""
+"""Tests for InterpolationService."""
 
 import pytest
 import numpy as np
 
-from agrr_core.adapter.services.interpolation_utils import LinearInterpolationService
+from agrr_core.framework.services.utils.interpolation_service import InterpolationService
 
 
-class TestLinearInterpolationService:
-    """Test cases for LinearInterpolationService."""
+class TestInterpolationService:
+    """Test cases for InterpolationService."""
     
     def test_interpolate_missing_middle_value(self):
         """Test interpolation for missing value in the middle."""
@@ -15,7 +15,7 @@ class TestLinearInterpolationService:
         data = [10.0, np.nan, 20.0]
         
         # Act
-        result = LinearInterpolationService.interpolate_missing_values(data)
+        result = InterpolationService.interpolate_missing_values(data)
         
         # Assert: Should be linear interpolation (10 + 20) / 2 = 15
         assert result == [10.0, 15.0, 20.0]
@@ -26,7 +26,7 @@ class TestLinearInterpolationService:
         data = [np.nan, 15.0, 20.0]
         
         # Act
-        result = LinearInterpolationService.interpolate_missing_values(data)
+        result = InterpolationService.interpolate_missing_values(data)
         
         # Assert: Should use first valid value (forward fill)
         assert result == [15.0, 15.0, 20.0]
@@ -37,7 +37,7 @@ class TestLinearInterpolationService:
         data = [10.0, 15.0, np.nan]
         
         # Act
-        result = LinearInterpolationService.interpolate_missing_values(data)
+        result = InterpolationService.interpolate_missing_values(data)
         
         # Assert: Should use last valid value (backward fill)
         assert result == [10.0, 15.0, 15.0]
@@ -48,7 +48,7 @@ class TestLinearInterpolationService:
         data = [10.0, np.nan, np.nan, np.nan, 30.0]
         
         # Act
-        result = LinearInterpolationService.interpolate_missing_values(data)
+        result = InterpolationService.interpolate_missing_values(data)
         
         # Assert: Should be linear interpolation
         # Day 1: 10.0
@@ -64,7 +64,7 @@ class TestLinearInterpolationService:
         data = [np.nan, np.nan, 20.0, 25.0]
         
         # Act
-        result = LinearInterpolationService.interpolate_missing_values(data)
+        result = InterpolationService.interpolate_missing_values(data)
         
         # Assert: Should use first valid value for all
         assert result == [20.0, 20.0, 20.0, 25.0]
@@ -75,7 +75,7 @@ class TestLinearInterpolationService:
         data = [10.0, 15.0, np.nan, np.nan]
         
         # Act
-        result = LinearInterpolationService.interpolate_missing_values(data)
+        result = InterpolationService.interpolate_missing_values(data)
         
         # Assert: Should use last valid value for all
         assert result == [10.0, 15.0, 15.0, 15.0]
@@ -86,7 +86,7 @@ class TestLinearInterpolationService:
         data = [10.0, 15.0, 20.0]
         
         # Act
-        result = LinearInterpolationService.interpolate_missing_values(data)
+        result = InterpolationService.interpolate_missing_values(data)
         
         # Assert: Should be unchanged
         assert result == [10.0, 15.0, 20.0]
@@ -98,7 +98,7 @@ class TestLinearInterpolationService:
         
         # Act & Assert
         with pytest.raises(ValueError, match="All values are missing"):
-            LinearInterpolationService.interpolate_missing_values(data)
+            InterpolationService.interpolate_missing_values(data)
     
     def test_interpolate_empty_list(self):
         """Test that empty list is returned unchanged."""
@@ -106,7 +106,7 @@ class TestLinearInterpolationService:
         data = []
         
         # Act
-        result = LinearInterpolationService.interpolate_missing_values(data)
+        result = InterpolationService.interpolate_missing_values(data)
         
         # Assert
         assert result == []
@@ -117,7 +117,7 @@ class TestLinearInterpolationService:
         data = [15.0]
         
         # Act
-        result = LinearInterpolationService.interpolate_missing_values(data)
+        result = InterpolationService.interpolate_missing_values(data)
         
         # Assert
         assert result == [15.0]
@@ -129,7 +129,7 @@ class TestLinearInterpolationService:
         
         # Act & Assert
         with pytest.raises(ValueError, match="All values are missing"):
-            LinearInterpolationService.interpolate_missing_values(data)
+            InterpolationService.interpolate_missing_values(data)
     
     def test_interpolate_complex_pattern(self):
         """Test interpolation with complex missing pattern."""
@@ -137,7 +137,7 @@ class TestLinearInterpolationService:
         data = [np.nan, np.nan, 10.0, np.nan, 20.0, np.nan, np.nan]
         
         # Act
-        result = LinearInterpolationService.interpolate_missing_values(data)
+        result = InterpolationService.interpolate_missing_values(data)
         
         # Assert:
         # [0,1]: Forward fill with 10.0
@@ -153,7 +153,7 @@ class TestLinearInterpolationService:
         data = [10.5, np.nan, 15.3]
         
         # Act
-        result = LinearInterpolationService.interpolate_missing_values(data)
+        result = InterpolationService.interpolate_missing_values(data)
         
         # Assert: Should preserve precision
         expected = (10.5 + 15.3) / 2

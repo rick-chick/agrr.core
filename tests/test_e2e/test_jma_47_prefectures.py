@@ -9,7 +9,7 @@ Run with: pytest tests/test_e2e/test_jma_47_prefectures.py -v -m e2e
 import pytest
 from datetime import datetime
 
-from agrr_core.framework.repositories.html_table_fetcher import HtmlTableFetcher
+from agrr_core.framework.services.io.html_table_service import HtmlTableService
 from agrr_core.adapter.gateways.weather_jma_gateway import (
     WeatherJMAGateway,
     LOCATION_MAPPING
@@ -22,7 +22,7 @@ class TestJMA47Prefectures:
     @pytest.fixture
     def html_table_fetcher(self):
         """Create HTML table fetcher instance."""
-        return HtmlTableFetcher(timeout=30)
+        return HtmlTableService(timeout=30)
     
     @pytest.fixture
     def repository(self, html_table_fetcher):

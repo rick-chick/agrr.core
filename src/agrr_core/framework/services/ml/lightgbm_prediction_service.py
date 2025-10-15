@@ -13,8 +13,8 @@ except ImportError:
 
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.prediction_error import PredictionError
-from agrr_core.adapter.interfaces.prediction_service_interface import PredictionServiceInterface
-from agrr_core.framework.services.feature_engineering_service import FeatureEngineeringService
+from agrr_core.adapter.interfaces.ml.prediction_service_interface import PredictionServiceInterface
+from agrr_core.framework.services.ml.feature_engineering_service import FeatureEngineeringService
 
 
 class LightGBMPredictionService(PredictionServiceInterface):

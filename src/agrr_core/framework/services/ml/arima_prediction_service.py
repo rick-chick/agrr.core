@@ -6,15 +6,15 @@ from datetime import datetime, timedelta
 
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.prediction_error import PredictionError
-from agrr_core.adapter.services.interpolation_utils import LinearInterpolationService
-from agrr_core.adapter.interfaces.prediction_service_interface import PredictionServiceInterface
-from agrr_core.adapter.interfaces.time_series_interface import TimeSeriesInterface
+from agrr_core.framework.services.utils.interpolation_service import InterpolationService
+from agrr_core.adapter.interfaces.ml.prediction_service_interface import PredictionServiceInterface
+from agrr_core.adapter.interfaces.ml.time_series_service_interface import TimeSeriesServiceInterface
 
 
 class ARIMAPredictionService(PredictionServiceInterface):
     """ARIMA-based prediction service (Framework layer implementation)."""
     
-    def __init__(self, time_series_service: TimeSeriesInterface):
+    def __init__(self, time_series_service: TimeSeriesServiceInterface):
         """
         Initialize ARIMA prediction service.
         
@@ -173,7 +173,7 @@ class ARIMAPredictionService(PredictionServiceInterface):
         
         # Apply linear interpolation for missing values using shared utility
         try:
-            data = LinearInterpolationService.interpolate_missing_values(data)
+            data = InterpolationService.interpolate_missing_values(data)
         except ValueError as e:
             raise PredictionError(str(e))
         

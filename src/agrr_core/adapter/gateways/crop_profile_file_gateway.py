@@ -15,7 +15,7 @@ from agrr_core.entity import (
     StageRequirement,
 )
 from agrr_core.entity.entities.crop_profile_entity import CropProfile
-from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
+from agrr_core.adapter.interfaces.io.file_service_interface import FileServiceInterface
 from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 
 
@@ -31,7 +31,7 @@ class CropProfileFileGateway(CropProfileGateway):
     File path is configured at initialization.
     """
     
-    def __init__(self, file_repository: FileRepositoryInterface, file_path: str = ""):
+    def __init__(self, file_repository: FileServiceInterface, file_path: str = ""):
         """Initialize crop profile file gateway.
         
         Args:

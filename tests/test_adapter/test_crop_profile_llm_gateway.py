@@ -1,16 +1,16 @@
-"""Tests for CropProfileLLMRepository."""
+"""Tests for CropProfileLLMGateway."""
 
 import pytest
 from unittest.mock import AsyncMock
 from typing import Dict, Any
 
-from agrr_core.framework.repositories.crop_profile_llm_repository import (
-    CropProfileLLMRepository,
+from agrr_core.adapter.gateways.crop_profile_llm_gateway import (
+    CropProfileLLMGateway,
 )
-from agrr_core.adapter.interfaces.llm_client import LLMClient
+from agrr_core.adapter.interfaces.clients.llm_client_interface import LLMClientInterface
 
 
-class MockLLMClient(LLMClient):
+class MockLLMClient(LLMClientInterface):
     """Mock LLM client for testing."""
     
     def __init__(self):
@@ -21,13 +21,13 @@ class MockLLMClient(LLMClient):
         pass
 
 
-class TestCropProfileLLMRepository:
-    """Test cases for CropProfileLLMRepository."""
+class TestCropProfileLLMGateway:
+    """Test cases for CropProfileLLMGateway."""
     
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_llm_client = MockLLMClient()
-        self.repository = CropProfileLLMRepository(self.mock_llm_client)
+        self.gateway = CropProfileLLMGateway(self.mock_llm_client)
     
     @pytest.mark.asyncio
     async def test_extract_crop_variety(self):
@@ -41,7 +41,7 @@ class TestCropProfileLLMRepository:
             }
         }
         
-        result = await self.repository.extract_crop_variety(crop_query)
+        result = await self.gateway.extract_crop_variety(crop_query)
         
         # Verify struct was called with correct parameters
         self.mock_llm_client.struct.assert_called_once()
@@ -77,7 +77,7 @@ class TestCropProfileLLMRepository:
             }
         }
         
-        result = await self.repository.define_growth_stages(crop_name, variety)
+        result = await self.gateway.define_growth_stages(crop_name, variety)
         
         # Verify struct was called with correct parameters
         self.mock_llm_client.struct.assert_called_once()
@@ -123,7 +123,7 @@ class TestCropProfileLLMRepository:
             }
         }
         
-        result = await self.repository.research_stage_requirements(
+        result = await self.gateway.research_stage_requirements(
             crop_name, variety, stage_name, stage_description
         )
         
@@ -160,7 +160,7 @@ class TestCropProfileLLMRepository:
             }
         }
         
-        result = await self.repository.extract_crop_economics(crop_name, variety)
+        result = await self.gateway.extract_crop_economics(crop_name, variety)
         
         # Verify struct was called with correct parameters
         self.mock_llm_client.struct.assert_called_once()
@@ -188,7 +188,7 @@ class TestCropProfileLLMRepository:
             }
         }
         
-        result = await self.repository.extract_crop_family(crop_name, variety)
+        result = await self.gateway.extract_crop_family(crop_name, variety)
         
         # Verify struct was called with correct parameters
         self.mock_llm_client.struct.assert_called_once()

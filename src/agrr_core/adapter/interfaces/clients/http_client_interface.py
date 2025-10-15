@@ -1,10 +1,10 @@
-"""HTTP service interface for adapter layer."""
+"""HTTP client interface for adapter layer."""
 
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 
 
-class HttpServiceInterface(ABC):
+class HttpClientInterface(ABC):
     """Interface for basic HTTP operations."""
     
     @abstractmethod
@@ -16,3 +16,4 @@ class HttpServiceInterface(ABC):
     async def post(self, url: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make POST request."""
         pass
+

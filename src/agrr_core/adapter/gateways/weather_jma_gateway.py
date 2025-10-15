@@ -13,8 +13,8 @@ from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 from agrr_core.entity.exceptions.html_fetch_error import HtmlFetchError
-from agrr_core.adapter.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
-from agrr_core.adapter.interfaces.html_table_structures import HtmlTable, TableRow
+from agrr_core.adapter.interfaces.io.html_table_service_interface import HtmlTableServiceInterface
+from agrr_core.adapter.interfaces.structures.html_table_structures import HtmlTable, TableRow
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 
@@ -99,7 +99,7 @@ class WeatherJMAGateway(WeatherGateway):
     
     BASE_URL = "https://www.data.jma.go.jp/obd/stats/etrn/view/daily_s1.php"
     
-    def __init__(self, html_table_fetcher: HtmlTableFetchInterface):
+    def __init__(self, html_table_fetcher: HtmlTableServiceInterface):
         """Initialize JMA weather gateway.
         
         Args:

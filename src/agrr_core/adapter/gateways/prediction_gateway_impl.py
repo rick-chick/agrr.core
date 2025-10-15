@@ -5,8 +5,8 @@ from typing import List
 from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.entity.entities.prediction_forecast_entity import Forecast
 from agrr_core.usecase.gateways.prediction_gateway import PredictionGateway
-from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
-from agrr_core.adapter.interfaces.prediction_service_interface import PredictionServiceInterface
+from agrr_core.adapter.interfaces.io.file_service_interface import FileServiceInterface
+from agrr_core.adapter.interfaces.ml.prediction_service_interface import PredictionServiceInterface
 
 
 class PredictionGatewayImpl(PredictionGateway):
@@ -18,7 +18,7 @@ class PredictionGatewayImpl(PredictionGateway):
     
     def __init__(
         self, 
-        file_repository: FileRepositoryInterface,
+        file_repository: FileServiceInterface,
         prediction_service: PredictionServiceInterface
     ):
         """Initialize prediction gateway with interface abstractions.

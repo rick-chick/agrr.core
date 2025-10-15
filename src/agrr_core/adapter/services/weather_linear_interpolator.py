@@ -10,16 +10,16 @@ from datetime import date, timedelta
 
 from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.usecase.gateways.weather_interpolator import WeatherInterpolator
-from agrr_core.adapter.services.interpolation_utils import LinearInterpolationService
+from agrr_core.framework.services.utils.interpolation_service import InterpolationService
 
 
 class WeatherLinearInterpolator(WeatherInterpolator):
     """Linear interpolation implementation for weather data.
     
-    This class uses the shared LinearInterpolationService to apply
+    This class uses the shared InterpolationService to apply
     linear interpolation specifically to weather temperature data.
     
-    Interpolation strategy (delegated to LinearInterpolationService):
+    Interpolation strategy (delegated to InterpolationService):
     1. For gaps at the beginning: use first valid value (forward fill)
     2. For gaps at the end: use last valid value (backward fill)
     3. For gaps in the middle: linear interpolation
@@ -51,7 +51,7 @@ class WeatherLinearInterpolator(WeatherInterpolator):
                 temperatures.append(np.nan)
         
         # Apply linear interpolation using shared utility
-        interpolated_temps = LinearInterpolationService.interpolate_missing_values(temperatures)
+        interpolated_temps = InterpolationService.interpolate_missing_values(temperatures)
         
         # Update weather data with interpolated values
         for i, d in enumerate(sorted_dates):

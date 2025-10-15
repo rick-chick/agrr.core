@@ -1,10 +1,10 @@
-"""File repository interface for adapter layer."""
+"""File service interface for adapter layer."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Any
 
 
-class FileRepositoryInterface(ABC):
+class FileServiceInterface(ABC):
     """Interface for basic file operations."""
     
     @abstractmethod
@@ -21,3 +21,4 @@ class FileRepositoryInterface(ABC):
     def exists(self, file_path: str) -> bool:
         """Check if file exists."""
         pass
+

@@ -1,20 +1,20 @@
-"""HTML table fetcher implementation for framework layer."""
+"""HTML table service implementation for framework layer."""
 
 import requests
 from bs4 import BeautifulSoup
 from typing import List
 
 from agrr_core.entity.exceptions.html_fetch_error import HtmlFetchError
-from agrr_core.adapter.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
-from agrr_core.adapter.interfaces.html_table_structures import HtmlTable, TableRow
+from agrr_core.adapter.interfaces.io.html_table_service_interface import HtmlTableServiceInterface
+from agrr_core.adapter.interfaces.structures.html_table_structures import HtmlTable, TableRow
 
 
-class HtmlTableFetcher(HtmlTableFetchInterface):
-    """HTMLテーブル取得クライアント"""
+class HtmlTableService(HtmlTableServiceInterface):
+    """HTMLテーブル取得サービス"""
     
     def __init__(self, timeout: int = 30):
         """
-        Initialize HTML table fetcher.
+        Initialize HTML table service.
         
         Args:
             timeout: Request timeout in seconds

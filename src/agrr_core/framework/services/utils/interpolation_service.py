@@ -1,4 +1,4 @@
-"""Linear interpolation utility (Adapter layer).
+"""Linear interpolation service (Framework layer).
 
 This module provides shared linear interpolation functionality
 used by multiple services in the application.
@@ -13,7 +13,7 @@ import numpy as np
 from typing import List
 
 
-class LinearInterpolationService:
+class InterpolationService:
     """Service providing linear interpolation for missing values.
     
     This service implements linear interpolation with the following strategy:
@@ -26,7 +26,7 @@ class LinearInterpolationService:
         where weight = (i - prev) / (next - prev)
     
     This service is used by:
-    - PredictionArimaService: For time series data
+    - ARIMAPredictionService: For time series data
     - WeatherLinearInterpolator: For weather temperature data
     """
     
@@ -49,13 +49,13 @@ class LinearInterpolationService:
             ValueError: If all values are missing
             
         Examples:
-            >>> LinearInterpolationService.interpolate_missing_values([10.0, np.nan, 20.0])
+            >>> InterpolationService.interpolate_missing_values([10.0, np.nan, 20.0])
             [10.0, 15.0, 20.0]
             
-            >>> LinearInterpolationService.interpolate_missing_values([np.nan, 15.0, 20.0])
+            >>> InterpolationService.interpolate_missing_values([np.nan, 15.0, 20.0])
             [15.0, 15.0, 20.0]
             
-            >>> LinearInterpolationService.interpolate_missing_values([10.0, 15.0, np.nan])
+            >>> InterpolationService.interpolate_missing_values([10.0, 15.0, np.nan])
             [10.0, 15.0, 15.0]
         """
         if not data:

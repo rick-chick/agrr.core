@@ -6,7 +6,7 @@ Tests that partial crop failures are handled gracefully using actual test data.
 import pytest
 from datetime import datetime
 
-from agrr_core.framework.repositories.file_repository import FileRepository
+from agrr_core.framework.services.io.file_service import FileService
 from agrr_core.adapter.gateways.crop_profile_file_gateway import CropProfileFileGateway
 from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway
 from agrr_core.adapter.gateways.field_file_gateway import FieldFileGateway
@@ -27,7 +27,7 @@ async def test_partial_crop_failure_continues_with_real_data():
     - ナス (base_temp=10°C): Cannot complete in available period
     - ほうれん草 (base_temp=0°C): Can complete even in winter
     """
-    file_repo = FileRepository()
+    file_repo = FileService()
     
     # Setup gateways with test data
     crop_gateway = CropProfileFileGateway(
@@ -91,7 +91,7 @@ async def test_all_crops_fail_raises_error_with_real_data():
     Using test_data with very late start (near end of weather data):
     - All crops: Cannot complete due to insufficient remaining data
     """
-    file_repo = FileRepository()
+    file_repo = FileService()
     
     # Setup gateways
     crop_gateway = CropProfileFileGateway(

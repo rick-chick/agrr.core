@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from agrr_core.adapter.gateways.interaction_rule_file_gateway import InteractionRuleFileGateway
-from agrr_core.framework.repositories.file_repository import FileRepository
+from agrr_core.framework.services.io.file_service import FileService
 from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.entity.value_objects.rule_type import RuleType
 
@@ -45,7 +45,7 @@ class TestInteractionRuleFileGateway:
         
         try:
             # Create file repository (Framework layer)
-            file_repository = FileRepository()
+            file_repository = FileService()
             
             # Create gateway (Adapter layer) - directly implements gateway interface
             gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
@@ -87,7 +87,7 @@ class TestInteractionRuleFileGateway:
             json.dump(rules_data, f, ensure_ascii=False)
         
         try:
-            file_repository = FileRepository()
+            file_repository = FileService()
             # Repository layer removed - gateway now directly uses file_repository
             gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
@@ -117,7 +117,7 @@ class TestInteractionRuleFileGateway:
             json.dump(rules_data, f, ensure_ascii=False)
         
         try:
-            file_repository = FileRepository()
+            file_repository = FileService()
             # Repository layer removed - gateway now directly uses file_repository
             gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
@@ -135,7 +135,7 @@ class TestInteractionRuleFileGateway:
             f.write("{ invalid json }")
         
         try:
-            file_repository = FileRepository()
+            file_repository = FileService()
             # Repository layer removed - gateway now directly uses file_repository
             gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
@@ -161,7 +161,7 @@ class TestInteractionRuleFileGateway:
             json.dump(rule_data, f, ensure_ascii=False)  # Single object, not list
         
         try:
-            file_repository = FileRepository()
+            file_repository = FileService()
             # Repository layer removed - gateway now directly uses file_repository
             gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
@@ -189,7 +189,7 @@ class TestInteractionRuleFileGateway:
             json.dump(rules_data, f, ensure_ascii=False)
         
         try:
-            file_repository = FileRepository()
+            file_repository = FileService()
             # Repository layer removed - gateway now directly uses file_repository
             gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
@@ -209,7 +209,7 @@ class TestInteractionRuleFileGateway:
             json.dump(rules_data, f, ensure_ascii=False)
         
         try:
-            file_repository = FileRepository()
+            file_repository = FileService()
             # Repository layer removed - gateway now directly uses file_repository
             gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             

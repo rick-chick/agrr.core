@@ -5,7 +5,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, Mock
 
 from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway, LOCATION_MAPPING
-from agrr_core.adapter.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
+from agrr_core.adapter.interfaces.io.html_table_service_interface import HtmlTableServiceInterface
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 
 
@@ -15,7 +15,7 @@ class TestWeatherJMAGateway:
     @pytest.fixture
     def mock_html_table_fetcher(self):
         """Create mock HTML table fetcher."""
-        fetcher = AsyncMock(spec=HtmlTableFetchInterface)
+        fetcher = AsyncMock(spec=HtmlTableServiceInterface)
         return fetcher
     
     @pytest.fixture

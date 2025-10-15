@@ -9,7 +9,7 @@ from datetime import datetime
 
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.file_error import FileError
-from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
+from agrr_core.adapter.interfaces.io.file_service_interface import FileServiceInterface
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 
@@ -22,7 +22,7 @@ class WeatherFileGateway(WeatherGateway):
     Directly implements WeatherGateway interface without intermediate layers.
     """
     
-    def __init__(self, file_repository: FileRepositoryInterface, file_path: str):
+    def __init__(self, file_repository: FileServiceInterface, file_path: str):
         """Initialize weather file gateway.
         
         Args:

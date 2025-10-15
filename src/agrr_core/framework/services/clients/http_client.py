@@ -1,14 +1,14 @@
-"""HTTP service implementation for framework layer."""
+"""HTTP client implementation for framework layer."""
 
 import requests
 from typing import Dict, Any, Optional
 from urllib.parse import urljoin
 
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
-from agrr_core.adapter.interfaces.http_service_interface import HttpServiceInterface
+from agrr_core.adapter.interfaces.clients.http_client_interface import HttpClientInterface
 
 
-class HttpClient(HttpServiceInterface):
+class HttpClient(HttpClientInterface):
     """Generic HTTP client for API requests."""
     
     def __init__(self, base_url: str = "", timeout: int = 30):
@@ -60,3 +60,4 @@ class HttpClient(HttpServiceInterface):
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
         self.close()
+

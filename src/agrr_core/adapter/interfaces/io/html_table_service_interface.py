@@ -1,13 +1,13 @@
-"""HTML table fetch interface for adapter layer."""
+"""HTML table service interface for adapter layer."""
 
 from abc import ABC, abstractmethod
 from typing import List
 
-from .html_table_structures import HtmlTable
+from ..structures.html_table_structures import HtmlTable
 
 
-class HtmlTableFetchInterface(ABC):
-    """HTMLテーブル取得インターフェース"""
+class HtmlTableServiceInterface(ABC):
+    """HTMLテーブル取得サービスインターフェース"""
     
     @abstractmethod
     async def get(self, url: str) -> List[HtmlTable]:

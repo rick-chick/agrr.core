@@ -8,7 +8,7 @@ import os
 import json
 from typing import Dict, Any, Optional
 
-from agrr_core.adapter.interfaces.llm_client import LLMClient
+from agrr_core.adapter.interfaces.clients.llm_client_interface import LLMClientInterface
 
 # Conditional imports
 try:
@@ -26,7 +26,7 @@ except ImportError:
     pass
 
 
-class FrameworkLLMClient(LLMClient):
+class LLMClient(LLMClientInterface):
     """LLM client using OpenAI API with proper environment variable management."""
 
     async def struct(self, query: str, structure: Dict[str, Any], instruction: Optional[str] = None) -> Dict[str, Any]:
@@ -91,3 +91,4 @@ class FrameworkLLMClient(LLMClient):
         except Exception as e:
             # If OpenAI setup fails, raise the error
             raise RuntimeError(f"Failed to initialize OpenAI client: {str(e)}")
+

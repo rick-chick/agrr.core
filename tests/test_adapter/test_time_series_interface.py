@@ -4,80 +4,80 @@ import pytest
 import numpy as np
 from abc import ABC
 
-from agrr_core.adapter.interfaces.time_series_interface import (
-    TimeSeriesInterface,
-    TimeSeriesModel,
-    FittedTimeSeriesModel
+from agrr_core.adapter.interfaces.ml.time_series_service_interface import (
+    TimeSeriesServiceInterface,
+    TimeSeriesModelInterface,
+    FittedTimeSeriesModelInterface
 )
 
 
 class TestTimeSeriesInterface:
-    """Test cases for TimeSeriesInterface."""
+    """Test cases for TimeSeriesServiceInterface."""
     
     def test_is_abstract_base_class(self):
-        """Test that TimeSeriesInterface is an abstract base class."""
-        assert issubclass(TimeSeriesInterface, ABC)
+        """Test that TimeSeriesServiceInterface is an abstract base class."""
+        assert issubclass(TimeSeriesServiceInterface, ABC)
         
         # Should not be able to instantiate directly
         with pytest.raises(TypeError):
-            TimeSeriesInterface()
+            TimeSeriesServiceInterface()
     
     def test_abstract_methods(self):
         """Test that interface has required abstract methods."""
         # Check that abstract methods exist
-        assert hasattr(TimeSeriesInterface, 'create_model')
-        assert hasattr(TimeSeriesInterface, 'check_stationarity')
-        assert hasattr(TimeSeriesInterface, 'make_stationary')
+        assert hasattr(TimeSeriesServiceInterface, 'create_model')
+        assert hasattr(TimeSeriesServiceInterface, 'check_stationarity')
+        assert hasattr(TimeSeriesServiceInterface, 'make_stationary')
         
         # Check that they are abstract
-        assert getattr(TimeSeriesInterface.create_model, '__isabstractmethod__', False)
-        assert getattr(TimeSeriesInterface.check_stationarity, '__isabstractmethod__', False)
-        assert getattr(TimeSeriesInterface.make_stationary, '__isabstractmethod__', False)
+        assert getattr(TimeSeriesServiceInterface.create_model, '__isabstractmethod__', False)
+        assert getattr(TimeSeriesServiceInterface.check_stationarity, '__isabstractmethod__', False)
+        assert getattr(TimeSeriesServiceInterface.make_stationary, '__isabstractmethod__', False)
 
 
 class TestTimeSeriesModel:
-    """Test cases for TimeSeriesModel."""
+    """Test cases for TimeSeriesModelInterface."""
     
     def test_is_abstract_base_class(self):
-        """Test that TimeSeriesModel is an abstract base class."""
-        assert issubclass(TimeSeriesModel, ABC)
+        """Test that TimeSeriesModelInterface is an abstract base class."""
+        assert issubclass(TimeSeriesModelInterface, ABC)
         
         # Should not be able to instantiate directly
         with pytest.raises(TypeError):
-            TimeSeriesModel()
+            TimeSeriesModelInterface()
     
     def test_abstract_methods(self):
         """Test that model has required abstract methods."""
         # Check that abstract method exists
-        assert hasattr(TimeSeriesModel, 'fit')
+        assert hasattr(TimeSeriesModelInterface, 'fit')
         
         # Check that it is abstract
-        assert getattr(TimeSeriesModel.fit, '__isabstractmethod__', False)
+        assert getattr(TimeSeriesModelInterface.fit, '__isabstractmethod__', False)
 
 
 class TestFittedTimeSeriesModel:
-    """Test cases for FittedTimeSeriesModel."""
+    """Test cases for FittedTimeSeriesModelInterface."""
     
     def test_is_abstract_base_class(self):
-        """Test that FittedTimeSeriesModel is an abstract base class."""
-        assert issubclass(FittedTimeSeriesModel, ABC)
+        """Test that FittedTimeSeriesModelInterface is an abstract base class."""
+        assert issubclass(FittedTimeSeriesModelInterface, ABC)
         
         # Should not be able to instantiate directly
         with pytest.raises(TypeError):
-            FittedTimeSeriesModel()
+            FittedTimeSeriesModelInterface()
     
     def test_abstract_methods(self):
         """Test that fitted model has required abstract methods."""
         # Check that abstract methods exist
-        assert hasattr(FittedTimeSeriesModel, 'forecast')
-        assert hasattr(FittedTimeSeriesModel, 'get_forecast_with_intervals')
+        assert hasattr(FittedTimeSeriesModelInterface, 'forecast')
+        assert hasattr(FittedTimeSeriesModelInterface, 'get_forecast_with_intervals')
         
         # Check that they are abstract
-        assert getattr(FittedTimeSeriesModel.forecast, '__isabstractmethod__', False)
-        assert getattr(FittedTimeSeriesModel.get_forecast_with_intervals, '__isabstractmethod__', False)
+        assert getattr(FittedTimeSeriesModelInterface.forecast, '__isabstractmethod__', False)
+        assert getattr(FittedTimeSeriesModelInterface.get_forecast_with_intervals, '__isabstractmethod__', False)
 
 
-class ConcreteTimeSeriesInterface(TimeSeriesInterface):
+class ConcreteTimeSeriesInterface(TimeSeriesServiceInterface):
     """Concrete implementation for testing."""
     
     def create_model(self, data, order, seasonal_order=None):
@@ -90,7 +90,7 @@ class ConcreteTimeSeriesInterface(TimeSeriesInterface):
         return data[1:] if len(data) > 1 else []
 
 
-class ConcreteTimeSeriesModel(TimeSeriesModel):
+class ConcreteTimeSeriesModel(TimeSeriesModelInterface):
     """Concrete model implementation for testing."""
     
     def __init__(self, data, order, seasonal_order=None):
@@ -102,7 +102,7 @@ class ConcreteTimeSeriesModel(TimeSeriesModel):
         return ConcreteFittedTimeSeriesModel(self.data)
 
 
-class ConcreteFittedTimeSeriesModel(FittedTimeSeriesModel):
+class ConcreteFittedTimeSeriesModel(FittedTimeSeriesModelInterface):
     """Concrete fitted model implementation for testing."""
     
     def __init__(self, data):

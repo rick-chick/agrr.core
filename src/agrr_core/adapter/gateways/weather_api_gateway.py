@@ -9,7 +9,7 @@ from datetime import datetime
 from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
-from agrr_core.adapter.interfaces.http_service_interface import HttpServiceInterface
+from agrr_core.adapter.interfaces.clients.http_client_interface import HttpClientInterface
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 
@@ -20,7 +20,7 @@ class WeatherAPIGateway(WeatherGateway):
     Directly implements WeatherGateway interface without intermediate layers.
     """
     
-    def __init__(self, http_service: HttpServiceInterface, forecast_http_service: HttpServiceInterface = None):
+    def __init__(self, http_service: HttpClientInterface, forecast_http_service: HttpClientInterface = None):
         """Initialize weather API gateway.
         
         Args:

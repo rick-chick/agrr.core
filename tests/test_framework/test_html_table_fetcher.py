@@ -1,18 +1,18 @@
-"""Tests for HtmlTableFetcher."""
+"""Tests for HtmlTableService."""
 
 import pytest
 
-from agrr_core.framework.repositories.html_table_fetcher import HtmlTableFetcher
-from agrr_core.adapter.interfaces.html_table_structures import HtmlTable
+from agrr_core.framework.services.io.html_table_service import HtmlTableService
+from agrr_core.adapter.interfaces.structures.html_table_structures import HtmlTable
 
 
 class TestHtmlTableFetcher:
-    """Test HtmlTableFetcher."""
+    """Test HtmlTableService."""
     
     @pytest.fixture
     def fetcher(self):
         """Create fetcher instance."""
-        return HtmlTableFetcher()
+        return HtmlTableService()
     
     @pytest.mark.asyncio
     @pytest.mark.e2e

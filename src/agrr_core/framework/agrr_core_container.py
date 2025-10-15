@@ -3,10 +3,10 @@
 import asyncio
 from typing import Dict, Any, Optional
 
-from agrr_core.framework.repositories.file_repository import FileRepository
-from agrr_core.framework.repositories.http_client import HttpClient
-from agrr_core.framework.repositories.html_table_fetcher import HtmlTableFetcher
-from agrr_core.framework.repositories.csv_downloader import CsvDownloader
+from agrr_core.framework.services.io.file_service import FileService
+from agrr_core.framework.services.clients.http_client import HttpClient
+from agrr_core.framework.services.io.html_table_service import HtmlTableService
+from agrr_core.framework.services.io.csv_service import CsvService
 from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway
 from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway
 from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway
@@ -16,8 +16,8 @@ from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetch
 from agrr_core.adapter.controllers.weather_cli_predict_controller import WeatherCliPredictController
 from agrr_core.usecase.interactors.weather_predict_interactor import WeatherPredictInteractor
 from agrr_core.adapter.gateways.prediction_gateway_impl import PredictionGatewayImpl
-from agrr_core.framework.services.arima_prediction_service import ARIMAPredictionService
-from agrr_core.framework.services.time_series_arima_service import TimeSeriesARIMAService
+from agrr_core.framework.services.ml.arima_prediction_service import ARIMAPredictionService
+from agrr_core.framework.services.ml.time_series_arima_service import TimeSeriesARIMAService
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
 from agrr_core.usecase.interactors.prediction_multi_metric_interactor import MultiMetricPredictionInteractor
 from agrr_core.usecase.interactors.prediction_evaluate_interactor import ModelEvaluationInteractor
@@ -26,7 +26,7 @@ from agrr_core.usecase.interactors.prediction_manage_interactor import ModelMana
 from agrr_core.usecase.ports.output.advanced_prediction_output_port import AdvancedPredictionOutputPort
 from agrr_core.usecase.ports.output.prediction_presenter_output_port import PredictionPresenterOutputPort
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
-from agrr_core.adapter.interfaces.time_series_interface import TimeSeriesInterface
+from agrr_core.adapter.interfaces.ml.time_series_service_interface import TimeSeriesServiceInterface
 
 
 class AgrrCoreContainer:
@@ -45,10 +45,10 @@ class AgrrCoreContainer:
     
     # Weather Repository Management
 
-    def get_file_repository_impl(self) -> FileRepository:
-        """Get file repository implementation instance."""
+    def get_file_repository_impl(self) -> FileService:
+        """Get file service implementation instance."""
         if 'file_repository_impl' not in self._instances:
-            self._instances['file_repository_impl'] = FileRepository()
+            self._instances['file_repository_impl'] = FileService()
         return self._instances['file_repository_impl']
 
     def get_http_service_impl(self) -> HttpClient:
@@ -131,7 +131,7 @@ class AgrrCoreContainer:
             )
         return self._instances['weather_file_gateway']
     
-    def get_time_series_service(self) -> TimeSeriesInterface:
+    def get_time_series_service(self) -> TimeSeriesServiceInterface:
         """Get time series service instance."""
         if 'time_series_service' not in self._instances:
             self._instances['time_series_service'] = TimeSeriesARIMAService()
@@ -162,18 +162,18 @@ class AgrrCoreContainer:
             )
         return self._instances['weather_api_gateway']
     
-    def get_html_table_fetcher(self) -> HtmlTableFetcher:
-        """Get HTML table fetcher instance."""
+    def get_html_table_fetcher(self) -> HtmlTableService:
+        """Get HTML table service instance."""
         if 'html_table_fetcher' not in self._instances:
             timeout = self.config.get('html_fetch_timeout', 30)
-            self._instances['html_table_fetcher'] = HtmlTableFetcher(timeout=timeout)
+            self._instances['html_table_fetcher'] = HtmlTableService(timeout=timeout)
         return self._instances['html_table_fetcher']
     
-    def get_csv_downloader(self) -> CsvDownloader:
-        """Get CSV downloader instance."""
+    def get_csv_downloader(self) -> CsvService:
+        """Get CSV service instance."""
         if 'csv_downloader' not in self._instances:
             timeout = self.config.get('csv_download_timeout', 30)
-            self._instances['csv_downloader'] = CsvDownloader(timeout=timeout)
+            self._instances['csv_downloader'] = CsvService(timeout=timeout)
         return self._instances['csv_downloader']
     
     def get_weather_jma_gateway(self) -> WeatherJMAGateway:

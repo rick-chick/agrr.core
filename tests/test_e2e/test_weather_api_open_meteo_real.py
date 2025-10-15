@@ -19,7 +19,7 @@ class TestOpenMeteoAPIReal:
     def setup_method(self):
         """Set up test fixtures."""
         # Use real HTTP client for E2E tests
-        from agrr_core.framework.repositories.http_client import HttpClient
+        from agrr_core.framework.services.clients.http_client import HttpClient
         http_service = HttpClient(base_url="https://archive-api.open-meteo.com/v1/archive")
         self.repository = WeatherAPIOpenMeteoRepository(http_service)
         # Use historical dates that should always be available

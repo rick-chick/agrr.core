@@ -81,7 +81,7 @@ src/agrr.core/usecase/
 #### 構成要素:
 - **Gateway** - ゲートウェイ実装（UseCase層のGatewayインターフェースの実装）
   - WeatherGatewayImpl, PredictionGatewayImpl, CropProfileGatewayImpl
-  - Framework層のRepositoryを注入してUseCaseに提供
+  - Framework層のServicesを注入してUseCaseに提供
 - **Presenter** - プレゼンター（Output Portの実装）
   - WeatherPresenter, PredictionPresenter, CropProfilePresenter
   - UseCaseの出力を外部形式（JSON, Table等）に変換
@@ -91,20 +91,29 @@ src/agrr.core/usecase/
 - **Mapper** - データマッパー
   - WeatherMapper, EntityToDtoMapper
   - Entity ↔ DTO変換
-- **Interfaces** - インターフェース定義
-  - PredictionServiceInterface, HttpServiceInterface, FileRepositoryInterface
-  - Framework層が実装すべきインターフェースを定義
+- **Interfaces** - Framework層向けインターフェース定義（役割別に分類）
+  - **Clients**: HttpClientInterface, LLMClientInterface
+  - **I/O Services**: FileServiceInterface, CsvServiceInterface, HtmlTableServiceInterface
+  - **ML Services**: PredictionServiceInterface, TimeSeriesServiceInterface
+  - **Structures**: HtmlTable, TableRow（共通データ構造）
+- **Services** - ドメインサービス（UseCase層との橋渡し）
+  - WeatherLinearInterpolator - 天気データ補間
 - **Adapter Exception** - アダプター例外
   - ExternalServiceError, DataMappingError
 
 #### ディレクトリ構造:
 ```
 src/agrr.core/adapter/
-├── gateways/         # ゲートウェイ実装（Framework層のRepositoryを抽象化）
+├── gateways/         # ゲートウェイ実装
 ├── presenters/       # プレゼンター（Output Portの実装）
 ├── controllers/      # コントローラー（Input Portの実装）
 ├── mappers/          # データマッパー
-├── interfaces/       # Framework層向けインターフェース定義
+├── interfaces/       # Framework層向けインターフェース定義（役割別）
+│   ├── clients/      # 外部接続クライアントのインターフェース
+│   ├── io/           # I/Oサービスのインターフェース
+│   ├── ml/           # ML/予測サービスのインターフェース
+│   └── structures/   # 共通データ構造
+├── services/         # ドメインサービス
 ├── exceptions/       # アダプター例外
 └── __init__.py
 ```
@@ -114,36 +123,37 @@ src/agrr.core/adapter/
 **責任**: 外部システムとの直接的な通信、技術的実装詳細、外部ライブラリの使用
 
 #### 構成要素:
-- **Repository実装** - 外部システムとの直接通信（データアクセス層）
-  - WeatherAPIOpenMeteoRepository - Open-Meteo API通信
-  - WeatherJMARepository - JMA API通信
-  - WeatherFileRepository - ファイルベースの天気データ
-  - CropProfileFileRepository - 作物プロファイルファイル
-  - 外部API、データベース、ファイルシステムとの直接I/O
-  - Adapter層のインターフェースを実装
-- **Technical Services** - 技術的サービス実装
-  - HttpClient - HTTP通信（requestsライブラリ使用）
-  - FileRepository - ファイルI/O基本実装
-  - HtmlTableFetcher - HTMLパース（BeautifulSoup使用）
-  - ARIMAPredictionService - 時系列予測（statsmodels使用）
-  - LightGBMPredictionService - 機械学習予測（lightgbm使用）
-  - TimeSeriesARIMAService - ARIMA実装
-  - FeatureEngineeringService - 特徴量エンジニアリング
-- **InMemory Repositories** - テスト用メモリ実装
-  - InMemoryCropProfileRepository
-  - InMemoryFieldRepository
-  - InMemoryOptimizationResultRepository
+- **Services（技術的サービス実装）** - 役割別に分類
+  - **Clients** - 外部システム接続クライアント
+    - HttpClient - HTTP通信（requestsライブラリ使用）
+    - LLMClient - LLM API通信（OpenAI等）
+  - **I/O Services** - ファイル・データI/O処理
+    - FileService - ファイルI/O基本実装
+    - CsvService - CSV処理
+    - HtmlTableService - HTMLパース（BeautifulSoup使用）
+  - **ML Services** - 機械学習・予測サービス
+    - ARIMAPredictionService - 時系列予測（statsmodels使用）
+    - TimeSeriesARIMAService - ARIMA実装
+    - LightGBMPredictionService - 機械学習予測（lightgbm使用）
+    - FeatureEngineeringService - 特徴量エンジニアリング
+  - **Utils** - 共通ユーティリティ
+    - InterpolationService - 線形補間処理
+
 - **Configuration** - 設定管理とDI
   - AgrrCoreContainer - 依存性注入コンテナ
   - Environment Config, Logging Config
+  
 - **Framework Exception** - フレームワーク例外
   - ConfigurationError, InfrastructureError
 
 #### ディレクトリ構造:
 ```
 src/agrr.core/framework/
-├── repositories/     # Repository実装（外部システムとの直接通信）
-├── services/         # 技術的サービス実装（ML、HTTP、File等）
+├── services/         # 技術的サービス実装（役割別）
+│   ├── clients/      # 外部接続クライアント（HTTP, LLM等）
+│   ├── io/           # I/O処理サービス（File, CSV, HTML等）
+│   ├── ml/           # 機械学習サービス（ARIMA, LightGBM等）
+│   └── utils/        # 共通ユーティリティ（補間等）
 ├── config/           # 設定管理、DIコンテナ
 ├── exceptions/       # フレームワーク例外
 └── __init__.py
@@ -155,7 +165,7 @@ src/agrr.core/framework/
 ### 標準的なフロー
 1. **入力**: Framework Layer → Adapter Layer (Controller) → UseCase Layer (Interactor)
 2. **処理**: UseCase Layer (Interactor) → Entity Layer (Entity)
-3. **外部システムアクセス**: UseCase Layer (Interactor) → UseCase Layer (Gatewayインターフェース) → Adapter Layer (Gateway実装) → Adapter Layer (Service)
+3. **外部システムアクセス**: UseCase Layer (Interactor) → UseCase Layer (Gatewayインターフェース) → Adapter Layer (Gateway実装) → Framework Layer (Services)
 4. **出力**: UseCase Layer (Interactor) → UseCase Layer (Output Port) → Adapter Layer (Presenter) → Framework Layer
 
 ### 依存関係の実現方法
@@ -187,21 +197,20 @@ src/agrr.core/framework/
 
 ---
 
-## 補足: Repository実装の配置
+## 命名規則
 
-✅ **2025-10-14 更新:** すべてのRepository実装を標準的なClean Architectureに従い`framework/repositories/`に配置しました。
+### インターフェースと実装
+- **インターフェース**: 必ず`*Interface`サフィックス
+  - 例: `HttpClientInterface`, `FileServiceInterface`, `PredictionServiceInterface`
+  
+- **実装**: サフィックスなし、役割に応じて命名
+  - 例: `HttpClient`, `FileService`, `ARIMAPredictionService`
 
-**配置されているRepository実装:**
-- WeatherAPIOpenMeteoRepository - Open-Meteo API通信
-- WeatherJMARepository - JMA API通信
-- WeatherFileRepository - ファイルベースの天気データ
-- CropProfileFileRepository - 作物プロファイルファイル
-- CropProfileLLMRepository - LLMベースの作物プロファイル
-- FieldFileRepository - 圃場ファイル
-- InteractionRuleFileRepository - 相互作用ルールファイル
-- PredictionStorageRepository - 予測結果ストレージ
-- InMemory*Repository - テスト用メモリ実装
-
-これにより、標準的なClean Architectureの定義に完全準拠しました。
+### Client vs Service
+- **Client**: 外部システムへの接続・通信
+  - 例: `HttpClient`, `LLMClient`
+  
+- **Service**: データ処理・変換・機能提供
+  - 例: `FileService`, `CsvService`, `PredictionService`, `InterpolationService`
 
 ---

@@ -1,16 +1,16 @@
-"""Time series analysis interface for adapter layer."""
+"""Time series analysis service interface for adapter layer."""
 
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Optional
 import numpy as np
 
 
-class TimeSeriesInterface(ABC):
+class TimeSeriesServiceInterface(ABC):
     """Interface for time series analysis operations."""
     
     @abstractmethod
     def create_model(self, data: List[float], order: Tuple[int, int, int], 
-                    seasonal_order: Optional[Tuple[int, int, int, int]] = None) -> 'TimeSeriesModel':
+                    seasonal_order: Optional[Tuple[int, int, int, int]] = None) -> 'TimeSeriesModelInterface':
         """Create time series model with given parameters."""
         pass
     
@@ -25,16 +25,16 @@ class TimeSeriesInterface(ABC):
         pass
 
 
-class TimeSeriesModel(ABC):
+class TimeSeriesModelInterface(ABC):
     """Interface for time series model operations."""
     
     @abstractmethod
-    def fit(self) -> 'FittedTimeSeriesModel':
+    def fit(self) -> 'FittedTimeSeriesModelInterface':
         """Fit the model to data."""
         pass
 
 
-class FittedTimeSeriesModel(ABC):
+class FittedTimeSeriesModelInterface(ABC):
     """Interface for fitted time series model operations."""
     
     @abstractmethod
@@ -51,3 +51,4 @@ class FittedTimeSeriesModel(ABC):
             confidence_intervals can be None if not available
         """
         pass
+

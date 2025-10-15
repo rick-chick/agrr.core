@@ -1,13 +1,13 @@
-"""File repository implementation for framework layer."""
+"""File service implementation for framework layer."""
 
-from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
+from agrr_core.adapter.interfaces.io.file_service_interface import FileServiceInterface
 
 
-class FileRepository(FileRepositoryInterface):
-    """Implementation of file repository interface."""
+class FileService(FileServiceInterface):
+    """Implementation of file service interface."""
     
     def __init__(self):
-        """Initialize file repository implementation."""
+        """Initialize file service implementation."""
         pass
     
     async def read(self, file_path: str) -> str:
@@ -40,3 +40,4 @@ class FileRepository(FileRepositoryInterface):
             return path.exists() and path.is_file()
         except Exception:
             return False
+

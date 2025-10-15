@@ -29,14 +29,14 @@ except ImportError:
         def __call__(data):
             return [0, 0.05, 0, {}, {}]  # Mock stationary result
 
-from agrr_core.adapter.interfaces.time_series_interface import (
-    TimeSeriesInterface, 
-    TimeSeriesModel, 
-    FittedTimeSeriesModel
+from agrr_core.adapter.interfaces.ml.time_series_service_interface import (
+    TimeSeriesServiceInterface, 
+    TimeSeriesModelInterface, 
+    FittedTimeSeriesModelInterface
 )
 
 
-class TimeSeriesARIMAService(TimeSeriesInterface):
+class TimeSeriesARIMAService(TimeSeriesServiceInterface):
     """ARIMA implementation of time series analysis interface."""
     
     def create_model(self, data: List[float], order: Tuple[int, int, int], 
@@ -66,7 +66,7 @@ class TimeSeriesARIMAService(TimeSeriesInterface):
         return diff_data
 
 
-class ARIMAModel(TimeSeriesModel):
+class ARIMAModel(TimeSeriesModelInterface):
     """ARIMA model implementation."""
     
     def __init__(self, data: List[float], order: Tuple[int, int, int], 
@@ -100,7 +100,7 @@ class ARIMAModel(TimeSeriesModel):
                 raise RuntimeError(f"Failed to fit ARIMA model: {e}. Fallback also failed: {fallback_e}")
 
 
-class FittedARIMAModel(FittedTimeSeriesModel):
+class FittedARIMAModel(FittedTimeSeriesModelInterface):
     """Fitted ARIMA model implementation."""
     
     def __init__(self, fitted_model):

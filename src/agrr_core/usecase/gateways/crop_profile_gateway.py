@@ -1,7 +1,7 @@
 """Gateway interface for crop profiles."""
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Dict, Any
 
 from agrr_core.entity.entities.crop_profile_entity import CropProfile
 
@@ -39,6 +39,70 @@ class CropProfileGateway(ABC):
             Generated CropProfile instance
         """
         pass
+
+    # LLM-specific methods for step-by-step profile generation
+    async def extract_crop_variety(self, crop_query: str) -> Dict[str, Any]:
+        """Extract crop name and variety from user input.
+        
+        Args:
+            crop_query: User input containing crop and variety information
+            
+        Returns:
+            Dict containing crop_name and variety
+        """
+        raise NotImplementedError("This gateway does not support LLM operations")
+
+    async def define_growth_stages(self, crop_name: str, variety: str) -> Dict[str, Any]:
+        """Define growth stages for the crop variety.
+        
+        Args:
+            crop_name: Name of the crop
+            variety: Variety name
+            
+        Returns:
+            Dict containing crop_info and growth_stages
+        """
+        raise NotImplementedError("This gateway does not support LLM operations")
+
+    async def research_stage_requirements(
+        self, crop_name: str, variety: str, stage_name: str, stage_description: str
+    ) -> Dict[str, Any]:
+        """Research variety-specific requirements for a specific stage.
+        
+        Args:
+            crop_name: Name of the crop
+            variety: Variety name
+            stage_name: Name of the growth stage
+            stage_description: Description of the growth stage
+            
+        Returns:
+            Dict containing detailed requirements for the stage
+        """
+        raise NotImplementedError("This gateway does not support LLM operations")
+
+    async def extract_crop_economics(self, crop_name: str, variety: str) -> Dict[str, Any]:
+        """Extract crop economic information (area per unit and revenue per area).
+        
+        Args:
+            crop_name: Name of the crop
+            variety: Variety name
+            
+        Returns:
+            Dict containing area_per_unit and revenue_per_area
+        """
+        raise NotImplementedError("This gateway does not support LLM operations")
+
+    async def extract_crop_family(self, crop_name: str, variety: str) -> Dict[str, Any]:
+        """Extract crop family (科) information.
+        
+        Args:
+            crop_name: Name of the crop
+            variety: Variety name
+            
+        Returns:
+            Dict containing family (科) information
+        """
+        raise NotImplementedError("This gateway does not support LLM operations")
 
 
 

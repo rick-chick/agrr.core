@@ -8,6 +8,7 @@ from typing import Optional
 from agrr_core.framework.agrr_core_container import WeatherCliContainer
 from agrr_core.adapter.gateways.crop_profile_file_gateway import CropProfileFileGateway
 from agrr_core.adapter.gateways.crop_profile_inmemory_gateway import CropProfileInMemoryGateway
+from agrr_core.adapter.gateways.crop_profile_llm_gateway import CropProfileLLMGateway
 from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway
 from agrr_core.adapter.gateways.optimization_result_inmemory_gateway import OptimizationResultInMemoryGateway
 from agrr_core.adapter.gateways.interaction_rule_file_gateway import InteractionRuleFileGateway
@@ -206,7 +207,7 @@ def main() -> None:
             # Run crop profile craft CLI (direct wiring per project rules)
             llm_client = FrameworkLLMClient()
             llm_repository = CropProfileLLMRepository(llm_client=llm_client)
-            gateway = CropProfileInMemoryGateway()  # TODO: Add LLM gateway adapter
+            gateway = CropProfileLLMGateway(llm_repository=llm_repository)
             presenter = CropProfileCraftPresenter()
             controller = CropCliCraftController(gateway=gateway, presenter=presenter)
             asyncio.run(controller.run(args[1:]))
@@ -457,7 +458,7 @@ For detailed help on each subcommand:
                     sys.exit(1)
             
                 # Setup crop gateway
-                crop_profile_gateway = CropProfileFileGateway(file_repository=file_repository, file_path=crop_file_path)
+                crop_profile_gateway = CropProfileFileGateway(file_repository=file_repository, file_path=crops_file_path)
             
                 # Setup interaction rule gateway (optional)
                 interaction_rules_path = ""

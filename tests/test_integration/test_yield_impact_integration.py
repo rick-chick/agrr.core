@@ -461,12 +461,11 @@ class TestYieldImpactRealisticScenarios:
         
         response = await interactor.execute(request)
         
-        # Verify moderate yield loss
-        # 3 days frost @ 15% per day, germination sensitivity = 0.5
-        # Impact: (1 - 0.15*0.5)^3 = 0.925^3 ≈ 0.791 (21% yield loss)
-        # Plus 3 days low temp stress @ 8% per day, sensitivity = 0.3
-        # Total: more than expected due to combined stress
-        assert 0.70 <= response.yield_factor <= 0.85  # Moderate loss
+        # Verify significant yield loss
+        # 3 days frost @ 15% per day: (1 - 0.15)^3 = 0.85^3 ≈ 0.614 (38.6% yield loss)
+        # Plus 3 days low temp stress @ 8% per day: (0.614) * (1 - 0.08)^3 ≈ 0.478
+        # Total: ~52% yield loss due to frost + low temp stress
+        assert 0.40 <= response.yield_factor <= 0.55  # Significant loss
         
         print(f"\nFrost scenario:")
         print(f"  Yield factor: {response.yield_factor:.3f}")

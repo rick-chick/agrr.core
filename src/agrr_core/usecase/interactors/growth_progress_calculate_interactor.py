@@ -114,7 +114,6 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
                 weather=weather_data
             )
             yield_accumulator.accumulate_daily_impact(
-                stage=current_stage.stage,
                 daily_impacts=daily_impacts,
             )
 

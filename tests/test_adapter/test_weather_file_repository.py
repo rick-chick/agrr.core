@@ -1,4 +1,4 @@
-"""Tests for WeatherFileRepository."""
+"""Tests for WeatherFileGateway."""
 
 import pytest
 import json
@@ -8,13 +8,13 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch, mock_open
 
-from agrr_core.framework.repositories.weather_file_repository import WeatherFileRepository
+from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.file_error import FileError
 
 
-class TestWeatherFileRepository:
-    """Test cases for WeatherFileRepository."""
+class TestWeatherFileGateway:
+    """Test cases for WeatherFileGateway."""
     
     def setup_method(self):
         """Set up test fixtures."""
@@ -27,10 +27,12 @@ class TestWeatherFileRepository:
         self.mock_file_repository.read = AsyncMock(return_value='{"data": [{"time": "2024-01-01", "temperature_2m_max": 25.0}]}')
         self.mock_file_repository.write = AsyncMock(return_value=None)
         self.mock_file_repository.delete = AsyncMock(return_value=None)
-        self.repository = WeatherFileRepository(
+        self.gateway = WeatherFileGateway(
             self.mock_file_repository,
             file_path="test_weather.json"
         )
+        # Backward compatibility alias
+        self.repository = self.gateway
     
     # ===== Input Validation Tests =====
     

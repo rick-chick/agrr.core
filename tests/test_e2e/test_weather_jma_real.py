@@ -8,7 +8,7 @@ import pytest
 from datetime import datetime, timedelta
 
 from agrr_core.framework.repositories.html_table_fetcher import HtmlTableFetcher
-from agrr_core.framework.repositories.weather_jma_repository import WeatherJMARepository
+from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway as WeatherJMARepository
 
 
 class TestJMAAPIReal:

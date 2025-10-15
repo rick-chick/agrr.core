@@ -5,9 +5,7 @@ import asyncio
 import json
 from typing import Optional
 
-from agrr_core.adapter.gateways.crop_profile_gateway_impl import (
-    CropProfileGatewayImpl,
-)
+from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 from agrr_core.adapter.presenters.crop_profile_craft_presenter import (
     CropProfileCraftPresenter,
 )
@@ -24,7 +22,7 @@ class CropCliCraftController:
 
     def __init__(
         self,
-        gateway: CropProfileGatewayImpl,
+        gateway: CropProfileGateway,
         presenter: CropProfileCraftPresenter,
     ) -> None:
         """Initialize with injected gateway and presenter."""

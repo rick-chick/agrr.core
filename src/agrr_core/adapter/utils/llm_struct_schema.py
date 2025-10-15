@@ -40,6 +40,7 @@ def build_stage_requirement_structure() -> Dict[str, Any]:
                 },
                 "thermal": {
                     "required_gdd": None,
+                    "harvest_start_gdd": None,
                 },
             }
         ]
@@ -72,6 +73,7 @@ def build_stage_requirement_descriptions() -> Dict[str, Any]:
                 },
                 "thermal": {
                     "required_gdd": "Required growing degree days to complete the stage (°C·day)",
+                    "harvest_start_gdd": "Optional: GDD when first harvest becomes possible (°C·day). Only for harvest stage of continuous-harvest crops. Must be less than required_gdd. Leave null for non-harvest stages or single-harvest crops.",
                 },
             }
         ]

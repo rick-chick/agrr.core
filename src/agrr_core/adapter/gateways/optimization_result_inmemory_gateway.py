@@ -1,22 +1,18 @@
-"""In-memory repository for optimization intermediate results.
+"""In-memory optimization result gateway implementation.
 
-This repository provides in-memory storage for optimization intermediate results
-using a dictionary data structure. Data is stored in memory and will be lost
-when the application terminates.
+This gateway directly implements OptimizationResultGateway interface for in-memory optimization result storage.
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from dataclasses import dataclass
 
-from agrr_core.adapter.interfaces.optimization_result_repository_interface import (
-    OptimizationResultRepositoryInterface,
-)
 from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
 from agrr_core.entity.entities.optimization_schedule_entity import (
     OptimizationSchedule,
 )
+from agrr_core.usecase.gateways.optimization_result_gateway import OptimizationResultGateway
 
 
 @dataclass
@@ -26,8 +22,11 @@ class StoredOptimizationResult:
     total_cost: Optional[float] = None
 
 
-class InMemoryOptimizationResultRepository(OptimizationResultRepositoryInterface):
-    """In-memory repository for storing optimization intermediate results."""
+class OptimizationResultInMemoryGateway(OptimizationResultGateway):
+    """In-memory gateway for storing optimization intermediate results.
+    
+    Directly implements OptimizationResultGateway interface without intermediate layers.
+    """
 
     def __init__(self):
         """Initialize in-memory storage."""

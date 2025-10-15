@@ -1,4 +1,7 @@
-"""JMA (Japan Meteorological Agency) weather repository implementation."""
+"""Weather JMA gateway implementation for Japan Meteorological Agency.
+
+This gateway directly implements WeatherGateway interface for JMA access.
+"""
 
 import logging
 from typing import Dict, Tuple, List, Optional
@@ -10,9 +13,10 @@ from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 from agrr_core.entity.exceptions.html_fetch_error import HtmlFetchError
-from agrr_core.framework.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
-from agrr_core.framework.interfaces.html_table_structures import HtmlTable, TableRow
+from agrr_core.adapter.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
+from agrr_core.adapter.interfaces.html_table_structures import HtmlTable, TableRow
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
+from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 
 
 # 気象庁観測地点マッピング（緯度経度 → (都道府県番号, 地点番号)）
@@ -87,14 +91,16 @@ LOCATION_MAPPING: Dict[Tuple[float, float], Tuple[int, int, str]] = {
 }
 
 
-class WeatherJMARepository:
-    """Repository for fetching weather data from JMA (Japan Meteorological Agency)."""
+class WeatherJMAGateway(WeatherGateway):
+    """Gateway for fetching weather data from JMA (Japan Meteorological Agency).
+    
+    Directly implements WeatherGateway interface without intermediate layers.
+    """
     
     BASE_URL = "https://www.data.jma.go.jp/obd/stats/etrn/view/daily_s1.php"
     
     def __init__(self, html_table_fetcher: HtmlTableFetchInterface):
-        """
-        Initialize JMA weather repository.
+        """Initialize JMA weather gateway.
         
         Args:
             html_table_fetcher: HTML table fetch service
@@ -102,9 +108,46 @@ class WeatherJMARepository:
         self.html_table_fetcher = html_table_fetcher
         self.logger = logging.getLogger(__name__)
     
-    def _find_nearest_location(self, latitude: float, longitude: float) -> Tuple[int, int, str]:
+    async def get(self) -> List[WeatherData]:
+        """Get weather data from configured source.
+        
+        Note: This method is not used for JMA weather data.
+        Use get_by_location_and_date_range() instead.
+        
+        Raises:
+            NotImplementedError: JMA requires location and date range parameters
         """
-        Find the nearest JMA observation station.
+        raise NotImplementedError(
+            "JMA weather source requires location and date range. "
+            "Use get_by_location_and_date_range() instead."
+        )
+    
+    async def create(self, weather_data: List[WeatherData], destination: str) -> None:
+        """Create weather data at destination.
+        
+        Raises:
+            NotImplementedError: Weather data creation not supported for JMA source
+        """
+        raise NotImplementedError(
+            "Weather data creation not supported for JMA source"
+        )
+    
+    async def get_forecast(
+        self,
+        latitude: float,
+        longitude: float
+    ) -> WeatherDataWithLocationDTO:
+        """Get weather forecast.
+        
+        Raises:
+            NotImplementedError: JMA does not provide forecast data
+        """
+        raise NotImplementedError(
+            "JMA does not provide forecast data. Use Open-Meteo API instead."
+        )
+    
+    def _find_nearest_location(self, latitude: float, longitude: float) -> Tuple[int, int, str]:
+        """Find the nearest JMA observation station.
         
         Args:
             latitude: Target latitude
@@ -140,8 +183,7 @@ class WeatherJMARepository:
         start_date: str,
         end_date: str
     ) -> WeatherDataWithLocationDTO:
-        """
-        Get weather data from JMA.
+        """Get weather data from JMA.
         
         Args:
             latitude: Latitude
@@ -244,8 +286,7 @@ class WeatherJMARepository:
             raise WeatherAPIError(f"Invalid JMA data format: {e}")
     
     def _build_url(self, prec_no: int, block_no: int, year: int, month: int) -> str:
-        """
-        Build JMA data URL.
+        """Build JMA data URL.
         
         Args:
             prec_no: Prefecture number
@@ -267,8 +308,7 @@ class WeatherJMARepository:
         )
     
     def _find_data_table(self, tables: List[HtmlTable]) -> HtmlTable:
-        """
-        データテーブル（id="tablefix1"）を見つける
+        """データテーブル（id="tablefix1"）を見つける
         
         Args:
             tables: 全テーブルのリスト
@@ -300,8 +340,7 @@ class WeatherJMARepository:
         year: int,
         month: int
     ) -> List[WeatherData]:
-        """
-        Parse JMA HTML table to WeatherData entities.
+        """Parse JMA HTML table to WeatherData entities.
         
         テーブル構造（実データより）:
         - cells[0]: 日
@@ -359,14 +398,6 @@ class WeatherJMARepository:
                     continue
                 
                 # Extract data from cells
-                # cells[3]: 降水量合計
-                # cells[6]: 平均気温
-                # cells[7]: 最高気温
-                # cells[8]: 最低気温
-                # cells[16]: 日照時間(h)
-                # cells[10]: 平均風速
-                # cells[12]: 最大風速
-                
                 precipitation = self._safe_float(row.cells[3])
                 temp_mean = self._safe_float(row.cells[6])
                 temp_max = self._safe_float(row.cells[7])
@@ -441,8 +472,7 @@ class WeatherJMARepository:
         return sorted(weather_data_dict.values(), key=lambda x: x.time)
     
     def _safe_float(self, value) -> Optional[float]:
-        """
-        Safely convert value to float.
+        """Safely convert value to float.
         
         Args:
             value: Value to convert
@@ -465,8 +495,7 @@ class WeatherJMARepository:
             return None
     
     def _validate_weather_data(self, data: WeatherData, date_str: str = "") -> bool:
-        """
-        Validate weather data ranges.
+        """Validate weather data ranges.
         
         Args:
             data: WeatherData to validate

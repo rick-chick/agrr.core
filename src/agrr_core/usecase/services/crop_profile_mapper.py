@@ -177,7 +177,7 @@ class CropProfileMapper:
         }
     
     @staticmethod
-    def _thermal_to_dict(thermal: ThermalRequirement) -> Dict[str, float]:
+    def _thermal_to_dict(thermal: ThermalRequirement) -> Dict[str, Any]:
         """Convert ThermalRequirement to dictionary.
         
         Args:
@@ -186,9 +186,13 @@ class CropProfileMapper:
         Returns:
             Dictionary with thermal requirement data
         """
-        return {
+        result = {
             "required_gdd": thermal.required_gdd,
         }
+        # Include harvest_start_gdd only if it's set (not None)
+        if thermal.harvest_start_gdd is not None:
+            result["harvest_start_gdd"] = thermal.harvest_start_gdd
+        return result
 
 
 # Backward compatibility alias

@@ -1,16 +1,20 @@
-"""In-memory field repository (Framework layer).
+"""In-memory field gateway implementation.
 
-This repository stores fields in memory for testing and development.
+This gateway directly implements FieldGateway interface for in-memory field storage.
 """
 
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from agrr_core.entity.entities.field_entity import Field
-from agrr_core.adapter.interfaces.field_repository_interface import FieldRepositoryInterface
+from agrr_core.usecase.gateways.field_gateway import FieldGateway
 
 
-class InMemoryFieldRepository(FieldRepositoryInterface):
-    """In-memory implementation of field repository."""
+class FieldInMemoryGateway(FieldGateway):
+    """In-memory implementation of FieldGateway.
+    
+    Directly implements FieldGateway interface without intermediate layers.
+    Stores fields in memory for testing and development.
+    """
 
     def __init__(self):
         """Initialize with empty field storage."""
@@ -26,6 +30,14 @@ class InMemoryFieldRepository(FieldRepositoryInterface):
             Field entity if found, None otherwise
         """
         return self._fields.get(field_id)
+    
+    async def get_all(self) -> List[Field]:
+        """Get all fields from configured source.
+        
+        Returns:
+            List of Field entities
+        """
+        return list(self._fields.values())
 
     async def save(self, field: Field) -> None:
         """Save a field.
@@ -52,3 +64,4 @@ class InMemoryFieldRepository(FieldRepositoryInterface):
     def clear(self) -> None:
         """Clear all fields (for testing)."""
         self._fields.clear()
+

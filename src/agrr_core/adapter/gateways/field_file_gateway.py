@@ -1,30 +1,6 @@
-"""Field file repository for adapter layer.
+"""Field file gateway implementation.
 
-This repository reads field configurations from JSON files.
-
-JSON Format:
-  Single field:
-    {
-      "field_id": "field_01",
-      "name": "北圃場",
-      "area": 1000.0,
-      "daily_fixed_cost": 5000.0,
-      "location": "北区画"  // optional
-    }
-  
-  Multiple fields:
-    {
-      "fields": [
-        {
-          "field_id": "field_01",
-          "name": "北圃場",
-          "area": 1000.0,
-          "daily_fixed_cost": 5000.0,
-          "location": "北区画"
-        },
-        ...
-      ]
-    }
+This gateway directly implements FieldGateway interface for file-based field data access.
 """
 
 from typing import List, Dict, Any, Optional
@@ -32,14 +8,42 @@ from typing import List, Dict, Any, Optional
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
-from agrr_core.adapter.interfaces.field_repository_interface import FieldRepositoryInterface
+from agrr_core.usecase.gateways.field_gateway import FieldGateway
 
 
-class FieldFileRepository(FieldRepositoryInterface):
-    """Repository for reading field data from files."""
+class FieldFileGateway(FieldGateway):
+    """Gateway for reading field data from files.
+    
+    Reads field configurations from JSON files.
+    Directly implements FieldGateway interface without intermediate layers.
+    
+    JSON Format:
+      Single field:
+        {
+          "field_id": "field_01",
+          "name": "北圃場",
+          "area": 1000.0,
+          "daily_fixed_cost": 5000.0,
+          "location": "北区画"  // optional
+        }
+      
+      Multiple fields:
+        {
+          "fields": [
+            {
+              "field_id": "field_01",
+              "name": "北圃場",
+              "area": 1000.0,
+              "daily_fixed_cost": 5000.0,
+              "location": "北区画"
+            },
+            ...
+          ]
+        }
+    """
     
     def __init__(self, file_repository: FileRepositoryInterface, file_path: str = ""):
-        """Initialize field file repository.
+        """Initialize field file gateway.
         
         Args:
             file_repository: File repository interface for file I/O operations
@@ -52,7 +56,7 @@ class FieldFileRepository(FieldRepositoryInterface):
     async def get(self, field_id: str) -> Optional[Field]:
         """Get field by ID.
         
-        Implementation of FieldRepositoryInterface.
+        Implementation of FieldGateway interface.
         
         Args:
             field_id: Field identifier
@@ -65,6 +69,20 @@ class FieldFileRepository(FieldRepositoryInterface):
             await self._load_fields_cache()
         
         return self._fields_cache.get(field_id) if self._fields_cache else None
+    
+    async def get_all(self) -> List[Field]:
+        """Get all fields from configured source.
+        
+        Implementation of FieldGateway interface.
+        
+        Returns:
+            List of Field entities
+        """
+        # Load fields into cache if not already loaded
+        if self._fields_cache is None:
+            await self._load_fields_cache()
+        
+        return list(self._fields_cache.values()) if self._fields_cache else []
     
     async def _load_fields_cache(self) -> None:
         """Load all fields from file into cache."""

@@ -14,11 +14,11 @@ from agrr_core.entity.entities.optimization_intermediate_result_entity import (
 from agrr_core.entity.entities.optimization_schedule_entity import (
     OptimizationSchedule,
 )
-from agrr_core.adapter.gateways.optimization_result_gateway_impl import (
-    OptimizationResultGatewayImpl,
+from agrr_core.usecase.gateways.optimization_result_gateway import (
+    OptimizationResultGateway,
 )
-from agrr_core.framework.repositories.inmemory_optimization_result_repository import (
-    InMemoryOptimizationResultRepository,
+from agrr_core.adapter.gateways.optimization_result_inmemory_gateway import (
+    OptimizationResultInMemoryGateway,
 )
 
 
@@ -28,8 +28,8 @@ class TestOptimizationScheduleGatewayImpl:
     @pytest.mark.asyncio
     async def test_save_and_get_schedule(self):
         """Test saving and retrieving a schedule through gateway."""
-        repository = InMemoryOptimizationResultRepository()
-        gateway = OptimizationResultGatewayImpl(repository)
+        # Gateway directly implements the interface now
+        gateway = OptimizationResultInMemoryGateway()
         
         # Create test results
         results = [
@@ -68,8 +68,7 @@ class TestOptimizationScheduleGatewayImpl:
     @pytest.mark.asyncio
     async def test_get_all_schedules(self):
         """Test retrieving all schedules through gateway."""
-        repository = InMemoryOptimizationResultRepository()
-        gateway = OptimizationResultGatewayImpl(repository)
+        gateway = OptimizationResultInMemoryGateway()
         
         # Create test results
         results1 = [
@@ -113,8 +112,7 @@ class TestOptimizationScheduleGatewayImpl:
     @pytest.mark.asyncio
     async def test_delete_schedule(self):
         """Test deleting a schedule through gateway."""
-        repository = InMemoryOptimizationResultRepository()
-        gateway = OptimizationResultGatewayImpl(repository)
+        gateway = OptimizationResultInMemoryGateway()
         
         # Create and save test result
         results = [
@@ -143,8 +141,7 @@ class TestOptimizationScheduleGatewayImpl:
     @pytest.mark.asyncio
     async def test_clear_schedules(self):
         """Test clearing all schedules through gateway."""
-        repository = InMemoryOptimizationResultRepository()
-        gateway = OptimizationResultGatewayImpl(repository)
+        gateway = OptimizationResultInMemoryGateway()
         
         # Create and save test results
         results = [

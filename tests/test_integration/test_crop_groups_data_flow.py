@@ -18,8 +18,8 @@ from agrr_core.entity.entities.temperature_profile_entity import TemperatureProf
 from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
 from agrr_core.usecase.services.crop_profile_mapper import CropProfileMapper
-from agrr_core.adapter.gateways.crop_profile_gateway_impl import CropProfileGatewayImpl
-from agrr_core.framework.repositories.crop_profile_file_repository import CropProfileFileRepository
+from agrr_core.adapter.gateways.crop_profile_file_gateway import CropProfileFileGateway
+# CropProfileFileRepository is now CropProfileFileGateway
 from agrr_core.framework.repositories.file_repository import FileRepository
 
 
@@ -165,13 +165,9 @@ class TestCropGroupsDataFlowThroughGateway:
         try:
             # Load using Gateway
             file_repository = FileRepository()
-            crop_profile_repository = CropProfileFileRepository(
+            gateway = CropProfileFileGateway(
                 file_repository=file_repository,
                 file_path=str(temp_file)
-            )
-            gateway = CropProfileGatewayImpl(
-                llm_repository=None,
-                profile_repository=crop_profile_repository
             )
             
             aggregate = await gateway.get()
@@ -236,13 +232,9 @@ class TestCropGroupsDataFlowThroughGateway:
         
         try:
             file_repository = FileRepository()
-            crop_profile_repository = CropProfileFileRepository(
+            gateway = CropProfileFileGateway(
                 file_repository=file_repository,
                 file_path=str(temp_file)
-            )
-            gateway = CropProfileGatewayImpl(
-                llm_repository=None,
-                profile_repository=crop_profile_repository
             )
             
             aggregate = await gateway.get()
@@ -314,13 +306,9 @@ class TestCropGroupsDataFlowThroughGateway:
         try:
             # 4. Load back using Gateway
             file_repository = FileRepository()
-            crop_profile_repository = CropProfileFileRepository(
+            gateway = CropProfileFileGateway(
                 file_repository=file_repository,
                 file_path=str(temp_file)
-            )
-            gateway = CropProfileGatewayImpl(
-                llm_repository=None,
-                profile_repository=crop_profile_repository
             )
             
             loaded_aggregate = await gateway.get()

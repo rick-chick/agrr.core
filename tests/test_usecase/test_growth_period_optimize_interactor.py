@@ -627,3 +627,119 @@ class TestGrowthPeriodOptimizeInteractor:
         expected_profit = (1000.0 * 50000.0) - (optimal.growth_days * 1000.0)
         assert optimal.get_metrics().profit == expected_profit
 
+    @pytest.mark.asyncio
+    async def test_optimize_with_harvest_start_gdd(self):
+        """Test optimize-period with harvest_start_gdd for fruiting crops."""
+        # Create eggplant crop profile with harvest_start_gdd
+        crop = Crop(
+            crop_id="eggplant",
+            name="Eggplant",
+            area_per_unit=0.5,
+            variety="Japanese",
+            revenue_per_area=800000.0,
+            groups=["Solanaceae"]
+        )
+        
+        # Seedling stage (no harvest_start_gdd)
+        stage1 = GrowthStage(name="Seedling", order=1)
+        temp1 = TemperatureProfile(
+            base_temperature=10.0,
+            optimal_min=20.0,
+            optimal_max=30.0,
+            low_stress_threshold=15.0,
+            high_stress_threshold=32.0,
+            frost_threshold=0.0,
+            max_temperature=35.0,
+        )
+        sr1 = StageRequirement(
+            stage=stage1,
+            temperature=temp1,
+            sunshine=SunshineProfile(),
+            thermal=ThermalRequirement(required_gdd=300.0),
+        )
+        
+        # Harvest stage (with harvest_start_gdd)
+        stage2 = GrowthStage(name="Harvest", order=2)
+        temp2 = TemperatureProfile(
+            base_temperature=10.0,
+            optimal_min=20.0,
+            optimal_max=30.0,
+            low_stress_threshold=12.0,
+            high_stress_threshold=32.0,
+            frost_threshold=0.0,
+            max_temperature=35.0,
+            sterility_risk_threshold=30.0,
+        )
+        sr2 = StageRequirement(
+            stage=stage2,
+            temperature=temp2,
+            sunshine=SunshineProfile(),
+            thermal=ThermalRequirement(
+                required_gdd=2200.0,
+                harvest_start_gdd=200.0  # Harvest starts at 200 GDD
+            ),
+        )
+        
+        crop_profile = CropProfile(crop=crop, stage_requirements=[sr1, sr2])
+        
+        # Weather data: 10 GDD per day, need 250 days
+        # Create data across multiple months
+        weather_data = []
+        current_date = datetime(2024, 6, 1)
+        for i in range(270):  # 270 days to ensure completion
+            weather_data.append(
+                WeatherData(
+                    time=current_date,
+                    temperature_2m_mean=20.0,  # GDD = 20 - 10 = 10 per day
+                    temperature_2m_max=25.0,
+                    temperature_2m_min=15.0
+                )
+            )
+            # Move to next day
+            if current_date.day < 28:  # Safe for all months
+                current_date = datetime(current_date.year, current_date.month, current_date.day + 1)
+            elif current_date.month < 12:
+                current_date = datetime(current_date.year, current_date.month + 1, 1)
+            else:
+                current_date = datetime(current_date.year + 1, 1, 1)
+        
+        self.gateway_crop_profile.get.return_value = crop_profile
+        self.gateway_weather.get.return_value = weather_data
+        
+        test_field = Field(
+            field_id="test_field",
+            name="Test Field",
+            area=1000.0,
+            daily_fixed_cost=1000.0,
+        )
+        
+        request = OptimalGrowthPeriodRequestDTO(
+            crop_id="eggplant",
+            variety="Japanese",
+            evaluation_period_start=datetime(2024, 6, 1),
+            evaluation_period_end=datetime(2025, 3, 31),  # Extended to allow 250-day growth
+            field=test_field,
+        )
+        
+        response = await self.interactor.execute(request)
+        
+        # Verify response
+        assert response.crop_name == "Eggplant"
+        assert response.variety == "Japanese"
+        
+        # Total required GDD = 300 (seedling) + 2200 (harvest) = 2500 GDD
+        # Actual growth_days may vary due to temperature stress and other factors
+        # Verify it's in a reasonable range
+        assert 250 <= response.growth_days <= 300  # Allow some variation
+        
+        # Verify that crop profile with harvest_start_gdd works correctly
+        # harvest_start_gdd should not affect the optimization logic
+        # (it's used for progress tracking, not period optimization)
+        assert response.optimal_start_date is not None
+        assert response.completion_date is not None
+        
+        # Verify all candidates have the same crop profile structure
+        for candidate in response.candidates:
+            assert candidate.crop.crop_id == "eggplant"
+            assert candidate.crop.name == "Eggplant"
+

@@ -21,8 +21,8 @@ class TestWeatherCliContainer:
         repo = self.container.get_weather_repository()
         
         assert repo is not None
-        assert hasattr(repo, 'weather_repository')
-        assert hasattr(repo, 'weather_api_repository')
+        assert hasattr(repo, 'file_gateway')
+        assert hasattr(repo, 'api_gateway')
         
         # Test singleton behavior
         repo2 = self.container.get_weather_repository()
@@ -81,8 +81,8 @@ class TestWeatherCliContainer:
         # Should use default config
         repo = container.get_weather_repository()
         assert repo is not None
-        assert hasattr(repo, 'weather_repository')
-        assert hasattr(repo, 'weather_api_repository')
+        assert hasattr(repo, 'file_gateway')
+        assert hasattr(repo, 'api_gateway')
     
     def test_get_time_series_service(self):
         """Test getting time series service instance."""

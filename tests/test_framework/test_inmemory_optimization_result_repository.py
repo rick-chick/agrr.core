@@ -1,10 +1,10 @@
-"""Tests for InMemoryOptimizationResultRepository."""
+"""Tests for OptimizationResultInMemoryGateway."""
 
 import pytest
 from datetime import datetime
 
-from agrr_core.framework.repositories.inmemory_optimization_result_repository import (
-    InMemoryOptimizationResultRepository,
+from agrr_core.adapter.gateways.optimization_result_inmemory_gateway import (
+    OptimizationResultInMemoryGateway,
 )
 from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
@@ -16,12 +16,12 @@ from agrr_core.entity.entities.field_entity import Field
 
 
 @pytest.mark.asyncio
-class TestInMemoryOptimizationResultRepository:
-    """Test cases for InMemoryOptimizationResultRepository."""
+class TestOptimizationResultInMemoryGateway:
+    """Test cases for OptimizationResultInMemoryGateway."""
 
     async def test_save_and_get(self):
         """Test saving and retrieving optimization results."""
-        repository = InMemoryOptimizationResultRepository()
+        repository = OptimizationResultInMemoryGateway()
         
         field = Field(field_id="test_field", name="Test Field", area=1000.0, daily_fixed_cost=5000.0)  # 530000 / 106 = 5000
         
@@ -51,14 +51,14 @@ class TestInMemoryOptimizationResultRepository:
 
     async def test_get_nonexistent(self):
         """Test retrieving non-existent optimization results."""
-        repository = InMemoryOptimizationResultRepository()
+        repository = OptimizationResultInMemoryGateway()
         
         retrieved = await repository.get("nonexistent")
         assert retrieved is None
 
     async def test_get_all(self):
         """Test retrieving all optimization results."""
-        repository = InMemoryOptimizationResultRepository()
+        repository = OptimizationResultInMemoryGateway()
         
         field1 = Field(field_id="test_field_1", name="Field 1", area=1000.0, daily_fixed_cost=5000.0)
         field2 = Field(field_id="test_field_2", name="Field 2", area=1000.0, daily_fixed_cost=5000.0)
@@ -105,7 +105,7 @@ class TestInMemoryOptimizationResultRepository:
 
     async def test_delete_existing(self):
         """Test deleting existing optimization results."""
-        repository = InMemoryOptimizationResultRepository()
+        repository = OptimizationResultInMemoryGateway()
         
         field = Field(field_id="test_field", name="Test Field", area=1000.0, daily_fixed_cost=5000.0)
         
@@ -132,14 +132,14 @@ class TestInMemoryOptimizationResultRepository:
 
     async def test_delete_nonexistent(self):
         """Test deleting non-existent optimization results."""
-        repository = InMemoryOptimizationResultRepository()
+        repository = OptimizationResultInMemoryGateway()
         
         deleted = await repository.delete("nonexistent")
         assert deleted is False
 
     async def test_clear(self):
         """Test clearing all optimization results."""
-        repository = InMemoryOptimizationResultRepository()
+        repository = OptimizationResultInMemoryGateway()
         
         field1 = Field(field_id="test_field_1", name="Field 1", area=1000.0, daily_fixed_cost=5000.0)
         field2 = Field(field_id="test_field_2", name="Field 2", area=1000.0, daily_fixed_cost=5000.0)
@@ -178,7 +178,7 @@ class TestInMemoryOptimizationResultRepository:
 
     async def test_overwrite_existing(self):
         """Test overwriting existing optimization results."""
-        repository = InMemoryOptimizationResultRepository()
+        repository = OptimizationResultInMemoryGateway()
         
         field1 = Field(field_id="test_field_1", name="Field 1", area=1000.0, daily_fixed_cost=5000.0)
         field2 = Field(field_id="test_field_2", name="Field 2", area=1000.0, daily_fixed_cost=5000.0)

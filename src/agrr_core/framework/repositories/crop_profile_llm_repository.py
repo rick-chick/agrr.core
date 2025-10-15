@@ -18,7 +18,6 @@ from agrr_core.entity import (
 )
 from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.adapter.interfaces.llm_client import LLMClient
-from agrr_core.adapter.interfaces.crop_profile_llm_repository_interface import CropProfileLLMRepositoryInterface
 
 
 # Debug mode - set to True for debugging
@@ -111,7 +110,7 @@ def extract_prompt_section(content: str, section_name: str) -> str:
     return result
 
 
-class CropProfileLLMRepository(CropProfileLLMRepositoryInterface):
+class CropProfileLLMRepository:
     """LLM-based repository for crop profile generation.
     
     Uses LLM client's generic struct() method to generate crop profiles.

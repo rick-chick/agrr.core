@@ -1,4 +1,7 @@
-"""Weather file repository for adapter layer."""
+"""Weather file gateway implementation.
+
+This gateway directly implements WeatherGateway interface for file-based weather data access.
+"""
 
 import pandas as pd
 from typing import List, Dict, Any, Optional
@@ -7,18 +10,20 @@ from datetime import datetime
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
-from agrr_core.adapter.interfaces.weather_repository_interface import WeatherRepositoryInterface
+from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
+from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 
 
-class WeatherFileRepository(WeatherRepositoryInterface):
-    """File-based implementation of WeatherRepository.
+class WeatherFileGateway(WeatherGateway):
+    """File-based implementation of WeatherGateway.
     
     Reads weather data from JSON/CSV files.
     File path is configured at initialization.
+    Directly implements WeatherGateway interface without intermediate layers.
     """
     
     def __init__(self, file_repository: FileRepositoryInterface, file_path: str):
-        """Initialize weather file repository.
+        """Initialize weather file gateway.
         
         Args:
             file_repository: File repository for file I/O operations (Framework layer)
@@ -34,6 +39,52 @@ class WeatherFileRepository(WeatherRepositoryInterface):
             List of WeatherData entities
         """
         return await self.read_weather_data_from_file(self.file_path)
+    
+    async def create(self, weather_data: List[WeatherData], destination: str) -> None:
+        """Create weather data at destination.
+        
+        Raises:
+            NotImplementedError: Weather data creation not implemented in file gateway
+        """
+        raise NotImplementedError("Weather data creation not implemented in WeatherFileGateway")
+    
+    async def get_by_location_and_date_range(
+        self,
+        latitude: float,
+        longitude: float,
+        start_date: str,
+        end_date: str
+    ) -> WeatherDataWithLocationDTO:
+        """Get weather data by location and date range.
+        
+        Note: File-based weather data doesn't support location-based queries.
+        Use API gateway for location-based queries.
+        
+        Raises:
+            NotImplementedError: File gateway doesn't support location queries
+        """
+        raise NotImplementedError(
+            "File-based weather data doesn't support location queries. "
+            "Use WeatherAPIGateway or WeatherJMAGateway instead."
+        )
+    
+    async def get_forecast(
+        self,
+        latitude: float,
+        longitude: float
+    ) -> WeatherDataWithLocationDTO:
+        """Get weather forecast.
+        
+        Note: File-based weather data doesn't support forecast queries.
+        Use API gateway for forecast queries.
+        
+        Raises:
+            NotImplementedError: File gateway doesn't support forecast queries
+        """
+        raise NotImplementedError(
+            "File-based weather data doesn't support forecast queries. "
+            "Use WeatherAPIGateway instead."
+        )
     
     # ===== Reading Methods =====
     
@@ -384,3 +435,4 @@ class WeatherFileRepository(WeatherRepositoryInterface):
             return True
         except Exception:
             return False
+

@@ -1,11 +1,11 @@
-"""Tests for FieldFileRepository (Adapter layer)."""
+"""Tests for FieldFileGateway (Adapter layer)."""
 
 import pytest
 from pathlib import Path
 import tempfile
 import json
 
-from agrr_core.framework.repositories.field_file_repository import FieldFileRepository
+from agrr_core.adapter.gateways.field_file_gateway import FieldFileGateway
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.exceptions.file_error import FileError
 
@@ -26,13 +26,13 @@ def file_repository():
 
 @pytest.fixture
 def field_file_repository(file_repository):
-    """Create a field file repository for testing."""
-    return FieldFileRepository(file_repository=file_repository)
+    """Create a field file gateway for testing."""
+    return FieldFileGateway(file_repository=file_repository)
 
 
 @pytest.mark.asyncio
-class TestFieldFileRepository:
-    """Test cases for FieldFileRepository."""
+class TestFieldFileGateway:
+    """Test cases for FieldFileGateway."""
 
     async def test_read_single_field_json(self, field_file_repository, temp_dir):
         """Test reading a single field from JSON file."""
@@ -275,7 +275,7 @@ class TestFieldFileRepository:
         test_file.write_text(json.dumps(fields_data, ensure_ascii=False), encoding='utf-8')
         
         # Create repository with file_path
-        repository = FieldFileRepository(file_repository=file_repository, file_path=str(test_file))
+        repository = FieldFileGateway(file_repository=file_repository, file_path=str(test_file))
 
         # Act
         field = await repository.get("field_02")
@@ -303,7 +303,7 @@ class TestFieldFileRepository:
         test_file.write_text(json.dumps(fields_data, ensure_ascii=False), encoding='utf-8')
         
         # Create repository with file_path
-        repository = FieldFileRepository(file_repository=file_repository, file_path=str(test_file))
+        repository = FieldFileGateway(file_repository=file_repository, file_path=str(test_file))
 
         # Act
         field = await repository.get("field_99")

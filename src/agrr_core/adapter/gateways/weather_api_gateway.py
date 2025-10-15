@@ -1,4 +1,7 @@
-"""Open-Meteo weather repository implementation."""
+"""Weather API gateway implementation for Open-Meteo API.
+
+This gateway directly implements WeatherGateway interface for Open-Meteo API access.
+"""
 
 from typing import List
 from datetime import datetime
@@ -6,17 +9,50 @@ from datetime import datetime
 from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
-from agrr_core.framework.interfaces.http_service_interface import HttpServiceInterface
+from agrr_core.adapter.interfaces.http_service_interface import HttpServiceInterface
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
+from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 
 
-class WeatherAPIOpenMeteoRepository:
-    """Repository for fetching weather data from Open-Meteo API."""
+class WeatherAPIGateway(WeatherGateway):
+    """Gateway for fetching weather data from Open-Meteo API.
+    
+    Directly implements WeatherGateway interface without intermediate layers.
+    """
     
     def __init__(self, http_service: HttpServiceInterface, forecast_http_service: HttpServiceInterface = None):
+        """Initialize weather API gateway.
+        
+        Args:
+            http_service: HTTP service for historical weather data
+            forecast_http_service: HTTP service for forecast data (optional, defaults to http_service)
+        """
         self.http_service = http_service
         self.forecast_http_service = forecast_http_service or http_service
     
+    async def get(self) -> List[WeatherData]:
+        """Get weather data from configured source.
+        
+        Note: This method is not used for API-based weather data.
+        Use get_by_location_and_date_range() or get_forecast() instead.
+        
+        Raises:
+            NotImplementedError: API requires location and date range parameters
+        """
+        raise NotImplementedError(
+            "API weather source requires location and date range. "
+            "Use get_by_location_and_date_range() or get_forecast() instead."
+        )
+    
+    async def create(self, weather_data: List[WeatherData], destination: str) -> None:
+        """Create weather data at destination.
+        
+        Raises:
+            NotImplementedError: Weather data creation not supported for API source
+        """
+        raise NotImplementedError(
+            "Weather data creation not supported for API source"
+        )
     
     async def get_by_location_and_date_range(
         self,
@@ -25,7 +61,21 @@ class WeatherAPIOpenMeteoRepository:
         start_date: str,
         end_date: str
     ) -> WeatherDataWithLocationDTO:
-        """Get weather data from Open-Meteo API."""
+        """Get weather data from Open-Meteo API.
+        
+        Args:
+            latitude: Latitude coordinate
+            longitude: Longitude coordinate
+            start_date: Start date in YYYY-MM-DD format
+            end_date: End date in YYYY-MM-DD format
+            
+        Returns:
+            WeatherDataWithLocationDTO containing weather data and location info
+            
+        Raises:
+            WeatherAPIError: If API request fails or response is invalid
+            WeatherDataNotFoundError: If no weather data found in response
+        """
         try:
             params = {
                 "latitude": latitude,
@@ -84,21 +134,39 @@ class WeatherAPIOpenMeteoRepository:
         except (KeyError, ValueError) as e:
             raise WeatherAPIError(f"Invalid API response format: {e}")
     
-    
     def _safe_get(self, data_list: List, index: int):
-        """Safely get value from list, return None if index is out of bounds or value is None."""
+        """Safely get value from list, return None if index is out of bounds or value is None.
+        
+        Args:
+            data_list: List to get value from
+            index: Index to access
+            
+        Returns:
+            Value at index or None if not available
+        """
         try:
             return data_list[index] if data_list and index < len(data_list) else None
         except (IndexError, TypeError):
             return None
-    
     
     async def get_forecast(
         self,
         latitude: float,
         longitude: float
     ) -> WeatherDataWithLocationDTO:
-        """Get 16-day weather forecast starting from tomorrow."""
+        """Get 16-day weather forecast starting from tomorrow.
+        
+        Args:
+            latitude: Latitude coordinate
+            longitude: Longitude coordinate
+            
+        Returns:
+            WeatherDataWithLocationDTO containing forecast data and location info
+            
+        Raises:
+            WeatherAPIError: If API request fails or response is invalid
+            WeatherDataNotFoundError: If no weather data found in response
+        """
         try:
             from datetime import date, timedelta
             
@@ -161,3 +229,4 @@ class WeatherAPIOpenMeteoRepository:
             raise
         except (KeyError, ValueError) as e:
             raise WeatherAPIError(f"Invalid API response format: {e}")
+

@@ -16,7 +16,6 @@ from .adapter import (
     PredictionPresenter,
 )
 from .framework.repositories import (
-    WeatherAPIOpenMeteoRepository,
     PredictionStorageRepository,
 )
 
@@ -37,7 +36,6 @@ __all__ = [
     "WeatherDataRequestDTO",
     "PredictionRequestDTO",
     # Adapters
-    "WeatherAPIOpenMeteoRepository",
     "PredictionStorageRepository",
     "WeatherMapper",
     "WeatherPresenter",

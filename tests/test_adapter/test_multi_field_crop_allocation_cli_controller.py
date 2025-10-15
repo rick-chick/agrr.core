@@ -68,6 +68,7 @@ class TestMultiFieldCropAllocationCliController:
             }.get(field_id)
         
         mock_field_gateway.get.side_effect = field_get_side_effect
+        mock_field_gateway.get_all.return_value = [field1, field2]
 
         # Setup crop requirements
         crop1 = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
@@ -191,6 +192,7 @@ class TestMultiFieldCropAllocationCliController:
             daily_fixed_cost=5000.0,
         )
         mock_field_gateway.get.return_value = field1
+        mock_field_gateway.get_all.return_value = [field1]
 
         # Setup crop
         crop1 = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
@@ -302,6 +304,7 @@ class TestMultiFieldCropAllocationCliController:
             daily_fixed_cost=5000.0,
         )
         mock_field_gateway.get.return_value = field1
+        mock_field_gateway.get_all.return_value = [field1]
 
         # Setup crop
         crop1 = Crop(crop_id="rice", name="Rice", area_per_unit=0.25)
@@ -414,6 +417,7 @@ class TestMultiFieldCropAllocationCliController:
             daily_fixed_cost=5000.0,
         )
         mock_field_gateway.get.return_value = field1
+        mock_field_gateway.get_all.return_value = [field1]
 
         # Setup crop
         crop1 = Crop(crop_id="tomato", name="Tomato", area_per_unit=0.5)
@@ -463,8 +467,8 @@ class TestMultiFieldCropAllocationCliController:
         ]
         mock_weather_gateway.get.return_value = weather_data
 
-        # Mock interaction rules
-        mock_interaction_rule_gateway.load_from_file.return_value = []
+        # Mock interaction rules gateway to return empty list
+        mock_interaction_rule_gateway.get_rules.return_value = []
 
         # Create controller
         controller = MultiFieldCropAllocationCliController(
@@ -495,23 +499,20 @@ class TestMultiFieldCropAllocationCliController:
             with open(crops_file, 'w') as f:
                 json.dump(crops_data, f)
 
-            # Simulate CLI arguments with interaction rules
+            # Simulate CLI arguments
             args = [
                 "--fields-file", str(fields_file),
                 "--crops-file", str(crops_file),
                 "--planning-start", "2024-04-01",
                 "--planning-end", "2024-10-31",
                 "--weather-file", "test_weather.json",
-                "--interaction-rules-file", "test_interaction_rules.json",
             ]
 
             with patch("sys.stdout", new=StringIO()):
                 await controller.run(args)
 
-        # Verify interaction rules were loaded
-        mock_interaction_rule_gateway.load_from_file.assert_called_once_with(
-            "test_interaction_rules.json"
-        )
+        # Verify interaction rules gateway was used
+        mock_interaction_rule_gateway.get_rules.assert_called_once()
         mock_presenter.present.assert_called_once()
 
     async def test_optimize_command_with_parallel_enabled(self):
@@ -531,6 +532,7 @@ class TestMultiFieldCropAllocationCliController:
             daily_fixed_cost=5000.0,
         )
         mock_field_gateway.get.return_value = field1
+        mock_field_gateway.get_all.return_value = [field1]
 
         # Setup crop
         crop1 = Crop(crop_id="rice", name="Rice", area_per_unit=0.25)
@@ -641,6 +643,7 @@ class TestMultiFieldCropAllocationCliController:
             daily_fixed_cost=5000.0,
         )
         mock_field_gateway.get.return_value = field1
+        mock_field_gateway.get_all.return_value = [field1]
 
         # Setup crop
         crop1 = Crop(crop_id="rice", name="Rice", area_per_unit=0.25)

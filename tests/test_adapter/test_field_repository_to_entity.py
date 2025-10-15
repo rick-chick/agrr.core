@@ -9,7 +9,7 @@ import tempfile
 import json
 from pathlib import Path
 
-from agrr_core.framework.repositories.field_file_repository import FieldFileRepository
+from agrr_core.adapter.gateways.field_file_gateway import FieldFileGateway as FieldFileRepository
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.framework.repositories.file_repository import FileRepository

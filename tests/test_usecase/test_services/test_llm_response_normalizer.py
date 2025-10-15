@@ -261,4 +261,27 @@ class TestNormalizeThermalField:
         data = {}
         result = LLMResponseNormalizer.normalize_thermal_field(data)
         assert result["required_gdd"] == 400.0
+    
+    def test_normalize_thermal_with_harvest_start_gdd(self):
+        """Test normalization of thermal field with harvest_start_gdd."""
+        data = {
+            "thermal": {
+                "required_gdd": 2000.0,
+                "harvest_start_gdd": 200.0,
+            }
+        }
+        result = LLMResponseNormalizer.normalize_thermal_field(data)
+        assert result["required_gdd"] == 2000.0
+        assert result["harvest_start_gdd"] == 200.0
+    
+    def test_normalize_thermal_without_harvest_start_gdd(self):
+        """Test normalization of thermal field without harvest_start_gdd."""
+        data = {
+            "thermal": {
+                "required_gdd": 800.0,
+            }
+        }
+        result = LLMResponseNormalizer.normalize_thermal_field(data)
+        assert result["required_gdd"] == 800.0
+        assert result["harvest_start_gdd"] is None
 

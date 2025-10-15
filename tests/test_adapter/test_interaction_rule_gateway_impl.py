@@ -1,4 +1,4 @@
-"""Tests for InteractionRuleGatewayImpl."""
+"""Tests for InteractionRuleFileGateway."""
 
 import json
 import tempfile
@@ -6,15 +6,14 @@ from pathlib import Path
 
 import pytest
 
-from agrr_core.adapter.gateways.interaction_rule_gateway_impl import InteractionRuleGatewayImpl
-from agrr_core.framework.repositories.interaction_rule_file_repository import InteractionRuleFileRepository
+from agrr_core.adapter.gateways.interaction_rule_file_gateway import InteractionRuleFileGateway
 from agrr_core.framework.repositories.file_repository import FileRepository
 from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.entity.value_objects.rule_type import RuleType
 
 
-class TestInteractionRuleGatewayImpl:
-    """Test InteractionRuleGatewayImpl."""
+class TestInteractionRuleFileGateway:
+    """Test InteractionRuleFileGateway."""
     
     @pytest.mark.asyncio
     async def test_get_rules_from_valid_file(self):
@@ -45,14 +44,13 @@ class TestInteractionRuleGatewayImpl:
             json.dump(rules_data, f, ensure_ascii=False)
         
         try:
-            # Create repository with file path (Framework layer)
+            # Create file repository (Framework layer)
             file_repository = FileRepository()
-            interaction_rule_repository = InteractionRuleFileRepository(file_repository, str(temp_file))
             
-            # Create gateway with repository (Adapter layer)
-            gateway = InteractionRuleGatewayImpl(interaction_rule_repository)
+            # Create gateway (Adapter layer) - directly implements gateway interface
+            gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
-            # Call gateway without file path (UseCase layer)
+            # Call gateway (UseCase layer)
             rules = await gateway.get_rules()
             
             assert len(rules) == 2
@@ -90,8 +88,8 @@ class TestInteractionRuleGatewayImpl:
         
         try:
             file_repository = FileRepository()
-            interaction_rule_repository = InteractionRuleFileRepository(file_repository, str(temp_file))
-            gateway = InteractionRuleGatewayImpl(interaction_rule_repository)
+            # Repository layer removed - gateway now directly uses file_repository
+            gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
             rules = await gateway.get_rules()
             
@@ -120,8 +118,8 @@ class TestInteractionRuleGatewayImpl:
         
         try:
             file_repository = FileRepository()
-            interaction_rule_repository = InteractionRuleFileRepository(file_repository, str(temp_file))
-            gateway = InteractionRuleGatewayImpl(interaction_rule_repository)
+            # Repository layer removed - gateway now directly uses file_repository
+            gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
             with pytest.raises(FileError, match="Missing required field"):
                 await gateway.get_rules()
@@ -138,8 +136,8 @@ class TestInteractionRuleGatewayImpl:
         
         try:
             file_repository = FileRepository()
-            interaction_rule_repository = InteractionRuleFileRepository(file_repository, str(temp_file))
-            gateway = InteractionRuleGatewayImpl(interaction_rule_repository)
+            # Repository layer removed - gateway now directly uses file_repository
+            gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
             with pytest.raises(FileError, match="Invalid JSON format"):
                 await gateway.get_rules()
@@ -164,8 +162,8 @@ class TestInteractionRuleGatewayImpl:
         
         try:
             file_repository = FileRepository()
-            interaction_rule_repository = InteractionRuleFileRepository(file_repository, str(temp_file))
-            gateway = InteractionRuleGatewayImpl(interaction_rule_repository)
+            # Repository layer removed - gateway now directly uses file_repository
+            gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
             with pytest.raises(FileError, match="expected list"):
                 await gateway.get_rules()
@@ -192,8 +190,8 @@ class TestInteractionRuleGatewayImpl:
         
         try:
             file_repository = FileRepository()
-            interaction_rule_repository = InteractionRuleFileRepository(file_repository, str(temp_file))
-            gateway = InteractionRuleGatewayImpl(interaction_rule_repository)
+            # Repository layer removed - gateway now directly uses file_repository
+            gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
             with pytest.raises(FileError, match="Invalid rule data"):
                 await gateway.get_rules()
@@ -212,8 +210,8 @@ class TestInteractionRuleGatewayImpl:
         
         try:
             file_repository = FileRepository()
-            interaction_rule_repository = InteractionRuleFileRepository(file_repository, str(temp_file))
-            gateway = InteractionRuleGatewayImpl(interaction_rule_repository)
+            # Repository layer removed - gateway now directly uses file_repository
+            gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
             rules = await gateway.get_rules()
             

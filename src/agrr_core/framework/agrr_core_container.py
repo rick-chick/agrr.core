@@ -3,21 +3,20 @@
 import asyncio
 from typing import Dict, Any, Optional
 
-from agrr_core.framework.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
-from agrr_core.framework.repositories.weather_jma_repository import WeatherJMARepository
 from agrr_core.framework.repositories.file_repository import FileRepository
 from agrr_core.framework.repositories.http_client import HttpClient
 from agrr_core.framework.repositories.html_table_fetcher import HtmlTableFetcher
 from agrr_core.framework.repositories.csv_downloader import CsvDownloader
-from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
+from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway
+from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway
+from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway
+from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAdapter
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
 from agrr_core.adapter.controllers.weather_cli_predict_controller import WeatherCliPredictController
-from agrr_core.framework.repositories.weather_file_repository import WeatherFileRepository
 from agrr_core.usecase.interactors.weather_predict_interactor import WeatherPredictInteractor
 from agrr_core.adapter.gateways.prediction_gateway_impl import PredictionGatewayImpl
 from agrr_core.framework.services.arima_prediction_service import ARIMAPredictionService
-from agrr_core.framework.interfaces.time_series_interface import TimeSeriesInterface
 from agrr_core.framework.services.time_series_arima_service import TimeSeriesARIMAService
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
 from agrr_core.usecase.interactors.prediction_multi_metric_interactor import MultiMetricPredictionInteractor
@@ -27,6 +26,7 @@ from agrr_core.usecase.interactors.prediction_manage_interactor import ModelMana
 from agrr_core.usecase.ports.output.advanced_prediction_output_port import AdvancedPredictionOutputPort
 from agrr_core.usecase.ports.output.prediction_presenter_output_port import PredictionPresenterOutputPort
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
+from agrr_core.adapter.interfaces.time_series_interface import TimeSeriesInterface
 
 
 class AgrrCoreContainer:
@@ -69,22 +69,22 @@ class AgrrCoreContainer:
         """Get weather repository instance."""
         return self.get_weather_gateway_impl()
 
-    def get_weather_gateway_impl(self) -> WeatherGatewayImpl:
-        """Get weather gateway instance."""
+    def get_weather_gateway_impl(self) -> WeatherGatewayAdapter:
+        """Get weather gateway adapter instance."""
         if 'weather_gateway' not in self._instances:
-            weather_file_repository = self.get_weather_file_repository()
+            weather_file_gateway = self.get_weather_file_gateway()
             
-            # Get appropriate weather API repository based on data source
+            # Get appropriate weather API gateway based on data source
             data_source = self.config.get('weather_data_source', 'openmeteo')
             
             if data_source == 'jma':
-                weather_api_repository = self.get_weather_jma_repository()
+                weather_api_gateway = self.get_weather_jma_gateway()
             else:
-                weather_api_repository = self.get_weather_api_repository()
+                weather_api_gateway = self.get_weather_api_gateway()
             
-            self._instances['weather_gateway'] = WeatherGatewayImpl(
-                weather_repository=weather_file_repository,
-                weather_api_repository=weather_api_repository
+            self._instances['weather_gateway'] = WeatherGatewayAdapter(
+                file_gateway=weather_file_gateway,
+                api_gateway=weather_api_gateway
             )
         
         return self._instances['weather_gateway']
@@ -118,18 +118,18 @@ class AgrrCoreContainer:
             )
         return self._instances['cli_controller']
     
-    def get_weather_file_repository(self) -> WeatherFileRepository:
-        """Get weather file repository instance.
+    def get_weather_file_gateway(self) -> WeatherFileGateway:
+        """Get weather file gateway instance.
         
         Note: Uses weather_file_path from container initialization.
         """
-        if 'weather_file_repository' not in self._instances:
+        if 'weather_file_gateway' not in self._instances:
             file_repository_impl = self.get_file_repository_impl()
-            self._instances['weather_file_repository'] = WeatherFileRepository(
+            self._instances['weather_file_gateway'] = WeatherFileGateway(
                 file_repository_impl, 
                 file_path=self.weather_file_path
             )
-        return self._instances['weather_file_repository']
+        return self._instances['weather_file_gateway']
     
     def get_time_series_service(self) -> TimeSeriesInterface:
         """Get time series service instance."""
@@ -151,16 +151,16 @@ class AgrrCoreContainer:
             self._instances['prediction_lightgbm_service'] = LightGBMPredictionService()
         return self._instances['prediction_lightgbm_service']
     
-    def get_weather_api_repository(self) -> WeatherAPIOpenMeteoRepository:
-        """Get weather API repository instance."""
-        if 'weather_api_repository' not in self._instances:
+    def get_weather_api_gateway(self) -> WeatherAPIGateway:
+        """Get weather API gateway instance."""
+        if 'weather_api_gateway' not in self._instances:
             http_service_impl = self.get_http_service_impl()
             forecast_http_service_impl = self.get_forecast_http_service_impl()
-            self._instances['weather_api_repository'] = WeatherAPIOpenMeteoRepository(
+            self._instances['weather_api_gateway'] = WeatherAPIGateway(
                 http_service_impl, 
                 forecast_http_service_impl
             )
-        return self._instances['weather_api_repository']
+        return self._instances['weather_api_gateway']
     
     def get_html_table_fetcher(self) -> HtmlTableFetcher:
         """Get HTML table fetcher instance."""
@@ -176,23 +176,16 @@ class AgrrCoreContainer:
             self._instances['csv_downloader'] = CsvDownloader(timeout=timeout)
         return self._instances['csv_downloader']
     
-    def get_weather_jma_repository(self) -> WeatherJMARepository:
-        """Get JMA weather repository instance."""
-        if 'weather_jma_repository' not in self._instances:
+    def get_weather_jma_gateway(self) -> WeatherJMAGateway:
+        """Get JMA weather gateway instance."""
+        if 'weather_jma_gateway' not in self._instances:
             html_table_fetcher = self.get_html_table_fetcher()
-            self._instances['weather_jma_repository'] = WeatherJMARepository(html_table_fetcher)
-        return self._instances['weather_jma_repository']
+            self._instances['weather_jma_gateway'] = WeatherJMAGateway(html_table_fetcher)
+        return self._instances['weather_jma_gateway']
     
     def get_weather_gateway(self) -> WeatherGateway:
         """Get weather gateway instance."""
-        if 'weather_gateway' not in self._instances:
-            weather_file_repository = self.get_weather_file_repository()
-            weather_api_repository = self.get_weather_api_repository()
-            self._instances['weather_gateway'] = WeatherGatewayImpl(
-                weather_repository=weather_file_repository,
-                weather_api_repository=weather_api_repository
-            )
-        return self._instances['weather_gateway']
+        return self.get_weather_gateway_impl()
     
     def get_prediction_gateway(self, model_type: str = 'arima') -> PredictionGatewayImpl:
         """
@@ -202,7 +195,7 @@ class AgrrCoreContainer:
             model_type: 'arima' or 'lightgbm' (default: 'arima')
         """
         # Don't cache - create new instance based on model_type
-        file_repository = self.get_weather_file_repository()
+        file_gateway = self.get_weather_file_gateway()
         
         if model_type == 'lightgbm':
             prediction_service = self.get_prediction_lightgbm_service()
@@ -210,7 +203,7 @@ class AgrrCoreContainer:
             prediction_service = self.get_prediction_arima_service()
         
         return PredictionGatewayImpl(
-            file_repository=file_repository,
+            file_repository=file_gateway,
             prediction_service=prediction_service
         )
     

@@ -9,11 +9,11 @@ import inspect
 from unittest.mock import AsyncMock
 import pandas as pd
 
-from agrr_core.framework.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
-from agrr_core.framework.repositories.weather_jma_repository import WeatherJMARepository
-from agrr_core.framework.interfaces.http_service_interface import HttpServiceInterface
-from agrr_core.framework.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
-from agrr_core.framework.interfaces.html_table_structures import HtmlTable, TableRow
+from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway as WeatherAPIOpenMeteoRepository
+from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway
+from agrr_core.adapter.interfaces.http_service_interface import HttpServiceInterface
+from agrr_core.adapter.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
+from agrr_core.adapter.interfaces.html_table_structures import HtmlTable, TableRow
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 
 
@@ -30,7 +30,7 @@ class TestWeatherRepositoryCompatibility:
     def jma_repository(self):
         """Create JMA repository."""
         mock_html_fetcher = AsyncMock(spec=HtmlTableFetchInterface)
-        return WeatherJMARepository(mock_html_fetcher)
+        return WeatherJMAGateway(mock_html_fetcher)
     
     def test_both_have_same_method(self, openmeteo_repository, jma_repository):
         """Test that both repositories have the same main method."""
@@ -113,7 +113,7 @@ class TestWeatherRepositoryCompatibility:
         
         table = HtmlTable(headers=[], rows=rows, table_id='tablefix1')
         mock_html_fetcher_jma.get.return_value = [table]
-        jma_repo = WeatherJMARepository(mock_html_fetcher_jma)
+        jma_repo = WeatherJMAGateway(mock_html_fetcher_jma)
         
         # Get data from both
         openmeteo_result = await openmeteo_repo.get_by_location_and_date_range(
@@ -204,9 +204,10 @@ class TestWeatherRepositoryCompatibility:
         mock_html_fetcher = AsyncMock(spec=HtmlTableFetchInterface)
         
         openmeteo_repo = WeatherAPIOpenMeteoRepository(mock_http)
-        jma_repo = WeatherJMARepository(mock_html_fetcher)
+        jma_repo = WeatherJMAGateway(mock_html_fetcher)
         
         # Check class names for identification
-        assert 'OpenMeteo' in openmeteo_repo.__class__.__name__
+        # Class names updated after gateway refactoring
+        assert 'API' in openmeteo_repo.__class__.__name__ or 'OpenMeteo' in openmeteo_repo.__class__.__name__
         assert 'JMA' in jma_repo.__class__.__name__
 

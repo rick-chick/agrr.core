@@ -3,7 +3,7 @@
 import pytest
 
 from agrr_core.framework.repositories.html_table_fetcher import HtmlTableFetcher
-from agrr_core.framework.interfaces.html_table_structures import HtmlTable
+from agrr_core.adapter.interfaces.html_table_structures import HtmlTable
 
 
 class TestHtmlTableFetcher:

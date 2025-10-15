@@ -9,9 +9,9 @@ from unittest.mock import AsyncMock, patch, MagicMock
 import pandas as pd
 
 from agrr_core.framework.agrr_core_container import WeatherCliContainer, AgrrCoreContainer
-from agrr_core.framework.repositories.weather_jma_repository import WeatherJMARepository
-from agrr_core.framework.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
-from agrr_core.framework.interfaces.html_table_structures import HtmlTable, TableRow
+from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway as WeatherJMAGateway
+from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway as WeatherAPIGateway
+from agrr_core.adapter.interfaces.html_table_structures import HtmlTable, TableRow
 
 
 class TestDataSourcePropagation:
@@ -75,10 +75,10 @@ class TestDataSourcePropagation:
         container = AgrrCoreContainer(config)
         
         # Get JMA repository
-        jma_repo = container.get_weather_jma_repository()
+        jma_repo = container.get_weather_jma_gateway()
         
         # Verify correct type
-        assert isinstance(jma_repo, WeatherJMARepository)
+        assert isinstance(jma_repo, WeatherJMAGateway)
         assert jma_repo is not None
     
     def test_layer3_container_to_repository_selection_openmeteo(self):
@@ -94,10 +94,10 @@ class TestDataSourcePropagation:
         container = AgrrCoreContainer(config)
         
         # Get OpenMeteo repository
-        openmeteo_repo = container.get_weather_api_repository()
+        openmeteo_repo = container.get_weather_api_gateway()
         
         # Verify correct type
-        assert isinstance(openmeteo_repo, WeatherAPIOpenMeteoRepository)
+        assert isinstance(openmeteo_repo, WeatherAPIGateway)
         assert openmeteo_repo is not None
     
     def test_layer4_container_to_gateway_injection_jma(self):
@@ -115,9 +115,9 @@ class TestDataSourcePropagation:
         # Get gateway (should inject JMA repository)
         gateway = container.get_weather_gateway_impl()
         
-        # Verify gateway has weather_api_repository
-        assert gateway.weather_api_repository is not None
-        assert isinstance(gateway.weather_api_repository, WeatherJMARepository)
+        # Verify gateway has api_gateway
+        assert gateway.api_gateway is not None
+        assert isinstance(gateway.api_gateway, WeatherJMAGateway)
     
     def test_layer4_container_to_gateway_injection_openmeteo(self):
         """
@@ -134,9 +134,9 @@ class TestDataSourcePropagation:
         # Get gateway (should inject OpenMeteo repository)
         gateway = container.get_weather_gateway_impl()
         
-        # Verify gateway has weather_api_repository
-        assert gateway.weather_api_repository is not None
-        assert isinstance(gateway.weather_api_repository, WeatherAPIOpenMeteoRepository)
+        # Verify gateway has api_gateway
+        assert gateway.api_gateway is not None
+        assert isinstance(gateway.api_gateway, WeatherAPIGateway)
     
     def test_end_to_end_data_source_propagation_jma(self):
         """
@@ -158,12 +158,12 @@ class TestDataSourcePropagation:
         gateway = container.get_weather_gateway_impl()
         
         # Step 5: Verify correct repository is injected
-        assert isinstance(gateway.weather_api_repository, WeatherJMARepository)
+        assert isinstance(gateway.api_gateway, WeatherJMAGateway)
         
         # Verify the chain
         # CLI args → config → Container → Gateway → JMA Repository
         assert container.config['weather_data_source'] == 'jma'
-        assert gateway.weather_api_repository.__class__.__name__ == 'WeatherJMARepository'
+        assert gateway.api_gateway.__class__.__name__ == 'WeatherJMAGateway'
     
     def test_end_to_end_data_source_propagation_openmeteo(self):
         """
@@ -181,11 +181,11 @@ class TestDataSourcePropagation:
         gateway = container.get_weather_gateway_impl()
         
         # Step 4: Verify correct repository is injected (default)
-        assert isinstance(gateway.weather_api_repository, WeatherAPIOpenMeteoRepository)
+        assert isinstance(gateway.api_gateway, WeatherAPIGateway)
         
         # Verify default behavior
         # No CLI args → empty config → Container → Gateway → OpenMeteo Repository
-        assert gateway.weather_api_repository.__class__.__name__ == 'WeatherAPIOpenMeteoRepository'
+        assert gateway.api_gateway.__class__.__name__ == 'WeatherAPIGateway'
     
     def test_data_source_switching_at_runtime(self):
         """
@@ -205,12 +205,12 @@ class TestDataSourcePropagation:
         gateway_openmeteo = container_openmeteo.get_weather_gateway_impl()
         
         # Verify different repositories
-        assert isinstance(gateway_jma.weather_api_repository, WeatherJMARepository)
-        assert isinstance(gateway_openmeteo.weather_api_repository, WeatherAPIOpenMeteoRepository)
+        assert isinstance(gateway_jma.api_gateway, WeatherJMAGateway)
+        assert isinstance(gateway_openmeteo.api_gateway, WeatherAPIGateway)
         
         # Verify they are different instances
         assert gateway_jma is not gateway_openmeteo
-        assert gateway_jma.weather_api_repository is not gateway_openmeteo.weather_api_repository
+        assert gateway_jma.api_gateway is not gateway_openmeteo.api_gateway
 
 
 class TestDataSourcePropagationWithMocks:
@@ -339,7 +339,7 @@ class TestDataSourceValidation:
         gateway = container.get_weather_gateway_impl()
         
         # Since 'invalid_source' is not 'jma', should use openmeteo
-        assert isinstance(gateway.weather_api_repository, WeatherAPIOpenMeteoRepository)
+        assert isinstance(gateway.api_gateway, WeatherAPIGateway)
     
     def test_empty_config_uses_default(self):
         """
@@ -351,7 +351,7 @@ class TestDataSourceValidation:
         gateway = container.get_weather_gateway_impl()
         
         # Should use OpenMeteo by default
-        assert isinstance(gateway.weather_api_repository, WeatherAPIOpenMeteoRepository)
+        assert isinstance(gateway.api_gateway, WeatherAPIGateway)
     
     def test_none_config_uses_default(self):
         """
@@ -361,7 +361,7 @@ class TestDataSourceValidation:
         gateway = container.get_weather_gateway_impl()
         
         # Should use OpenMeteo by default
-        assert isinstance(gateway.weather_api_repository, WeatherAPIOpenMeteoRepository)
+        assert isinstance(gateway.api_gateway, WeatherAPIGateway)
 
 
 class TestDataSourceIsolation:
@@ -382,9 +382,9 @@ class TestDataSourceIsolation:
         gateway3 = container3.get_weather_gateway_impl()
         
         # Verify each has correct repository
-        assert isinstance(gateway1.weather_api_repository, WeatherJMARepository)
-        assert isinstance(gateway2.weather_api_repository, WeatherAPIOpenMeteoRepository)
-        assert isinstance(gateway3.weather_api_repository, WeatherJMARepository)
+        assert isinstance(gateway1.api_gateway, WeatherJMAGateway)
+        assert isinstance(gateway2.api_gateway, WeatherAPIGateway)
+        assert isinstance(gateway3.api_gateway, WeatherJMAGateway)
         
         # Verify isolation (different instances)
         assert gateway1 is not gateway2
@@ -401,7 +401,7 @@ class TestDataSourceIsolation:
         
         # Get initial gateway
         gateway1 = container.get_weather_gateway_impl()
-        assert isinstance(gateway1.weather_api_repository, WeatherJMARepository)
+        assert isinstance(gateway1.api_gateway, WeatherJMAGateway)
         
         # Modify config (should not affect already created container)
         config['weather_data_source'] = 'openmeteo'
@@ -411,7 +411,7 @@ class TestDataSourceIsolation:
         
         # Should still be JMA (cached)
         assert gateway1 is gateway2
-        assert isinstance(gateway2.weather_api_repository, WeatherJMARepository)
+        assert isinstance(gateway2.api_gateway, WeatherJMAGateway)
 
 
 class TestDataSourcePropagationTrace:
@@ -425,8 +425,8 @@ class TestDataSourcePropagationTrace:
         1. Config contains 'jma'
         2. Container reads 'jma'
         3. CsvDownloader is created
-        4. WeatherJMARepository is created with CsvDownloader
-        5. Gateway receives WeatherJMARepository
+        4. WeatherJMAGateway is created with CsvDownloader
+        5. Gateway receives WeatherJMAGateway
         """
         # Step 1: Config
         config = {'weather_data_source': 'jma'}
@@ -441,13 +441,13 @@ class TestDataSourcePropagationTrace:
         assert html_table_fetcher is not None, "Step 3: HTML Table Fetcher creation failed"
         
         # Step 4: JMA Repository
-        jma_repo = container.get_weather_jma_repository()
-        assert isinstance(jma_repo, WeatherJMARepository), "Step 4: JMA Repository type check failed"
+        jma_repo = container.get_weather_jma_gateway()
+        assert isinstance(jma_repo, WeatherJMAGateway), "Step 4: JMA Repository type check failed"
         assert jma_repo.html_table_fetcher is html_table_fetcher, "Step 4: HTML Table Fetcher injection failed"
         
         # Step 5: Gateway
         gateway = container.get_weather_gateway_impl()
-        assert gateway.weather_api_repository is jma_repo, "Step 5: Repository injection to Gateway failed"
+        assert gateway.api_gateway is jma_repo, "Step 5: Repository injection to Gateway failed"
         
         print("\n✅ All propagation steps verified:")
         print("   Config → Container → CsvDownloader → JMARepository → Gateway")
@@ -460,8 +460,8 @@ class TestDataSourcePropagationTrace:
         1. Config contains 'openmeteo' (or defaults to it)
         2. Container reads config
         3. HttpClient is created
-        4. WeatherAPIOpenMeteoRepository is created with HttpClient
-        5. Gateway receives WeatherAPIOpenMeteoRepository
+        4. WeatherAPIGateway is created with HttpClient
+        5. Gateway receives WeatherAPIGateway
         """
         # Step 1: Config (default)
         config = {}  # Will default to openmeteo
@@ -474,13 +474,13 @@ class TestDataSourcePropagationTrace:
         assert http_client is not None, "Step 3: HTTP Client creation failed"
         
         # Step 4: OpenMeteo Repository
-        openmeteo_repo = container.get_weather_api_repository()
-        assert isinstance(openmeteo_repo, WeatherAPIOpenMeteoRepository), "Step 4: OpenMeteo Repository type check failed"
+        openmeteo_repo = container.get_weather_api_gateway()
+        assert isinstance(openmeteo_repo, WeatherAPIGateway), "Step 4: OpenMeteo Repository type check failed"
         assert openmeteo_repo.http_service is http_client, "Step 4: HTTP service injection failed"
         
         # Step 5: Gateway
         gateway = container.get_weather_gateway_impl()
-        assert gateway.weather_api_repository is openmeteo_repo, "Step 5: Repository injection to Gateway failed"
+        assert gateway.api_gateway is openmeteo_repo, "Step 5: Repository injection to Gateway failed"
         
         print("\n✅ All propagation steps verified:")
         print("   Config → Container → HttpClient → OpenMeteoRepository → Gateway")
@@ -495,13 +495,13 @@ class TestDataSourceConfigVariations:
         config1 = {'weather_data_source': 'jma'}
         container1 = AgrrCoreContainer(config1)
         gateway1 = container1.get_weather_gateway_impl()
-        assert isinstance(gateway1.weather_api_repository, WeatherJMARepository)
+        assert isinstance(gateway1.api_gateway, WeatherJMAGateway)
         
         # Uppercase 'JMA' (should use openmeteo as default)
         config2 = {'weather_data_source': 'JMA'}
         container2 = AgrrCoreContainer(config2)
         gateway2 = container2.get_weather_gateway_impl()
-        assert isinstance(gateway2.weather_api_repository, WeatherAPIOpenMeteoRepository)
+        assert isinstance(gateway2.api_gateway, WeatherAPIGateway)
     
     def test_whitespace_in_config(self):
         """Test that whitespace in data_source is handled correctly."""
@@ -511,7 +511,7 @@ class TestDataSourceConfigVariations:
         gateway = container.get_weather_gateway_impl()
         
         # Should NOT match 'jma' due to whitespace, uses openmeteo
-        assert isinstance(gateway.weather_api_repository, WeatherAPIOpenMeteoRepository)
+        assert isinstance(gateway.api_gateway, WeatherAPIGateway)
     
     def test_config_persistence(self):
         """Test that config values persist through component creation."""

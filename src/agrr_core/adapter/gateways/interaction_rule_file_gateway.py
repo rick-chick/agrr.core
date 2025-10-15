@@ -1,26 +1,28 @@
-"""File-based implementation of InteractionRuleRepository."""
+"""Interaction rule file gateway implementation.
+
+This gateway directly implements InteractionRuleGateway interface for file-based interaction rule access.
+"""
 
 import json
 from typing import List
 
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.entity.value_objects.rule_type import RuleType
-from agrr_core.adapter.interfaces.interaction_rule_repository_interface import (
-    InteractionRuleRepositoryInterface,
-)
 from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
 from agrr_core.entity.exceptions.file_error import FileError
+from agrr_core.usecase.gateways.interaction_rule_gateway import InteractionRuleGateway
 
 
-class InteractionRuleFileRepository(InteractionRuleRepositoryInterface):
-    """File-based implementation of InteractionRuleRepository.
+class InteractionRuleFileGateway(InteractionRuleGateway):
+    """File-based implementation of InteractionRuleGateway.
     
+    Directly implements InteractionRuleGateway interface without intermediate layers.
     Reads interaction rules from JSON files.
     File path is configured at initialization.
     """
     
     def __init__(self, file_repository: FileRepositoryInterface, file_path: str):
-        """Initialize interaction rule file repository.
+        """Initialize interaction rule file gateway.
         
         Args:
             file_repository: File repository for file I/O operations (Framework layer)

@@ -10,8 +10,8 @@ import pytest
 from datetime import datetime
 
 from agrr_core.framework.repositories.html_table_fetcher import HtmlTableFetcher
-from agrr_core.framework.repositories.weather_jma_repository import (
-    WeatherJMARepository,
+from agrr_core.adapter.gateways.weather_jma_gateway import (
+    WeatherJMAGateway,
     LOCATION_MAPPING
 )
 
@@ -27,7 +27,7 @@ class TestJMA47Prefectures:
     @pytest.fixture
     def repository(self, html_table_fetcher):
         """Create JMA repository instance."""
-        return WeatherJMARepository(html_table_fetcher)
+        return WeatherJMAGateway(html_table_fetcher)
     
     @pytest.mark.asyncio
     @pytest.mark.e2e

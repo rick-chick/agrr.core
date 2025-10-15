@@ -4,13 +4,13 @@ import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock
 
-from agrr_core.framework.repositories.weather_jma_repository import WeatherJMARepository, LOCATION_MAPPING
-from agrr_core.framework.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
+from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway, LOCATION_MAPPING
+from agrr_core.adapter.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 
 
-class TestWeatherJMARepository:
-    """Test WeatherJMARepository."""
+class TestWeatherJMAGateway:
+    """Test WeatherJMAGateway."""
     
     @pytest.fixture
     def mock_html_table_fetcher(self):
@@ -21,7 +21,7 @@ class TestWeatherJMARepository:
     @pytest.fixture
     def repository(self, mock_html_table_fetcher):
         """Create repository instance."""
-        return WeatherJMARepository(mock_html_table_fetcher)
+        return WeatherJMAGateway(mock_html_table_fetcher)
     
     def test_find_nearest_location_tokyo(self, repository):
         """Test finding nearest location for Tokyo."""
@@ -134,7 +134,7 @@ class TestWeatherJMARepository:
     
     def test_interface_compatibility(self, repository):
         """
-        Test that WeatherJMARepository implements the same interface as OpenMeteo repository.
+        Test that WeatherJMAGateway implements the same interface as OpenMeteo repository.
         
         This ensures both repositories can be used interchangeably.
         """

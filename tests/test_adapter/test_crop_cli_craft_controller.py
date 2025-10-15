@@ -6,7 +6,7 @@ from io import StringIO
 import json
 
 from agrr_core.adapter.controllers.crop_cli_craft_controller import CropCliCraftController
-from agrr_core.adapter.gateways.crop_profile_gateway_impl import CropProfileGatewayImpl
+from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway as CropProfileGatewayImpl
 from agrr_core.adapter.presenters.crop_profile_craft_presenter import CropProfileCraftPresenter
 
 

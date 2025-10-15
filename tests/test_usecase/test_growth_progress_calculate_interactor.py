@@ -240,3 +240,112 @@ class TestGrowthProgressCalculateInteractor:
         current_stage = self.interactor._determine_current_stage(250.0, stage_requirements)
         assert current_stage.stage.name == "Stage2"  # Returns last stage
 
+    @pytest.mark.asyncio
+    async def test_progress_with_harvest_start_gdd(self):
+        """Test growth progress calculation with harvest_start_gdd for fruiting crops."""
+        # Create eggplant crop profile with harvest_start_gdd
+        crop = Crop(
+            crop_id="eggplant",
+            name="Eggplant",
+            area_per_unit=0.5,
+            variety="Japanese"
+        )
+        
+        # Seedling stage (no harvest_start_gdd)
+        stage1 = GrowthStage(name="Seedling", order=1)
+        temp1 = TemperatureProfile(
+            base_temperature=10.0,
+            optimal_min=20.0,
+            optimal_max=30.0,
+            low_stress_threshold=15.0,
+            high_stress_threshold=32.0,
+            frost_threshold=0.0,
+            max_temperature=35.0,
+        )
+        sr1 = StageRequirement(
+            stage=stage1,
+            temperature=temp1,
+            sunshine=SunshineProfile(),
+            thermal=ThermalRequirement(required_gdd=300.0),
+        )
+        
+        # Harvest stage (with harvest_start_gdd)
+        stage2 = GrowthStage(name="Harvest", order=2)
+        temp2 = TemperatureProfile(
+            base_temperature=10.0,
+            optimal_min=20.0,
+            optimal_max=30.0,
+            low_stress_threshold=12.0,
+            high_stress_threshold=32.0,
+            frost_threshold=0.0,
+            max_temperature=35.0,
+            sterility_risk_threshold=30.0,
+        )
+        sr2 = StageRequirement(
+            stage=stage2,
+            temperature=temp2,
+            sunshine=SunshineProfile(),
+            thermal=ThermalRequirement(
+                required_gdd=2200.0,
+                harvest_start_gdd=200.0  # Harvest starts at 200 GDD
+            ),
+        )
+        
+        crop_profile = CropProfile(crop=crop, stage_requirements=[sr1, sr2])
+        
+        # Weather data: 10 GDD per day
+        # Day 1-30: Seedling stage (300 GDD)
+        # Day 31-50: Harvest stage up to harvest_start (200 GDD)
+        # Day 51+: Harvest continues to required_gdd (2200 GDD)
+        weather_data = []
+        for day in range(1, 51):
+            if day <= 30:
+                date = datetime(2024, 6, day)
+            else:
+                date = datetime(2024, 7, day - 30)
+            
+            weather_data.append(
+                WeatherData(
+                    time=date,
+                    temperature_2m_mean=20.0,  # GDD = 20 - 10 = 10 per day
+                    temperature_2m_max=25.0,
+                    temperature_2m_min=15.0
+                )
+            )
+        
+        self.mock_crop_profile_gateway.get.return_value = crop_profile
+        self.mock_weather_gateway.get.return_value = weather_data
+        
+        request = GrowthProgressCalculateRequestDTO(
+            crop_id="eggplant",
+            variety="Japanese",
+            start_date=datetime(2024, 6, 1)
+        )
+        
+        response = await self.interactor.execute(request)
+        
+        # Verify response
+        assert response.crop_name == "Eggplant"
+        assert response.variety == "Japanese"
+        assert len(response.progress_records) == 50
+        
+        # Verify total required GDD includes both stages
+        # 300 (seedling) + 2200 (harvest) = 2500 GDD
+        assert response.progress_records[0].total_required_gdd == 2500.0
+        
+        # Day 30: Seedling complete (300 GDD)
+        record_day30 = response.progress_records[29]
+        assert record_day30.cumulative_gdd == 300.0
+        assert record_day30.stage_name == "Seedling"
+        
+        # Day 50: Harvest stage (300 + 200 = 500 GDD)
+        # harvest_start_gdd (200) has been reached
+        record_day50 = response.progress_records[49]
+        assert record_day50.cumulative_gdd == 500.0
+        assert record_day50.stage_name == "Harvest"
+        
+        # Verify that harvest_start_gdd doesn't affect progress calculation
+        # Progress is still calculated based on required_gdd
+        # 500 / 2500 = 20%
+        assert record_day50.growth_percentage == 20.0
+

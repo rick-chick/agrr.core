@@ -1,7 +1,11 @@
-"""File-based implementation of CropProfileRepository."""
+"""Crop profile file gateway implementation.
+
+This gateway directly implements CropProfileGateway interface for file-based crop profile access.
+"""
 
 import json
 from typing import List, Dict, Optional
+
 from agrr_core.entity import (
     Crop,
     GrowthStage,
@@ -11,16 +15,16 @@ from agrr_core.entity import (
     StageRequirement,
 )
 from agrr_core.entity.entities.crop_profile_entity import CropProfile
-from agrr_core.adapter.interfaces.crop_profile_repository_interface import (
-    CropProfileRepositoryInterface,
-)
 from agrr_core.adapter.interfaces.file_repository_interface import FileRepositoryInterface
+from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 
 
-class CropProfileFileRepository(CropProfileRepositoryInterface):
-    """File-based implementation of CropProfileRepository.
+class CropProfileFileGateway(CropProfileGateway):
+    """File-based implementation of CropProfileGateway.
     
-    This repository can handle both:
+    Directly implements CropProfileGateway interface without intermediate layers.
+    
+    This gateway can handle both:
     - Single crop profile files (one profile per file)
     - Collection files (multiple profiles in one file)
     
@@ -28,7 +32,7 @@ class CropProfileFileRepository(CropProfileRepositoryInterface):
     """
     
     def __init__(self, file_repository: FileRepositoryInterface, file_path: str = ""):
-        """Initialize crop profile file repository.
+        """Initialize crop profile file gateway.
         
         Args:
             file_repository: File repository for file I/O operations (Framework layer)
@@ -71,6 +75,112 @@ class CropProfileFileRepository(CropProfileRepositoryInterface):
         """
         await self._load_cache()
         return list(self._cache.values())
+    
+    async def save(self, crop_profile: CropProfile) -> None:
+        """Save a crop profile.
+        
+        Args:
+            crop_profile: CropProfile to save
+            
+        Raises:
+            NotImplementedError: Save not implemented in file gateway yet
+        """
+        raise NotImplementedError("Save operation not implemented in CropProfileFileGateway")
+    
+    async def delete(self) -> None:
+        """Delete current crop profile.
+        
+        Raises:
+            NotImplementedError: Delete not implemented in file gateway yet
+        """
+        raise NotImplementedError("Delete operation not implemented in CropProfileFileGateway")
+    
+    async def generate(self, crop_query: str) -> CropProfile:
+        """Generate a crop profile from the given query.
+        
+        Note: Generation is not supported by file gateway.
+        Use CropProfileLLMGateway for generation.
+        
+        Raises:
+            NotImplementedError: File gateway doesn't support generation
+        """
+        raise NotImplementedError(
+            "Profile generation not supported by file gateway. "
+            "Use CropProfileLLMGateway or CropProfileGatewayImpl instead."
+        )
+    
+    async def extract_crop_variety(self, crop_query: str) -> Dict:
+        """Extract crop variety from query.
+        
+        Note: This is an LLM operation, not supported by file gateway.
+        
+        Raises:
+            NotImplementedError: File gateway doesn't support LLM operations
+        """
+        raise NotImplementedError(
+            "LLM operations not supported by file gateway. "
+            "Use CropProfileLLMGateway instead."
+        )
+    
+    async def define_growth_stages(self, crop_name: str, variety: str) -> Dict:
+        """Define growth stages.
+        
+        Note: This is an LLM operation, not supported by file gateway.
+        
+        Raises:
+            NotImplementedError: File gateway doesn't support LLM operations
+        """
+        raise NotImplementedError(
+            "LLM operations not supported by file gateway. "
+            "Use CropProfileLLMGateway instead."
+        )
+    
+    async def research_stage_requirements(
+        self, 
+        crop_name: str, 
+        variety: str, 
+        stage_name: str, 
+        stage_description: str
+    ) -> Dict:
+        """Research stage requirements.
+        
+        Note: This is an LLM operation, not supported by file gateway.
+        
+        Raises:
+            NotImplementedError: File gateway doesn't support LLM operations
+        """
+        raise NotImplementedError(
+            "LLM operations not supported by file gateway. "
+            "Use CropProfileLLMGateway instead."
+        )
+    
+    async def extract_crop_economics(self, crop_name: str, variety: str) -> Dict:
+        """Extract crop economics.
+        
+        Note: This is an LLM operation, not supported by file gateway.
+        
+        Raises:
+            NotImplementedError: File gateway doesn't support LLM operations
+        """
+        raise NotImplementedError(
+            "LLM operations not supported by file gateway. "
+            "Use CropProfileLLMGateway instead."
+        )
+    
+    async def extract_crop_family(self, crop_name: str, variety: str) -> Dict:
+        """Extract crop family.
+        
+        Note: This is an LLM operation, not supported by file gateway.
+        
+        Raises:
+            NotImplementedError: File gateway doesn't support LLM operations
+        """
+        raise NotImplementedError(
+            "LLM operations not supported by file gateway. "
+            "Use CropProfileLLMGateway instead."
+        )
+    
+    # ===== Internal parsing methods =====
     
     async def _load_cache(self) -> None:
         """Load all crops from file into cache."""
@@ -196,7 +306,8 @@ class CropProfileFileRepository(CropProfileRepositoryInterface):
             
             thermal_data = stage_data['thermal']
             thermal = ThermalRequirement(
-                required_gdd=thermal_data['required_gdd']
+                required_gdd=thermal_data['required_gdd'],
+                harvest_start_gdd=thermal_data.get('harvest_start_gdd', None)
             )
             
             stage_req = StageRequirement(
@@ -208,6 +319,4 @@ class CropProfileFileRepository(CropProfileRepositoryInterface):
             stage_requirements.append(stage_req)
         
         return stage_requirements
-
-
 

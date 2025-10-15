@@ -5,8 +5,8 @@ from bs4 import BeautifulSoup
 from typing import List
 
 from agrr_core.entity.exceptions.html_fetch_error import HtmlFetchError
-from agrr_core.framework.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
-from agrr_core.framework.interfaces.html_table_structures import HtmlTable, TableRow
+from agrr_core.adapter.interfaces.html_table_fetch_interface import HtmlTableFetchInterface
+from agrr_core.adapter.interfaces.html_table_structures import HtmlTable, TableRow
 
 
 class HtmlTableFetcher(HtmlTableFetchInterface):

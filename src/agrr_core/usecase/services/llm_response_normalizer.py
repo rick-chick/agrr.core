@@ -234,7 +234,7 @@ class LLMResponseNormalizer:
         }
     
     @staticmethod
-    def normalize_thermal_field(data: Dict[str, Any]) -> Dict[str, float]:
+    def normalize_thermal_field(data: Dict[str, Any]) -> Dict[str, Any]:
         """Normalize thermal requirement data field names.
         
         Supported field names:
@@ -254,6 +254,10 @@ class LLMResponseNormalizer:
             >>> result = LLMResponseNormalizer.normalize_thermal_field(data)
             >>> result["required_gdd"]
             400.0
+            >>> data = {"thermal": {"required_gdd": 2000.0, "harvest_start_gdd": 200.0}}
+            >>> result = LLMResponseNormalizer.normalize_thermal_field(data)
+            >>> result["harvest_start_gdd"]
+            200.0
         """
         thermal_data = (
             data.get("accumulated_temperature") or 
@@ -265,5 +269,6 @@ class LLMResponseNormalizer:
         
         return {
             "required_gdd": thermal_data.get("required_gdd", 400.0),
+            "harvest_start_gdd": thermal_data.get("harvest_start_gdd", None),
         }
 

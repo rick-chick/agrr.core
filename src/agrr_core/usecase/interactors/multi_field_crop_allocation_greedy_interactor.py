@@ -198,6 +198,26 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         else:
             candidates = await self._generate_candidates(fields, crops, request, optimization_config)
         
+        # Check if any candidates were generated
+        if not candidates:
+            # All crops failed to generate candidates
+            # This means no crop can complete growth in the planning period
+            raise ValueError(
+                "No valid allocation candidates could be generated.\n"
+                "\n"
+                "Possible causes:\n"
+                "1. Planning period is too short for any crop to complete growth\n"
+                "2. Weather data is insufficient (extends beyond available data)\n"
+                "3. All crops require temperature conditions not met in the planning period\n"
+                "   (e.g., summer crops cannot grow in winter starting period)\n"
+                "\n"
+                "Recommendations:\n"
+                "- Extend planning period end date\n"
+                "- Choose crops suitable for the season\n"
+                "- Provide more weather data (historical or predicted)\n"
+                "- Adjust planning start date to a suitable season for your crops"
+            )
+        
         # Phase 2: Greedy allocation
         allocations = self._greedy_allocation(
             candidates, 
@@ -368,6 +388,15 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         """Generate candidates for a single field×crop combination.
         
         This is used by parallel candidate generation.
+        
+        Returns:
+            List of allocation candidates. Returns empty list if the crop
+            cannot be grown in the given planning period (graceful degradation).
+            
+        Note:
+            This method catches ValueError from GrowthPeriodOptimizeInteractor
+            to allow partial allocation when some crops cannot complete growth.
+            The final check in execute() ensures at least one crop succeeds.
         """
         crop = crop_aggregate.crop
         
@@ -383,10 +412,30 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         # Set crop requirement in growth period optimizer gateway
         await self.crop_profile_gateway_internal.save(crop_aggregate)
         
-        optimization_result = await self.growth_period_optimizer.execute(optimization_request)
-        
-        # Clean up
-        await self.crop_profile_gateway_internal.delete()
+        try:
+            optimization_result = await self.growth_period_optimizer.execute(optimization_request)
+            
+        except ValueError as e:
+            # Crop cannot complete growth in the planning period
+            # This is expected behavior for some crop-season combinations
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                f"Skipping crop '{crop.name} ({crop.variety})' in field '{field.name}': {str(e)}"
+            )
+            
+            # Clean up before returning
+            await self.crop_profile_gateway_internal.delete()
+            
+            # Return empty list to skip this crop
+            return []
+            
+        finally:
+            # Ensure cleanup happens even if unexpected error occurs
+            try:
+                await self.crop_profile_gateway_internal.delete()
+            except Exception:
+                pass  # Ignore cleanup errors
         
         # Generate area×period candidates
         candidates = []

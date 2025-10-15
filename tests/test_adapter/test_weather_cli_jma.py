@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, Mock, patch
 import pandas as pd
 
 from agrr_core.framework.agrr_core_container import WeatherCliContainer, AgrrCoreContainer
-from agrr_core.framework.repositories.weather_jma_repository import WeatherJMARepository
-from agrr_core.framework.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
+from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway as WeatherJMAGateway
+from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway as WeatherAPIGateway
 
 
 class TestWeatherCLIWithJMA:
@@ -22,8 +22,8 @@ class TestWeatherCLIWithJMA:
         assert weather_gateway is not None
         
         # Check that OpenMeteo repository is created
-        openmeteo_repo = container.get_weather_api_repository()
-        assert isinstance(openmeteo_repo, WeatherAPIOpenMeteoRepository)
+        openmeteo_gateway = container.get_weather_api_gateway()
+        assert isinstance(openmeteo_gateway, WeatherAPIGateway)
     
     def test_container_config_jma(self):
         """Test that JMA data source can be configured."""
@@ -33,8 +33,8 @@ class TestWeatherCLIWithJMA:
         container = AgrrCoreContainer(config)
         
         # Should use JMA when configured
-        jma_repo = container.get_weather_jma_repository()
-        assert isinstance(jma_repo, WeatherJMARepository)
+        jma_gateway = container.get_weather_jma_gateway()
+        assert isinstance(jma_gateway, WeatherJMAGateway)
     
     def test_container_csv_downloader_creation(self):
         """Test CSV downloader is created correctly."""
@@ -88,20 +88,20 @@ class TestCLIArgumentParsing:
         """Test that --data-source jma is accepted."""
         from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
         from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
-        from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
-        from agrr_core.framework.repositories.weather_file_repository import WeatherFileRepository
+        from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAdapter as WeatherGatewayAdapter
+        from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway as WeatherFileGateway
         from agrr_core.framework.repositories.file_repository import FileRepository
         from agrr_core.framework.repositories.csv_downloader import CsvDownloader
         
         # Create mocked components
         file_repo = FileRepository()
-        weather_file_repo = WeatherFileRepository(file_repo, "test_weather.json")
+        weather_file_repo = WeatherFileGateway(file_repo, "test_weather.json")
         csv_downloader = CsvDownloader()
-        jma_repo = WeatherJMARepository(csv_downloader)
+        jma_gateway = WeatherJMAGateway(csv_downloader)
         
-        weather_gateway = WeatherGatewayImpl(
-            weather_repository=weather_file_repo,
-            weather_api_repository=jma_repo
+        weather_gateway = WeatherGatewayAdapter(
+            file_gateway=weather_file_repo,
+            api_gateway=jma_gateway
         )
         presenter = WeatherCLIPresenter()
         
@@ -131,21 +131,21 @@ class TestCLIArgumentParsing:
         """Test that data-source defaults to openmeteo."""
         from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
         from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
-        from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
-        from agrr_core.framework.repositories.weather_file_repository import WeatherFileRepository
+        from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAdapter as WeatherGatewayAdapter
+        from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway as WeatherFileGateway
         from agrr_core.framework.repositories.file_repository import FileRepository
-        from agrr_core.framework.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
+        from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway as WeatherAPIGateway
         from agrr_core.framework.repositories.http_client import HttpClient
         
         # Create mocked components
         file_repo = FileRepository()
-        weather_file_repo = WeatherFileRepository(file_repo, "test_weather.json")
+        weather_file_repo = WeatherFileGateway(file_repo, "test_weather.json")
         http_client = HttpClient("https://test.com")
-        openmeteo_repo = WeatherAPIOpenMeteoRepository(http_client)
+        openmeteo_gateway = WeatherAPIGateway(http_client)
         
-        weather_gateway = WeatherGatewayImpl(
-            weather_repository=weather_file_repo,
-            weather_api_repository=openmeteo_repo
+        weather_gateway = WeatherGatewayAdapter(
+            file_gateway=weather_file_repo,
+            api_gateway=openmeteo_gateway
         )
         presenter = WeatherCLIPresenter()
         
@@ -170,21 +170,21 @@ class TestCLIArgumentParsing:
         """Test that only valid data sources are accepted."""
         from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
         from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
-        from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
-        from agrr_core.framework.repositories.weather_file_repository import WeatherFileRepository
+        from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAdapter as WeatherGatewayAdapter
+        from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway as WeatherFileGateway
         from agrr_core.framework.repositories.file_repository import FileRepository
         from agrr_core.framework.repositories.http_client import HttpClient
-        from agrr_core.framework.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
+        from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway as WeatherAPIGateway
         
         # Create mocked components
         file_repo = FileRepository()
-        weather_file_repo = WeatherFileRepository(file_repo, "test_weather.json")
+        weather_file_repo = WeatherFileGateway(file_repo, "test_weather.json")
         http_client = HttpClient("https://test.com")
-        openmeteo_repo = WeatherAPIOpenMeteoRepository(http_client)
+        openmeteo_gateway = WeatherAPIGateway(http_client)
         
-        weather_gateway = WeatherGatewayImpl(
-            weather_repository=weather_file_repo,
-            weather_api_repository=openmeteo_repo
+        weather_gateway = WeatherGatewayAdapter(
+            file_gateway=weather_file_repo,
+            api_gateway=openmeteo_gateway
         )
         presenter = WeatherCLIPresenter()
         

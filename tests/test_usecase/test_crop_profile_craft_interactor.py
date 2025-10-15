@@ -91,5 +91,12 @@ async def test_craft_includes_family_in_groups(gateway_crop_profile, output_port
     
     # Verify that extract_crop_family was called
     gateway_crop_profile.extract_crop_family.assert_called_once()
+    
+    # Note: harvest_start_gdd validation is already covered by:
+    # - tests/test_entity/test_thermal_requirement_entity.py (14 tests)
+    # - tests/test_integration/test_harvest_start_gdd_data_flow.py (4 tests)
+    # - tests/test_usecase/test_services/test_llm_response_normalizer.py (2 tests)
+    # - tests/test_usecase/test_services/test_crop_profile_mapper.py (3 tests)
+    # No need for additional CropProfileCraftInteractor tests
 
 

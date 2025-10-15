@@ -27,7 +27,6 @@ from agrr_core.usecase.dto.multi_field_crop_allocation_response_dto import (
 )
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
-from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 
 
 class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
@@ -53,6 +52,11 @@ class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
             crop_profile_gateway_internal: Internal gateway for crop profile operations in growth period optimization
             interaction_rule_gateway: Optional gateway for loading interaction rules
             config: Optional optimization configuration
+            
+        Note:
+            File paths are NOT passed to Controller/Interactor.
+            They are configured at Gateway initialization (done at CLI startup).
+            Gateways are already initialized with appropriate repositories and file paths.
         """
         self.field_gateway = field_gateway
         self.crop_gateway = crop_gateway
@@ -395,56 +399,17 @@ Notes:
                 f'Invalid date format: "{date_str}". Use YYYY-MM-DD (e.g., "2024-04-01")'
             )
 
-    def _load_fields_from_file(self, fields_file: str) -> List[str]:
-        """Load field IDs from JSON file.
-        
-        Args:
-            fields_file: Path to fields configuration file (JSON)
-            
-        Returns:
-            List of field IDs
-            
-        Raises:
-            ValueError: If file format is invalid
-        """
-        try:
-            with open(fields_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            
-            if 'fields' not in data:
-                raise ValueError("Fields file must contain 'fields' array")
-            
-            field_ids = []
-            for field_data in data['fields']:
-                if 'field_id' not in field_data:
-                    raise ValueError("Each field must have 'field_id'")
-                field_ids.append(field_data['field_id'])
-            
-            return field_ids
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON in fields file: {str(e)}")
-        except FileNotFoundError:
-            raise ValueError(f"Fields file not found: {fields_file}")
 
-
-    async def _load_interaction_rules(self, interaction_rules_file: str) -> List[InteractionRule]:
-        """Load interaction rules from file.
-        
-        Args:
-            interaction_rules_file: Path to interaction rules JSON file
-            
-        Returns:
-            List of InteractionRule objects
-        """
-        if not self.interaction_rule_gateway:
-            return []
-        
-        return await self.interaction_rule_gateway.load_from_file(interaction_rules_file)
 
     async def handle_optimize_command(self, args) -> None:
         """Handle the optimize command.
         
         Optimizes crop allocation across multiple fields to maximize profit or minimize cost.
+        
+        Note:
+            File paths are NOT passed to Interactor.
+            They are configured at Gateway initialization (done at CLI startup).
+            Gateways are already initialized with appropriate repositories and file paths.
         """
         # Parse planning period dates
         try:
@@ -454,17 +419,21 @@ Notes:
             print(f'Error: {str(e)}')
             return
 
-        # Load fields from file
+        # Load fields from gateway
         try:
-            field_ids = self._load_fields_from_file(args.fields_file)
-        except ValueError as e:
+            fields = await self.field_gateway.get_all()
+            if not fields:
+                print('Error: No fields found. Make sure --fields-file is a valid fields JSON file.')
+                return
+            field_ids = [field.field_id for field in fields]
+        except Exception as e:
             print(f'Error loading fields: {str(e)}')
             return
 
-        # Load interaction rules if specified
-        if getattr(args, 'interaction_rules_file', None):
+        # Load interaction rules if gateway is provided
+        if self.interaction_rule_gateway:
             try:
-                interaction_rules = await self._load_interaction_rules(args.interaction_rules_file)
+                interaction_rules = await self.interaction_rule_gateway.get_rules()
                 # Update interactor with loaded rules
                 self.interactor.interaction_rule_service.rules = interaction_rules
             except Exception as e:

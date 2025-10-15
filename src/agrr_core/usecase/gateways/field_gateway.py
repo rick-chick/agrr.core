@@ -4,7 +4,7 @@ This gateway provides access to field data from external sources.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, List
 
 from agrr_core.entity.entities.field_entity import Field
 
@@ -21,5 +21,17 @@ class FieldGateway(ABC):
             
         Returns:
             Field entity if found, None otherwise
+        """
+        pass
+    
+    @abstractmethod
+    async def get_all(self) -> List[Field]:
+        """Get all fields from configured source.
+        
+        Returns:
+            List of Field entities
+            
+        Note:
+            Source configuration is provided at initialization, not here.
         """
         pass

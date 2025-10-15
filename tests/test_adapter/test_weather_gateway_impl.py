@@ -1,24 +1,24 @@
-"""Tests for WeatherGatewayImpl."""
+"""Tests for WeatherGatewayAdapter."""
 
 import pytest
 from unittest.mock import AsyncMock
 from datetime import datetime
 
-from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
+from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAdapter
 from agrr_core.entity import WeatherData, Location
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 
 
-class TestWeatherGatewayImpl:
-    """Test WeatherGatewayImpl."""
+class TestWeatherGatewayAdapter:
+    """Test WeatherGatewayAdapter."""
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.mock_file_repository = AsyncMock()
-        self.mock_api_repository = AsyncMock()
-        self.gateway = WeatherGatewayImpl(
-            self.mock_file_repository,
-            self.mock_api_repository
+        self.mock_file_gateway = AsyncMock()
+        self.mock_api_gateway = AsyncMock()
+        self.gateway = WeatherGatewayAdapter(
+            self.mock_file_gateway,
+            self.mock_api_gateway
         )
     
     @pytest.mark.asyncio
@@ -47,7 +47,7 @@ class TestWeatherGatewayImpl:
             weather_data_list=weather_data,
             location=location
         )
-        self.mock_api_repository.get_by_location_and_date_range.return_value = expected_dto
+        self.mock_api_gateway.get_by_location_and_date_range.return_value = expected_dto
         
         # Test
         result = await self.gateway.get_by_location_and_date_range(
@@ -56,7 +56,7 @@ class TestWeatherGatewayImpl:
         
         # Assertions
         assert result == expected_dto
-        self.mock_api_repository.get_by_location_and_date_range.assert_called_once_with(
+        self.mock_api_gateway.get_by_location_and_date_range.assert_called_once_with(
             35.7, 139.7, "2023-01-01", "2023-01-02"
         )
     
@@ -87,7 +87,7 @@ class TestWeatherGatewayImpl:
             weather_data_list=weather_data,
             location=location
         )
-        self.mock_api_repository.get_forecast.return_value = expected_dto
+        self.mock_api_gateway.get_forecast.return_value = expected_dto
         
         # Test
         result = await self.gateway.get_forecast(35.7, 139.7)
@@ -95,5 +95,5 @@ class TestWeatherGatewayImpl:
         # Assertions
         assert result == expected_dto
         assert len(result.weather_data_list) == 16
-        self.mock_api_repository.get_forecast.assert_called_once_with(35.7, 139.7)
+        self.mock_api_gateway.get_forecast.assert_called_once_with(35.7, 139.7)
 

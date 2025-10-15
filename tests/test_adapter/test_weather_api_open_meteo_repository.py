@@ -1,18 +1,18 @@
-"""Tests for WeatherAPIOpenMeteoRepository."""
+"""Tests for WeatherAPIGateway."""
 
 import pytest
 from unittest.mock import Mock, patch
 import requests
 from datetime import datetime
 
-from agrr_core.framework.repositories.weather_api_open_meteo_repository import WeatherAPIOpenMeteoRepository
+from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway
 from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 
 
-class TestWeatherAPIOpenMeteoRepository:
-    """Test WeatherAPIOpenMeteoRepository."""
+class TestWeatherAPIGateway:
+    """Test WeatherAPIGateway."""
     
     def setup_method(self):
         """Set up test fixtures."""
@@ -35,7 +35,9 @@ class TestWeatherAPIOpenMeteoRepository:
                 'weather_code': [0, 1]
             }
         }
-        self.repository = WeatherAPIOpenMeteoRepository(self.mock_http_service)
+        self.gateway = WeatherAPIGateway(self.mock_http_service)
+        # Backward compatibility alias
+        self.repository = self.gateway
     
     def test_init(self):
         """Test repository initialization."""

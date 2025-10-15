@@ -13,8 +13,8 @@ from agrr_core.entity.entities.optimization_schedule_entity import (
     OptimizationSchedule,
 )
 from agrr_core.entity.entities.field_entity import Field
-from agrr_core.framework.repositories.inmemory_optimization_result_repository import (
-    InMemoryOptimizationResultRepository,
+from agrr_core.adapter.gateways.optimization_result_inmemory_gateway import (
+    OptimizationResultInMemoryGateway,
 )
 
 
@@ -24,7 +24,7 @@ class TestInMemoryOptimizationScheduleRepository:
     @pytest.mark.asyncio
     async def test_save_and_get_schedule(self):
         """Test saving and retrieving a schedule."""
-        repository = InMemoryOptimizationResultRepository()
+        repository = OptimizationResultInMemoryGateway()
         
         field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)  # 1000 / 10 = 100
         field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=80.0)   # 800 / 10 = 80
@@ -68,7 +68,7 @@ class TestInMemoryOptimizationScheduleRepository:
     @pytest.mark.asyncio
     async def test_get_nonexistent_schedule(self):
         """Test retrieving a schedule that doesn't exist."""
-        repository = InMemoryOptimizationResultRepository()
+        repository = OptimizationResultInMemoryGateway()
         
         result = await repository.get("nonexistent")
         
@@ -77,7 +77,7 @@ class TestInMemoryOptimizationScheduleRepository:
     @pytest.mark.asyncio
     async def test_get_all_schedules(self):
         """Test retrieving all schedules."""
-        repository = InMemoryOptimizationResultRepository()
+        repository = OptimizationResultInMemoryGateway()
         
         field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
         field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=90.0)
@@ -124,7 +124,7 @@ class TestInMemoryOptimizationScheduleRepository:
     @pytest.mark.asyncio
     async def test_delete_schedule(self):
         """Test deleting a schedule."""
-        repository = InMemoryOptimizationResultRepository()
+        repository = OptimizationResultInMemoryGateway()
         
         field = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
         
@@ -155,7 +155,7 @@ class TestInMemoryOptimizationScheduleRepository:
     @pytest.mark.asyncio
     async def test_delete_nonexistent_schedule(self):
         """Test deleting a schedule that doesn't exist."""
-        repository = InMemoryOptimizationResultRepository()
+        repository = OptimizationResultInMemoryGateway()
         
         deleted = await repository.delete("nonexistent")
         
@@ -164,7 +164,7 @@ class TestInMemoryOptimizationScheduleRepository:
     @pytest.mark.asyncio
     async def test_clear_schedules(self):
         """Test clearing all schedules."""
-        repository = InMemoryOptimizationResultRepository()
+        repository = OptimizationResultInMemoryGateway()
         
         field = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
         
@@ -195,7 +195,7 @@ class TestInMemoryOptimizationScheduleRepository:
     @pytest.mark.asyncio
     async def test_schedules_and_results_separate(self):
         """Test that schedules and results storage are separate."""
-        repository = InMemoryOptimizationResultRepository()
+        repository = OptimizationResultInMemoryGateway()
         
         field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
         field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=90.0)

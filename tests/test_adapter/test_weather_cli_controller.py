@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
-from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
+from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAdapter as WeatherGatewayImpl
 from agrr_core.entity import WeatherData, Location
 
 

@@ -278,6 +278,31 @@ class TestPrivateMethods:
         result = CropProfileMapper._thermal_to_dict(thermal)
         
         assert result["required_gdd"] == 500.0
+        assert "harvest_start_gdd" not in result  # Should not include None values
+    
+    def test_thermal_to_dict_with_harvest_start_gdd(self):
+        """Test _thermal_to_dict method with harvest_start_gdd."""
+        thermal = ThermalRequirement(
+            required_gdd=2000.0,
+            harvest_start_gdd=200.0
+        )
+        
+        result = CropProfileMapper._thermal_to_dict(thermal)
+        
+        assert result["required_gdd"] == 2000.0
+        assert result["harvest_start_gdd"] == 200.0
+    
+    def test_thermal_to_dict_without_harvest_start_gdd(self):
+        """Test _thermal_to_dict method explicitly without harvest_start_gdd."""
+        thermal = ThermalRequirement(
+            required_gdd=800.0,
+            harvest_start_gdd=None
+        )
+        
+        result = CropProfileMapper._thermal_to_dict(thermal)
+        
+        assert result["required_gdd"] == 800.0
+        assert "harvest_start_gdd" not in result  # Should not include None values
 
 
 @pytest.mark.unit

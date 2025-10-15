@@ -5,7 +5,7 @@ import asyncio
 from typing import Optional, Tuple
 from datetime import datetime, timedelta
 
-from agrr_core.adapter.gateways.weather_gateway_impl import WeatherGatewayImpl
+from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
 from agrr_core.usecase.interactors.weather_get_forecast_interactor import WeatherGetForecastInteractor
@@ -18,7 +18,7 @@ class WeatherCliFetchController:
     
     def __init__(
         self, 
-        weather_gateway: WeatherGatewayImpl,
+        weather_gateway: WeatherGateway,
         cli_presenter: WeatherCLIPresenter
     ):
         """Initialize CLI weather controller."""

@@ -147,7 +147,7 @@ class AgrrCoreContainer:
     def get_prediction_lightgbm_service(self):
         """Get LightGBM prediction service instance."""
         if 'prediction_lightgbm_service' not in self._instances:
-            from agrr_core.framework.services.lightgbm_prediction_service import LightGBMPredictionService
+            from agrr_core.framework.services.ml.lightgbm_prediction_service import LightGBMPredictionService
             self._instances['prediction_lightgbm_service'] = LightGBMPredictionService()
         return self._instances['prediction_lightgbm_service']
     

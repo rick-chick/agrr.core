@@ -47,9 +47,13 @@ class OptimizationMetrics:
         growth_days: Number of growth days
         daily_fixed_cost: Daily fixed cost (yen/day)
         
+    Fields for yield impact:
+        yield_factor: Yield reduction factor due to temperature stress (0-1)
+                     1.0 = no impact, 0.0 = total loss
+        
     Calculated properties:
         cost: Total cost
-        revenue: Total revenue
+        revenue: Total revenue (with yield_factor applied)
         profit: Total profit (revenue - cost, with constraints)
     """
     
@@ -61,6 +65,9 @@ class OptimizationMetrics:
     # Growth period parameters
     growth_days: Optional[int] = None
     daily_fixed_cost: Optional[float] = None
+    
+    # Yield impact parameters
+    yield_factor: float = 1.0  # Default: no yield impact
     
     @property
     def cost(self) -> float:
@@ -78,16 +85,27 @@ class OptimizationMetrics:
     
     @property
     def revenue(self) -> Optional[float]:
-        """Calculate total revenue.
+        """Calculate total revenue with yield impact.
+        
+        Formula: revenue = area_used * revenue_per_area * yield_factor
+        
+        The yield_factor accounts for temperature stress impacts on actual yield:
+        - 1.0 = no yield reduction (full harvest)
+        - 0.9 = 10% yield loss due to stress
+        - 0.0 = complete crop failure
         
         Returns:
-            Total revenue (area_used * revenue_per_area) or None
+            Total revenue (area_used * revenue_per_area * yield_factor) or None
             Capped at max_revenue if specified
         """
         if self.area_used is None or self.revenue_per_area is None:
             return None
         
+        # Calculate base revenue
         revenue = self.area_used * self.revenue_per_area
+        
+        # Apply yield factor (temperature stress impact)
+        revenue = revenue * self.yield_factor
         
         # Apply max_revenue constraint
         if self.max_revenue is not None and revenue > self.max_revenue:

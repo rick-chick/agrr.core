@@ -215,3 +215,140 @@ class TestObjectiveFunctionSignature:
         profit = objective.calculate(metrics)
         
         assert profit == expected_profit
+
+
+class TestYieldFactorImpact:
+    """Test yield_factor impact on revenue and profit."""
+    
+    def test_yield_factor_default_is_one(self):
+        """Test that default yield_factor is 1.0 (no impact)."""
+        metrics = OptimizationMetrics(
+            area_used=100.0,
+            revenue_per_area=10.0,
+            growth_days=50,
+            daily_fixed_cost=5.0,
+        )
+        
+        assert metrics.yield_factor == 1.0
+        assert metrics.revenue == 1000.0  # 100 * 10 * 1.0
+        assert metrics.profit == 750.0    # 1000 - 250
+    
+    def test_yield_factor_reduces_revenue(self):
+        """Test that yield_factor < 1.0 reduces revenue."""
+        metrics = OptimizationMetrics(
+            area_used=100.0,
+            revenue_per_area=10.0,
+            growth_days=50,
+            daily_fixed_cost=5.0,
+            yield_factor=0.8,  # 20% yield loss
+        )
+        
+        assert metrics.revenue == 800.0  # 100 * 10 * 0.8
+        assert metrics.profit == 550.0   # 800 - 250
+    
+    def test_yield_factor_severe_impact(self):
+        """Test severe yield impact (50% loss)."""
+        metrics = OptimizationMetrics(
+            area_used=200.0,
+            revenue_per_area=20.0,
+            growth_days=100,
+            daily_fixed_cost=10.0,
+            yield_factor=0.5,  # 50% yield loss
+        )
+        
+        # Base revenue: 200 * 20 = 4000
+        # Adjusted revenue: 4000 * 0.5 = 2000
+        # Cost: 100 * 10 = 1000
+        # Profit: 2000 - 1000 = 1000
+        assert metrics.revenue == 2000.0
+        assert metrics.cost == 1000.0
+        assert metrics.profit == 1000.0
+    
+    def test_yield_factor_with_max_revenue_constraint(self):
+        """Test yield_factor interaction with max_revenue constraint."""
+        metrics = OptimizationMetrics(
+            area_used=200.0,
+            revenue_per_area=20.0,
+            growth_days=100,
+            daily_fixed_cost=10.0,
+            yield_factor=0.9,      # 10% yield loss
+            max_revenue=3000.0,    # Revenue cap
+        )
+        
+        # Base revenue: 200 * 20 = 4000
+        # With yield_factor: 4000 * 0.9 = 3600
+        # With max_revenue: min(3600, 3000) = 3000
+        assert metrics.revenue == 3000.0  # Capped
+        assert metrics.profit == 2000.0   # 3000 - 1000
+    
+    def test_yield_factor_zero_total_loss(self):
+        """Test yield_factor = 0.0 (complete crop failure)."""
+        metrics = OptimizationMetrics(
+            area_used=100.0,
+            revenue_per_area=10.0,
+            growth_days=50,
+            daily_fixed_cost=5.0,
+            yield_factor=0.0,  # Total crop failure
+        )
+        
+        assert metrics.revenue == 0.0     # No revenue
+        assert metrics.cost == 250.0
+        assert metrics.profit == -250.0   # Pure loss
+    
+    def test_objective_calculate_with_yield_factor(self):
+        """Test OptimizationObjective.calculate() with yield_factor."""
+        objective = OptimizationObjective()
+        
+        # Scenario: 15% yield loss
+        metrics = OptimizationMetrics(
+            area_used=150.0,
+            revenue_per_area=15.0,
+            growth_days=80,
+            daily_fixed_cost=8.0,
+            yield_factor=0.85,  # 15% yield loss
+        )
+        
+        profit = objective.calculate(metrics)
+        
+        # Revenue: 150 * 15 * 0.85 = 1912.5
+        # Cost: 80 * 8 = 640
+        # Profit: 1912.5 - 640 = 1272.5
+        expected_profit = (150.0 * 15.0 * 0.85) - (80 * 8)
+        assert abs(profit - expected_profit) < 0.01
+    
+    def test_select_best_considers_yield_factor(self):
+        """Test that select_best accounts for yield_factor differences."""
+        objective = OptimizationObjective()
+        
+        # Candidate A: Higher base revenue but lower yield
+        metrics_a = OptimizationMetrics(
+            area_used=200.0,
+            revenue_per_area=12.0,
+            growth_days=100,
+            daily_fixed_cost=10.0,
+            yield_factor=0.7,  # 30% yield loss
+        )
+        
+        # Candidate B: Lower base revenue but better yield
+        metrics_b = OptimizationMetrics(
+            area_used=200.0,
+            revenue_per_area=10.0,
+            growth_days=100,
+            daily_fixed_cost=10.0,
+            yield_factor=0.95,  # 5% yield loss
+        )
+        
+        candidates = [
+            {"name": "A", "metrics": metrics_a},
+            {"name": "B", "metrics": metrics_b},
+        ]
+        
+        best = objective.select_best(
+            candidates,
+            key_func=lambda c: objective.calculate(c["metrics"])
+        )
+        
+        # A: revenue=200*12*0.7=1680, cost=1000, profit=680
+        # B: revenue=200*10*0.95=1900, cost=1000, profit=900
+        # B should win despite lower revenue_per_area
+        assert best["name"] == "B"

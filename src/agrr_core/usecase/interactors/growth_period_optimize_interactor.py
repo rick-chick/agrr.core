@@ -184,8 +184,9 @@ class GrowthPeriodOptimizeInteractor(
             for stage_req in crop_profile.stage_requirements
         )
         
-        # Get base temperature from first stage (assuming same for all stages)
-        base_temp = crop_profile.stage_requirements[0].temperature.base_temperature
+        # Get temperature profile from first stage (assuming same for all stages)
+        # Use entity method for GDD calculation instead of direct calculation
+        temperature_profile = crop_profile.stage_requirements[0].temperature
         
         # Create weather data lookup by date
         weather_by_date = {w.time.date(): w for w in weather_data}
@@ -217,7 +218,8 @@ class GrowthPeriodOptimizeInteractor(
             date = sorted_dates[window_end_idx]
             if date >= current_start.date():
                 weather = weather_by_date[date]
-                daily_gdd = max(0, weather.temperature_2m_mean - base_temp)
+                # Use entity method for GDD calculation (with temperature efficiency)
+                daily_gdd = temperature_profile.daily_gdd(weather.temperature_2m_mean)
                 accumulated_gdd += daily_gdd
                 window_end_idx += 1
             else:
@@ -260,14 +262,16 @@ class GrowthPeriodOptimizeInteractor(
             # Remove GDD from the day that's no longer in the window
             if prev_start.date() in weather_by_date:
                 weather = weather_by_date[prev_start.date()]
-                daily_gdd = max(0, weather.temperature_2m_mean - base_temp)
+                # Use entity method for GDD calculation (with temperature efficiency)
+                daily_gdd = temperature_profile.daily_gdd(weather.temperature_2m_mean)
                 accumulated_gdd -= daily_gdd
             
             # Add days at the end until we reach required GDD again
             while accumulated_gdd < total_required_gdd and window_end_idx < len(sorted_dates):
                 date = sorted_dates[window_end_idx]
                 weather = weather_by_date[date]
-                daily_gdd = max(0, weather.temperature_2m_mean - base_temp)
+                # Use entity method for GDD calculation (with temperature efficiency)
+                daily_gdd = temperature_profile.daily_gdd(weather.temperature_2m_mean)
                 accumulated_gdd += daily_gdd
                 window_end_idx += 1
             
@@ -304,7 +308,7 @@ class GrowthPeriodOptimizeInteractor(
                     accumulated_gdd=gdd_per_candidate[idx] if idx < len(gdd_per_candidate) else 0.0,
                     field=candidate.field,
                     is_optimal=candidate.is_optimal,
-                    base_temperature=base_temp,
+                    base_temperature=temperature_profile.base_temperature,
                 )
                 intermediate_results.append(intermediate_result)
             
@@ -399,6 +403,9 @@ class GrowthPeriodOptimizeInteractor(
                 # If exceeds deadline, leave growth_days as None (invalid candidate)
                 break
         
+        # Get yield factor from progress response (defaults to 1.0 if not available)
+        yield_factor = progress_response.yield_factor if progress_response.yield_factor is not None else 1.0
+        
         # Create candidate with field and crop entities (calculation happens in get_metrics())
         return CandidateResultDTO(
             start_date=start_date,
@@ -407,6 +414,7 @@ class GrowthPeriodOptimizeInteractor(
             field=field if growth_days is not None else None,
             crop=crop if growth_days is not None else None,
             is_optimal=False,  # Will be updated later
+            yield_factor=yield_factor,
         )
 
     async def _get_crop_profile(

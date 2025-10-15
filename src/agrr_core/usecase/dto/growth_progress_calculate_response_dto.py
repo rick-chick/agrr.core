@@ -46,6 +46,7 @@ class GrowthProgressCalculateResponseDTO:
     variety: Optional[str]
     start_date: datetime
     progress_records: List[GrowthProgressRecordDTO]
+    yield_factor: Optional[float] = None  # Cumulative yield impact (0-1)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -54,5 +55,7 @@ class GrowthProgressCalculateResponseDTO:
             "variety": self.variety,
             "start_date": self.start_date.isoformat(),
             "progress_records": [record.to_dict() for record in self.progress_records],
+            "yield_factor": self.yield_factor,
+            "yield_loss_percentage": (1.0 - self.yield_factor) * 100.0 if self.yield_factor else 0.0,
         }
 

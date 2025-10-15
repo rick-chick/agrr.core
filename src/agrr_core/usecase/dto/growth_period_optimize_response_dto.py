@@ -37,6 +37,7 @@ class CandidateResultDTO:
     field: Optional[Field] = None  # Field entity for cost calculation
     crop: Optional[Crop] = None  # Crop entity for revenue calculation
     is_optimal: bool = False
+    yield_factor: float = 1.0  # Yield impact from temperature stress (default: no impact)
 
     def get_metrics(self) -> OptimizationMetrics:
         """Get optimization metrics with raw calculation parameters (implements Optimizable protocol).
@@ -70,6 +71,7 @@ class CandidateResultDTO:
             area_used=area_used,
             revenue_per_area=revenue_per_area,
             max_revenue=max_revenue,
+            yield_factor=self.yield_factor,
         )
     
     @property
@@ -87,6 +89,8 @@ class CandidateResultDTO:
             "growth_days": self.growth_days,
             "total_cost": self.total_cost,
             "is_optimal": self.is_optimal,
+            "yield_factor": self.yield_factor,
+            "yield_loss_percentage": (1.0 - self.yield_factor) * 100.0,
         }
 
 

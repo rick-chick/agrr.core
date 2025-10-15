@@ -19,6 +19,7 @@ from agrr_core.entity.entities.growth_progress_timeline_entity import (
 from agrr_core.entity.entities.growth_stage_entity import GrowthStage
 from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
 from agrr_core.entity.entities.weather_entity import WeatherData
+from agrr_core.entity.value_objects.yield_impact_accumulator import YieldImpactAccumulator
 from agrr_core.usecase.dto.growth_progress_calculate_request_dto import (
     GrowthProgressCalculateRequestDTO,
 )
@@ -83,7 +84,7 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
         start_date,
         weather_data_list: List[WeatherData],
     ) -> GrowthProgressTimeline:
-        """Calculate growth progress based on GDD accumulation."""
+        """Calculate growth progress based on GDD accumulation with yield impact tracking."""
         # Calculate total required GDD
         total_required_gdd = sum(
             sr.thermal.required_gdd for sr in crop_profile.stage_requirements
@@ -94,6 +95,9 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
 
         cumulative_gdd = 0.0
         progress_list = []
+        
+        # Initialize yield impact accumulator
+        yield_accumulator = YieldImpactAccumulator()
 
         for weather_data in weather_data_list:
             # Determine current stage based on cumulative GDD
@@ -104,6 +108,15 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
             # Calculate daily GDD using the current stage's temperature profile
             daily_gdd = current_stage.daily_gdd(weather_data)
             cumulative_gdd += daily_gdd
+            
+            # Calculate and accumulate daily stress impacts
+            daily_impacts = current_stage.temperature.calculate_daily_stress_impacts(
+                weather=weather_data
+            )
+            yield_accumulator.accumulate_daily_impact(
+                stage=current_stage.stage,
+                daily_impacts=daily_impacts,
+            )
 
             # Calculate growth percentage (cap at 100%)
             growth_percentage = min(
@@ -120,11 +133,15 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
                 is_complete=(growth_percentage >= 100.0),
             )
             progress_list.append(progress)
+        
+        # Get final yield factor
+        yield_factor = yield_accumulator.get_yield_factor()
 
         return GrowthProgressTimeline(
             crop=crop_profile.crop,
             start_date=start_date,
             progress_list=progress_list,
+            yield_factor=yield_factor,
         )
 
     def _determine_current_stage(
@@ -165,5 +182,6 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
             variety=timeline.crop.variety,
             start_date=timeline.start_date,
             progress_records=progress_records,
+            yield_factor=timeline.yield_factor,
         )
 

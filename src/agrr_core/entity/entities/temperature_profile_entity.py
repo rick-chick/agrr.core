@@ -49,6 +49,12 @@ class TemperatureProfile:
     frost_threshold: float
     max_temperature: float  # Upper developmental threshold (developmental arrest temperature)
     sterility_risk_threshold: Optional[float] = None
+    
+    # Yield impact rates (literature-based, can be overridden per crop/stage)
+    high_temp_daily_impact: float = 0.05  # 5% yield reduction per day
+    low_temp_daily_impact: float = 0.08   # 8% yield reduction per day
+    frost_daily_impact: float = 0.15      # 15% yield reduction per day
+    sterility_daily_impact: float = 0.20  # 20% yield reduction per day
 
     def is_ok_temperature(self, t_mean: Optional[float]) -> bool:
         """Return True if mean temperature is within the optimal range.
@@ -115,21 +121,7 @@ class TemperatureProfile:
         return t_max >= self.sterility_risk_threshold
 
     def daily_gdd(self, t_mean: Optional[float]) -> float:
-        """Return daily growing degree days (non-negative).
-
-        Formula: max(t_mean - base_temperature, 0)
-        Missing input (None) returns 0.0.
-        
-        Note: This is the simple linear model. For temperature efficiency consideration,
-        use daily_gdd_modified() instead.
-        """
-        if t_mean is None:
-            return 0.0
-        delta = t_mean - self.base_temperature
-        return delta if delta > 0 else 0.0
-
-    def daily_gdd_modified(self, t_mean: Optional[float]) -> float:
-        """Return daily GDD with temperature efficiency (trapezoidal model).
+        """Return daily growing degree days with temperature efficiency (trapezoidal model).
         
         This method accounts for reduced developmental rate outside the optimal
         temperature range, based on DSSAT and APSIM crop models.
@@ -169,6 +161,28 @@ class TemperatureProfile:
         
         # Modified GDD
         return base_gdd * efficiency
+
+    def daily_gdd_simple(self, t_mean: Optional[float]) -> float:
+        """Return daily GDD using simple linear model (for backward compatibility).
+
+        Formula: max(t_mean - base_temperature, 0)
+        Missing input (None) returns 0.0.
+        
+        Note: This is the simple linear model without temperature efficiency.
+        The default daily_gdd() method now uses the trapezoidal model.
+        """
+        if t_mean is None:
+            return 0.0
+        delta = t_mean - self.base_temperature
+        return delta if delta > 0 else 0.0
+    
+    def daily_gdd_modified(self, t_mean: Optional[float]) -> float:
+        """Alias for daily_gdd() for backward compatibility.
+        
+        This method now simply calls daily_gdd() as the trapezoidal model
+        is now the default behavior.
+        """
+        return self.daily_gdd(t_mean)
     
     def _calculate_temperature_efficiency(self, t_mean: float) -> float:
         """Calculate temperature efficiency using trapezoidal function.
@@ -198,5 +212,63 @@ class TemperatureProfile:
         # Outside range (should not reach here due to earlier checks)
         else:
             return 0.0
+    
+    def calculate_daily_stress_impacts(
+        self,
+        weather: "WeatherData",
+    ) -> dict:
+        """Calculate daily stress impact rates from temperature conditions.
+        
+        This method evaluates temperature stress and returns impact rates for
+        each stress type. These rates represent the daily yield reduction factor
+        (0.0 = no stress, 0.05 = 5% reduction, etc.) before applying stage-specific
+        sensitivity coefficients.
+        
+        The impact rates are based on literature review:
+        - High temperature stress: 5% per day (Matsui et al., 2001)
+        - Low temperature stress: 8% per day (Satake & Hayase, 1970)
+        - Frost damage: 15% per day (Porter & Gawith, 1999)
+        - Sterility risk: 20% per day (high temperature during flowering)
+        
+        Args:
+            weather: Daily weather data containing temperature observations.
+        
+        Returns:
+            Dict with keys: 'high_temp', 'low_temp', 'frost', 'sterility'
+            Values are daily impact rates (0.0 to 1.0).
+            
+        Example:
+            >>> profile = TemperatureProfile(...)
+            >>> weather = WeatherData(temperature_2m_mean=36.0, ...)
+            >>> impacts = profile.calculate_daily_stress_impacts(weather)
+            >>> impacts['high_temp']  # 0.05 if high temp stress occurred
+        """
+        # Import WeatherData type for type checking
+        from agrr_core.entity.entities.weather_entity import WeatherData
+        
+        impacts = {
+            "high_temp": 0.0,
+            "low_temp": 0.0,
+            "frost": 0.0,
+            "sterility": 0.0,
+        }
+        
+        # High temperature stress
+        if self.is_high_temp_stress(weather.temperature_2m_mean):
+            impacts["high_temp"] = self.high_temp_daily_impact
+        
+        # Low temperature stress
+        if self.is_low_temp_stress(weather.temperature_2m_mean):
+            impacts["low_temp"] = self.low_temp_daily_impact
+        
+        # Frost risk
+        if self.is_frost_risk(weather.temperature_2m_min):
+            impacts["frost"] = self.frost_daily_impact
+        
+        # Sterility risk
+        if self.is_sterility_risk(weather.temperature_2m_max):
+            impacts["sterility"] = self.sterility_daily_impact
+        
+        return impacts
 
 

@@ -15,8 +15,8 @@ from .adapter import (
     WeatherPresenter,
     PredictionPresenter,
 )
-from .framework.repositories import (
-    PredictionStorageRepository,
+from .adapter.gateways import (
+    ForecastInMemoryGateway,
 )
 
 __version__ = "0.1.0"
@@ -36,7 +36,7 @@ __all__ = [
     "WeatherDataRequestDTO",
     "PredictionRequestDTO",
     # Adapters
-    "PredictionStorageRepository",
+    "ForecastInMemoryGateway",
     "WeatherMapper",
     "WeatherPresenter",
     "PredictionPresenter",

@@ -1,18 +1,18 @@
-"""Tests for prediction repository."""
+"""Tests for forecast in-memory gateway."""
 
 import pytest
 from datetime import datetime
 
-from agrr_core.framework.repositories.prediction_storage_repository import PredictionStorageRepository
+from agrr_core.adapter.gateways.forecast_inmemory_gateway import ForecastInMemoryGateway
 from agrr_core.entity import Forecast
 
 
-class TestPredictionStorageRepository:
-    """Test InMemoryPredictionRepository."""
+class TestForecastInMemoryGateway:
+    """Test ForecastInMemoryGateway."""
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.repository = PredictionStorageRepository()
+        self.repository = ForecastInMemoryGateway()
     
     @pytest.mark.asyncio
     async def test_save_and_get_forecast(self):

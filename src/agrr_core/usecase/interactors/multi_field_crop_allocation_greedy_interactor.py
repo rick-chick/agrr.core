@@ -580,12 +580,13 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         crops: List,
         optimization_objective: str,
     ) -> List[CropAllocation]:
-        """Select allocations using greedy allocation.
+        """Select allocations using greedy allocation with dynamic re-sorting.
         
-        Strategy: Sort candidates by profit (using unified objective) and select
-        greedily while respecting constraints.
+        Strategy: For each selection, re-evaluate remaining candidates with current
+        interaction rules and select the best one. This ensures continuous cultivation
+        penalties are properly considered.
         
-        Applies interaction rules (continuous cultivation) to adjust revenue.
+        Applies interaction rules (continuous cultivation) to adjust revenue dynamically.
         
         Note: optimization_objective parameter is kept for backward compatibility
         but the actual optimization uses the unified objective (profit maximization).
@@ -593,40 +594,70 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         # Track allocated resources
         field_schedules: Dict[str, List[CropAllocation]] = {}  # field_id -> allocations
         crop_areas: Dict[str, float] = {c.crop.crop_id: 0.0 for c in crops}
+        crop_revenues: Dict[str, float] = {c.crop.crop_id: 0.0 for c in crops}  # Track total revenue per crop
         
-        # Sort candidates using BaseOptimizer (unified objective)
-        sorted_candidates = self.sort_candidates(candidates, reverse=True)
-        
-        # Greedily select allocations with dynamic interaction rule evaluation
+        # Greedily select allocations with dynamic re-sorting
         allocations = []
+        remaining_candidates = candidates.copy()
         
-        for candidate in sorted_candidates:
-            # Apply interaction rules dynamically based on current field schedules
-            updated_candidate = self._apply_interaction_rules(candidate, field_schedules)
+        while remaining_candidates:
+            # Evaluate all remaining candidates with current field schedules
+            evaluated_candidates = []
+            for candidate in remaining_candidates:
+                # Apply interaction rules based on current state
+                updated_candidate = self._apply_interaction_rules(candidate, field_schedules)
+                evaluated_candidates.append((candidate, updated_candidate))
             
-            # Track crop allocation
-            crop_id = updated_candidate.crop.crop_id            
-            # Check time overlap with existing allocations in the same field
-            field_id = updated_candidate.field.field_id
-            if field_id not in field_schedules:
-                field_schedules[field_id] = []
+            # Sort by profit (with interaction impact applied)
+            evaluated_candidates.sort(
+                key=lambda x: self._get_candidate_sort_key(x[1]),
+                reverse=True
+            )
             
-            has_overlap = False
-            for existing in field_schedules[field_id]:
-                if self._time_overlaps(updated_candidate, existing):
-                    has_overlap = True
-                    break
+            # Try to allocate the best candidates
+            allocated = False
+            for original_candidate, updated_candidate in evaluated_candidates:
+                # Check time overlap with existing allocations in the same field
+                field_id = updated_candidate.field.field_id
+                if field_id not in field_schedules:
+                    field_schedules[field_id] = []
+                
+                has_overlap = False
+                for existing in field_schedules[field_id]:
+                    if self._time_overlaps(updated_candidate, existing):
+                        has_overlap = True
+                        break
+                
+                if has_overlap:
+                    continue  # Skip this candidate
+                
+                # Check max_revenue constraint (total revenue cap for this crop)
+                crop_id = updated_candidate.crop.crop_id
+                if updated_candidate.crop.max_revenue is not None and updated_candidate.revenue is not None:
+                    potential_total_revenue = crop_revenues.get(crop_id, 0.0) + updated_candidate.revenue
+                    if potential_total_revenue > updated_candidate.crop.max_revenue:
+                        continue  # Skip this candidate - would exceed max_revenue
+                
+                # Found a feasible candidate - allocate it
+                allocation = self._candidate_to_allocation(updated_candidate)
+                allocations.append(allocation)
+                field_schedules[field_id].append(allocation)
+                crop_areas[crop_id] += allocation.area_used
+                if allocation.expected_revenue is not None:
+                    crop_revenues[crop_id] += allocation.expected_revenue
+                remaining_candidates.remove(original_candidate)
+                allocated = True
+                break
             
-            if has_overlap:
-                continue  # Cannot allocate due to time conflict
-            
-            # Create allocation (using updated candidate with interaction impact)
-            allocation = self._candidate_to_allocation(updated_candidate)
-            allocations.append(allocation)
-            field_schedules[field_id].append(allocation)
-            crop_areas[crop_id] += allocation.area_used
+            # If no candidate could be allocated, stop
+            if not allocated:
+                break
         
         return allocations
+    
+    def _get_candidate_sort_key(self, candidate: AllocationCandidate) -> float:
+        """Get sort key for a candidate (profit rate with interaction impact applied)."""
+        return candidate.profit_rate
     
     def _time_overlaps(self, alloc1, alloc2) -> bool:
         """Check if two allocations overlap in time.

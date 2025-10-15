@@ -236,14 +236,16 @@ class CropProfileLLMGateway(CropProfileGateway):
                 "low_stress_threshold": None,
                 "high_stress_threshold": None,
                 "frost_threshold": None,
-                "sterility_risk_threshold": None
+                "sterility_risk_threshold": None,
+                "max_temperature": None
             },
             "sunshine": {
                 "minimum_sunshine_hours": None,
                 "target_sunshine_hours": None
             },
             "thermal": {
-                "required_gdd": None
+                "required_gdd": None,
+                "harvest_start_gdd": None
             }
         }
         
@@ -266,33 +268,77 @@ class CropProfileLLMGateway(CropProfileGateway):
         query = f"""作物: {crop_name}
 品種: {variety}
 
-この作物・品種について、以下の経済情報を調査してください：
-1. area_per_unit: 1単位あたりの栽培面積（㎡）
-   - 例: トマトの場合、1株あたり何㎡必要か
-   - 標準的な栽培密度から計算してください
-2. revenue_per_area: 1㎡あたりの収益（円/㎡）
-   - 例: 平均的な市場価格と収量から計算した㎡あたりの収益
-   - 一般的な露地栽培または施設栽培での標準値を使用してください
+この作物・品種について、以下の経済情報を段階的に調査してください：
 
-数値のみを返してください（説明文は不要）。"""
+### 調査手順：
+1. **収量調査**: 標準的な露地栽培での単位面積あたり収量（kg/m²）を文献から調査
+   - 農林水産省の作物統計や試験場データを参照
+   
+2. **市場価格調査**: 卸売市場での中値・平均価格（円/kg）を調査
+   - 農林水産省「野菜生産出荷統計」の卸売価格データを参照
+   - 東京都中央卸売市場の年間平均価格（中値）を参照
+   - 注意: 生産者価格ではなく、卸売市場での取引価格を使用
+   - 卸売市場価格は小売価格の約60-80%の水準
+   
+3. **収益計算**: revenue_per_area = 収量(kg/m²) × 単価(円/kg)
+
+### 出力項目：
+1. area_per_unit: 1株あたりの栽培面積（㎡/株）
+   - 標準的な栽培密度（株数/m²）から計算
+   
+2. yield_per_area: 露地栽培での標準収量（kg/m²）
+   
+3. market_price: 卸売市場での中値・平均取引価格（円/kg）
+   - 東京都中央卸売市場の年間平均価格（中値）
+   - 卸売市場での実際の取引価格
+   
+4. revenue_per_area: 1㎡あたりの売上収益（円/m²）
+   - 計算式: yield_per_area × market_price
+   - 注意: 売上（gross revenue）であり、経費を差し引く前の金額
+
+### 調査時の注意：
+- 収量と単価を別々に調査し、積算して収益を算出すること
+- 市場価格は農林水産省の公式統計を優先すること
+- 露地栽培の標準的な収量を使用（施設栽培の高収量は含めない）"""
 
         structure = {
             "area_per_unit": None,  # m² per unit
-            "revenue_per_area": None  # yen per m²
+            "yield_per_area": None,  # kg per m² (intermediate)
+            "market_price": None,  # yen per kg (intermediate)
+            "revenue_per_area": None  # yen per m² (calculated)
         }
         
         instruction = """
         作物・品種の経済情報を調査し、JSON形式で返してください。
-        - area_per_unit: 1単位（1株、1本など）あたりの栽培面積（㎡）
-        - revenue_per_area: 1㎡あたりの収益（円/㎡）
         
-        信頼できる農業資料や標準的な栽培データに基づいて数値を算出してください。
-        数値は小数点以下も含めて正確に記載してください。
+        調査手順：
+        1. yield_per_area: 露地栽培での標準収量（kg/m²）を文献から調査
+        2. market_price: 卸売市場での平均単価（円/kg）を調査
+        3. revenue_per_area: 上記2つを掛け算して算出（円/m²）
+        4. area_per_unit: 1株あたりの栽培面積（㎡/株）
+        
+        注意：
+        - 収益は売上（gross revenue）であり、経費控除前の金額
+        - 露地栽培の標準的な値を使用すること
+        - 信頼できる農業統計や市場データに基づくこと
         """
         
         result = await self.llm_client.struct(query, structure, instruction)
         debug_print(f"Crop economics result: {result['data']}")
-        return result.get("data", {})
+        
+        # Extract data - handle nested structure if LLM returns it
+        data = result.get("data", {})
+        if "economic_info" in data:
+            # LLM returned nested structure - extract the inner data
+            economic_info = data["economic_info"]
+            return {
+                "area_per_unit": economic_info.get("area_per_unit"),
+                "yield_per_area": economic_info.get("yield_per_area"),
+                "market_price": economic_info.get("market_price"),
+                "revenue_per_area": economic_info.get("revenue_per_area")
+            }
+        
+        return data
     
     async def extract_crop_family(self, crop_name: str, variety: str) -> Dict[str, Any]:
         """Extract crop family (科) information.
@@ -387,8 +433,10 @@ class CropProfileLLMGateway(CropProfileGateway):
             
             # Thermal requirement
             thermal_data = requirements.get("thermal", {})
+            harvest_start_gdd = thermal_data.get("harvest_start_gdd")
             thermal = ThermalRequirement(
-                required_gdd=float(thermal_data.get("required_gdd", 0.0))
+                required_gdd=float(thermal_data.get("required_gdd", 0.0)),
+                harvest_start_gdd=float(harvest_start_gdd) if harvest_start_gdd is not None else None
             )
             
             stage_requirement = StageRequirement(

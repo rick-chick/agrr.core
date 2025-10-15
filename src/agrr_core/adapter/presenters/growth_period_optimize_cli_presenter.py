@@ -65,12 +65,26 @@ class GrowthPeriodOptimizeCliPresenter(GrowthPeriodOptimizeOutputPort):
         print(f"  Completion Date: {self.response.completion_date.strftime('%Y-%m-%d')}")
         print(f"  Growth Days: {self.response.growth_days} days")
         print(f"  Total Cost: ¥{self.response.total_cost:,.0f}")
+        if self.response.revenue is not None:
+            print(f"  Total Revenue: ¥{self.response.revenue:,.0f}")
+            print(f"  Profit: ¥{self.response.profit:,.0f}")
         print()
 
         # Candidate comparison table
         print("All Candidates:")
-        print(f"{'Start Date':<15} {'Completion':<15} {'Days':>6} {'Total Cost':>15} {'Status':>10}")
-        print("-" * 66)
+        
+        # Check if revenue is available for any candidate
+        has_revenue = any(
+            c.completion_date and c.crop is not None 
+            for c in self.response.candidates
+        )
+        
+        if has_revenue:
+            print(f"{'Start Date':<15} {'Completion':<15} {'Days':>6} {'Cost':>12} {'Revenue':>12} {'Profit':>12} {'Status':>10}")
+            print("-" * 93)
+        else:
+            print(f"{'Start Date':<15} {'Completion':<15} {'Days':>6} {'Total Cost':>15} {'Status':>10}")
+            print("-" * 66)
 
         for candidate in self.response.candidates:
             start_str = candidate.start_date.strftime("%Y-%m-%d")
@@ -79,16 +93,31 @@ class GrowthPeriodOptimizeCliPresenter(GrowthPeriodOptimizeOutputPort):
                 completion_str = candidate.completion_date.strftime("%Y-%m-%d")
                 days_str = str(candidate.growth_days)
                 cost_str = f"¥{candidate.total_cost:,.0f}"
+                
+                if has_revenue and candidate.crop is not None:
+                    metrics = candidate.get_metrics()
+                    revenue_str = f"¥{metrics.revenue:,.0f}" if metrics.revenue else "N/A"
+                    profit_str = f"¥{metrics.profit:,.0f}"
+                else:
+                    revenue_str = None
+                    profit_str = None
             else:
                 completion_str = "N/A"
                 days_str = "N/A"
                 cost_str = "N/A"
+                revenue_str = None
+                profit_str = None
             
             status_str = "← OPTIMAL" if candidate.is_optimal else ""
             
-            print(
-                f"{start_str:<15} {completion_str:<15} {days_str:>6} {cost_str:>15} {status_str:>10}"
-            )
+            if has_revenue and revenue_str:
+                print(
+                    f"{start_str:<15} {completion_str:<15} {days_str:>6} {cost_str:>12} {revenue_str:>12} {profit_str:>12} {status_str:>10}"
+                )
+            else:
+                print(
+                    f"{start_str:<15} {completion_str:<15} {days_str:>6} {cost_str:>15} {status_str:>10}"
+                )
 
     def _present_json(self) -> None:
         """Present results in JSON format."""

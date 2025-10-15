@@ -83,7 +83,7 @@ class CandidateResultDTO:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        return {
+        result = {
             "start_date": self.start_date.isoformat(),
             "completion_date": self.completion_date.isoformat() if self.completion_date else None,
             "growth_days": self.growth_days,
@@ -92,6 +92,14 @@ class CandidateResultDTO:
             "yield_factor": self.yield_factor,
             "yield_loss_percentage": (1.0 - self.yield_factor) * 100.0,
         }
+        
+        # Add revenue and profit if available
+        if self.growth_days is not None and self.field is not None:
+            metrics = self.get_metrics()
+            result["revenue"] = metrics.revenue
+            result["profit"] = metrics.profit
+        
+        return result
 
 
 @dataclass
@@ -104,6 +112,8 @@ class OptimalGrowthPeriodResponseDTO:
     completion_date: datetime
     growth_days: int
     total_cost: float
+    revenue: Optional[float]
+    profit: float
     daily_fixed_cost: float
     field: Field
     candidates: List[CandidateResultDTO]
@@ -117,6 +127,8 @@ class OptimalGrowthPeriodResponseDTO:
             "completion_date": self.completion_date.isoformat(),
             "growth_days": self.growth_days,
             "total_cost": self.total_cost,
+            "revenue": self.revenue,
+            "profit": self.profit,
             "daily_fixed_cost": self.daily_fixed_cost,
             "field": {
                 "field_id": self.field.field_id,

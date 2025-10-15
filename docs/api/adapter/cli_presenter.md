@@ -125,26 +125,25 @@ def display_weather_data_json(self, weather_data_list: WeatherDataListResponseDT
 **出力例**:
 ```json
 {
-  "success": true,
-  "data": {
-    "data": [
-      {
-        "time": "2024-01-15",
-        "temperature_2m_max": 15.5,
-        "temperature_2m_min": 8.2,
-        "temperature_2m_mean": 11.8,
-        "precipitation_sum": 5.0,
-        "sunshine_duration": 28800.0,
-        "sunshine_hours": 8.0
-      }
-    ],
-    "total_count": 1,
-    "location": {
-      "latitude": 35.6762,
-      "longitude": 139.6503,
-      "elevation": 37.0,
-      "timezone": "Asia/Tokyo"
+  "data": [
+    {
+      "time": "2024-01-15",
+      "temperature_2m_max": 15.5,
+      "temperature_2m_min": 8.2,
+      "temperature_2m_mean": 11.8,
+      "precipitation_sum": 5.0,
+      "sunshine_duration": 28800.0,
+      "sunshine_hours": 8.0,
+      "wind_speed_10m": 10.5,
+      "weather_code": 0
     }
+  ],
+  "total_count": 1,
+  "location": {
+    "latitude": 35.6762,
+    "longitude": 139.6503,
+    "elevation": 37.0,
+    "timezone": "Asia/Tokyo"
   }
 }
 ```

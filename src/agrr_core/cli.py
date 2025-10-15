@@ -101,7 +101,8 @@ Input File Formats:
          "temperature_2m_min": 15.2,
          "temperature_2m_mean": 20.3,
          "precipitation_sum": 0.0,
-         "sunshine_duration": 28800.0
+         "sunshine_duration": 28800.0,
+         "sunshine_hours": 8.0
        }
      ]
    }

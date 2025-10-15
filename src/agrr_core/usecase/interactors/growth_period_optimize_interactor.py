@@ -48,6 +48,9 @@ from agrr_core.usecase.ports.input.growth_period_optimize_input_port import (
 from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
+from agrr_core.entity.value_objects.yield_impact_accumulator import (
+    YieldImpactAccumulator,
+)
 from agrr_core.usecase.interactors.base_optimizer import BaseOptimizer
 from agrr_core.usecase.gateways.weather_interpolator import WeatherInterpolator
 
@@ -141,6 +144,9 @@ class GrowthPeriodOptimizeInteractor(
                 # Create new candidate with is_optimal=True
                 object.__setattr__(candidate, 'is_optimal', True)
         
+        # Calculate revenue and profit for optimal candidate
+        optimal_metrics = optimal_candidate.get_metrics()
+        
         return OptimalGrowthPeriodResponseDTO(
             crop_name=crop_profile.crop.name,
             variety=crop_profile.crop.variety,
@@ -148,6 +154,8 @@ class GrowthPeriodOptimizeInteractor(
             completion_date=optimal_candidate.completion_date,
             growth_days=optimal_candidate.growth_days,
             total_cost=optimal_candidate.total_cost,
+            revenue=optimal_metrics.revenue,
+            profit=optimal_metrics.profit,
             daily_fixed_cost=daily_fixed_cost,
             field=request.field,
             candidates=candidates,
@@ -231,6 +239,15 @@ class GrowthPeriodOptimizeInteractor(
             completion_date = datetime.combine(sorted_dates[window_end_idx - 1], datetime.min.time())
             if completion_date <= request.evaluation_period_end:
                 growth_days = (completion_date - current_start).days + 1
+                
+                # Calculate yield_factor for this candidate
+                yield_factor = self._calculate_yield_factor_for_period(
+                    current_start,
+                    completion_date,
+                    weather_by_date,
+                    crop_profile.stage_requirements
+                )
+                
                 # Create candidate with field and crop entities (calculation happens in get_metrics())
                 results.append(CandidateResultDTO(
                     start_date=current_start,
@@ -238,7 +255,8 @@ class GrowthPeriodOptimizeInteractor(
                     growth_days=growth_days,
                     field=request.field,
                     crop=crop,
-                    is_optimal=False
+                    is_optimal=False,
+                    yield_factor=yield_factor
                 ))
                 gdd_per_candidate.append(accumulated_gdd)
             else:
@@ -280,6 +298,15 @@ class GrowthPeriodOptimizeInteractor(
                 completion_date = datetime.combine(sorted_dates[window_end_idx - 1], datetime.min.time())
                 if completion_date <= request.evaluation_period_end:
                     growth_days = (completion_date - current_start).days + 1
+                    
+                    # Calculate yield_factor for this candidate
+                    yield_factor = self._calculate_yield_factor_for_period(
+                        current_start,
+                        completion_date,
+                        weather_by_date,
+                        crop_profile.stage_requirements
+                    )
+                    
                     # Create candidate with field and crop entities (calculation happens in get_metrics())
                     results.append(CandidateResultDTO(
                         start_date=current_start,
@@ -287,7 +314,8 @@ class GrowthPeriodOptimizeInteractor(
                         growth_days=growth_days,
                         field=request.field,
                         crop=crop,
-                        is_optimal=False
+                        is_optimal=False,
+                        yield_factor=yield_factor
                     ))
                     gdd_per_candidate.append(accumulated_gdd)
                 else:
@@ -328,6 +356,47 @@ class GrowthPeriodOptimizeInteractor(
         # Return sorted valid candidates followed by invalid candidates
         return valid_results + invalid_results
 
+    def _calculate_yield_factor_for_period(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+        weather_by_date: dict,
+        stage_requirements: List
+    ) -> float:
+        """Calculate yield_factor for a cultivation period.
+        
+        Args:
+            start_date: Cultivation start date
+            end_date: Cultivation end date
+            weather_by_date: Dict mapping date to WeatherData
+            stage_requirements: List of StageRequirement entities
+            
+        Returns:
+            Yield factor (0-1): 1.0 = no impact, 0.0 = complete loss
+        """
+        accumulator = YieldImpactAccumulator()
+        current_date = start_date.date()
+        end_date_only = end_date.date()
+        
+        # Accumulate temperature stress impacts for each day
+        while current_date <= end_date_only:
+            if current_date in weather_by_date:
+                weather = weather_by_date[current_date]
+                
+                # Find the appropriate temperature profile for this date
+                # For now, use a simple approach: use the first stage's temperature profile
+                # TODO: In the future, track stage progression and use stage-specific profiles
+                temperature_profile = stage_requirements[0].temperature
+                
+                # Calculate daily stress impacts
+                daily_impacts = temperature_profile.calculate_daily_stress_impacts(weather)
+                accumulator.accumulate_daily_impact(daily_impacts)
+            
+            # Move to next day
+            current_date = current_date + timedelta(days=1)
+        
+        return accumulator.get_yield_factor()
+    
     async def _evaluate_candidates(
         self, request: OptimalGrowthPeriodRequestDTO, candidate_start_dates: List[datetime]
     ) -> List[CandidateResultDTO]:

@@ -253,9 +253,18 @@ class TemperatureProfile:
             "sterility": 0.0,
         }
         
-        # High temperature stress
-        if self.is_high_temp_stress(weather.temperature_2m_mean):
-            impacts["high_temp"] = self.high_temp_daily_impact
+        # High temperature stress (use max temperature for daily peak)
+        # Prorate the impact based on the proportion of time above threshold
+        if self.is_high_temp_stress(weather.temperature_2m_max):
+            # Calculate the proportion of day above threshold
+            # Assumption: temperature varies linearly from min to max
+            temp_range = weather.temperature_2m_max - weather.temperature_2m_min
+            if temp_range > 0 and self.high_stress_threshold is not None:
+                temp_above_threshold = weather.temperature_2m_max - self.high_stress_threshold
+                stress_proportion = min(1.0, temp_above_threshold / temp_range)
+                impacts["high_temp"] = self.high_temp_daily_impact * stress_proportion
+            else:
+                impacts["high_temp"] = self.high_temp_daily_impact
         
         # Low temperature stress
         if self.is_low_temp_stress(weather.temperature_2m_mean):

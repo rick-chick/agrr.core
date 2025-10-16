@@ -1,16 +1,29 @@
-"""Multi-field crop allocation interactor using greedy algorithm with local search.
+"""Multi-field crop allocation interactor using greedy or DP algorithm with local search.
 
-This interactor implements the recommended approach: Greedy + Local Search (Hill Climbing).
+This interactor implements two allocation strategies:
+1. Greedy + Local Search (Hill Climbing) - fast heuristic approach
+2. DP (per-field) + Local Search - optimal per-field solution with global adjustment
 
-Algorithm:
+Greedy Algorithm:
 1. Generate candidates: For each field × crop × start date, generate allocation candidates
 2. Greedy allocation: Select allocations in profit-rate descending order
 3. Local search: Improve solution using Swap, Shift, and Replace operations
 4. Return optimized solution
 
-Time Complexity: O(n log n + k·n²) where n is number of candidates, k is iterations
-Expected Quality: 85-95% of optimal solution
-Computation Time: 5-30 seconds for typical problems
+DP Algorithm:
+1. Generate candidates: For each field × crop × start date, generate allocation candidates
+2. Per-field DP: Solve weighted interval scheduling for each field independently
+3. Revenue recalculation: Recalculate revenue with market demand budget tracking
+4. Local search: Improve solution using Swap, Shift, and Replace operations
+5. Return optimized solution
+
+Time Complexity: 
+- Greedy: O(n log n + k·n²) where n is number of candidates, k is LS iterations
+- DP: O(n log n + m·n² + k·n²) where m is number of fields, k is LS iterations
+
+Expected Quality: 
+- Greedy: 85-95% of optimal solution
+- DP: 95-100% per-field optimal (global optimality depends on market demand limits)
 
 Optimizations (Phase 1-3):
 - Phase 1: Configuration, neighbor sampling, candidate filtering
@@ -21,6 +34,7 @@ Optimizations (Phase 1-3):
 import time
 import uuid
 import asyncio
+import dataclasses
 from datetime import datetime
 from typing import List, Dict, Optional
 from dataclasses import dataclass
@@ -47,6 +61,7 @@ from agrr_core.usecase.interactors.base_optimizer import BaseOptimizer
 from agrr_core.entity.value_objects.optimization_objective import OptimizationMetrics
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.usecase.services.interaction_rule_service import InteractionRuleService
+from agrr_core.usecase.services.alns_optimizer_service import ALNSOptimizer
 
 
 @dataclass
@@ -64,57 +79,72 @@ class AllocationCandidate:
     growth_days: int
     accumulated_gdd: float
     area_used: float  # Allocated area (m²)
-    previous_crop: Optional[Crop] = None  # Previous crop for continuous cultivation check
-    interaction_impact: float = 1.0  # Impact from interaction rules
     
-    def get_metrics(self) -> OptimizationMetrics:
+    def get_metrics(
+        self, 
+        current_allocations: Optional[List[CropAllocation]] = None,
+        field_schedules: Optional[Dict[str, List[CropAllocation]]] = None,
+        interaction_rules: Optional[List] = None
+    ) -> OptimizationMetrics:
         """Get optimization metrics with raw calculation parameters (implements Optimizable protocol).
         
         Returns OptimizationMetrics with all raw data needed for calculation.
         The actual cost/revenue/profit calculations happen inside OptimizationMetrics.
         
-        Applies interaction_impact to revenue_per_area for continuous cultivation effects.
+        Uses OptimizationMetrics.create_for_allocation() which automatically calculates:
+        - crop_cumulative_revenue from current_allocations
+        - interaction_impact from field_schedules and interaction_rules
         
+        This is the SINGLE SOURCE OF TRUTH for all profit-related calculations.
+        
+        Args:
+            current_allocations: List of currently selected allocations (for market demand tracking)
+            field_schedules: Dict mapping field_id to allocations (for interaction rules)
+            interaction_rules: List of interaction rules (for continuous cultivation, etc.)
+            
         Returns:
             OptimizationMetrics containing raw parameters for calculation
         """
-        # Apply interaction impact to revenue
-        adjusted_revenue_per_area = None
-        if self.crop.revenue_per_area is not None:
-            adjusted_revenue_per_area = self.crop.revenue_per_area * self.interaction_impact
-        
-        adjusted_max_revenue = None
-        if self.crop.max_revenue is not None:
-            adjusted_max_revenue = self.crop.max_revenue * self.interaction_impact
-        
-        return OptimizationMetrics(
+        # Use factory method - all calculations are performed internally
+        return OptimizationMetrics.create_for_allocation(
             area_used=self.area_used,
-            revenue_per_area=adjusted_revenue_per_area,
-            max_revenue=adjusted_max_revenue,
+            revenue_per_area=self.crop.revenue_per_area,
+            max_revenue=self.crop.max_revenue,
             growth_days=self.growth_days,
             daily_fixed_cost=self.field.daily_fixed_cost,
+            crop_id=self.crop.crop_id,
+            crop=self.crop,
+            field=self.field,
+            start_date=self.start_date,
+            current_allocations=current_allocations,
+            field_schedules=field_schedules,
+            interaction_rules=interaction_rules,
         )
     
-    @property
-    def profit(self) -> float:
-        """Get profit (convenience property)."""
-        return self.get_metrics().profit
-    
-    @property
-    def profit_rate(self) -> float:
-        """Get profit rate (convenience property)."""
-        metrics = self.get_metrics()
-        return (metrics.profit / metrics.cost) if metrics.cost > 0 else 0.0
+    # ===== Baseline Properties (NO CONTEXT - for filtering only) =====
+    # These should NOT be used for final calculations
+    # Use OptimizationMetrics.create_for_allocation() with context instead
     
     @property
     def cost(self) -> float:
-        """Get cost (convenience property)."""
+        """Get baseline cost (NO CONTEXT - for pre-allocation filtering only)."""
         return self.get_metrics().cost
     
     @property
     def revenue(self) -> Optional[float]:
-        """Get revenue (convenience property)."""
+        """Get baseline revenue (NO CONTEXT - for pre-allocation filtering only)."""
         return self.get_metrics().revenue
+    
+    @property
+    def profit(self) -> float:
+        """Get baseline profit (NO CONTEXT - for pre-allocation filtering only)."""
+        return self.get_metrics().profit
+    
+    @property
+    def profit_rate(self) -> float:
+        """Get baseline profit rate (NO CONTEXT - for pre-allocation filtering only)."""
+        metrics = self.get_metrics()
+        return (metrics.profit / metrics.cost) if metrics.cost > 0 else 0.0
 
 
 class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate]):
@@ -160,6 +190,9 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         self.interaction_rule_service = InteractionRuleService(
             rules=interaction_rules or []
         )
+        
+        # Create ALNS optimizer if enabled
+        self.alns_optimizer = ALNSOptimizer(self.config) if self.config.enable_alns else None
 
     async def execute(
         self,
@@ -167,19 +200,25 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         enable_local_search: bool = True,
         max_local_search_iterations: Optional[int] = None,
         config: Optional[OptimizationConfig] = None,
+        algorithm: str = "dp",
     ) -> MultiFieldCropAllocationResponseDTO:
         """Execute multi-field crop allocation optimization.
         
         Args:
             request: Allocation request
-            enable_local_search: If True, apply local search after greedy phase
+            enable_local_search: If True, apply local search after initial allocation
             max_local_search_iterations: Maximum iterations for local search (overrides config)
             config: Optimization configuration (overrides instance config)
+            algorithm: Algorithm to use for initial allocation ("dp" or "greedy"). Default: "dp"
             
         Returns:
             Optimization response with allocation solution
         """
         start_time = time.time()
+        
+        # Validate algorithm parameter
+        if algorithm not in ["greedy", "dp"]:
+            raise ValueError(f"Invalid algorithm: {algorithm}. Must be 'greedy' or 'dp'")
         
         # Use provided config or instance config
         optimization_config = config or self.config
@@ -218,12 +257,17 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 "- Adjust planning start date to a suitable season for your crops"
             )
         
-        # Phase 2: Greedy allocation
-        allocations = self._greedy_allocation(
-            candidates, 
-            crops,
-            request.optimization_objective
-        )
+        # Phase 2: Initial allocation (Greedy or DP)
+        if algorithm == "dp":
+            allocations = self._dp_allocation(candidates, crops, fields)
+            algorithm_name = "DP"
+        else:  # greedy
+            allocations = self._greedy_allocation(
+                candidates, 
+                crops,
+                request.optimization_objective
+            )
+            algorithm_name = "Greedy"
         
         # Phase 3: Local search (optional)
         if enable_local_search:
@@ -234,6 +278,11 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 config=optimization_config,
                 time_limit=request.max_computation_time
             )
+            # Update algorithm name based on which search was used
+            if optimization_config.enable_alns:
+                algorithm_name += " + ALNS"
+            else:
+                algorithm_name += " + Local Search"
         
         # Phase 4: Build result
         computation_time = time.time() - start_time
@@ -241,7 +290,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             allocations=allocations,
             fields=fields,
             computation_time=computation_time,
-            algorithm_used="Greedy + Local Search" if enable_local_search else "Greedy",
+            algorithm_used=algorithm_name,
         )
         
         return MultiFieldCropAllocationResponseDTO(optimization_result=result)
@@ -319,19 +368,26 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                         
                         # ===== Phase 1: Quality Filtering =====
                         if cfg.enable_candidate_filtering:
+                            # Get baseline metrics (no context - this is pre-allocation filtering)
+                            baseline_metrics = candidate.get_metrics()
+                            
                             # Filter 1: Minimum profit rate
-                            if candidate.profit_rate < cfg.min_profit_rate_threshold:
+                            cost = baseline_metrics.cost
+                            profit = baseline_metrics.profit
+                            profit_rate = (profit / cost) if cost > 0 else 0.0
+                            if profit_rate < cfg.min_profit_rate_threshold:
                                 continue  # Skip clearly bad candidates
                             
                             # Filter 2: Minimum revenue/cost ratio
-                            if candidate.revenue is not None and candidate.cost > 0:
-                                revenue_cost_ratio = candidate.revenue / candidate.cost
+                            revenue = baseline_metrics.revenue
+                            if revenue is not None and cost > 0:
+                                revenue_cost_ratio = revenue / cost
                                 if revenue_cost_ratio < cfg.min_revenue_cost_ratio:
                                     continue
                             
                             # Filter 3: Minimum absolute profit (for profit maximization)
                             if request.optimization_objective == "maximize_profit":
-                                if candidate.profit is not None and candidate.profit < 0:
+                                if profit < 0:
                                     continue  # Skip unprofitable candidates
                         
                         candidates.append(candidate)
@@ -461,12 +517,19 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 
                 # Quality filtering
                 if config.enable_candidate_filtering:
-                    if candidate.profit_rate < config.min_profit_rate_threshold:
+                    # Get baseline metrics (no context - this is pre-allocation filtering)
+                    baseline_metrics = candidate.get_metrics()
+                    cost = baseline_metrics.cost
+                    profit = baseline_metrics.profit
+                    revenue = baseline_metrics.revenue
+                    profit_rate = (profit / cost) if cost > 0 else 0.0
+                    
+                    if profit_rate < config.min_profit_rate_threshold:
                         continue
-                    if candidate.revenue is not None and candidate.cost > 0:
-                        if candidate.revenue / candidate.cost < config.min_revenue_cost_ratio:
+                    if revenue is not None and cost > 0:
+                        if revenue / cost < config.min_revenue_cost_ratio:
                             continue
-                    if request.optimization_objective == "maximize_profit" and candidate.profit is not None and candidate.profit < 0:
+                    if request.optimization_objective == "maximize_profit" and profit < 0:
                         continue  # Skip unprofitable candidates
                 
                 candidates.append(candidate)
@@ -499,80 +562,6 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         
         return filtered_candidates
 
-    def _get_previous_crop(
-        self,
-        field_id: str,
-        start_date: datetime,
-        field_schedules: Dict[str, List[CropAllocation]]
-    ) -> Optional[Crop]:
-        """Get the previous crop in the same field before the given start date.
-        
-        Args:
-            field_id: Field ID to check
-            start_date: Start date of current allocation
-            field_schedules: Current field schedules
-            
-        Returns:
-            Previous crop if exists, None otherwise
-        """
-        if field_id not in field_schedules:
-            return None
-        
-        # Find the most recent allocation that completes before start_date
-        previous_allocations = [
-            alloc for alloc in field_schedules[field_id]
-            if alloc.completion_date <= start_date
-        ]
-        
-        if not previous_allocations:
-            return None
-        
-        # Get the most recent one
-        most_recent = max(previous_allocations, key=lambda a: a.completion_date)
-        return most_recent.crop
-    
-    def _apply_interaction_rules(
-        self,
-        candidate: AllocationCandidate,
-        field_schedules: Dict[str, List[CropAllocation]]
-    ) -> AllocationCandidate:
-        """Apply interaction rules to a candidate.
-        
-        Calculates continuous cultivation impact based on previous crop
-        and updates candidate's interaction_impact.
-        
-        Args:
-            candidate: Allocation candidate to evaluate
-            field_schedules: Current field schedules
-            
-        Returns:
-            Updated candidate with interaction_impact applied
-        """
-        # Get previous crop
-        previous_crop = self._get_previous_crop(
-            field_id=candidate.field.field_id,
-            start_date=candidate.start_date,
-            field_schedules=field_schedules
-        )
-        
-        # Calculate continuous cultivation impact
-        impact = self.interaction_rule_service.get_continuous_cultivation_impact(
-            current_crop=candidate.crop,
-            previous_crop=previous_crop
-        )
-        
-        # Create new candidate with updated impact
-        return AllocationCandidate(
-            field=candidate.field,
-            crop=candidate.crop,
-            start_date=candidate.start_date,
-            completion_date=candidate.completion_date,
-            growth_days=candidate.growth_days,
-            accumulated_gdd=candidate.accumulated_gdd,
-            area_used=candidate.area_used,
-            previous_crop=previous_crop,
-            interaction_impact=impact
-        )
     
     def _greedy_allocation(
         self,
@@ -594,58 +583,61 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         # Track allocated resources
         field_schedules: Dict[str, List[CropAllocation]] = {}  # field_id -> allocations
         crop_areas: Dict[str, float] = {c.crop.crop_id: 0.0 for c in crops}
-        crop_revenues: Dict[str, float] = {c.crop.crop_id: 0.0 for c in crops}  # Track total revenue per crop
+        # Note: No need to manually track crop_revenues!
+        # OptimizationMetrics.calculate_crop_cumulative_revenue() handles this (single source of truth)
         
         # Greedily select allocations with dynamic re-sorting
         allocations = []
         remaining_candidates = candidates.copy()
         
         while remaining_candidates:
-            # Evaluate all remaining candidates with current field schedules
-            evaluated_candidates = []
-            for candidate in remaining_candidates:
-                # Apply interaction rules based on current state
-                updated_candidate = self._apply_interaction_rules(candidate, field_schedules)
-                evaluated_candidates.append((candidate, updated_candidate))
+            # Evaluate all remaining candidates with current state
+            # get_metrics() will automatically calculate:
+            # - cumulative revenue (market demand tracking)
+            # - interaction impact (continuous cultivation, rotation, etc.)
+            # This is the SINGLE SOURCE OF TRUTH for all profit calculations
             
-            # Sort by profit (with interaction impact applied)
-            evaluated_candidates.sort(
-                key=lambda x: self._get_candidate_sort_key(x[1]),
+            # Sort by profit with current context
+            # Pass allocations, field_schedules, and interaction_rules
+            remaining_candidates.sort(
+                key=lambda x: self._get_candidate_sort_key_with_full_context(
+                    x, allocations, field_schedules, self.interaction_rule_service.rules
+                ),
                 reverse=True
             )
             
             # Try to allocate the best candidates
             allocated = False
-            for original_candidate, updated_candidate in evaluated_candidates:
+            for candidate in remaining_candidates:
                 # Check time overlap with existing allocations in the same field
-                field_id = updated_candidate.field.field_id
+                field_id = candidate.field.field_id
                 if field_id not in field_schedules:
                     field_schedules[field_id] = []
                 
                 has_overlap = False
                 for existing in field_schedules[field_id]:
-                    if self._time_overlaps(updated_candidate, existing):
+                    if self._time_overlaps(candidate, existing):
                         has_overlap = True
                         break
                 
                 if has_overlap:
                     continue  # Skip this candidate
                 
-                # Check max_revenue constraint (total revenue cap for this crop)
-                crop_id = updated_candidate.crop.crop_id
-                if updated_candidate.crop.max_revenue is not None and updated_candidate.revenue is not None:
-                    potential_total_revenue = crop_revenues.get(crop_id, 0.0) + updated_candidate.revenue
-                    if potential_total_revenue > updated_candidate.crop.max_revenue:
-                        continue  # Skip this candidate - would exceed max_revenue
-                
                 # Found a feasible candidate - allocate it
-                allocation = self._candidate_to_allocation(updated_candidate)
+                # All calculations (market demand, interaction impact) handled by get_metrics()
+                crop_id = candidate.crop.crop_id
+                # Convert candidate to allocation with full context
+                allocation = self._candidate_to_allocation(
+                    candidate, allocations, field_schedules, self.interaction_rule_service.rules
+                )
                 allocations.append(allocation)
                 field_schedules[field_id].append(allocation)
                 crop_areas[crop_id] += allocation.area_used
-                if allocation.expected_revenue is not None:
-                    crop_revenues[crop_id] += allocation.expected_revenue
-                remaining_candidates.remove(original_candidate)
+                
+                # No need to manually update crop_revenues or interaction_impact!
+                # Next iteration will automatically calculate them
+                
+                remaining_candidates.remove(candidate)
                 allocated = True
                 break
             
@@ -655,9 +647,313 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         
         return allocations
     
-    def _get_candidate_sort_key(self, candidate: AllocationCandidate) -> float:
-        """Get sort key for a candidate (profit rate with interaction impact applied)."""
-        return candidate.profit_rate
+    def _get_candidate_sort_key_with_full_context(
+        self, 
+        candidate: AllocationCandidate, 
+        current_allocations: List[CropAllocation],
+        field_schedules: Dict[str, List[CropAllocation]],
+        interaction_rules: List
+    ) -> float:
+        """Get sort key for a candidate with full context.
+        
+        This calculates profit rate considering:
+        - Market demand limits (from current_allocations)
+        - Interaction rules (from field_schedules)
+        
+        All calculations delegated to OptimizationMetrics (single source of truth).
+        
+        Args:
+            candidate: Candidate to evaluate
+            current_allocations: Currently selected allocations
+            field_schedules: Dict mapping field_id to allocations
+            interaction_rules: List of interaction rules
+            
+        Returns:
+            Profit rate (to be maximized)
+        """
+        # Use factory directly (single source of truth)
+        metrics = OptimizationMetrics.create_for_allocation(
+            area_used=candidate.area_used,
+            revenue_per_area=candidate.crop.revenue_per_area,
+            max_revenue=candidate.crop.max_revenue,
+            growth_days=candidate.growth_days,
+            daily_fixed_cost=candidate.field.daily_fixed_cost,
+            crop_id=candidate.crop.crop_id,
+            crop=candidate.crop,
+            field=candidate.field,
+            start_date=candidate.start_date,
+            current_allocations=current_allocations,
+            field_schedules=field_schedules,
+            interaction_rules=interaction_rules,
+        )
+        cost = metrics.cost
+        if cost > 0:
+            return metrics.profit / cost
+        return 0.0
+    
+    def _weighted_interval_scheduling_dp_with_profits(
+        self,
+        candidates: List[AllocationCandidate],
+        candidate_profits: Dict[int, float],
+    ) -> List[AllocationCandidate]:
+        """Solve weighted interval scheduling with externally provided profit values.
+        
+        This variant accepts pre-calculated profit values that consider:
+        - Market demand limits (cumulative revenue across fields)
+        - Interaction rules (continuous cultivation, rotation, etc.)
+        
+        Args:
+            candidates: List of allocation candidates for a single field
+            candidate_profits: Dict mapping id(candidate) to evaluated profit
+            
+        Returns:
+            Optimal subset of candidates
+        """
+        if not candidates:
+            return []
+        
+        # Sort by completion date
+        sorted_candidates = sorted(candidates, key=lambda c: c.completion_date)
+        n = len(sorted_candidates)
+        
+        # dp[i] = maximum profit considering candidates 0..i-1
+        dp = [0.0] * (n + 1)
+        
+        # For each candidate, find the latest non-overlapping candidate
+        p = [0] * n
+        for i in range(n):
+            p[i] = self._find_latest_non_overlapping(sorted_candidates, i)
+        
+        # DP: compute maximum profit using provided profit values
+        for i in range(1, n + 1):
+            candidate = sorted_candidates[i - 1]
+            # Use externally provided profit (considers full context)
+            profit = candidate_profits.get(id(candidate), 0.0)
+            
+            # Option 1: Don't include candidate i-1
+            without_i = dp[i - 1]
+            # Option 2: Include candidate i-1
+            with_i = profit + dp[p[i - 1]]
+            
+            dp[i] = max(without_i, with_i)
+        
+        # Reconstruct solution
+        selected = []
+        i = n
+        while i > 0:
+            candidate = sorted_candidates[i - 1]
+            profit = candidate_profits.get(id(candidate), 0.0)
+            
+            # Check if candidate i-1 was included
+            without_i = dp[i - 1]
+            with_i = profit + dp[p[i - 1]]
+            
+            if with_i >= without_i:  # Candidate was included
+                selected.append(candidate)
+                i = p[i - 1]
+            else:
+                i -= 1
+        
+        return list(reversed(selected))
+    
+    def _weighted_interval_scheduling_dp(
+        self,
+        candidates: List[AllocationCandidate],
+    ) -> List[AllocationCandidate]:
+        """Solve weighted interval scheduling problem for a single field using DP.
+        
+        This is the classic weighted interval scheduling problem:
+        - Given a set of intervals (cultivation periods) with weights (profit)
+        - Find the maximum weight subset with no overlapping intervals
+        
+        Algorithm:
+        1. Sort candidates by completion_date
+        2. For each candidate i, compute:
+           - dp[i] = max profit using candidates 0..i
+           - dp[i] = max(dp[i-1], profit[i] + dp[p(i)])
+           - p(i) = latest candidate that doesn't overlap with i
+        3. Reconstruct solution by backtracking
+        
+        Time Complexity: O(n log n) for sorting + O(n log n) for DP = O(n log n)
+        Space Complexity: O(n)
+        
+        Args:
+            candidates: List of allocation candidates for a single field
+            
+        Returns:
+            Optimal subset of candidates (no time overlaps, maximum profit)
+        """
+        if not candidates:
+            return []
+        
+        # Sort by completion date
+        sorted_candidates = sorted(candidates, key=lambda c: c.completion_date)
+        n = len(sorted_candidates)
+        
+        # dp[i] = maximum profit considering candidates 0..i-1
+        dp = [0.0] * (n + 1)
+        
+        # For each candidate, find the latest non-overlapping candidate
+        # p[i] = index of latest candidate that doesn't overlap with i
+        p = [0] * n
+        for i in range(n):
+            # Binary search for latest non-overlapping candidate
+            p[i] = self._find_latest_non_overlapping(sorted_candidates, i)
+        
+        # DP: compute maximum profit
+        for i in range(1, n + 1):
+            candidate = sorted_candidates[i - 1]
+            # Option 1: Don't include candidate i-1
+            without_i = dp[i - 1]
+            # Option 2: Include candidate i-1
+            with_i = candidate.profit + dp[p[i - 1]]
+            
+            dp[i] = max(without_i, with_i)
+        
+        # Reconstruct solution
+        selected = []
+        i = n
+        while i > 0:
+            candidate = sorted_candidates[i - 1]
+            # Check if candidate i-1 was included
+            without_i = dp[i - 1]
+            with_i = candidate.profit + dp[p[i - 1]]
+            
+            if with_i >= without_i:  # Candidate was included
+                selected.append(candidate)
+                i = p[i - 1]
+            else:
+                i -= 1
+        
+        return selected
+    
+    def _find_latest_non_overlapping(
+        self,
+        sorted_candidates: List[AllocationCandidate],
+        i: int,
+    ) -> int:
+        """Find the latest candidate that doesn't overlap with candidate i.
+        
+        Uses binary search to find the rightmost candidate j such that
+        sorted_candidates[j].completion_date < sorted_candidates[i].start_date
+        
+        Note: We use strict inequality (<) to prevent same-day overlap.
+        For example, if a crop completes on day 10 and another starts on day 10,
+        they should not be considered non-overlapping.
+        
+        Args:
+            sorted_candidates: Candidates sorted by completion_date
+            i: Index of current candidate
+            
+        Returns:
+            Index + 1 for dp array (0 means no non-overlapping candidate)
+        """
+        target_start = sorted_candidates[i].start_date
+        
+        # Binary search for rightmost candidate with completion_date < target_start
+        left, right = 0, i - 1
+        result = 0
+        
+        while left <= right:
+            mid = (left + right) // 2
+            if sorted_candidates[mid].completion_date < target_start:
+                result = mid + 1  # +1 for dp array indexing
+                left = mid + 1
+            else:
+                right = mid - 1
+        
+        return result
+    
+    def _dp_allocation(
+        self,
+        candidates: List[AllocationCandidate],
+        crops: List,
+        fields: List[Field],
+    ) -> List[CropAllocation]:
+        """Allocate crops using sequential per-field DP with cumulative context.
+        
+        Algorithm (CORRECTED):
+        1. Group candidates by field
+        2. For each field SEQUENTIALLY:
+           a. Re-evaluate candidates with current allocation context (market demand, interaction)
+           b. Solve weighted interval scheduling DP with updated profit values
+           c. Add selected allocations to global solution
+        3. Return optimized solution
+        
+        Key Fix: Fields are processed sequentially, not independently.
+        Each field's DP considers what has already been allocated in previous fields.
+        This prevents all fields from choosing the same crop when market demand is limited.
+        
+        Args:
+            candidates: All allocation candidates
+            crops: List of crop aggregates
+            fields: List of fields
+            
+        Returns:
+            List of selected allocations
+        """
+        # Group candidates by field
+        candidates_by_field = {}
+        for candidate in candidates:
+            field_id = candidate.field.field_id
+            if field_id not in candidates_by_field:
+                candidates_by_field[field_id] = []
+            candidates_by_field[field_id].append(candidate)
+        
+        # Solve DP for each field SEQUENTIALLY (considering previous allocations)
+        allocations = []
+        field_schedules = {}
+        
+        for field in fields:
+            field_id = field.field_id
+            field_candidates = candidates_by_field.get(field_id, [])
+            
+            if not field_candidates:
+                continue
+            
+            # Re-evaluate candidates with current allocation context
+            # This updates profit values to reflect:
+            # - Market demand already consumed by previous fields
+            # - Interaction impact from previous allocations in this field
+            candidate_profits = {}
+            for candidate in field_candidates:
+                # Use factory directly (single source of truth)
+                metrics = OptimizationMetrics.create_for_allocation(
+                    area_used=candidate.area_used,
+                    revenue_per_area=candidate.crop.revenue_per_area,
+                    max_revenue=candidate.crop.max_revenue,
+                    growth_days=candidate.growth_days,
+                    daily_fixed_cost=candidate.field.daily_fixed_cost,
+                    crop_id=candidate.crop.crop_id,
+                    crop=candidate.crop,
+                    field=candidate.field,
+                    start_date=candidate.start_date,
+                    current_allocations=allocations,
+                    field_schedules=field_schedules,
+                    interaction_rules=self.interaction_rule_service.rules,
+                )
+                # Store evaluated profit for this candidate
+                candidate_profits[id(candidate)] = metrics.profit
+            
+            # Solve weighted interval scheduling with evaluated profits
+            selected_candidates = self._weighted_interval_scheduling_dp_with_profits(
+                field_candidates, candidate_profits
+            )
+            
+            # Convert to CropAllocation
+            for candidate in selected_candidates:
+                # Convert with current context for correct revenue calculation
+                allocation = self._candidate_to_allocation(
+                    candidate, allocations, field_schedules, self.interaction_rule_service.rules
+                )
+                allocations.append(allocation)
+                
+                # Update field schedules
+                if field_id not in field_schedules:
+                    field_schedules[field_id] = []
+                field_schedules[field_id].append(allocation)
+        
+        return allocations
     
     def _time_overlaps(self, alloc1, alloc2) -> bool:
         """Check if two allocations overlap in time.
@@ -686,19 +982,58 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         config: OptimizationConfig,
         time_limit: Optional[float] = None,
     ) -> List[CropAllocation]:
-        """Improve solution using local search (Hill Climbing).
+        """Improve solution using Local Search or ALNS.
+        
+        Automatically selects algorithm based on config.enable_alns:
+        - False: Hill Climbing (small neighborhoods, fast)
+        - True: ALNS (large neighborhoods, higher quality)
+        
+        Uses unified optimization objective (profit maximization).
+        """
+        # Skip if initial solution is too small
+        if len(initial_solution) < 2:
+            return initial_solution
+        
+        # Extract unique crops from candidates
+        crops_dict = {}
+        for c in candidates:
+            if c.crop.crop_id not in crops_dict:
+                crops_dict[c.crop.crop_id] = c.crop
+        crops_list = list(crops_dict.values())
+        
+        # Choose algorithm based on config
+        if config.enable_alns:
+            # Use ALNS
+            if self.alns_optimizer is None:
+                self.alns_optimizer = ALNSOptimizer(config)
+            
+            return self.alns_optimizer.optimize(
+                initial_solution=initial_solution,
+                candidates=candidates,
+                fields=fields,
+                crops=crops_list,
+                max_iterations=config.alns_iterations,
+            )
+        else:
+            # Use Hill Climbing (existing implementation)
+            return self._hill_climbing_local_search(
+                initial_solution, candidates, fields, config, time_limit
+            )
+    
+    def _hill_climbing_local_search(
+        self,
+        initial_solution: List[CropAllocation],
+        candidates: List[AllocationCandidate],
+        fields: List[Field],
+        config: OptimizationConfig,
+        time_limit: Optional[float] = None,
+    ) -> List[CropAllocation]:
+        """Hill Climbing local search implementation.
         
         Phase 1: Neighbor sampling to limit computational cost
         Phase 2: Incremental feasibility checking for faster validation
         Phase 3: Adaptive early stopping
-        
-        Uses unified optimization objective (profit maximization).
         """
-        # Skip local search if initial solution is too small
-        # (prevents deletion of valid small solutions)
-        if len(initial_solution) < 2:
-            return initial_solution
-        
         start_time = time.time()
         current_solution = initial_solution
         current_profit = self._calculate_total_profit(current_solution)
@@ -707,7 +1042,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         best_profit_so_far = current_profit
         consecutive_near_optimal = 0
         
-        # Extract unique crops from candidates (using crop_id for uniqueness)
+        # Extract unique crops
         crops_dict = {}
         for c in candidates:
             if c.crop.crop_id not in crops_dict:
@@ -737,11 +1072,27 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             best_profit = current_profit
             
             for neighbor in neighbors:
+                # Build field_schedules from neighbor for interaction rule calculation
+                neighbor_field_schedules = {}
+                for alloc in neighbor:
+                    field_id = alloc.field.field_id
+                    if field_id not in neighbor_field_schedules:
+                        neighbor_field_schedules[field_id] = []
+                    neighbor_field_schedules[field_id].append(alloc)
+                
+                # Recalculate revenue with full context
+                # Delegate to OptimizationMetrics (single source of truth)
+                adjusted_neighbor = OptimizationMetrics.recalculate_allocations_with_context(
+                    neighbor, 
+                    neighbor_field_schedules, 
+                    self.interaction_rule_service.rules
+                )
+                
                 # Use standard or incremental feasibility check
-                if self._is_feasible_solution(neighbor):
-                    neighbor_profit = self._calculate_total_profit(neighbor)
+                if self._is_feasible_solution(adjusted_neighbor):
+                    neighbor_profit = self._calculate_total_profit(adjusted_neighbor)
                     if neighbor_profit > best_profit:
-                        best_neighbor = neighbor
+                        best_neighbor = adjusted_neighbor
                         best_profit = neighbor_profit
             
             # Update if improvement found
@@ -782,8 +1133,42 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
     
     # ===== Helper Methods =====
     
-    def _candidate_to_allocation(self, candidate: AllocationCandidate) -> CropAllocation:
-        """Convert AllocationCandidate to CropAllocation."""
+    def _candidate_to_allocation(
+        self, 
+        candidate: AllocationCandidate, 
+        current_allocations: Optional[List[CropAllocation]] = None,
+        field_schedules: Optional[Dict[str, List[CropAllocation]]] = None,
+        interaction_rules: Optional[List] = None
+    ) -> CropAllocation:
+        """Convert AllocationCandidate to CropAllocation.
+        
+        All calculations delegated to OptimizationMetrics (single source of truth).
+        
+        Args:
+            candidate: Candidate to convert
+            current_allocations: Currently selected allocations (for market demand tracking)
+            field_schedules: Dict mapping field_id to allocations (for interaction rules)
+            interaction_rules: List of interaction rules
+            
+        Returns:
+            CropAllocation with correct revenue/profit calculated from full context
+        """
+        # Use factory directly (single source of truth)
+        metrics = OptimizationMetrics.create_for_allocation(
+            area_used=candidate.area_used,
+            revenue_per_area=candidate.crop.revenue_per_area,
+            max_revenue=candidate.crop.max_revenue,
+            growth_days=candidate.growth_days,
+            daily_fixed_cost=candidate.field.daily_fixed_cost,
+            crop_id=candidate.crop.crop_id,
+            crop=candidate.crop,
+            field=candidate.field,
+            start_date=candidate.start_date,
+            current_allocations=current_allocations,
+            field_schedules=field_schedules,
+            interaction_rules=interaction_rules,
+        )
+        
         return CropAllocation(
             allocation_id=str(uuid.uuid4()),
             field=candidate.field,
@@ -793,9 +1178,9 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             completion_date=candidate.completion_date,
             growth_days=candidate.growth_days,
             accumulated_gdd=candidate.accumulated_gdd,
-            total_cost=candidate.cost,
-            expected_revenue=candidate.revenue,
-            profit=candidate.profit,
+            total_cost=metrics.cost,
+            expected_revenue=metrics.revenue,
+            profit=metrics.profit,
         )
 
     def _calculate_total_profit(self, allocations: List[CropAllocation]) -> float:
@@ -803,7 +1188,19 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         return sum(alloc.profit for alloc in allocations if alloc.profit is not None)
 
     def _is_feasible_solution(self, allocations: List[CropAllocation]) -> bool:
-        """Check if solution respects all constraints."""
+        """Check if solution is valid.
+        
+        Checks:
+        1. No time overlaps within each field
+        2. Revenue calculations are consistent with market demand limits
+        
+        Note on market demand:
+        - Exceeding market demand is NOT a violation (planting is allowed)
+        - Revenue should already be 0 for allocations beyond market capacity
+        - This check detects calculation errors, not policy violations
+        - If total_revenue > max_revenue, it means revenue wasn't properly
+          recalculated with cumulative context (a bug, not a constraint violation)
+        """
         # Check for time overlaps within each field
         field_allocations: Dict[str, List[CropAllocation]] = {}
         for alloc in allocations:
@@ -817,6 +1214,24 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 for alloc2 in field_allocs[i+1:]:
                     if alloc1.overlaps_with(alloc2):
                         return False
+        
+        # Verify revenue calculations are consistent (sanity check for bugs)
+        # Get unique crops
+        unique_crops = {}
+        for alloc in allocations:
+            unique_crops[alloc.crop.crop_id] = alloc.crop
+        
+        # Check: if cumulative revenue > max_revenue, revenue calculation has a bug
+        for crop_id, crop in unique_crops.items():
+            if crop.max_revenue is not None:
+                # Use unified calculation method
+                total_revenue = OptimizationMetrics.calculate_crop_cumulative_revenue(
+                    crop_id, allocations
+                )
+                # This should never happen if OptimizationMetrics works correctly
+                # Allow small tolerance for floating point errors
+                if total_revenue > crop.max_revenue * 1.001:  # 0.1% tolerance
+                    return False  # Bug detected: revenue not properly capped
         
         return True
 

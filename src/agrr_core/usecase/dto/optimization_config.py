@@ -112,6 +112,17 @@ class OptimizationConfig:
     max_insert_neighbors: int = 50
     """Maximum number of insert neighbors to generate (to prevent explosion)."""
     
+    # ===== ALNS Settings =====
+    
+    enable_alns: bool = False
+    """Enable ALNS (Adaptive Large Neighborhood Search) instead of Hill Climbing."""
+    
+    alns_iterations: int = 200
+    """Number of ALNS iterations."""
+    
+    alns_removal_rate: float = 0.3
+    """Fraction of solution to remove in each ALNS iteration (0.0-1.0)."""
+    
     @classmethod
     def fast_profile(cls) -> 'OptimizationConfig':
         """Create a fast optimization profile (lower quality, higher speed).

@@ -92,11 +92,30 @@ class CropInsertOperation(NeighborOperation):
         return neighbors
     
     def _time_overlaps_candidate(self, candidate: Any, allocation: CropAllocation) -> bool:
-        """Check if candidate overlaps with allocation in time."""
-        return not (
-            candidate.completion_date < allocation.start_date or
-            allocation.completion_date < candidate.start_date
+        """Check if candidate overlaps with allocation in time (including fallow period).
+        
+        CRITICAL: This method now considers fallow periods to ensure proper soil recovery time.
+        
+        Args:
+            candidate: Allocation candidate to check
+            allocation: Existing allocation to check against
+            
+        Returns:
+            True if there is overlap considering fallow period, False otherwise
+        """
+        from datetime import timedelta
+        
+        # Calculate end dates including fallow period
+        candidate_end_with_fallow = candidate.completion_date + timedelta(
+            days=candidate.field.fallow_period_days
         )
+        allocation_end_with_fallow = allocation.completion_date + timedelta(
+            days=allocation.field.fallow_period_days
+        )
+        
+        # Check overlap with fallow periods included
+        return not (candidate_end_with_fallow <= allocation.start_date or 
+                    allocation_end_with_fallow <= candidate.start_date)
     
     def _candidate_to_allocation(self, candidate: Any) -> CropAllocation:
         """Convert candidate to allocation."""

@@ -32,7 +32,11 @@ class CropChangeOperation(NeighborOperation):
         solution: List[CropAllocation],
         context: Dict[str, Any],
     ) -> List[List[CropAllocation]]:
-        """Generate neighbors by changing crops."""
+        """Generate neighbors by changing crops.
+        
+        CRITICAL: This method now checks fallow period constraints to ensure
+        the new crop's period doesn't violate fallow period with other allocations.
+        """
         neighbors = []
         candidates = context.get("candidates", [])
         crops = context.get("crops", [])
@@ -67,6 +71,21 @@ class CropChangeOperation(NeighborOperation):
                     best_candidate,
                     area_used=original_area
                 )
+                
+                # Check if new allocation violates fallow period with other allocations
+                # in the same field
+                has_overlap = False
+                for j, other_alloc in enumerate(solution):
+                    if i == j:  # Skip the allocation being replaced
+                        continue
+                    
+                    if other_alloc.field.field_id == new_alloc.field.field_id:
+                        if new_alloc.overlaps_with_fallow(other_alloc):
+                            has_overlap = True
+                            break
+                
+                if has_overlap:
+                    continue  # Skip this candidate - violates fallow period
                 
                 neighbor = solution.copy()
                 neighbor[i] = new_alloc

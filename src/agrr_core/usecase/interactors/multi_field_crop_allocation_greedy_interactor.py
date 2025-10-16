@@ -145,6 +145,41 @@ class AllocationCandidate:
         """Get baseline profit rate (NO CONTEXT - for pre-allocation filtering only)."""
         metrics = self.get_metrics()
         return (metrics.profit / metrics.cost) if metrics.cost > 0 else 0.0
+    
+    def overlaps_with_fallow(self, other) -> bool:
+        """Check if this candidate overlaps with another including fallow period.
+        
+        This method checks if two candidates/allocations violate the fallow period constraint.
+        The fallow period is the required rest period for the soil after crop harvest.
+        
+        Args:
+            other: Another candidate or allocation to check overlap with
+                   (AllocationCandidate or CropAllocation)
+            
+        Returns:
+            True if candidates overlap considering fallow period, False otherwise
+            
+        Example:
+            If candidate1 completes on June 30 and field has 28-day fallow period,
+            candidate2 must start on or after July 28.
+        """
+        from datetime import timedelta
+        
+        # Only check overlap if both candidates are in the same field
+        if self.field.field_id != other.field.field_id:
+            return False
+        
+        # Calculate end dates including fallow period
+        self_end_with_fallow = self.completion_date + timedelta(
+            days=self.field.fallow_period_days
+        )
+        other_end_with_fallow = other.completion_date + timedelta(
+            days=other.field.fallow_period_days
+        )
+        
+        # Check overlap with fallow periods included
+        return not (self_end_with_fallow <= other.start_date or 
+                    other_end_with_fallow <= self.start_date)
 
 
 class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate]):
@@ -257,15 +292,19 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 "- Adjust planning start date to a suitable season for your crops"
             )
         
+        # Store planning start date for soil recovery calculation
+        planning_start_date = request.planning_period_start
+        
         # Phase 2: Initial allocation (Greedy or DP)
         if algorithm == "dp":
-            allocations = self._dp_allocation(candidates, crops, fields)
+            allocations = self._dp_allocation(candidates, crops, fields, planning_start_date)
             algorithm_name = "DP"
         else:  # greedy
             allocations = self._greedy_allocation(
                 candidates, 
                 crops,
-                request.optimization_objective
+                request.optimization_objective,
+                planning_start_date
             )
             algorithm_name = "Greedy"
         
@@ -276,7 +315,8 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 candidates,
                 fields=fields,
                 config=optimization_config,
-                time_limit=request.max_computation_time
+                time_limit=request.max_computation_time,
+                planning_start_date=planning_start_date
             )
             # Update algorithm name based on which search was used
             if optimization_config.enable_alns:
@@ -568,6 +608,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         candidates: List[AllocationCandidate],
         crops: List,
         optimization_objective: str,
+        planning_start_date,
     ) -> List[CropAllocation]:
         """Select allocations using greedy allocation with dynamic re-sorting.
         
@@ -598,10 +639,10 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             # This is the SINGLE SOURCE OF TRUTH for all profit calculations
             
             # Sort by profit with current context
-            # Pass allocations, field_schedules, and interaction_rules
+            # Pass allocations, field_schedules, interaction_rules, and planning_start_date
             remaining_candidates.sort(
                 key=lambda x: self._get_candidate_sort_key_with_full_context(
-                    x, allocations, field_schedules, self.interaction_rule_service.rules
+                    x, allocations, field_schedules, self.interaction_rule_service.rules, planning_start_date
                 ),
                 reverse=True
             )
@@ -616,7 +657,9 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 
                 has_overlap = False
                 for existing in field_schedules[field_id]:
-                    if self._time_overlaps(candidate, existing):
+                    # Use overlaps_with_fallow to respect fallow period constraint
+                    # Call from candidate (AllocationCandidate) to use the flexible method
+                    if candidate.overlaps_with_fallow(existing):
                         has_overlap = True
                         break
                 
@@ -628,7 +671,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 crop_id = candidate.crop.crop_id
                 # Convert candidate to allocation with full context
                 allocation = self._candidate_to_allocation(
-                    candidate, allocations, field_schedules, self.interaction_rule_service.rules
+                    candidate, allocations, field_schedules, self.interaction_rule_service.rules, planning_start_date
                 )
                 allocations.append(allocation)
                 field_schedules[field_id].append(allocation)
@@ -652,7 +695,8 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         candidate: AllocationCandidate, 
         current_allocations: List[CropAllocation],
         field_schedules: Dict[str, List[CropAllocation]],
-        interaction_rules: List
+        interaction_rules: List,
+        planning_start_date
     ) -> float:
         """Get sort key for a candidate with full context.
         
@@ -667,6 +711,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             current_allocations: Currently selected allocations
             field_schedules: Dict mapping field_id to allocations
             interaction_rules: List of interaction rules
+            planning_start_date: Planning period start date
             
         Returns:
             Profit rate (to be maximized)
@@ -685,6 +730,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             current_allocations=current_allocations,
             field_schedules=field_schedules,
             interaction_rules=interaction_rules,
+            planning_start_date=planning_start_date,
         )
         cost = metrics.cost
         if cost > 0:
@@ -832,14 +878,19 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         sorted_candidates: List[AllocationCandidate],
         i: int,
     ) -> int:
-        """Find the latest candidate that doesn't overlap with candidate i.
+        """Find the latest candidate that doesn't overlap with candidate i (including fallow period).
         
         Uses binary search to find the rightmost candidate j such that
-        sorted_candidates[j].completion_date < sorted_candidates[i].start_date
+        sorted_candidates[j] doesn't overlap with sorted_candidates[i] when considering fallow periods.
         
-        Note: We use strict inequality (<) to prevent same-day overlap.
-        For example, if a crop completes on day 10 and another starts on day 10,
-        they should not be considered non-overlapping.
+        CRITICAL: This method now considers fallow periods to ensure proper soil recovery time.
+        Two candidates don't overlap if: completion_date + fallow_period_days <= next_start_date
+        
+        Example:
+            If candidate A completes on June 30 with 28-day fallow period,
+            candidate B can only start on July 28 or later.
+            
+        Note: We use the field's fallow_period_days for proper constraint enforcement.
         
         Args:
             sorted_candidates: Candidates sorted by completion_date
@@ -848,15 +899,25 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         Returns:
             Index + 1 for dp array (0 means no non-overlapping candidate)
         """
-        target_start = sorted_candidates[i].start_date
+        from datetime import timedelta
         
-        # Binary search for rightmost candidate with completion_date < target_start
+        current_candidate = sorted_candidates[i]
+        
+        # Binary search for rightmost candidate that doesn't overlap with fallow period
         left, right = 0, i - 1
         result = 0
         
         while left <= right:
             mid = (left + right) // 2
-            if sorted_candidates[mid].completion_date < target_start:
+            candidate = sorted_candidates[mid]
+            
+            # Check if candidate doesn't overlap considering fallow period
+            # candidate ends (with fallow) before current starts
+            candidate_end_with_fallow = candidate.completion_date + timedelta(
+                days=candidate.field.fallow_period_days
+            )
+            
+            if candidate_end_with_fallow <= current_candidate.start_date:
                 result = mid + 1  # +1 for dp array indexing
                 left = mid + 1
             else:
@@ -869,6 +930,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         candidates: List[AllocationCandidate],
         crops: List,
         fields: List[Field],
+        planning_start_date,
     ) -> List[CropAllocation]:
         """Allocate crops using sequential per-field DP with cumulative context.
         
@@ -915,6 +977,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             # This updates profit values to reflect:
             # - Market demand already consumed by previous fields
             # - Interaction impact from previous allocations in this field
+            # - Soil recovery bonus from fallow periods
             candidate_profits = {}
             for candidate in field_candidates:
                 # Use factory directly (single source of truth)
@@ -931,6 +994,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                     current_allocations=allocations,
                     field_schedules=field_schedules,
                     interaction_rules=self.interaction_rule_service.rules,
+                    planning_start_date=planning_start_date,
                 )
                 # Store evaluated profit for this candidate
                 candidate_profits[id(candidate)] = metrics.profit
@@ -944,7 +1008,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             for candidate in selected_candidates:
                 # Convert with current context for correct revenue calculation
                 allocation = self._candidate_to_allocation(
-                    candidate, allocations, field_schedules, self.interaction_rule_service.rules
+                    candidate, allocations, field_schedules, self.interaction_rule_service.rules, planning_start_date
                 )
                 allocations.append(allocation)
                 
@@ -955,25 +1019,6 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         
         return allocations
     
-    def _time_overlaps(self, alloc1, alloc2) -> bool:
-        """Check if two allocations overlap in time.
-        
-        Args:
-            alloc1: First allocation
-            alloc2: Second allocation
-            
-        Returns:
-            True if they overlap, False otherwise
-        """
-        # Get dates from allocations
-        start1 = alloc1.start_date if hasattr(alloc1, 'start_date') else alloc1.start_date
-        end1 = alloc1.completion_date if hasattr(alloc1, 'completion_date') else alloc1.completion_date
-        start2 = alloc2.start_date if hasattr(alloc2, 'start_date') else alloc2.start_date
-        end2 = alloc2.completion_date if hasattr(alloc2, 'completion_date') else alloc2.completion_date
-        
-        # Check overlap: allocations overlap if one starts before the other ends
-        return not (end1 < start2 or end2 < start1)
-
     def _local_search(
         self,
         initial_solution: List[CropAllocation],
@@ -981,6 +1026,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         fields: List[Field],
         config: OptimizationConfig,
         time_limit: Optional[float] = None,
+        planning_start_date = None,
     ) -> List[CropAllocation]:
         """Improve solution using Local Search or ALNS.
         
@@ -1017,7 +1063,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         else:
             # Use Hill Climbing (existing implementation)
             return self._hill_climbing_local_search(
-                initial_solution, candidates, fields, config, time_limit
+                initial_solution, candidates, fields, config, time_limit, planning_start_date
             )
     
     def _hill_climbing_local_search(
@@ -1027,6 +1073,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         fields: List[Field],
         config: OptimizationConfig,
         time_limit: Optional[float] = None,
+        planning_start_date = None,
     ) -> List[CropAllocation]:
         """Hill Climbing local search implementation.
         
@@ -1085,7 +1132,8 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 adjusted_neighbor = OptimizationMetrics.recalculate_allocations_with_context(
                     neighbor, 
                     neighbor_field_schedules, 
-                    self.interaction_rule_service.rules
+                    self.interaction_rule_service.rules,
+                    planning_start_date
                 )
                 
                 # Use standard or incremental feasibility check
@@ -1138,7 +1186,8 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         candidate: AllocationCandidate, 
         current_allocations: Optional[List[CropAllocation]] = None,
         field_schedules: Optional[Dict[str, List[CropAllocation]]] = None,
-        interaction_rules: Optional[List] = None
+        interaction_rules: Optional[List] = None,
+        planning_start_date = None
     ) -> CropAllocation:
         """Convert AllocationCandidate to CropAllocation.
         
@@ -1149,6 +1198,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             current_allocations: Currently selected allocations (for market demand tracking)
             field_schedules: Dict mapping field_id to allocations (for interaction rules)
             interaction_rules: List of interaction rules
+            planning_start_date: Planning period start date (for soil recovery calculation)
             
         Returns:
             CropAllocation with correct revenue/profit calculated from full context
@@ -1167,6 +1217,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             current_allocations=current_allocations,
             field_schedules=field_schedules,
             interaction_rules=interaction_rules,
+            planning_start_date=planning_start_date,
         )
         
         return CropAllocation(
@@ -1212,8 +1263,8 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         for field_id, field_allocs in field_allocations.items():
             for i, alloc1 in enumerate(field_allocs):
                 for alloc2 in field_allocs[i+1:]:
-                    if alloc1.overlaps_with(alloc2):
-                        return False
+                    if alloc1.overlaps_with_fallow(alloc2):
+                        return False  # Overlap found (considering fallow period)
         
         # Verify revenue calculations are consistent (sanity check for bugs)
         # Get unique crops

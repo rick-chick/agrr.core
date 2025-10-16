@@ -31,7 +31,11 @@ class PeriodReplaceOperation(NeighborOperation):
         solution: List[CropAllocation],
         context: Dict[str, Any],
     ) -> List[List[CropAllocation]]:
-        """Generate neighbors by replacing periods."""
+        """Generate neighbors by replacing periods.
+        
+        CRITICAL: This method now checks fallow period constraints to ensure
+        the new period doesn't violate fallow period with other allocations.
+        """
         neighbors = []
         candidates = context.get("candidates", [])
         config = context.get("config")
@@ -49,11 +53,28 @@ class PeriodReplaceOperation(NeighborOperation):
             
             # Try up to N alternatives
             for candidate in similar_candidates[:max_alternatives]:
-                neighbor = solution.copy()
-                neighbor[i] = self._candidate_to_allocation_with_area(
+                new_alloc = self._candidate_to_allocation_with_area(
                     candidate,
                     area_used=alloc.area_used
                 )
+                
+                # Check if new period violates fallow period with other allocations
+                # in the same field
+                has_overlap = False
+                for j, other_alloc in enumerate(solution):
+                    if i == j:  # Skip the allocation being replaced
+                        continue
+                    
+                    if other_alloc.field.field_id == new_alloc.field.field_id:
+                        if new_alloc.overlaps_with_fallow(other_alloc):
+                            has_overlap = True
+                            break
+                
+                if has_overlap:
+                    continue  # Skip this candidate - violates fallow period
+                
+                neighbor = solution.copy()
+                neighbor[i] = new_alloc
                 neighbors.append(neighbor)
         
         return neighbors

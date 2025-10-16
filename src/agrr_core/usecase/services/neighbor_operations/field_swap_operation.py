@@ -31,7 +31,11 @@ class FieldSwapOperation(NeighborOperation):
         solution: List[CropAllocation],
         context: Dict[str, Any],
     ) -> List[List[CropAllocation]]:
-        """Generate neighbors by swapping allocations between fields."""
+        """Generate neighbors by swapping allocations between fields.
+        
+        CRITICAL: This method now checks fallow period constraints to ensure
+        swapped allocations don't violate fallow period in their new fields.
+        """
         neighbors = []
         
         for i in range(len(solution)):
@@ -41,6 +45,30 @@ class FieldSwapOperation(NeighborOperation):
                         solution[i], solution[j], solution
                     )
                     if swapped is not None:
+                        # Check if swapped allocations violate fallow period
+                        new_alloc_a, new_alloc_b = swapped
+                        
+                        # Check new_alloc_a (going to field_b) against other allocations in field_b
+                        has_overlap_a = False
+                        for alloc in solution:
+                            if alloc.allocation_id != solution[j].allocation_id:  # Skip the one being swapped
+                                if alloc.field.field_id == new_alloc_a.field.field_id:
+                                    if new_alloc_a.overlaps_with_fallow(alloc):
+                                        has_overlap_a = True
+                                        break
+                        
+                        # Check new_alloc_b (going to field_a) against other allocations in field_a
+                        has_overlap_b = False
+                        for alloc in solution:
+                            if alloc.allocation_id != solution[i].allocation_id:  # Skip the one being swapped
+                                if alloc.field.field_id == new_alloc_b.field.field_id:
+                                    if new_alloc_b.overlaps_with_fallow(alloc):
+                                        has_overlap_b = True
+                                        break
+                        
+                        if has_overlap_a or has_overlap_b:
+                            continue  # Skip this swap - violates fallow period
+                        
                         neighbor = solution.copy()
                         neighbor[i], neighbor[j] = swapped
                         neighbors.append(neighbor)

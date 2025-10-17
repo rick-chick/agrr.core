@@ -34,7 +34,7 @@ class TestAllocationCandidateWithInteractionImpact:
     
     def test_candidate_with_no_impact(self):
         """Test that candidate with no impact (1.0) returns original revenue."""
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("tomato", "Tomato", 0.5, revenue_per_area=50000.0)
         
         candidate = AllocationCandidate(
@@ -57,7 +57,7 @@ class TestAllocationCandidateWithInteractionImpact:
     
     def test_candidate_with_continuous_cultivation_penalty(self):
         """Test that continuous cultivation penalty reduces revenue."""
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("eggplant", "Eggplant", 0.5, revenue_per_area=50000.0, groups=["Solanaceae"])
         previous_crop = Crop("tomato", "Tomato", 0.5, groups=["Solanaceae"])
         
@@ -85,7 +85,7 @@ class TestAllocationCandidateWithInteractionImpact:
     
     def test_candidate_with_max_revenue_limit_and_impact(self):
         """Test that both max_revenue and interaction_impact are applied."""
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop(
             "tomato", "Tomato", 0.5,
             revenue_per_area=50000.0,
@@ -149,7 +149,7 @@ class TestInteractionRuleServiceIntegration:
             interaction_rules=rules
         )
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         tomato = Crop("tomato", "Tomato", 0.5, groups=["Solanaceae"])
         
         # Create a prior allocation
@@ -197,7 +197,7 @@ class TestInteractionRuleServiceIntegration:
             interaction_rules=rules
         )
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         tomato = Crop("tomato", "Tomato", 0.5, groups=["Solanaceae"])
         
         candidate = AllocationCandidate(
@@ -240,7 +240,7 @@ class TestInteractionRuleServiceIntegration:
             interaction_rules=rules
         )
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         tomato = Crop("tomato", "Tomato", 0.5, groups=["Solanaceae"])
         eggplant = Crop("eggplant", "Eggplant", 0.5, groups=["Solanaceae"])
         
@@ -298,7 +298,7 @@ class TestInteractionRuleServiceIntegration:
             interaction_rules=rules
         )
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         tomato = Crop("tomato", "Tomato", 0.5, groups=["Solanaceae"])
         soybean = Crop("soybean", "Soybean", 0.15, groups=["Fabaceae"])
         

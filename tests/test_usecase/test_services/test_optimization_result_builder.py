@@ -19,7 +19,7 @@ class TestBuild:
         """Test building result with no allocations."""
         builder = OptimizationResultBuilder()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         
         result = builder.build(
             allocations=[],
@@ -42,7 +42,7 @@ class TestBuild:
         """Test building result with single allocation."""
         builder = OptimizationResultBuilder()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         alloc = CropAllocation(
@@ -84,7 +84,7 @@ class TestBuild:
         """Test building result with multiple allocations in single field."""
         builder = OptimizationResultBuilder()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         rice = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         wheat = Crop("wheat", "Wheat", 0.3, revenue_per_area=8000.0)
         
@@ -139,8 +139,8 @@ class TestBuild:
         """Test building result with allocations across multiple fields."""
         builder = OptimizationResultBuilder()
         
-        field1 = Field("f1", "Field 1", 1000.0, 5000.0)
-        field2 = Field("f2", "Field 2", 800.0, 4500.0)
+        field1 = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
+        field2 = Field("f2", "Field 2", 800.0, 4500.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         alloc1 = CropAllocation(
@@ -203,7 +203,7 @@ class TestBuild:
         """Test building result when some allocations have no revenue."""
         builder = OptimizationResultBuilder()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=None)  # No revenue data
         
         alloc = CropAllocation(
@@ -240,7 +240,7 @@ class TestGroupByField:
         """Test grouping with allocations in single field."""
         builder = OptimizationResultBuilder()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25)
         
         alloc1 = CropAllocation(
@@ -280,8 +280,8 @@ class TestGroupByField:
         """Test grouping with allocations across multiple fields."""
         builder = OptimizationResultBuilder()
         
-        field1 = Field("f1", "Field 1", 1000.0, 5000.0)
-        field2 = Field("f2", "Field 2", 800.0, 4500.0)
+        field1 = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
+        field2 = Field("f2", "Field 2", 800.0, 4500.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25)
         
         alloc1 = CropAllocation(
@@ -323,8 +323,8 @@ class TestGroupByField:
         """Test that fields without allocations are included."""
         builder = OptimizationResultBuilder()
         
-        field1 = Field("f1", "Field 1", 1000.0, 5000.0)
-        field2 = Field("f2", "Field 2", 800.0, 4500.0)
+        field1 = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
+        field2 = Field("f2", "Field 2", 800.0, 4500.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25)
         
         alloc = CropAllocation(
@@ -357,7 +357,7 @@ class TestCalculateFieldMetrics:
         """Test basic field metrics calculation."""
         builder = OptimizationResultBuilder()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         alloc = CropAllocation(
@@ -386,7 +386,7 @@ class TestCalculateFieldMetrics:
         """Test metrics calculation with multiple allocations."""
         builder = OptimizationResultBuilder()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         alloc1 = CropAllocation(
@@ -434,7 +434,7 @@ class TestAggregateMetrics:
         """Test that aggregation updates global metrics."""
         builder = OptimizationResultBuilder()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         rice = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         wheat = Crop("wheat", "Wheat", 0.3, revenue_per_area=8000.0)
         

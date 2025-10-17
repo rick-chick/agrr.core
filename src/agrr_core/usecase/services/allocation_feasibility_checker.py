@@ -84,12 +84,12 @@ class AllocationFeasibilityChecker:
                 field_allocations[field_id] = []
             field_allocations[field_id].append(alloc)
         
-        # Check for overlaps within each field
+        # Check for overlaps within each field (including fallow period)
         for field_id, field_allocs in field_allocations.items():
             for i, alloc1 in enumerate(field_allocs):
                 for alloc2 in field_allocs[i+1:]:
-                    if alloc1.overlaps_with(alloc2):
-                        return False  # Found overlap
+                    if alloc1.overlaps_with_fallow(alloc2):
+                        return False  # Found overlap (considering fallow period)
         
         return True  # No overlaps found
     

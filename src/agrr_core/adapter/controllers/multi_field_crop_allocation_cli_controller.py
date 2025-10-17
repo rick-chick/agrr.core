@@ -131,6 +131,28 @@ Examples:
     --enable-parallel \\
     --max-time 30
 
+  # Use greedy algorithm for faster heuristic allocation
+  agrr optimize allocate \\
+    --fields-file fields.json \\
+    --crops-file crops.json \\
+    --planning-start 2024-04-01 --planning-end 2024-10-31 \\
+    --weather-file weather.json \\
+    --algorithm greedy
+
+  # Test with sample data (different fallow periods per field)
+  agrr optimize allocate \\
+    --fields-file test_data/allocation_fields_with_fallow.json \\
+    --crops-file test_data/allocation_crops_1760447748.json \\
+    --planning-start 2023-04-01 --planning-end 2023-10-31 \\
+    --weather-file test_data/weather_2023_full.json
+
+  # Test without fallow period (continuous cultivation)
+  agrr optimize allocate \\
+    --fields-file test_data/allocation_fields_no_fallow.json \\
+    --crops-file test_data/allocation_crops_1760447748.json \\
+    --planning-start 2023-04-01 --planning-end 2023-10-31 \\
+    --weather-file test_data/weather_2023_full.json
+
 Fields File Format (JSON):
   Based on Field entity structure:
   {
@@ -140,16 +162,34 @@ Fields File Format (JSON):
         "name": "北圃場",                  // Required: Human-readable name
         "area": 1000.0,                   // Required: Field area in m²
         "daily_fixed_cost": 5000.0,       // Required: Daily fixed cost in ¥/day
-        "location": "北区画"               // Optional: Location description
+        "location": "北区画",              // Optional: Location description
+        "fallow_period_days": 28          // Optional: Fallow period in days (default: 28)
       },
       {
         "field_id": "field_02",
         "name": "南圃場",
         "area": 800.0,
-        "daily_fixed_cost": 4000.0
+        "daily_fixed_cost": 4000.0,
+        "fallow_period_days": 14          // Shorter fallow period
+      },
+      {
+        "field_id": "field_03",
+        "name": "東圃場",
+        "area": 1200.0,
+        "daily_fixed_cost": 6000.0
+        // fallow_period_days omitted → default 28 days
       }
     ]
   }
+  
+  Fallow Period:
+    - The fallow period is the required rest period for soil recovery between crops
+    - Specified in days (integer, >= 0)
+    - Default: 28 days if not specified
+    - Set to 0 for continuous cultivation (no rest period)
+    - Each field can have a different fallow period
+    - Example: If crop A finishes on June 30 with 28-day fallow, 
+               crop B cannot start before July 28
 
 Crops File Format (JSON):
   {
@@ -302,7 +342,12 @@ Output (JSON):
   }
 
 Notes:
-  - The algorithm uses Greedy + Local Search (Hill Climbing)
+  - Two algorithms available:
+    * dp (default): Optimal per-field allocation (DP + Local Search)
+    * greedy: Fast heuristic (Greedy + Local Search)
+  - DP algorithm solves weighted interval scheduling for each field independently
+  - Greedy algorithm is recommended for problems with many crops (6+) and tight revenue constraints
+  - Local search is applied by default after initial allocation
   - Weather file can be generated using 'agrr weather' command with --json flag
   - Crop profiles can be generated using 'agrr crop' command
   - Interaction rules allow modeling continuous cultivation impacts
@@ -375,7 +420,14 @@ Notes:
         parser.add_argument(
             "--disable-local-search",
             action="store_true",
-            help="Disable local search (greedy only)",
+            help="Disable local search (initial allocation only)",
+        )
+        parser.add_argument(
+            "--algorithm",
+            "-alg",
+            choices=["greedy", "dp"],
+            default="dp",
+            help="Algorithm for initial allocation: 'dp' (optimal per-field) or 'greedy' (fast heuristic). Default: dp",
         )
 
         return parser
@@ -461,11 +513,13 @@ Notes:
         # Execute use case
         try:
             enable_local_search = not getattr(args, 'disable_local_search', False)
+            algorithm = getattr(args, 'algorithm', 'dp')
             
             response = await self.interactor.execute(
                 request,
                 enable_local_search=enable_local_search,
                 config=config,
+                algorithm=algorithm,
             )
             self.presenter.present(response)
         except Exception as e:

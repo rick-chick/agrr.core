@@ -211,3 +211,147 @@ class TestCropAllocationEntity:
                 total_cost=765000.0,
             )
 
+    def test_overlaps_with_fallow_period_violation(self):
+        """Test overlap detection with fallow period violation."""
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=28)
+        crop1 = Crop("rice", "Rice", 0.25)
+        crop2 = Crop("tomato", "Tomato", 0.3)
+        
+        # First allocation: April 1 - June 30 (90 days)
+        alloc1 = CropAllocation(
+            allocation_id="alloc_001",
+            field=field,
+            crop=crop1,
+            area_used=250.0,
+            start_date=datetime(2025, 4, 1),
+            completion_date=datetime(2025, 6, 30),
+            growth_days=90,
+            accumulated_gdd=1800.0,
+            total_cost=450000.0,
+        )
+        
+        # Second allocation starts July 15 (only 15 days after first completion)
+        # This violates the 28-day fallow period
+        alloc2 = CropAllocation(
+            allocation_id="alloc_002",
+            field=field,
+            crop=crop2,
+            area_used=300.0,
+            start_date=datetime(2025, 7, 15),  # Too soon!
+            completion_date=datetime(2025, 10, 31),
+            growth_days=108,
+            accumulated_gdd=1800.0,
+            total_cost=540000.0,
+        )
+        
+        # Regular overlap check: False (no time overlap)
+        assert not alloc1.overlaps_with(alloc2)
+        
+        # Fallow period overlap check: True (violates fallow period)
+        assert alloc1.overlaps_with_fallow(alloc2)
+
+    def test_no_overlap_with_fallow_period_respected(self):
+        """Test no overlap when fallow period is respected."""
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=28)
+        crop1 = Crop("rice", "Rice", 0.25)
+        crop2 = Crop("tomato", "Tomato", 0.3)
+        
+        # First allocation: April 1 - June 30
+        alloc1 = CropAllocation(
+            allocation_id="alloc_001",
+            field=field,
+            crop=crop1,
+            area_used=250.0,
+            start_date=datetime(2025, 4, 1),
+            completion_date=datetime(2025, 6, 30),
+            growth_days=90,
+            accumulated_gdd=1800.0,
+            total_cost=450000.0,
+        )
+        
+        # Second allocation starts July 28 (exactly 28 days after)
+        alloc2 = CropAllocation(
+            allocation_id="alloc_002",
+            field=field,
+            crop=crop2,
+            area_used=300.0,
+            start_date=datetime(2025, 7, 28),  # Respects fallow period
+            completion_date=datetime(2025, 10, 31),
+            growth_days=95,
+            accumulated_gdd=1800.0,
+            total_cost=475000.0,
+        )
+        
+        # Both checks should return False (no overlap, fallow respected)
+        assert not alloc1.overlaps_with(alloc2)
+        assert not alloc1.overlaps_with_fallow(alloc2)
+
+    def test_overlaps_with_fallow_different_fields(self):
+        """Test that fallow overlap check respects different fields."""
+        field1 = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=28)
+        field2 = Field("f2", "Field 2", 1500.0, 6000.0, fallow_period_days=28)
+        crop = Crop("rice", "Rice", 0.25)
+        
+        alloc1 = CropAllocation(
+            allocation_id="alloc_001",
+            field=field1,
+            crop=crop,
+            area_used=250.0,
+            start_date=datetime(2025, 4, 1),
+            completion_date=datetime(2025, 6, 30),
+            growth_days=90,
+            accumulated_gdd=1800.0,
+            total_cost=450000.0,
+        )
+        
+        # Same period but different field
+        alloc2 = CropAllocation(
+            allocation_id="alloc_002",
+            field=field2,  # Different field
+            crop=crop,
+            area_used=250.0,
+            start_date=datetime(2025, 7, 1),  # Right after alloc1
+            completion_date=datetime(2025, 9, 30),
+            growth_days=91,
+            accumulated_gdd=1800.0,
+            total_cost=546000.0,
+        )
+        
+        # Different fields, so no overlap even with fallow period
+        assert not alloc1.overlaps_with_fallow(alloc2)
+
+    def test_overlaps_with_fallow_zero_fallow_period(self):
+        """Test fallow overlap with zero fallow period."""
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
+        crop1 = Crop("rice", "Rice", 0.25)
+        crop2 = Crop("tomato", "Tomato", 0.3)
+        
+        # First allocation
+        alloc1 = CropAllocation(
+            allocation_id="alloc_001",
+            field=field,
+            crop=crop1,
+            area_used=250.0,
+            start_date=datetime(2025, 4, 1),
+            completion_date=datetime(2025, 6, 30),
+            growth_days=90,
+            accumulated_gdd=1800.0,
+            total_cost=450000.0,
+        )
+        
+        # Second allocation starts immediately after (July 1)
+        alloc2 = CropAllocation(
+            allocation_id="alloc_002",
+            field=field,
+            crop=crop2,
+            area_used=300.0,
+            start_date=datetime(2025, 7, 1),  # Next day
+            completion_date=datetime(2025, 9, 30),
+            growth_days=91,
+            accumulated_gdd=1800.0,
+            total_cost=455000.0,
+        )
+        
+        # With zero fallow period, no overlap
+        assert not alloc1.overlaps_with_fallow(alloc2)
+

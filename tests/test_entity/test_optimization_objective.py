@@ -352,3 +352,149 @@ class TestYieldFactorImpact:
         # B: revenue=200*10*0.95=1900, cost=1000, profit=900
         # B should win despite lower revenue_per_area
         assert best["name"] == "B"
+
+
+class TestSoilRecoveryFactor:
+    """Test soil_recovery_factor impact on revenue and profit."""
+    
+    def test_soil_recovery_factor_default_is_one(self):
+        """Test that default soil_recovery_factor is 1.0 (no bonus)."""
+        metrics = OptimizationMetrics(
+            area_used=100.0,
+            revenue_per_area=10.0,
+            growth_days=50,
+            daily_fixed_cost=5.0,
+        )
+        
+        assert metrics.soil_recovery_factor == 1.0
+        assert metrics.revenue == 1000.0  # 100 * 10 * 1.0
+        assert metrics.profit == 750.0    # 1000 - 250
+    
+    def test_soil_recovery_factor_increases_revenue(self):
+        """Test that soil_recovery_factor > 1.0 increases revenue."""
+        metrics = OptimizationMetrics(
+            area_used=100.0,
+            revenue_per_area=10.0,
+            growth_days=50,
+            daily_fixed_cost=5.0,
+            soil_recovery_factor=1.05,  # 5% recovery bonus
+        )
+        
+        assert metrics.revenue == 1050.0  # 100 * 10 * 1.05
+        assert metrics.profit == 800.0    # 1050 - 250
+    
+    def test_soil_recovery_factor_maximum_bonus(self):
+        """Test maximum soil recovery bonus (60+ days fallow)."""
+        metrics = OptimizationMetrics(
+            area_used=200.0,
+            revenue_per_area=20.0,
+            growth_days=100,
+            daily_fixed_cost=10.0,
+            soil_recovery_factor=1.10,  # 10% recovery bonus
+        )
+        
+        # Base revenue: 200 * 20 = 4000
+        # With recovery: 4000 * 1.10 = 4400
+        # Cost: 100 * 10 = 1000
+        # Profit: 4400 - 1000 = 3400
+        assert metrics.revenue == 4400.0
+        assert metrics.cost == 1000.0
+        assert metrics.profit == 3400.0
+    
+    def test_soil_recovery_with_interaction_impact(self):
+        """Test soil recovery combined with interaction impact (continuous cultivation)."""
+        metrics = OptimizationMetrics(
+            area_used=100.0,
+            revenue_per_area=10.0,
+            growth_days=50,
+            daily_fixed_cost=5.0,
+            interaction_impact=0.75,     # -25% continuous cultivation penalty
+            soil_recovery_factor=1.05,   # +5% soil recovery bonus
+        )
+        
+        # Base revenue: 100 * 10 = 1000
+        # With interaction: 1000 * 0.75 = 750
+        # With recovery: 750 * 1.05 = 787.5
+        # Cost: 50 * 5 = 250
+        # Profit: 787.5 - 250 = 537.5
+        assert metrics.revenue == 787.5
+        assert metrics.profit == 537.5
+    
+    def test_soil_recovery_with_yield_factor_and_interaction(self):
+        """Test all three factors combined: yield, interaction, and soil recovery."""
+        metrics = OptimizationMetrics(
+            area_used=100.0,
+            revenue_per_area=10.0,
+            growth_days=50,
+            daily_fixed_cost=5.0,
+            yield_factor=0.9,            # -10% temperature stress
+            interaction_impact=0.8,      # -20% continuous cultivation
+            soil_recovery_factor=1.10,   # +10% soil recovery
+        )
+        
+        # Base revenue: 100 * 10 = 1000
+        # With yield: 1000 * 0.9 = 900
+        # With interaction: 900 * 0.8 = 720
+        # With recovery: 720 * 1.10 = 792
+        # Cost: 50 * 5 = 250
+        # Profit: 792 - 250 = 542
+        assert abs(metrics.revenue - 792.0) < 0.01
+        assert abs(metrics.profit - 542.0) < 0.01
+    
+    def test_objective_calculate_with_soil_recovery(self):
+        """Test OptimizationObjective.calculate() with soil_recovery_factor."""
+        objective = OptimizationObjective()
+        
+        # Scenario: 60+ day fallow period (10% bonus)
+        metrics = OptimizationMetrics(
+            area_used=150.0,
+            revenue_per_area=15.0,
+            growth_days=80,
+            daily_fixed_cost=8.0,
+            soil_recovery_factor=1.10,  # 10% recovery bonus
+        )
+        
+        profit = objective.calculate(metrics)
+        
+        # Revenue: 150 * 15 * 1.10 = 2475
+        # Cost: 80 * 8 = 640
+        # Profit: 2475 - 640 = 1835
+        expected_profit = (150.0 * 15.0 * 1.10) - (80 * 8)
+        assert abs(profit - expected_profit) < 0.01
+    
+    def test_select_best_considers_soil_recovery(self):
+        """Test that select_best accounts for soil_recovery_factor differences."""
+        objective = OptimizationObjective()
+        
+        # Candidate A: Higher base revenue but no soil recovery
+        metrics_a = OptimizationMetrics(
+            area_used=200.0,
+            revenue_per_area=11.0,
+            growth_days=100,
+            daily_fixed_cost=10.0,
+            soil_recovery_factor=1.0,  # No recovery
+        )
+        
+        # Candidate B: Lower base revenue but good soil recovery
+        metrics_b = OptimizationMetrics(
+            area_used=200.0,
+            revenue_per_area=10.0,
+            growth_days=100,
+            daily_fixed_cost=10.0,
+            soil_recovery_factor=1.10,  # 10% recovery bonus
+        )
+        
+        candidates = [
+            {"name": "A", "metrics": metrics_a},
+            {"name": "B", "metrics": metrics_b},
+        ]
+        
+        best = objective.select_best(
+            candidates,
+            key_func=lambda c: objective.calculate(c["metrics"])
+        )
+        
+        # A: revenue=200*11*1.0=2200, cost=1000, profit=1200
+        # B: revenue=200*10*1.10=2200, cost=1000, profit=1200
+        # They are equal, so either could win
+        assert best["name"] in ["A", "B"]

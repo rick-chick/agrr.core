@@ -24,7 +24,7 @@ class TestIsFeasible:
         """Test that single allocation is always feasible."""
         checker = AllocationFeasibilityChecker()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         alloc = CropAllocation(
@@ -46,7 +46,7 @@ class TestIsFeasible:
         """Test feasible solution with non-overlapping allocations."""
         checker = AllocationFeasibilityChecker()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         alloc1 = CropAllocation(
@@ -81,7 +81,7 @@ class TestIsFeasible:
         """Test infeasible solution with overlapping allocations."""
         checker = AllocationFeasibilityChecker()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         alloc1 = CropAllocation(
@@ -116,8 +116,8 @@ class TestIsFeasible:
         """Test that allocations in different fields can overlap in time."""
         checker = AllocationFeasibilityChecker()
         
-        field1 = Field("f1", "Field 1", 1000.0, 5000.0)
-        field2 = Field("f2", "Field 2", 800.0, 4500.0)
+        field1 = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
+        field2 = Field("f2", "Field 2", 800.0, 4500.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         alloc1 = CropAllocation(
@@ -157,7 +157,7 @@ class TestCheckTimeConstraints:
         """Test time constraints check with non-overlapping allocations."""
         checker = AllocationFeasibilityChecker()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         alloc1 = CropAllocation(
@@ -192,7 +192,7 @@ class TestCheckTimeConstraints:
         """Test time constraints check with overlapping allocations."""
         checker = AllocationFeasibilityChecker()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         alloc1 = CropAllocation(
@@ -232,7 +232,7 @@ class TestCheckAreaConstraints:
         """Test area constraints when within field capacity."""
         checker = AllocationFeasibilityChecker()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         # Two allocations using 500m² total (< 1000m²)
@@ -268,7 +268,7 @@ class TestCheckAreaConstraints:
         """Test area constraints when exceeding field capacity."""
         checker = AllocationFeasibilityChecker()
         
-        field = Field("f1", "Field 1", 500.0, 5000.0)  # Small field
+        field = Field("f1", "Field 1", 500.0, 5000.0, fallow_period_days=0)  # Small field
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         # Two allocations using 600m² total (> 500m²)
@@ -304,7 +304,7 @@ class TestCheckAreaConstraints:
         """Test that allocations at exactly field capacity pass."""
         checker = AllocationFeasibilityChecker()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         # Allocation using exactly 1000m² (100% of capacity)
@@ -328,8 +328,8 @@ class TestCheckAreaConstraints:
         """Test area constraints across multiple fields."""
         checker = AllocationFeasibilityChecker()
         
-        field1 = Field("f1", "Field 1", 1000.0, 5000.0)
-        field2 = Field("f2", "Field 2", 800.0, 4500.0)
+        field1 = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
+        field2 = Field("f2", "Field 2", 800.0, 4500.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         alloc1 = CropAllocation(
@@ -369,7 +369,7 @@ class TestComplexScenarios:
         """Test feasibility with multiple crops in same field sequentially."""
         checker = AllocationFeasibilityChecker()
         
-        field = Field("f1", "Field 1", 1000.0, 5000.0)
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         rice = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         wheat = Crop("wheat", "Wheat", 0.3, revenue_per_area=8000.0)
         
@@ -407,8 +407,8 @@ class TestComplexScenarios:
         """Test feasibility with same time period across different fields."""
         checker = AllocationFeasibilityChecker()
         
-        field1 = Field("f1", "Field 1", 1000.0, 5000.0)
-        field2 = Field("f2", "Field 2", 800.0, 4500.0)
+        field1 = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
+        field2 = Field("f2", "Field 2", 800.0, 4500.0, fallow_period_days=0)
         crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
         
         # Same time period but different fields
@@ -436,6 +436,131 @@ class TestComplexScenarios:
             expected_revenue=400000.0,
             profit=385000.0,
             area_used=400.0,
+        )
+        
+        assert checker.is_feasible([alloc1, alloc2]) is True
+
+
+@pytest.mark.unit
+class TestFallowPeriodConstraints:
+    """Tests for fallow period constraint validation."""
+    
+    def test_is_feasible_with_fallow_period_no_overlap(self):
+        """Test that allocations respect fallow period when they don't overlap."""
+        checker = AllocationFeasibilityChecker()
+        
+        # Field with 28-day fallow period
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=28)
+        crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
+        
+        # First allocation ends June 30
+        alloc1 = CropAllocation(
+            allocation_id="alloc1",
+            field=field,
+            crop=crop,
+            start_date=datetime(2024, 4, 1),
+            completion_date=datetime(2024, 6, 30),
+            growth_days=90,
+            accumulated_gdd=900.0,
+            total_cost=9000.0,
+            expected_revenue=250000.0,
+            profit=241000.0,
+            area_used=250.0,
+        )
+        
+        # Second allocation starts July 29 (28 days after June 30 + 1 day)
+        alloc2 = CropAllocation(
+            allocation_id="alloc2",
+            field=field,
+            crop=crop,
+            start_date=datetime(2024, 7, 29),  # Respects 28-day fallow
+            completion_date=datetime(2024, 10, 31),
+            growth_days=90,
+            accumulated_gdd=900.0,
+            total_cost=9000.0,
+            expected_revenue=250000.0,
+            profit=241000.0,
+            area_used=250.0,
+        )
+        
+        assert checker.is_feasible([alloc1, alloc2]) is True
+    
+    def test_is_feasible_with_fallow_period_overlap(self):
+        """Test that allocations violating fallow period are infeasible."""
+        checker = AllocationFeasibilityChecker()
+        
+        # Field with 28-day fallow period
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=28)
+        crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
+        
+        # First allocation ends June 30
+        alloc1 = CropAllocation(
+            allocation_id="alloc1",
+            field=field,
+            crop=crop,
+            start_date=datetime(2024, 4, 1),
+            completion_date=datetime(2024, 6, 30),
+            growth_days=90,
+            accumulated_gdd=900.0,
+            total_cost=9000.0,
+            expected_revenue=250000.0,
+            profit=241000.0,
+            area_used=250.0,
+        )
+        
+        # Second allocation starts July 15 (violates 28-day fallow)
+        alloc2 = CropAllocation(
+            allocation_id="alloc2",
+            field=field,
+            crop=crop,
+            start_date=datetime(2024, 7, 15),  # Too soon! Needs to wait until July 29
+            completion_date=datetime(2024, 10, 31),
+            growth_days=90,
+            accumulated_gdd=900.0,
+            total_cost=9000.0,
+            expected_revenue=250000.0,
+            profit=241000.0,
+            area_used=250.0,
+        )
+        
+        assert checker.is_feasible([alloc1, alloc2]) is False
+    
+    def test_is_feasible_with_zero_fallow_period(self):
+        """Test that zero fallow period allows immediate sequential planting."""
+        checker = AllocationFeasibilityChecker()
+        
+        # Field with no fallow period
+        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
+        crop = Crop("rice", "Rice", 0.25, revenue_per_area=10000.0)
+        
+        # First allocation ends June 30
+        alloc1 = CropAllocation(
+            allocation_id="alloc1",
+            field=field,
+            crop=crop,
+            start_date=datetime(2024, 4, 1),
+            completion_date=datetime(2024, 6, 30),
+            growth_days=90,
+            accumulated_gdd=900.0,
+            total_cost=9000.0,
+            expected_revenue=250000.0,
+            profit=241000.0,
+            area_used=250.0,
+        )
+        
+        # Second allocation can start immediately on July 1
+        alloc2 = CropAllocation(
+            allocation_id="alloc2",
+            field=field,
+            crop=crop,
+            start_date=datetime(2024, 7, 1),  # No fallow needed
+            completion_date=datetime(2024, 9, 30),
+            growth_days=90,
+            accumulated_gdd=900.0,
+            total_cost=9000.0,
+            expected_revenue=250000.0,
+            profit=241000.0,
+            area_used=250.0,
         )
         
         assert checker.is_feasible([alloc1, alloc2]) is True

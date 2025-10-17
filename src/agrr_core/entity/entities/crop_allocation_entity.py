@@ -114,3 +114,37 @@ class CropAllocation:
         # Check time overlap: two intervals overlap if one starts before the other ends
         return not (self.completion_date < other.start_date or other.completion_date < self.start_date)
 
+    def overlaps_with_fallow(self, other: "CropAllocation") -> bool:
+        """Check if this allocation overlaps with another including fallow period.
+        
+        This method checks if two allocations violate the fallow period constraint.
+        The fallow period is the required rest period for the soil after crop harvest.
+        
+        Args:
+            other: Another allocation to check overlap with
+            
+        Returns:
+            True if allocations overlap considering fallow period, False otherwise
+            
+        Example:
+            If alloc1 completes on June 30 and field has 28-day fallow period,
+            alloc2 must start on or after July 28.
+        """
+        from datetime import timedelta
+        
+        # Only check overlap if both allocations are in the same field
+        if self.field.field_id != other.field.field_id:
+            return False
+        
+        # Calculate end dates including fallow period
+        self_end_with_fallow = self.completion_date + timedelta(
+            days=self.field.fallow_period_days
+        )
+        other_end_with_fallow = other.completion_date + timedelta(
+            days=other.field.fallow_period_days
+        )
+        
+        # Check overlap with fallow periods included
+        return not (self_end_with_fallow <= other.start_date or 
+                    other_end_with_fallow <= self.start_date)
+

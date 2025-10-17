@@ -59,9 +59,13 @@ class OptimizationMetrics:
         yield_factor: Yield reduction factor due to temperature stress (0-1)
                      1.0 = no impact, 0.0 = total loss
         
+    Fields for soil recovery:
+        soil_recovery_factor: Soil recovery bonus based on fallow period (>= 1.0)
+                             1.0 = no recovery period, 1.1 = maximum recovery bonus
+        
     Calculated properties:
         cost: Total cost
-        revenue: Total revenue (with yield_factor, interaction_impact, and market demand limit applied)
+        revenue: Total revenue (with yield_factor, interaction_impact, soil_recovery_factor, and market demand limit applied)
         profit: Total profit (revenue - cost)
     """
     
@@ -79,6 +83,9 @@ class OptimizationMetrics:
     # Yield impact parameters
     yield_factor: float = 1.0  # Default: no yield impact
     
+    # Soil recovery parameters
+    soil_recovery_factor: float = 1.0  # Default: no recovery bonus
+    
     @classmethod
     def create_for_allocation(
         cls,
@@ -95,12 +102,14 @@ class OptimizationMetrics:
         field_schedules: Optional[dict] = None,
         interaction_rules: Optional[List['InteractionRule']] = None,
         yield_factor: float = 1.0,
+        planning_start_date = None,
     ) -> 'OptimizationMetrics':
         """Create OptimizationMetrics for allocation with automatic calculations.
         
         This factory method automatically calculates:
         - crop_cumulative_revenue from current_allocations
         - interaction_impact from field_schedules and interaction_rules
+        - soil_recovery_factor from field_schedules and planning_start_date
         
         This is the RECOMMENDED way to create OptimizationMetrics for allocations.
         
@@ -113,11 +122,12 @@ class OptimizationMetrics:
             crop_id: Crop identifier (for cumulative revenue lookup)
             crop: Crop entity (for interaction rules)
             field: Field entity (for interaction rules)
-            start_date: Start date (for interaction rules)
+            start_date: Start date (for interaction rules and soil recovery)
             current_allocations: Currently selected allocations
             field_schedules: Dict mapping field_id to allocations
             interaction_rules: List of interaction rules
             yield_factor: Yield reduction factor (default: 1.0)
+            planning_start_date: Planning period start date (for soil recovery calculation)
             
         Returns:
             OptimizationMetrics with all calculations performed
@@ -136,6 +146,13 @@ class OptimizationMetrics:
                 crop, field, start_date, field_schedules, interaction_rules
             )
         
+        # Calculate soil recovery factor (SINGLE SOURCE OF TRUTH)
+        soil_recovery_factor = 1.0
+        if field_schedules is not None:
+            soil_recovery_factor = cls.calculate_soil_recovery_factor(
+                field, start_date, field_schedules, planning_start_date
+            )
+        
         return cls(
             area_used=area_used,
             revenue_per_area=revenue_per_area,
@@ -145,6 +162,7 @@ class OptimizationMetrics:
             growth_days=growth_days,
             daily_fixed_cost=daily_fixed_cost,
             yield_factor=yield_factor,
+            soil_recovery_factor=soil_recovery_factor,
         )
     
     @property
@@ -165,7 +183,7 @@ class OptimizationMetrics:
     def revenue(self) -> Optional[float]:
         """Calculate total revenue with all impacts applied.
         
-        Formula: revenue = area_used * revenue_per_area * yield_factor * interaction_impact
+        Formula: revenue = area_used * revenue_per_area * yield_factor * interaction_impact * soil_recovery_factor
         
         Factors applied:
         1. yield_factor: Temperature stress impacts on actual yield
@@ -178,7 +196,13 @@ class OptimizationMetrics:
            - 0.75 = 25% reduction (continuous cultivation penalty)
            - 1.1 = 10% increase (beneficial rotation)
         
-        3. Market demand budget (max_revenue):
+        3. soil_recovery_factor: Soil recovery bonus from fallow period
+           - 1.0 = no recovery period (0-14 days)
+           - 1.02 = short recovery (15-29 days)
+           - 1.05 = medium recovery (30-59 days)
+           - 1.10 = full recovery (60+ days)
+        
+        4. Market demand budget (max_revenue):
            - max_revenue represents market demand/contract limit for this crop
            - crop_cumulative_revenue tracks how much has already been sold
            - Remaining capacity: max(0, max_revenue - crop_cumulative_revenue)
@@ -205,6 +229,9 @@ class OptimizationMetrics:
         
         # Apply interaction impact (continuous cultivation, rotation, etc.)
         revenue = revenue * self.interaction_impact
+        
+        # Apply soil recovery factor (fallow period bonus)
+        revenue = revenue * self.soil_recovery_factor
         
         # Apply market demand limit (farm-wide cumulative sales)
         if self.max_revenue is not None:
@@ -272,9 +299,10 @@ class OptimizationMetrics:
         cls, 
         allocations: List['CropAllocation'],
         field_schedules: Optional[dict] = None,
-        interaction_rules: Optional[List['InteractionRule']] = None
+        interaction_rules: Optional[List['InteractionRule']] = None,
+        planning_start_date = None
     ) -> List['CropAllocation']:
-        """Recalculate all allocations with proper context (cumulative revenue, interaction impact, etc.).
+        """Recalculate all allocations with proper context (cumulative revenue, interaction impact, soil recovery, etc.).
         
         This is the SINGLE SOURCE OF TRUTH for recalculating allocations after DP or other operations.
         Uses create_for_allocation() factory to ensure all profit calculations are unified.
@@ -283,12 +311,13 @@ class OptimizationMetrics:
         1. Group allocations by crop
         2. Sort by profit rate (descending) for each crop
         3. Recalculate each allocation using create_for_allocation() factory
-        4. All calculations (cumulative revenue, interaction impact) handled automatically
+        4. All calculations (cumulative revenue, interaction impact, soil recovery) handled automatically
         
         Args:
             allocations: List of allocations to recalculate
             field_schedules: Dict mapping field_id to allocations (for interaction rules)
             interaction_rules: List of interaction rules (for continuous cultivation, etc.)
+            planning_start_date: Planning period start date (for soil recovery calculation)
             
         Returns:
             Recalculated allocations with correct revenue/profit
@@ -298,7 +327,7 @@ class OptimizationMetrics:
             allocations = dp_allocate(...)
             # Recalculate with proper context
             allocations = OptimizationMetrics.recalculate_allocations_with_context(
-                allocations, field_schedules, interaction_rules
+                allocations, field_schedules, interaction_rules, planning_start_date
             )
         """
         import dataclasses
@@ -329,6 +358,7 @@ class OptimizationMetrics:
                 current_allocations=processed_allocs,
                 field_schedules=field_schedules,
                 interaction_rules=interaction_rules,
+                planning_start_date=planning_start_date,
             )
             
             # Extract calculated values
@@ -424,6 +454,78 @@ class OptimizationMetrics:
                         combined_impact *= impact
         
         return combined_impact
+    
+    @staticmethod
+    def calculate_soil_recovery_factor(
+        field: 'Field',
+        start_date,
+        field_schedules: dict,
+        planning_start_date = None
+    ) -> float:
+        """Calculate soil recovery bonus based on fallow period.
+        
+        This is the SINGLE SOURCE OF TRUTH for soil recovery bonus calculation.
+        The bonus increases with the length of the fallow period between crops.
+        
+        Recovery factor scale:
+        - 0-14 days: 1.00 (no bonus)
+        - 15-29 days: 1.02 (2% bonus)
+        - 30-59 days: 1.05 (5% bonus)
+        - 60+ days: 1.10 (10% bonus)
+        
+        Args:
+            field: The field being allocated to
+            start_date: Start date of this allocation
+            field_schedules: Dict mapping field_id to list of allocations
+            planning_start_date: Planning period start date (used if no previous crop)
+            
+        Returns:
+            Soil recovery factor (>= 1.0)
+            
+        Example:
+            factor = OptimizationMetrics.calculate_soil_recovery_factor(
+                field, start_date, field_schedules, planning_start_date
+            )
+            # Returns: 1.05 (30-day fallow period)
+        """
+        # Get previous allocation in this field
+        field_allocs = field_schedules.get(field.field_id, [])
+        
+        if not field_allocs:
+            # No previous crop - calculate from planning start if available
+            if planning_start_date is not None:
+                days_since_last_crop = (start_date - planning_start_date).days
+            else:
+                # No planning start date - assume maximum recovery
+                return 1.10
+        else:
+            # Find the allocation that ends just before this one
+            previous_alloc = None
+            for alloc in field_allocs:
+                if alloc.completion_date <= start_date:
+                    if previous_alloc is None or alloc.completion_date > previous_alloc.completion_date:
+                        previous_alloc = alloc
+            
+            if not previous_alloc:
+                # No previous crop before this date - use planning start if available
+                if planning_start_date is not None:
+                    days_since_last_crop = (start_date - planning_start_date).days
+                else:
+                    # No planning start date - assume maximum recovery
+                    return 1.10
+            else:
+                # Calculate days since previous crop completion
+                days_since_last_crop = (start_date - previous_alloc.completion_date).days
+        
+        # Apply recovery factor based on fallow period
+        if days_since_last_crop >= 60:
+            return 1.10  # Maximum recovery bonus
+        elif days_since_last_crop >= 30:
+            return 1.05  # Medium recovery
+        elif days_since_last_crop >= 15:
+            return 1.02  # Short recovery
+        else:
+            return 1.0   # No recovery bonus
 
 
 class OptimizationObjective:

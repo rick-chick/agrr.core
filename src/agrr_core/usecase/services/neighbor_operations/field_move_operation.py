@@ -55,11 +55,11 @@ class FieldMoveOperation(NeighborOperation):
                 if alloc.area_used > available_area:
                     continue
                 
-                # Check time overlap
+                # Check time overlap (including fallow period)
                 has_overlap = False
                 for existing in solution:
                     if existing.field.field_id == target_field.field_id:
-                        if alloc.overlaps_with(existing):
+                        if alloc.overlaps_with_fallow(existing):
                             has_overlap = True
                             break
                 

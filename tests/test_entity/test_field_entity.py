@@ -121,3 +121,76 @@ class TestFieldEntity:
         )
         
         assert field1 != field2
+
+    def test_field_default_fallow_period(self):
+        """Test Field has default fallow period of 28 days."""
+        field = Field(
+            field_id="field_010",
+            name="圃場B",
+            area=1000.0,
+            daily_fixed_cost=5000.0
+        )
+        
+        assert field.fallow_period_days == 28
+
+    def test_field_custom_fallow_period(self):
+        """Test Field with custom fallow period."""
+        field = Field(
+            field_id="field_011",
+            name="圃場C",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+            fallow_period_days=14
+        )
+        
+        assert field.fallow_period_days == 14
+
+    def test_field_zero_fallow_period(self):
+        """Test Field with zero fallow period (no rest period)."""
+        field = Field(
+            field_id="field_012",
+            name="圃場D",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+            fallow_period_days=0
+        )
+        
+        assert field.fallow_period_days == 0
+
+    def test_field_equality_same_fallow_period(self):
+        """Test Field equality includes fallow period."""
+        field1 = Field(
+            field_id="field_013",
+            name="圃場E",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+            fallow_period_days=21
+        )
+        field2 = Field(
+            field_id="field_013",
+            name="圃場E",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+            fallow_period_days=21
+        )
+        
+        assert field1 == field2
+
+    def test_field_inequality_different_fallow_period(self):
+        """Test Field inequality when fallow_period_days differs."""
+        field1 = Field(
+            field_id="field_014",
+            name="圃場F",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+            fallow_period_days=14
+        )
+        field2 = Field(
+            field_id="field_014",
+            name="圃場F",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+            fallow_period_days=28
+        )
+        
+        assert field1 != field2

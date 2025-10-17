@@ -311,3 +311,140 @@ class TestFieldFileGateway:
         # Assert
         assert field is None
 
+    async def test_read_field_with_default_fallow_period(self, field_file_repository, temp_dir):
+        """Test reading field without fallow_period_days uses default value."""
+        # Arrange
+        test_file = temp_dir / "test_field.json"
+        field_data = {
+            "field_id": "field_01",
+            "name": "北圃場",
+            "area": 1000.0,
+            "daily_fixed_cost": 5000.0
+            # fallow_period_days not specified
+        }
+        test_file.write_text(json.dumps(field_data, ensure_ascii=False), encoding='utf-8')
+
+        # Act
+        fields = await field_file_repository.read_fields_from_file(str(test_file))
+
+        # Assert
+        assert len(fields) == 1
+        field = fields[0]
+        assert field.fallow_period_days == 28  # Default value
+
+    async def test_read_field_with_custom_fallow_period(self, field_file_repository, temp_dir):
+        """Test reading field with custom fallow_period_days."""
+        # Arrange
+        test_file = temp_dir / "test_field.json"
+        field_data = {
+            "field_id": "field_01",
+            "name": "北圃場",
+            "area": 1000.0,
+            "daily_fixed_cost": 5000.0,
+            "fallow_period_days": 14
+        }
+        test_file.write_text(json.dumps(field_data, ensure_ascii=False), encoding='utf-8')
+
+        # Act
+        fields = await field_file_repository.read_fields_from_file(str(test_file))
+
+        # Assert
+        assert len(fields) == 1
+        field = fields[0]
+        assert field.fallow_period_days == 14
+
+    async def test_read_field_with_zero_fallow_period(self, field_file_repository, temp_dir):
+        """Test reading field with zero fallow_period_days."""
+        # Arrange
+        test_file = temp_dir / "test_field.json"
+        field_data = {
+            "field_id": "field_01",
+            "name": "北圃場",
+            "area": 1000.0,
+            "daily_fixed_cost": 5000.0,
+            "fallow_period_days": 0
+        }
+        test_file.write_text(json.dumps(field_data, ensure_ascii=False), encoding='utf-8')
+
+        # Act
+        fields = await field_file_repository.read_fields_from_file(str(test_file))
+
+        # Assert
+        assert len(fields) == 1
+        field = fields[0]
+        assert field.fallow_period_days == 0
+
+    async def test_read_multiple_fields_with_different_fallow_periods(self, field_file_repository, temp_dir):
+        """Test reading multiple fields with different fallow periods."""
+        # Arrange
+        test_file = temp_dir / "test_fields.json"
+        fields_data = {
+            "fields": [
+                {
+                    "field_id": "field_01",
+                    "name": "北圃場",
+                    "area": 1000.0,
+                    "daily_fixed_cost": 5000.0,
+                    "fallow_period_days": 14
+                },
+                {
+                    "field_id": "field_02",
+                    "name": "南圃場",
+                    "area": 1500.0,
+                    "daily_fixed_cost": 7000.0,
+                    "fallow_period_days": 21
+                },
+                {
+                    "field_id": "field_03",
+                    "name": "東圃場",
+                    "area": 800.0,
+                    "daily_fixed_cost": 4000.0
+                    # fallow_period_days not specified, should use default
+                }
+            ]
+        }
+        test_file.write_text(json.dumps(fields_data, ensure_ascii=False), encoding='utf-8')
+
+        # Act
+        fields = await field_file_repository.read_fields_from_file(str(test_file))
+
+        # Assert
+        assert len(fields) == 3
+        assert fields[0].fallow_period_days == 14
+        assert fields[1].fallow_period_days == 21
+        assert fields[2].fallow_period_days == 28  # Default
+
+    async def test_validate_field_data_with_valid_fallow_period(self, field_file_repository):
+        """Test validation accepts valid fallow_period_days."""
+        # Arrange
+        field_data = {
+            "field_id": "field_01",
+            "name": "北圃場",
+            "area": 1000.0,
+            "daily_fixed_cost": 5000.0,
+            "fallow_period_days": 21
+        }
+
+        # Act
+        result = field_file_repository.validate_field_data(field_data)
+
+        # Assert
+        assert result is True
+
+    async def test_validate_field_data_with_negative_fallow_period(self, field_file_repository):
+        """Test validation rejects negative fallow_period_days."""
+        # Arrange
+        field_data = {
+            "field_id": "field_01",
+            "name": "北圃場",
+            "area": 1000.0,
+            "daily_fixed_cost": 5000.0,
+            "fallow_period_days": -10
+        }
+
+        # Act
+        result = field_file_repository.validate_field_data(field_data)
+
+        # Assert
+        assert result is False
+

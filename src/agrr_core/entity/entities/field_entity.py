@@ -9,6 +9,7 @@ Fields:
 - area: Field area in square meters (m²)
 - daily_fixed_cost: Daily fixed cost for this field (in JPY or currency unit per day)
 - location: Optional location description or identifier
+- fallow_period_days: Number of days required for soil recovery between crops (default: 28 days)
 """
 
 from dataclasses import dataclass
@@ -24,3 +25,4 @@ class Field:
     area: float
     daily_fixed_cost: float
     location: Optional[str] = None
+    fallow_period_days: int = 28

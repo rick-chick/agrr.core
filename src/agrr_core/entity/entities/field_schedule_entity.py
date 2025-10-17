@@ -59,12 +59,13 @@ class FieldSchedule:
                     f"not {self.field.field_id}"
                 )
         
-        # Verify no time overlaps between allocations
+        # Verify no time overlaps between allocations (including fallow period)
         for i, alloc1 in enumerate(self.allocations):
             for alloc2 in self.allocations[i + 1:]:
-                if alloc1.overlaps_with(alloc2):
+                if alloc1.overlaps_with_fallow(alloc2):
                     raise ValueError(
-                        f"Allocations {alloc1.allocation_id} and {alloc2.allocation_id} overlap in time"
+                        f"Allocations {alloc1.allocation_id} and {alloc2.allocation_id} overlap "
+                        f"(considering {alloc1.field.fallow_period_days}-day fallow period)"
                     )
 
     @property

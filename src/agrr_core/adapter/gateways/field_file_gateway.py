@@ -24,7 +24,8 @@ class FieldFileGateway(FieldGateway):
           "name": "北圃場",
           "area": 1000.0,
           "daily_fixed_cost": 5000.0,
-          "location": "北区画"  // optional
+          "location": "北区画",  // optional
+          "fallow_period_days": 28  // optional, default: 28
         }
       
       Multiple fields:
@@ -35,7 +36,8 @@ class FieldFileGateway(FieldGateway):
               "name": "北圃場",
               "area": 1000.0,
               "daily_fixed_cost": 5000.0,
-              "location": "北区画"
+              "location": "北区画",
+              "fallow_period_days": 28
             },
             ...
           ]
@@ -194,12 +196,18 @@ class FieldFileGateway(FieldGateway):
                 raise FileError("Field 'daily_fixed_cost' must be non-negative")
         
         try:
+            # Handle fallow_period_days with default value
+            fallow_period_days = 28  # Default
+            if 'fallow_period_days' in data and data['fallow_period_days'] is not None:
+                fallow_period_days = int(data['fallow_period_days'])
+            
             return Field(
                 field_id=str(data['field_id']),
                 name=str(data['name']),
                 area=float(data['area']),
                 daily_fixed_cost=float(data['daily_fixed_cost']),
-                location=str(data['location']) if 'location' in data and data['location'] is not None else None
+                location=str(data['location']) if 'location' in data and data['location'] is not None else None,
+                fallow_period_days=fallow_period_days
             )
         except (KeyError, ValueError, TypeError) as e:
             raise FileError(f"Invalid field data: {e}")
@@ -235,6 +243,12 @@ class FieldFileGateway(FieldGateway):
             # location is optional, but if present should be string-convertible
             if 'location' in data and data['location'] is not None:
                 str(data['location'])
+            
+            # fallow_period_days is optional, but if present must be non-negative integer
+            if 'fallow_period_days' in data and data['fallow_period_days'] is not None:
+                fallow_period = int(data['fallow_period_days'])
+                if fallow_period < 0:
+                    return False
             
             return True
             

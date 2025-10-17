@@ -33,7 +33,13 @@ Usage:
   agrr <command> [options]
 
 Available Commands:
-  weather           Get historical weather data from Open-Meteo or JMA
+  weather           Get historical weather data
+                    - openmeteo: Global coverage, 2-3 years historical data (default)
+                    - jma: Japan only, high quality, recent years
+                    - noaa-ftp: US only, long-term historical data (1901-present, 2000+ recommended)
+                      * 197 stations across all 50 US states
+                      * Automatic year-by-year fetching for multi-year requests
+                      * Free, no registration required
   forecast          Get 16-day weather forecast from tomorrow
   crop              Get crop growth profiles using AI
   progress          Calculate crop growth progress based on weather data
@@ -41,11 +47,14 @@ Available Commands:
   predict           Predict future weather using ML models (ARIMA, LightGBM)
 
 Examples:
-  # Get historical weather data for Tokyo (last 7 days) - OpenMeteo
+  # Get recent weather data (default: OpenMeteo)
   agrr weather --location 35.6762,139.6503 --days 7
 
-  # Get historical weather data for Tokyo - JMA (気象庁)
+  # Get Japan weather data (high quality, JMA)
   agrr weather --location 35.6762,139.6503 --days 7 --data-source jma
+  
+  # Get US long-term weather data (2000-2023, NOAA FTP, auto year-split)
+  agrr weather --location 40.7128,-74.0060 --start-date 2000-01-01 --end-date 2023-12-31 --data-source noaa-ftp --json
 
   # Get 16-day weather forecast
   agrr forecast --location 35.6762,139.6503

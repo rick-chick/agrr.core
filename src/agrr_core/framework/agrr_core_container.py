@@ -9,6 +9,8 @@ from agrr_core.framework.services.io.html_table_service import HtmlTableService
 from agrr_core.framework.services.io.csv_service import CsvService
 from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway
 from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway
+from agrr_core.adapter.gateways.weather_noaa_gateway import WeatherNOAAGateway
+from agrr_core.adapter.gateways.weather_noaa_ftp_gateway import WeatherNOAAFTPGateway
 from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway
 from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAdapter
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
@@ -79,6 +81,10 @@ class AgrrCoreContainer:
             
             if data_source == 'jma':
                 weather_api_gateway = self.get_weather_jma_gateway()
+            elif data_source == 'noaa':
+                weather_api_gateway = self.get_weather_noaa_gateway()
+            elif data_source == 'noaa-ftp':
+                weather_api_gateway = self.get_weather_noaa_ftp_gateway()
             else:
                 weather_api_gateway = self.get_weather_api_gateway()
             
@@ -182,6 +188,19 @@ class AgrrCoreContainer:
             html_table_fetcher = self.get_html_table_fetcher()
             self._instances['weather_jma_gateway'] = WeatherJMAGateway(html_table_fetcher)
         return self._instances['weather_jma_gateway']
+    
+    def get_weather_noaa_gateway(self) -> WeatherNOAAGateway:
+        """Get NOAA weather gateway instance (HTTP/ISD)."""
+        if 'weather_noaa_gateway' not in self._instances:
+            http_client = self.get_http_service_impl()
+            self._instances['weather_noaa_gateway'] = WeatherNOAAGateway(http_client)
+        return self._instances['weather_noaa_gateway']
+    
+    def get_weather_noaa_ftp_gateway(self) -> WeatherNOAAFTPGateway:
+        """Get NOAA FTP weather gateway instance (long-term historical data: 1901-present)."""
+        if 'weather_noaa_ftp_gateway' not in self._instances:
+            self._instances['weather_noaa_ftp_gateway'] = WeatherNOAAFTPGateway()
+        return self._instances['weather_noaa_ftp_gateway']
     
     def get_weather_gateway(self) -> WeatherGateway:
         """Get weather gateway instance."""

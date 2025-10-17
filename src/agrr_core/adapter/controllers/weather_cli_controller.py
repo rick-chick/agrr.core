@@ -47,6 +47,9 @@ Examples:
   # Get weather from JMA (Japan Meteorological Agency) for Tokyo
   agrr weather --location 35.6762,139.6503 --days 7 --data-source jma
   
+  # Get long-term historical data from NOAA FTP (US 2000+)
+  agrr weather --location 40.7128,-74.0060 --start-date 2000-01-01 --end-date 2023-12-31 --data-source noaa-ftp
+  
   # Get weather for specific historical date range
   agrr weather --location 35.6762,139.6503 --start-date 2024-01-01 --end-date 2024-01-07
   
@@ -142,9 +145,9 @@ Output (JSON):
         # Data source selection
         weather_parser.add_argument(
             '--data-source',
-            choices=['openmeteo', 'jma'],
+            choices=['openmeteo', 'jma', 'noaa-ftp'],
             default='openmeteo',
-            help='Weather data source: openmeteo (global, default) or jma (Japan only, more accurate for Japan)'
+            help='Weather data source: openmeteo (global, default), jma (Japan only), or noaa-ftp (US long-term historical data 2000+)'
         )
         
         # Date range arguments
@@ -277,6 +280,19 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
             else:
                 start_date, end_date = self.calculate_date_range(args.days)
             
+            # Check if we should split by year (for long-term data)
+            data_source = getattr(args, 'data_source', 'openmeteo')
+            json_output = getattr(args, 'json', False)
+            
+            if self._should_split_by_year(start_date, end_date, data_source):
+                # Fetch data year by year (more reliable for long-term data)
+                await self._fetch_by_year_chunks(
+                    latitude, longitude, start_date, end_date, 
+                    data_source, json_output
+                )
+                return
+            
+            # Normal single-request fetch
             # Create request DTO
             request = WeatherDataRequestDTO(
                 latitude=latitude,
@@ -387,6 +403,172 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
         except Exception as e:
             json_output = getattr(args, 'json', False)
             self.cli_presenter.display_error(f"Unexpected error: {e}", "INTERNAL_ERROR", json_output=json_output)
+    
+    def _should_split_by_year(self, start_date: str, end_date: str, data_source: str) -> bool:
+        """Determine if we should split the request by year.
+        
+        For NOAA FTP data source and date ranges spanning multiple years,
+        it's more reliable to fetch year by year.
+        """
+        # Only split for NOAA FTP source
+        if data_source != 'noaa-ftp':
+            return False
+        
+        # Check if date range spans multiple years
+        start = datetime.strptime(start_date, '%Y-%m-%d')
+        end = datetime.strptime(end_date, '%Y-%m-%d')
+        
+        # Split if more than 1 year
+        days_diff = (end - start).days
+        return days_diff > 365
+    
+    async def _fetch_by_year_chunks(
+        self,
+        latitude: float,
+        longitude: float,
+        start_date: str,
+        end_date: str,
+        data_source: str,
+        json_output: bool
+    ) -> None:
+        """Fetch weather data year by year and merge.
+        
+        This is more reliable for long-term historical data.
+        """
+        import sys
+        import json
+        
+        start = datetime.strptime(start_date, '%Y-%m-%d')
+        end = datetime.strptime(end_date, '%Y-%m-%d')
+        
+        all_weather_data = []
+        failed_years = []
+        
+        # Display progress header (to stderr if JSON output)
+        output_stream = sys.stderr if json_output else sys.stdout
+        print(f"\n{'='*60}", file=output_stream)
+        print(f"Fetching Long-Term Weather Data", file=output_stream)
+        print(f"{'='*60}", file=output_stream)
+        print(f"Location: {latitude}, {longitude}", file=output_stream)
+        print(f"Period: {start_date} to {end_date}", file=output_stream)
+        print(f"Data Source: {data_source}", file=output_stream)
+        print(f"Mode: Year-by-year fetch (more reliable)", file=output_stream)
+        print(f"{'='*60}\n", file=output_stream)
+        
+        # Fetch year by year
+        current_year = start.year
+        end_year = end.year
+        
+        while current_year <= end_year:
+            # Determine date range for this year
+            year_start = start.strftime('%Y-%m-%d') if current_year == start.year else f"{current_year}-01-01"
+            year_end = end.strftime('%Y-%m-%d') if current_year == end.year else f"{current_year}-12-31"
+            
+            print(f"[{current_year}] Fetching data from {year_start} to {year_end}...", file=output_stream, flush=True)
+            
+            try:
+                # Create request for this year
+                request = WeatherDataRequestDTO(
+                    latitude=latitude,
+                    longitude=longitude,
+                    start_date=year_start,
+                    end_date=year_end
+                )
+                
+                # Execute interactor
+                result = await self.weather_interactor.execute(request)
+                
+                if result.get('success', False):
+                    data = result.get('data', {})
+                    weather_data_list = data.get('data', [])
+                    
+                    if weather_data_list:
+                        all_weather_data.extend(weather_data_list)
+                        print(f"[{current_year}] ✅ Success! Fetched {len(weather_data_list)} records", file=output_stream)
+                    else:
+                        failed_years.append(current_year)
+                        print(f"[{current_year}] ⚠️  No data available", file=output_stream)
+                else:
+                    failed_years.append(current_year)
+                    error_msg = result.get('error', 'Unknown error')
+                    print(f"[{current_year}] ❌ Failed: {error_msg}", file=output_stream)
+                    
+            except Exception as e:
+                failed_years.append(current_year)
+                print(f"[{current_year}] ❌ Error: {str(e)}", file=output_stream)
+            
+            current_year += 1
+        
+        # Display summary
+        print(f"\n{'='*60}", file=output_stream)
+        print(f"Summary", file=output_stream)
+        print(f"{'='*60}", file=output_stream)
+        print(f"Total records: {len(all_weather_data)}", file=output_stream)
+        print(f"Successful years: {end_year - start.year + 1 - len(failed_years)}", file=output_stream)
+        if failed_years:
+            print(f"Failed years: {failed_years}", file=output_stream)
+        print(f"{'='*60}\n", file=output_stream)
+        
+        # Check if we got any data
+        if not all_weather_data:
+            self.cli_presenter.display_error(
+                f"No weather data found for location ({latitude}, {longitude}) "
+                f"from {start_date} to {end_date}"
+            )
+            sys.exit(1)
+        
+        # Sort by time
+        all_weather_data.sort(key=lambda x: x['time'] if isinstance(x, dict) else x.time)
+        
+        # Display results
+        if json_output:
+            # JSON output
+            output = {
+                'data': all_weather_data,
+                'total_count': len(all_weather_data),
+                'location': {
+                    'latitude': latitude,
+                    'longitude': longitude
+                }
+            }
+            print(json.dumps(output, indent=2))
+        else:
+            # Table output
+            from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataListResponseDTO
+            from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
+            from agrr_core.usecase.dto.location_response_dto import LocationResponseDTO
+            
+            # Convert dict data to DTOs
+            dto_list = []
+            for item in all_weather_data:
+                if isinstance(item, dict):
+                    dto = WeatherDataResponseDTO(
+                        time=item.get('time', ''),
+                        temperature_2m_max=item.get('temperature_2m_max'),
+                        temperature_2m_min=item.get('temperature_2m_min'),
+                        temperature_2m_mean=item.get('temperature_2m_mean'),
+                        precipitation_sum=item.get('precipitation_sum'),
+                        sunshine_duration=item.get('sunshine_duration'),
+                        sunshine_hours=item.get('sunshine_hours'),
+                        wind_speed_10m=item.get('wind_speed_10m'),
+                        weather_code=item.get('weather_code')
+                    )
+                    dto_list.append(dto)
+            
+            location_dto = LocationResponseDTO(
+                latitude=latitude,
+                longitude=longitude,
+                elevation=None,
+                timezone=None
+            )
+            
+            response_dto = WeatherDataListResponseDTO(
+                weather_data_list=dto_list,
+                total_count=len(dto_list),
+                location=location_dto
+            )
+            
+            self.cli_presenter.display_weather_data_list(response_dto)
     
     async def handle_forecast_command(self, args) -> None:
         """Handle forecast command execution."""

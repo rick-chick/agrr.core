@@ -40,6 +40,21 @@ def wheat_temperature_profile():
     )
 
 
+@pytest.fixture
+def tomato_temperature_profile():
+    """Temperature profile for tomato (typical values)."""
+    return TemperatureProfile(
+        base_temperature=10.0,
+        optimal_min=20.0,
+        optimal_max=26.0,
+        low_stress_threshold=12.0,
+        high_stress_threshold=32.0,
+        frost_threshold=0.0,
+        max_temperature=40.0,
+        sterility_risk_threshold=35.0,
+    )
+
+
 class TestTemperatureJudgments:
     """Test temperature judgment methods."""
     
@@ -153,7 +168,11 @@ class TestCalculateDailyStressImpacts:
         assert impacts["sterility"] == 0.0
     
     def test_high_temp_stress_only(self, rice_temperature_profile):
-        """Test high temperature stress impact."""
+        """Test high temperature stress impact.
+        
+        Note: This test now includes GDD efficiency-based attenuation.
+        Mean temp = 36°C is sub-optimal (optimal_max=30°C), so efficiency is low.
+        """
         weather = WeatherData(
             time=datetime(2024, 7, 15),
             temperature_2m_mean=36.0,  # Above high_stress_threshold (35)
@@ -163,11 +182,22 @@ class TestCalculateDailyStressImpacts:
         
         impacts = rice_temperature_profile.calculate_daily_stress_impacts(weather)
         
-        assert impacts["high_temp"] == 0.05  # 5% impact
+        # Calculate expected values with attenuation
+        # Mean temp efficiency: (42 - 36) / (42 - 30) = 6/12 = 0.5
+        # Base impact: 0.05 * (38-35)/(38-33) = 0.05 * 3/5 = 0.03
+        # Attenuation factor: 1 - (0.5 * 0.7) = 1 - 0.35 = 0.65
+        # Expected impact: 0.03 * 0.65 = 0.0195
+        mean_temp_efficiency = (42.0 - 36.0) / (42.0 - 30.0)
+        stress_proportion = (38.0 - 35.0) / (38.0 - 33.0)
+        base_impact = 0.05 * stress_proportion
+        attenuation_factor = 1.0 - (mean_temp_efficiency * 0.7)
+        expected_high_temp = base_impact * attenuation_factor
+        
+        assert abs(impacts["high_temp"] - expected_high_temp) < 0.001
         assert impacts["low_temp"] == 0.0
         assert impacts["frost"] == 0.0
         # Note: sterility_risk_threshold is 35, so max=38 triggers it
-        assert impacts["sterility"] == 0.20  # 20% impact
+        assert impacts["sterility"] == 0.20  # 20% impact (no attenuation)
     
     def test_low_temp_stress_only(self, rice_temperature_profile):
         """Test low temperature stress impact."""
@@ -202,20 +232,35 @@ class TestCalculateDailyStressImpacts:
         assert impacts["sterility"] == 0.0
     
     def test_sterility_risk(self, rice_temperature_profile):
-        """Test sterility risk impact during flowering."""
+        """Test sterility risk impact during flowering.
+        
+        Note: GDD efficiency-based attenuation applies to high_temp stress.
+        Mean temp = 33°C is sub-optimal but still has some efficiency.
+        """
         weather = WeatherData(
             time=datetime(2024, 7, 20),
             temperature_2m_mean=33.0,
-            temperature_2m_max=37.0,  # Above sterility_risk_threshold (35)
+            temperature_2m_max=37.0,  # Above sterility_risk_threshold (35) and high_stress_threshold (35)
             temperature_2m_min=29.0,
         )
         
         impacts = rice_temperature_profile.calculate_daily_stress_impacts(weather)
         
-        assert impacts["high_temp"] == 0.0  # Mean is below 35
+        # Calculate expected high_temp with attenuation
+        # Mean temp efficiency: (42 - 33) / (42 - 30) = 9/12 = 0.75
+        # Base impact: 0.05 * (37-35)/(37-29) = 0.05 * 2/8 = 0.0125
+        # Attenuation factor: 1 - (0.75 * 0.7) = 1 - 0.525 = 0.475
+        # Expected: 0.0125 * 0.475 = 0.0059375
+        mean_temp_efficiency = (42.0 - 33.0) / (42.0 - 30.0)
+        stress_proportion = (37.0 - 35.0) / (37.0 - 29.0)
+        base_impact = 0.05 * stress_proportion
+        attenuation_factor = 1.0 - (mean_temp_efficiency * 0.7)
+        expected_high_temp = base_impact * attenuation_factor
+        
+        assert abs(impacts["high_temp"] - expected_high_temp) < 0.001
         assert impacts["low_temp"] == 0.0
         assert impacts["frost"] == 0.0
-        assert impacts["sterility"] == 0.20  # 20% impact
+        assert impacts["sterility"] == 0.20  # 20% impact (no attenuation)
     
     def test_multiple_stress_types(self, rice_temperature_profile):
         """Test multiple stress types occurring simultaneously."""
@@ -234,7 +279,10 @@ class TestCalculateDailyStressImpacts:
         assert impacts["sterility"] == 0.0
     
     def test_custom_impact_rates(self):
-        """Test that custom impact rates can be specified."""
+        """Test that custom impact rates can be specified.
+        
+        Note: Custom impact rates are subject to GDD efficiency-based attenuation.
+        """
         profile = TemperatureProfile(
             base_temperature=10.0,
             optimal_min=20.0,
@@ -260,8 +308,19 @@ class TestCalculateDailyStressImpacts:
         
         impacts = profile.calculate_daily_stress_impacts(weather)
         
-        assert impacts["high_temp"] == 0.10
-        assert impacts["sterility"] == 0.30
+        # Calculate expected high_temp with attenuation
+        # Mean temp efficiency: (35 - 31) / (35 - 25) = 4/10 = 0.4
+        # Base impact: 0.10 * (33-30)/(33-28) = 0.10 * 3/5 = 0.06
+        # Attenuation factor: 1 - (0.4 * 0.7) = 1 - 0.28 = 0.72
+        # Expected: 0.06 * 0.72 = 0.0432
+        mean_temp_efficiency = (35.0 - 31.0) / (35.0 - 25.0)
+        stress_proportion = (33.0 - 30.0) / (33.0 - 28.0)
+        base_impact = 0.10 * stress_proportion
+        attenuation_factor = 1.0 - (mean_temp_efficiency * 0.7)
+        expected_high_temp = base_impact * attenuation_factor
+        
+        assert abs(impacts["high_temp"] - expected_high_temp) < 0.001
+        assert impacts["sterility"] == 0.30  # No attenuation for sterility
     
     def test_no_sterility_threshold(self, wheat_temperature_profile):
         """Test that missing sterility threshold results in no sterility impact."""
@@ -274,9 +333,150 @@ class TestCalculateDailyStressImpacts:
         
         impacts = wheat_temperature_profile.calculate_daily_stress_impacts(weather)
         
-        # Wheat should have high temp stress but no sterility impact
-        assert impacts["high_temp"] == 0.05
+        # Calculate expected with attenuation
+        # Mean temp efficiency: (35 - 31) / (35 - 24) = 4/11 = 0.364
+        # Base impact: 0.05 * (40-30)/(40-25) = 0.05 * 10/15 = 0.0333
+        # Attenuation factor: 1 - (0.364 * 0.7) = 1 - 0.255 = 0.745
+        # Expected: 0.0333 * 0.745 = 0.0248
+        mean_temp_efficiency = (35.0 - 31.0) / (35.0 - 24.0)
+        stress_proportion = (40.0 - 30.0) / (40.0 - 25.0)
+        base_impact = 0.05 * stress_proportion
+        attenuation_factor = 1.0 - (mean_temp_efficiency * 0.7)
+        expected_high_temp = base_impact * attenuation_factor
+        
+        assert abs(impacts["high_temp"] - expected_high_temp) < 0.001
         assert impacts["sterility"] == 0.0
+
+
+class TestGDDEfficiencyBasedAttenuation:
+    """Test GDD efficiency-based stress attenuation feature."""
+    
+    def test_tomato_summer_optimal_mean_temp(self, tomato_temperature_profile):
+        """Test tomato in summer with optimal mean temp but brief high peaks.
+        
+        Scenario: Summer day with mean=24°C (optimal), max=38°C (brief peak)
+        Expected: Stress impact should be significantly attenuated
+        because mean temperature is within optimal range.
+        """
+        weather = WeatherData(
+            time=datetime(2024, 8, 10),
+            temperature_2m_mean=24.0,  # Optimal (20-26°C)
+            temperature_2m_max=38.0,   # Peak exceeds high_stress_threshold (32°C)
+            temperature_2m_min=18.0,
+        )
+        
+        impacts = tomato_temperature_profile.calculate_daily_stress_impacts(weather)
+        
+        # Calculate expected values
+        # Mean temp efficiency: 1.0 (in optimal range 20-26°C)
+        # Base impact: 0.05 * (38-32)/(38-18) = 0.05 * 6/20 = 0.015
+        # Attenuation factor: 1 - (1.0 * 0.7) = 0.3
+        # Expected impact: 0.015 * 0.3 = 0.0045 (70% reduction!)
+        mean_temp_efficiency = 1.0  # Optimal range
+        stress_proportion = (38.0 - 32.0) / (38.0 - 18.0)
+        base_impact = 0.05 * stress_proportion
+        attenuation_factor = 1.0 - (mean_temp_efficiency * 0.7)
+        expected_high_temp = base_impact * attenuation_factor
+        
+        assert abs(impacts["high_temp"] - expected_high_temp) < 0.001
+        # Verify significant attenuation occurred
+        assert impacts["high_temp"] < 0.01  # Less than 1% impact
+        assert impacts["low_temp"] == 0.0
+        assert impacts["frost"] == 0.0
+    
+    def test_tomato_summer_sub_optimal_mean_temp(self, tomato_temperature_profile):
+        """Test tomato in extreme summer with sub-optimal mean temp.
+        
+        Scenario: Extreme summer day with mean=32°C (sub-optimal), max=38°C
+        Expected: Less attenuation because mean temp is also high.
+        """
+        weather = WeatherData(
+            time=datetime(2024, 8, 15),
+            temperature_2m_mean=32.0,  # Sub-optimal (above optimal_max=26°C)
+            temperature_2m_max=38.0,   # Peak exceeds high_stress_threshold
+            temperature_2m_min=26.0,
+        )
+        
+        impacts = tomato_temperature_profile.calculate_daily_stress_impacts(weather)
+        
+        # Calculate expected values
+        # Mean temp efficiency: (40 - 32) / (40 - 26) = 8/14 = 0.571
+        # Base impact: 0.05 * (38-32)/(38-26) = 0.05 * 6/12 = 0.025
+        # Attenuation factor: 1 - (0.571 * 0.7) = 1 - 0.4 = 0.6
+        # Expected impact: 0.025 * 0.6 = 0.015
+        mean_temp_efficiency = (40.0 - 32.0) / (40.0 - 26.0)
+        stress_proportion = (38.0 - 32.0) / (38.0 - 26.0)
+        base_impact = 0.05 * stress_proportion
+        attenuation_factor = 1.0 - (mean_temp_efficiency * 0.7)
+        expected_high_temp = base_impact * attenuation_factor
+        
+        assert abs(impacts["high_temp"] - expected_high_temp) < 0.001
+        # Verify moderate attenuation (less than optimal case)
+        assert impacts["high_temp"] > 0.01  # More than 1% impact
+        assert impacts["high_temp"] < 0.02  # But still attenuated
+    
+    def test_tomato_extreme_heat_no_attenuation(self, tomato_temperature_profile):
+        """Test tomato in extreme heat with very high mean temp.
+        
+        Scenario: Extreme heat wave with mean=38°C, max=42°C
+        Expected: Minimal attenuation because day is overall stressful.
+        """
+        weather = WeatherData(
+            time=datetime(2024, 8, 20),
+            temperature_2m_mean=38.0,  # Very high (approaching max_temperature=40°C)
+            temperature_2m_max=42.0,   # Above max_temperature
+            temperature_2m_min=34.0,
+        )
+        
+        impacts = tomato_temperature_profile.calculate_daily_stress_impacts(weather)
+        
+        # Calculate expected values
+        # Mean temp efficiency: (40 - 38) / (40 - 26) = 2/14 = 0.143
+        # Base impact: 0.05 * (42-32)/(42-34) = 0.05 * 10/8 = 0.0625 (capped at stress_proportion=1.0)
+        # Note: max_temperature check happens in is_high_temp_stress (uses max temp)
+        # stress_proportion: (42-32)/(42-34) = 10/8 = 1.25 → capped to 1.0
+        # Base impact: 0.05 * 1.0 = 0.05
+        # Attenuation factor: 1 - (0.143 * 0.7) = 1 - 0.1 = 0.9
+        # Expected impact: 0.05 * 0.9 = 0.045
+        mean_temp_efficiency = (40.0 - 38.0) / (40.0 - 26.0)
+        stress_proportion = min(1.0, (42.0 - 32.0) / (42.0 - 34.0))
+        base_impact = 0.05 * stress_proportion
+        attenuation_factor = 1.0 - (mean_temp_efficiency * 0.7)
+        expected_high_temp = base_impact * attenuation_factor
+        
+        assert abs(impacts["high_temp"] - expected_high_temp) < 0.001
+        # Verify minimal attenuation (near full impact)
+        assert impacts["high_temp"] > 0.04  # Close to full 5% impact
+    
+    def test_comparison_old_vs_new_tomato(self, tomato_temperature_profile):
+        """Compare old (no attenuation) vs new (GDD-based attenuation) for tomato.
+        
+        This test demonstrates the improvement for tomato in summer.
+        """
+        # Summer day: optimal mean, but brief afternoon peak
+        weather = WeatherData(
+            time=datetime(2024, 7, 25),
+            temperature_2m_mean=23.0,  # Optimal
+            temperature_2m_max=36.0,   # Brief peak
+            temperature_2m_min=16.0,
+        )
+        
+        impacts = tomato_temperature_profile.calculate_daily_stress_impacts(weather)
+        
+        # OLD calculation (without attenuation):
+        # stress_proportion = (36-32)/(36-16) = 4/20 = 0.2
+        # old_impact = 0.05 * 0.2 = 0.01 (1% yield loss per day)
+        
+        # NEW calculation (with attenuation):
+        # mean_temp_efficiency = 1.0 (optimal)
+        # attenuation_factor = 1 - (1.0 * 0.7) = 0.3
+        # new_impact = 0.01 * 0.3 = 0.003 (0.3% yield loss per day)
+        
+        old_impact_estimate = 0.05 * ((36.0 - 32.0) / (36.0 - 16.0))
+        
+        # New impact should be significantly lower
+        assert impacts["high_temp"] < old_impact_estimate * 0.4  # At least 60% reduction
+        assert impacts["high_temp"] < 0.005  # Less than 0.5% impact
 
 
 class TestTemperatureProfileImmutability:

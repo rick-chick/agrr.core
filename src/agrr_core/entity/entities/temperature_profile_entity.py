@@ -230,6 +230,12 @@ class TemperatureProfile:
         - Frost damage: 15% per day (Porter & Gawith, 1999)
         - Sterility risk: 20% per day (high temperature during flowering)
         
+        Enhanced with GDD efficiency-based attenuation:
+        - If daily mean temperature has high GDD efficiency (close to optimal),
+          stress impacts from peak temperatures are attenuated
+        - This prevents over-penalization from brief temperature spikes
+        - Based on DSSAT/APSIM trapezoidal temperature response models
+        
         Args:
             weather: Daily weather data containing temperature observations.
         
@@ -241,7 +247,7 @@ class TemperatureProfile:
             >>> profile = TemperatureProfile(...)
             >>> weather = WeatherData(temperature_2m_mean=36.0, ...)
             >>> impacts = profile.calculate_daily_stress_impacts(weather)
-            >>> impacts['high_temp']  # 0.05 if high temp stress occurred
+            >>> impacts['high_temp']  # Attenuated if mean temp has high efficiency
         """
         # Import WeatherData type for type checking
         from agrr_core.entity.entities.weather_entity import WeatherData
@@ -253,8 +259,12 @@ class TemperatureProfile:
             "sterility": 0.0,
         }
         
+        # Calculate GDD efficiency for daily mean temperature
+        # This represents how favorable the overall day is for growth
+        mean_temp_efficiency = self._calculate_temperature_efficiency(weather.temperature_2m_mean)
+        
         # High temperature stress (use max temperature for daily peak)
-        # Prorate the impact based on the proportion of time above threshold
+        # Apply GDD efficiency-based attenuation
         if self.is_high_temp_stress(weather.temperature_2m_max):
             # Calculate the proportion of day above threshold
             # Assumption: temperature varies linearly from min to max
@@ -262,19 +272,30 @@ class TemperatureProfile:
             if temp_range > 0 and self.high_stress_threshold is not None:
                 temp_above_threshold = weather.temperature_2m_max - self.high_stress_threshold
                 stress_proportion = min(1.0, temp_above_threshold / temp_range)
-                impacts["high_temp"] = self.high_temp_daily_impact * stress_proportion
+                base_impact = self.high_temp_daily_impact * stress_proportion
+                
+                # Attenuate stress impact based on mean temperature efficiency
+                # High efficiency (close to optimal) → lower stress impact
+                # Low efficiency (far from optimal) → full stress impact
+                # Formula: impact = base_impact * (1 - efficiency * 0.7)
+                # - efficiency=1.0 (optimal): 70% reduction in stress impact
+                # - efficiency=0.5 (sub-optimal): 35% reduction
+                # - efficiency=0.0 (poor): no reduction (full impact)
+                attenuation_factor = 1.0 - (mean_temp_efficiency * 0.7)
+                impacts["high_temp"] = base_impact * attenuation_factor
             else:
                 impacts["high_temp"] = self.high_temp_daily_impact
         
         # Low temperature stress
+        # Use mean temperature for evaluation (already based on daily average)
         if self.is_low_temp_stress(weather.temperature_2m_mean):
             impacts["low_temp"] = self.low_temp_daily_impact
         
-        # Frost risk
+        # Frost risk (critical damage, no attenuation)
         if self.is_frost_risk(weather.temperature_2m_min):
             impacts["frost"] = self.frost_daily_impact
         
-        # Sterility risk
+        # Sterility risk (critical reproductive damage, no attenuation)
         if self.is_sterility_risk(weather.temperature_2m_max):
             impacts["sterility"] = self.sterility_daily_impact
         

@@ -44,6 +44,7 @@ class OptimalGrowthPeriodRequestDTO:
     evaluation_period_start: datetime
     evaluation_period_end: datetime
     field: Field  # Field entity containing area, daily_fixed_cost, etc.
+    filter_redundant_candidates: bool = True  # Filter to keep only shortest period per completion date
 
     def __post_init__(self):
         """Validate input parameters."""

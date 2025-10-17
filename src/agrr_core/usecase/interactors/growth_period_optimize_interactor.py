@@ -17,7 +17,8 @@ The evaluation period has dual meaning:
 """
 
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict
+from collections import defaultdict
 
 from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.entity.entities.crop_entity import Crop
@@ -119,6 +120,12 @@ class GrowthPeriodOptimizeInteractor(
         # Find optimal candidate (maximum profit, excluding failures and deadline violations)
         valid_candidates = [c for c in candidates if c.total_cost is not None]
         
+        # Optionally filter to keep only the shortest cultivation period per completion date
+        # This removes redundant candidates: if multiple start dates reach the same completion date,
+        # we only keep the one with shortest growth_days (lowest cost, latest start)
+        if request.filter_redundant_candidates:
+            valid_candidates = self._filter_shortest_candidates_per_completion_date(valid_candidates)
+        
         if not valid_candidates:
             # Check if any candidate completed but exceeded deadline
             completed_candidates = [c for c in candidates if c.completion_date is not None]
@@ -138,8 +145,8 @@ class GrowthPeriodOptimizeInteractor(
         # Use BaseOptimizer's select_best (unified objective function)
         optimal_candidate = self.select_best(valid_candidates)
         
-        # Mark optimal candidate
-        for candidate in candidates:
+        # Mark optimal candidate in the filtered list
+        for candidate in valid_candidates:
             if candidate.start_date == optimal_candidate.start_date:
                 # Create new candidate with is_optimal=True
                 object.__setattr__(candidate, 'is_optimal', True)
@@ -158,7 +165,7 @@ class GrowthPeriodOptimizeInteractor(
             profit=optimal_metrics.profit,
             daily_fixed_cost=daily_fixed_cost,
             field=request.field,
-            candidates=candidates,
+            candidates=valid_candidates,  # Use filtered candidates (no redundant completion dates)
         )
 
     async def _evaluate_candidates_efficient(
@@ -485,6 +492,41 @@ class GrowthPeriodOptimizeInteractor(
             is_optimal=False,  # Will be updated later
             yield_factor=yield_factor,
         )
+
+    def _filter_shortest_candidates_per_completion_date(
+        self, candidates: List[CandidateResultDTO]
+    ) -> List[CandidateResultDTO]:
+        """Filter candidates to keep only the shortest cultivation period per completion date.
+        
+        When multiple candidates reach the same completion date, we only keep the one with
+        the shortest growth_days (i.e., the one that starts latest). This is optimal because:
+        - Same completion date means same deadline constraint satisfaction
+        - Shorter period means lower total cost (growth_days × daily_fixed_cost)
+        - Later start may have better yield_factor due to better weather conditions
+        
+        Args:
+            candidates: List of candidate results to filter
+            
+        Returns:
+            Filtered list with only the shortest candidate per completion date,
+            ordered by completion_date descending (future to past)
+        """
+        # Group candidates by completion_date
+        completion_groups: Dict[datetime, List[CandidateResultDTO]] = defaultdict(list)
+        
+        for candidate in candidates:
+            if candidate.completion_date is not None and candidate.growth_days is not None:
+                completion_groups[candidate.completion_date].append(candidate)
+        
+        # Select shortest candidate from each group
+        filtered = []
+        for completion_date in sorted(completion_groups.keys(), reverse=True):  # Future to past
+            group = completion_groups[completion_date]
+            # Find candidate with minimum growth_days
+            shortest = min(group, key=lambda c: c.growth_days)
+            filtered.append(shortest)
+        
+        return filtered
 
     async def _get_crop_profile(
         self, crop_id: str, variety: Optional[str]

@@ -153,6 +153,14 @@ Examples:
     --planning-start 2023-04-01 --planning-end 2023-10-31 \\
     --weather-file test_data/weather_2023_full.json
 
+  # Detailed analysis mode (show all growth period candidates)
+  agrr optimize allocate \\
+    --fields-file fields.json \\
+    --crops-file crops.json \\
+    --planning-start 2024-04-01 --planning-end 2024-10-31 \\
+    --weather-file weather.json \\
+    --no-filter-redundant
+
 Fields File Format (JSON):
   Based on Field entity structure:
   {
@@ -352,6 +360,16 @@ Notes:
   - Crop profiles can be generated using 'agrr crop' command
   - Interaction rules allow modeling continuous cultivation impacts
   - The optimizer automatically determines optimal cultivation areas for each crop
+
+Growth Period Candidate Filtering (Default: Enabled):
+  - For each field×crop combination, growth period optimization is performed internally
+  - By default, redundant growth period candidates are filtered per completion date
+  - When multiple start dates reach the same completion date, only the shortest period 
+    (latest start, lowest cost) is kept for that field×crop
+  - This reduces the candidate space for allocation optimization while preserving diversity
+  - Use --no-filter-redundant to keep all growth period candidates for each field×crop
+  - Disabling filter increases computation time but may find alternative allocation strategies
+  - Useful for understanding how different cultivation timings affect overall allocation
             """
         )
 
@@ -428,6 +446,11 @@ Notes:
             choices=["greedy", "dp"],
             default="dp",
             help="Algorithm for initial allocation: 'dp' (optimal per-field) or 'greedy' (fast heuristic). Default: dp",
+        )
+        parser.add_argument(
+            "--no-filter-redundant",
+            action="store_true",
+            help="Disable filtering of redundant growth period candidates (show all candidates with same completion date for each field×crop)",
         )
 
         return parser
@@ -508,6 +531,7 @@ Notes:
             planning_period_end=planning_end,
             optimization_objective=args.objective,
             max_computation_time=getattr(args, 'max_time', None),
+            filter_redundant_candidates=not getattr(args, 'no_filter_redundant', False),  # Invert the flag
         )
 
         # Execute use case

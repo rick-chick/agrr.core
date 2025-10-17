@@ -373,6 +373,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                     evaluation_period_start=request.planning_period_start,
                     evaluation_period_end=request.planning_period_end,
                     field=field,
+                    filter_redundant_candidates=request.filter_redundant_candidates,  # Pass flag from parent request
                 )
                 
                 # Set crop requirement in growth period optimizer gateway
@@ -503,6 +504,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             evaluation_period_start=request.planning_period_start,
             evaluation_period_end=request.planning_period_end,
             field=field,
+            filter_redundant_candidates=request.filter_redundant_candidates,  # Pass flag from parent request
         )
         
         # Set crop requirement in growth period optimizer gateway

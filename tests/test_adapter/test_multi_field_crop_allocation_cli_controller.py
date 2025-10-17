@@ -30,6 +30,7 @@ from agrr_core.entity.entities.multi_field_optimization_result_entity import (
 from agrr_core.usecase.dto.multi_field_crop_allocation_response_dto import (
     MultiFieldCropAllocationResponseDTO,
 )
+from argparse import Namespace
 
 
 @pytest.mark.asyncio
@@ -737,3 +738,155 @@ class TestMultiFieldCropAllocationCliController:
         # Verify presenter was called
         mock_presenter.present.assert_called_once()
 
+    async def test_flag_transfer_with_default_filtering_enabled(self):
+        """Test that filter_redundant_candidates=True is passed by default."""
+        # Setup mocks
+        mock_field_gateway = AsyncMock()
+        mock_crop_gateway = AsyncMock()
+        mock_weather_gateway = AsyncMock()
+        mock_presenter = MagicMock()
+        mock_presenter.output_format = "table"
+
+        field1 = Field(
+            field_id="field_01",
+            name="Field 1",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+        )
+        mock_field_gateway.get_all.return_value = [field1]
+
+        # Create controller
+        controller = MultiFieldCropAllocationCliController(
+            field_gateway=mock_field_gateway,
+            crop_gateway=mock_crop_gateway,
+            weather_gateway=mock_weather_gateway,
+            presenter=mock_presenter,
+            crop_profile_gateway_internal=mock_crop_gateway,
+        )
+
+        # Create mock args without --no-filter-redundant flag
+        args = Namespace(
+            planning_start="2024-04-01",
+            planning_end="2024-10-31",
+            objective="maximize_profit",
+            format="table",
+            no_filter_redundant=False,  # Default: filtering enabled
+        )
+
+        # Mock the interactor's execute method to capture the request
+        captured_request = None
+
+        async def capture_execute(request, **kwargs):
+            nonlocal captured_request
+            captured_request = request
+            # Return mock response
+            return MultiFieldCropAllocationResponseDTO(
+                optimization_result=MagicMock(),
+                field_schedules=[],
+            )
+
+        controller.interactor.execute = AsyncMock(side_effect=capture_execute)
+
+        # Execute the command
+        await controller.handle_optimize_command(args)
+
+        # Verify that the request was created with filter_redundant_candidates=True
+        assert captured_request is not None, "Request was not passed to interactor"
+        assert captured_request.filter_redundant_candidates is True, \
+            "Expected filter_redundant_candidates=True by default"
+
+    async def test_flag_transfer_with_filtering_disabled(self):
+        """Test that filter_redundant_candidates=False is passed when --no-filter-redundant is specified."""
+        # Setup mocks
+        mock_field_gateway = AsyncMock()
+        mock_crop_gateway = AsyncMock()
+        mock_weather_gateway = AsyncMock()
+        mock_presenter = MagicMock()
+        mock_presenter.output_format = "table"
+
+        field1 = Field(
+            field_id="field_01",
+            name="Field 1",
+            area=1000.0,
+            daily_fixed_cost=5000.0,
+        )
+        mock_field_gateway.get_all.return_value = [field1]
+
+        # Create controller
+        controller = MultiFieldCropAllocationCliController(
+            field_gateway=mock_field_gateway,
+            crop_gateway=mock_crop_gateway,
+            weather_gateway=mock_weather_gateway,
+            presenter=mock_presenter,
+            crop_profile_gateway_internal=mock_crop_gateway,
+        )
+
+        # Create mock args with --no-filter-redundant flag
+        args = Namespace(
+            planning_start="2024-04-01",
+            planning_end="2024-10-31",
+            objective="maximize_profit",
+            format="table",
+            no_filter_redundant=True,  # Filtering disabled
+        )
+
+        # Mock the interactor's execute method to capture the request
+        captured_request = None
+
+        async def capture_execute(request, **kwargs):
+            nonlocal captured_request
+            captured_request = request
+            # Return mock response
+            return MultiFieldCropAllocationResponseDTO(
+                optimization_result=MagicMock(),
+                field_schedules=[],
+            )
+
+        controller.interactor.execute = AsyncMock(side_effect=capture_execute)
+
+        # Execute the command
+        await controller.handle_optimize_command(args)
+
+        # Verify that the request was created with filter_redundant_candidates=False
+        assert captured_request is not None, "Request was not passed to interactor"
+        assert captured_request.filter_redundant_candidates is False, \
+            "Expected filter_redundant_candidates=False when --no-filter-redundant is specified"
+
+    def test_argument_parser_includes_no_filter_flag(self):
+        """Test that argument parser includes --no-filter-redundant option."""
+        # Setup mocks
+        mock_field_gateway = MagicMock()
+        mock_crop_gateway = MagicMock()
+        mock_weather_gateway = MagicMock()
+        mock_presenter = MagicMock()
+
+        controller = MultiFieldCropAllocationCliController(
+            field_gateway=mock_field_gateway,
+            crop_gateway=mock_crop_gateway,
+            weather_gateway=mock_weather_gateway,
+            presenter=mock_presenter,
+            crop_profile_gateway_internal=mock_crop_gateway,
+        )
+
+        parser = controller.create_argument_parser()
+
+        # Parse with default (no flag)
+        args_default = parser.parse_args([
+            "--fields-file", "fields.json",
+            "--crops-file", "crops.json",
+            "--planning-start", "2024-04-01",
+            "--planning-end", "2024-10-31",
+            "--weather-file", "weather.json",
+        ])
+        assert args_default.no_filter_redundant is False
+
+        # Parse with --no-filter-redundant flag
+        args_no_filter = parser.parse_args([
+            "--fields-file", "fields.json",
+            "--crops-file", "crops.json",
+            "--planning-start", "2024-04-01",
+            "--planning-end", "2024-10-31",
+            "--weather-file", "weather.json",
+            "--no-filter-redundant",
+        ])
+        assert args_no_filter.no_filter_redundant is True

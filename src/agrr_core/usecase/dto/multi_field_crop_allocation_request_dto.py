@@ -26,6 +26,7 @@ class MultiFieldCropAllocationRequestDTO:
     planning_period_end: datetime
     optimization_objective: str = "maximize_profit"  # or "minimize_cost"
     max_computation_time: Optional[float] = None  # seconds
+    filter_redundant_candidates: bool = True  # Filter candidates per completion date in growth period optimization
 
     def __post_init__(self):
         """Validate request parameters."""

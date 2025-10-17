@@ -110,6 +110,12 @@ Examples:
     --weather-file weather.json --field-file field_01.json \\
     --interaction-rules-file interaction_rules.json
 
+  # Show all candidates (disable filtering) for detailed analysis
+  agrr optimize period --crop-file rice_profile.json \\
+    --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
+    --weather-file weather.json --field-file field_01.json \\
+    --no-filter-redundant
+
 
 Weather File Format (JSON):
   {
@@ -193,6 +199,14 @@ Notes:
   - Crop profile file must be generated using 'agrr crop' command
   - The output from 'agrr crop' can be used directly as --crop-file input
   - The 'groups' field in crop data is essential for interaction rules (continuous cultivation, etc.)
+
+Candidate Filtering (Default: Enabled):
+  - By default, redundant candidates are filtered to simplify results
+  - When multiple start dates reach the same completion date, only the shortest cultivation 
+    period (latest start date) is kept, as it has the lowest cost
+  - This filtering reduces output clutter while preserving all unique completion dates
+  - Use --no-filter-redundant to disable filtering and see all evaluated candidates
+  - Useful for debugging or detailed analysis of how different start dates behave
             """
         )
 
@@ -238,6 +252,11 @@ Notes:
             choices=["table", "json"],
             default="table",
             help="Output format (default: table)",
+        )
+        parser.add_argument(
+            "--no-filter-redundant",
+            action="store_true",
+            help="Disable filtering of redundant candidates (show all candidates with same completion date)",
         )
 
         return parser
@@ -303,6 +322,7 @@ Notes:
             evaluation_period_start=evaluation_start,
             evaluation_period_end=evaluation_end,
             field=self.field,
+            filter_redundant_candidates=not args.no_filter_redundant,  # Invert the flag (default: True)
         )
 
         # Execute use case

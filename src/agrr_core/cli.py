@@ -37,7 +37,7 @@ Available Commands:
                     - openmeteo: Global coverage, 2-3 years historical data (default)
                     - jma: Japan only, high quality, recent years
                     - noaa-ftp: US only, long-term historical data (1901-present, 2000+ recommended)
-                      * 197 stations across all 50 US states
+                      * 194 stations across all 50 US states (98.5% validated)
                       * Automatic year-by-year fetching for multi-year requests
                       * Free, no registration required
   forecast          Get 16-day weather forecast from tomorrow

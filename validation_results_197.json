@@ -1,0 +1,4421 @@
+{
+  "total": 197,
+  "success": 194,
+  "no_temp": 0,
+  "no_data": 3,
+  "error": 0,
+  "results": [
+    {
+      "status": "success",
+      "state": "AK",
+      "usaf": "700637",
+      "wban": "27406",
+      "name": "DEADHORSE AIRPORT, AK",
+      "days": 7,
+      "avg_temp": -15.737825551317647,
+      "lat": 70.191,
+      "lon": -148.48
+    },
+    {
+      "status": "success",
+      "state": "AK",
+      "usaf": "700860",
+      "wban": "27401",
+      "name": "BARTER ISLAND AIRPORT, AK",
+      "days": 7,
+      "avg_temp": -13.991908957870622,
+      "lat": 70.134,
+      "lon": -143.577
+    },
+    {
+      "status": "success",
+      "state": "AK",
+      "usaf": "701330",
+      "wban": "26616",
+      "name": "RALPH WIEN MEMORIAL AIRPORT, AK",
+      "days": 7,
+      "avg_temp": -12.689077380952382,
+      "lat": 66.886,
+      "lon": -162.607
+    },
+    {
+      "status": "success",
+      "state": "AK",
+      "usaf": "701740",
+      "wban": "26533",
+      "name": "BETTLES AIRPORT, AK",
+      "days": 7,
+      "avg_temp": -16.32722978080121,
+      "lat": 66.918,
+      "lon": -151.519
+    },
+    {
+      "status": "success",
+      "state": "AK",
+      "usaf": "701940",
+      "wban": "26413",
+      "name": "FORT YUKON AIRPORT, AK",
+      "days": 7,
+      "avg_temp": -20.197977653898608,
+      "lat": 66.567,
+      "lon": -145.267
+    },
+    {
+      "status": "success",
+      "state": "AK",
+      "usaf": "702000",
+      "wban": "26617",
+      "name": "NOME AIRPORT, AK",
+      "days": 7,
+      "avg_temp": -8.338651778788998,
+      "lat": 64.511,
+      "lon": -165.44
+    },
+    {
+      "status": "success",
+      "state": "AK",
+      "usaf": "702070",
+      "wban": "26627",
+      "name": "UNALAKLEET AIRPORT, AK",
+      "days": 7,
+      "avg_temp": -8.414238347859035,
+      "lat": 63.883,
+      "lon": -160.8
+    },
+    {
+      "status": "success",
+      "state": "AK",
+      "usaf": "702190",
+      "wban": "26615",
+      "name": "BETHEL AIRPORT, AK",
+      "days": 7,
+      "avg_temp": -10.62237100628749,
+      "lat": 60.785,
+      "lon": -161.829
+    },
+    {
+      "status": "success",
+      "state": "AK",
+      "usaf": "702310",
+      "wban": "26510",
+      "name": "MCGRATH AIRPORT, AK",
+      "days": 7,
+      "avg_temp": -18.308007424568704,
+      "lat": 62.957,
+      "lon": -155.61
+    },
+    {
+      "status": "success",
+      "state": "AK",
+      "usaf": "702320",
+      "wban": "26516",
+      "name": "ANIAK AIRPORT, AK",
+      "days": 7,
+      "avg_temp": -11.82077543412519,
+      "lat": 61.582,
+      "lon": -159.543
+    },
+    {
+      "status": "success",
+      "state": "AL",
+      "usaf": "722230",
+      "wban": "13894",
+      "name": "MOBILE REGIONAL AIRPORT, AL",
+      "days": 7,
+      "avg_temp": 17.353470678039773,
+      "lat": 30.688,
+      "lon": -88.246
+    },
+    {
+      "status": "success",
+      "state": "AL",
+      "usaf": "722265",
+      "wban": "13821",
+      "name": "MAXWELL AFB AIRPORT, AL",
+      "days": 7,
+      "avg_temp": 14.22012536751822,
+      "lat": 32.383,
+      "lon": -86.35
+    },
+    {
+      "status": "success",
+      "state": "AL",
+      "usaf": "722267",
+      "wban": "03878",
+      "name": "TROY MUNICIPAL AIRPORT, AL",
+      "days": 7,
+      "avg_temp": 15.416637616769195,
+      "lat": 31.857,
+      "lon": -86.01
+    },
+    {
+      "status": "success",
+      "state": "AR",
+      "usaf": "723405",
+      "wban": "03930",
+      "name": "LITTLE ROCK AFB AIRPORT, AR",
+      "days": 7,
+      "avg_temp": 11.457237148705635,
+      "lat": 34.917,
+      "lon": -92.15
+    },
+    {
+      "status": "success",
+      "state": "AR",
+      "usaf": "723417",
+      "wban": "93988",
+      "name": "GRIDER FIELD AIRPORT, AR",
+      "days": 7,
+      "avg_temp": 14.178727114221441,
+      "lat": 34.18,
+      "lon": -91.934
+    },
+    {
+      "status": "success",
+      "state": "AR",
+      "usaf": "723418",
+      "wban": "13977",
+      "name": "TEXARKANA REGIONAL AIRPORT-WE, AR",
+      "days": 7,
+      "avg_temp": 16.029004329004326,
+      "lat": 33.456,
+      "lon": -93.988
+    },
+    {
+      "status": "success",
+      "state": "AZ",
+      "usaf": "722730",
+      "wban": "03124",
+      "name": "SIERRA VISTA MUNICIPAL-LIBBY, AZ",
+      "days": 7,
+      "avg_temp": 8.49221258816089,
+      "lat": 31.588,
+      "lon": -110.344
+    },
+    {
+      "status": "success",
+      "state": "AZ",
+      "usaf": "722740",
+      "wban": "23160",
+      "name": "TUCSON INTERNATIONAL AIRPORT, AZ",
+      "days": 7,
+      "avg_temp": 11.601885995777621,
+      "lat": 32.132,
+      "lon": -110.956
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "722886",
+      "wban": "23130",
+      "name": "VAN NUYS AIRPORT, CA",
+      "days": 7,
+      "avg_temp": 12.726464999331082,
+      "lat": 34.212,
+      "lon": -118.491
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "723815",
+      "wban": "23161",
+      "name": "BARSTOW-DAGGETT AIRPORT, CA",
+      "days": 7,
+      "avg_temp": 9.403119047619047,
+      "lat": 34.854,
+      "lon": -116.787
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "723840",
+      "wban": "23155",
+      "name": "MEADOWS FIELD AIRPORT, CA",
+      "days": 7,
+      "avg_temp": 10.958676633444075,
+      "lat": 35.434,
+      "lon": -119.055
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "723925",
+      "wban": "23190",
+      "name": "SANTA BARBARA MUNICIPAL AIRPO, CA",
+      "days": 7,
+      "avg_temp": 12.824966166742415,
+      "lat": 34.424,
+      "lon": -119.842
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "723965",
+      "wban": "93209",
+      "name": "PASO ROBLES MUNICIPAL ARPT, CA",
+      "days": 7,
+      "avg_temp": 9.128243027678879,
+      "lat": 35.669,
+      "lon": -120.629
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "724800",
+      "wban": "23157",
+      "name": "BISHOP AIRPORT, CA",
+      "days": 7,
+      "avg_temp": 2.3434746206174775,
+      "lat": 37.371,
+      "lon": -118.359
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "724830",
+      "wban": "23232",
+      "name": "SACRAMENTO EXECUTIVE AIRPORT, CA",
+      "days": 7,
+      "avg_temp": 9.835488276161527,
+      "lat": 38.507,
+      "lon": -121.496
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "725905",
+      "wban": "23275",
+      "name": "UKIAH MUNICIPAL AIRPORT, CA",
+      "days": 7,
+      "avg_temp": 7.701825519094482,
+      "lat": 39.128,
+      "lon": -123.2
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "725910",
+      "wban": "24216",
+      "name": "RED BLUFF MUNICIPAL ARPT, CA",
+      "days": 7,
+      "avg_temp": 8.610771663148755,
+      "lat": 40.152,
+      "lon": -122.255
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "725945",
+      "wban": "24283",
+      "name": "ARCATA AIRPORT, CA",
+      "days": 7,
+      "avg_temp": 10.04522187336473,
+      "lat": 40.978,
+      "lon": -124.105
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "725955",
+      "wban": "24259",
+      "name": "SISKIYOU COUNTY AIRPORT, CA",
+      "days": 7,
+      "avg_temp": 4.009239795918367,
+      "lat": 41.774,
+      "lon": -122.468
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "747188",
+      "wban": "23158",
+      "name": "BLYTHE AIRPORT, CA",
+      "days": 7,
+      "avg_temp": 13.791836523691362,
+      "lat": 33.619,
+      "lon": -114.715
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "723805",
+      "wban": "23179",
+      "name": "NEEDLES AIRPORT, CA",
+      "days": 7,
+      "avg_temp": 12.83392857142857,
+      "lat": 34.768,
+      "lon": -114.618
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "725847",
+      "wban": "93230",
+      "name": "LAKE TAHOE AIRPORT, CA",
+      "days": 7,
+      "avg_temp": -3.0163412807843026,
+      "lat": 38.898,
+      "lon": -119.996
+    },
+    {
+      "status": "success",
+      "state": "CA",
+      "usaf": "722900",
+      "wban": "23188",
+      "name": "SAN DIEGO INTERNATIONAL AIRPO, CA",
+      "days": 7,
+      "avg_temp": 14.536484761933268,
+      "lat": 32.734,
+      "lon": -117.183
+    },
+    {
+      "status": "success",
+      "state": "CO",
+      "usaf": "724620",
+      "wban": "23061",
+      "name": "SAN LUIS VALLEY REGIONAL AIRP, CO",
+      "days": 7,
+      "avg_temp": -4.899293563579277,
+      "lat": 37.439,
+      "lon": -105.862
+    },
+    {
+      "status": "success",
+      "state": "CO",
+      "usaf": "724635",
+      "wban": "23067",
+      "name": "LA JUNTA MUNICIPAL AIRPORT, CO",
+      "days": 7,
+      "avg_temp": -0.8007739840804359,
+      "lat": 38.049,
+      "lon": -103.513
+    },
+    {
+      "status": "success",
+      "state": "CO",
+      "usaf": "724640",
+      "wban": "93058",
+      "name": "PUEBLO MEMORIAL AIRPORT, CO",
+      "days": 7,
+      "avg_temp": -0.02683525622108168,
+      "lat": 38.289,
+      "lon": -104.506
+    },
+    {
+      "status": "success",
+      "state": "CT",
+      "usaf": "725045",
+      "wban": "14758",
+      "name": "TWEED-NEW HAVEN AIRPORT, CT",
+      "days": 7,
+      "avg_temp": 7.593225294352465,
+      "lat": 41.259,
+      "lon": -72.889
+    },
+    {
+      "status": "success",
+      "state": "DE",
+      "usaf": "724088",
+      "wban": "13707",
+      "name": "DOVER AFB AIRPORT, DE",
+      "days": 7,
+      "avg_temp": 11.379754064407937,
+      "lat": 39.133,
+      "lon": -75.467
+    },
+    {
+      "status": "success",
+      "state": "FL",
+      "usaf": "722020",
+      "wban": "12839",
+      "name": "MIAMI INTERNATIONAL AIRPORT, FL",
+      "days": 7,
+      "avg_temp": 24.03677584670232,
+      "lat": 25.788,
+      "lon": -80.317
+    },
+    {
+      "status": "success",
+      "state": "FL",
+      "usaf": "722050",
+      "wban": "12815",
+      "name": "ORLANDO INTERNATIONAL AIRPORT, FL",
+      "days": 7,
+      "avg_temp": 19.921267454350165,
+      "lat": 28.418,
+      "lon": -81.324
+    },
+    {
+      "status": "success",
+      "state": "FL",
+      "usaf": "722106",
+      "wban": "12835",
+      "name": "PAGE FIELD AIRPORT, FL",
+      "days": 7,
+      "avg_temp": 22.329285264543888,
+      "lat": 26.585,
+      "lon": -81.861
+    },
+    {
+      "status": "success",
+      "state": "GA",
+      "usaf": "722130",
+      "wban": "13861",
+      "name": "WAYCROSS-WARE CO. AIRPORT, GA",
+      "days": 7,
+      "avg_temp": 16.524653194611176,
+      "lat": 31.25,
+      "lon": -82.4
+    },
+    {
+      "status": "success",
+      "state": "GA",
+      "usaf": "722137",
+      "wban": "13878",
+      "name": "MALCOLM MC KINNON AIRPORT, GA",
+      "days": 7,
+      "avg_temp": 15.340373553388975,
+      "lat": 31.153,
+      "lon": -81.391
+    },
+    {
+      "status": "success",
+      "state": "GA",
+      "usaf": "722160",
+      "wban": "13869",
+      "name": "SW GEORGIA REGIONAL ARPT, GA",
+      "days": 7,
+      "avg_temp": 14.838357077411379,
+      "lat": 31.536,
+      "lon": -84.196
+    },
+    {
+      "status": "success",
+      "state": "GA",
+      "usaf": "722170",
+      "wban": "03813",
+      "name": "MIDDLE GEORGIA REGIONAL AIRPO, GA",
+      "days": 7,
+      "avg_temp": 13.668311291340862,
+      "lat": 32.689,
+      "lon": -83.653
+    },
+    {
+      "status": "success",
+      "state": "HI",
+      "usaf": "911650",
+      "wban": "22536",
+      "name": "LIHUE AIRPORT, HI",
+      "days": 7,
+      "avg_temp": 22.9692912164866,
+      "lat": 21.98,
+      "lon": -159.339
+    },
+    {
+      "status": "success",
+      "state": "IA",
+      "usaf": "725450",
+      "wban": "14990",
+      "name": "EASTERN IOWA REGIONAL AIRPORT, IA",
+      "days": 7,
+      "avg_temp": -2.1448935851595943,
+      "lat": 41.883,
+      "lon": -91.725
+    },
+    {
+      "status": "success",
+      "state": "IA",
+      "usaf": "725470",
+      "wban": "94908",
+      "name": "DUBUQUE REGIONAL AIRPORT, IA",
+      "days": 7,
+      "avg_temp": -1.5191810570382,
+      "lat": 42.398,
+      "lon": -90.709
+    },
+    {
+      "status": "success",
+      "state": "IA",
+      "usaf": "725485",
+      "wban": "14940",
+      "name": "MASON CITY MUNICIPAL ARPT, IA",
+      "days": 7,
+      "avg_temp": -4.777945269016697,
+      "lat": 43.154,
+      "lon": -93.326
+    },
+    {
+      "status": "success",
+      "state": "IA",
+      "usaf": "725460",
+      "wban": "14933",
+      "name": "DES MOINES INTERNATIONAL AIRP, IA",
+      "days": 7,
+      "avg_temp": -0.901998245264861,
+      "lat": 41.534,
+      "lon": -93.653
+    },
+    {
+      "status": "success",
+      "state": "IA",
+      "usaf": "725570",
+      "wban": "14943",
+      "name": "SIOUX GATEWAY/COL BUD DAY FIE, IA",
+      "days": 7,
+      "avg_temp": -3.878326247165534,
+      "lat": 42.392,
+      "lon": -96.379
+    },
+    {
+      "status": "success",
+      "state": "IA",
+      "usaf": "725420",
+      "wban": "14931",
+      "name": "SE IOWA REGIONAL AIRPORT, IA",
+      "days": 7,
+      "avg_temp": 1.2631864649995903,
+      "lat": 40.773,
+      "lon": -91.125
+    },
+    {
+      "status": "success",
+      "state": "IA",
+      "usaf": "722097",
+      "wban": "04936",
+      "name": "HARLAN MUNICIPAL AIRPORT, IA",
+      "days": 7,
+      "avg_temp": -2.2025765705343168,
+      "lat": 41.584,
+      "lon": -95.339
+    },
+    {
+      "status": "success",
+      "state": "IA",
+      "usaf": "725476",
+      "wban": "04916",
+      "name": "DECORAH MUNICIPAL AIRPORT, IA",
+      "days": 7,
+      "avg_temp": -2.996031746031746,
+      "lat": 43.275,
+      "lon": -91.739
+    },
+    {
+      "status": "success",
+      "state": "ID",
+      "usaf": "725780",
+      "wban": "24156",
+      "name": "POCATELLO REGIONAL AIRPORT, ID",
+      "days": 7,
+      "avg_temp": -1.6248616841752497,
+      "lat": 42.92,
+      "lon": -112.572
+    },
+    {
+      "status": "success",
+      "state": "ID",
+      "usaf": "725785",
+      "wban": "24145",
+      "name": "IDAHO FALLS REGIONAL ARPT, ID",
+      "days": 7,
+      "avg_temp": -3.6191610657985325,
+      "lat": 43.52,
+      "lon": -112.068
+    },
+    {
+      "status": "no_data",
+      "state": "ID",
+      "usaf": "725786",
+      "wban": "24151",
+      "name": "MALAD CITY AIRPORT, ID"
+    },
+    {
+      "status": "success",
+      "state": "IL",
+      "usaf": "725320",
+      "wban": "14842",
+      "name": "GREATER PEORIA REGIONAL AIRPO, IL",
+      "days": 7,
+      "avg_temp": 3.3797875901980547,
+      "lat": 40.667,
+      "lon": -89.684
+    },
+    {
+      "status": "success",
+      "state": "IL",
+      "usaf": "725430",
+      "wban": "94822",
+      "name": "GREATER ROCKFORD AIRPORT, IL",
+      "days": 7,
+      "avg_temp": 0.38192608155560925,
+      "lat": 42.193,
+      "lon": -89.093
+    },
+    {
+      "status": "success",
+      "state": "IL",
+      "usaf": "724338",
+      "wban": "13802",
+      "name": "SCOTT AIR FORCE BASE/MIDAMERI, IL",
+      "days": 7,
+      "avg_temp": 7.464513850612022,
+      "lat": 38.55,
+      "lon": -89.85
+    },
+    {
+      "status": "success",
+      "state": "IL",
+      "usaf": "725300",
+      "wban": "94846",
+      "name": "CHICAGO O'HARE INTERNATIONAL, IL",
+      "days": 7,
+      "avg_temp": 2.1614970675277254,
+      "lat": 41.96,
+      "lon": -87.932
+    },
+    {
+      "status": "success",
+      "state": "IL",
+      "usaf": "720170",
+      "wban": "63851",
+      "name": "METROPOLIS MUNICIPAL AIRPORT, IL",
+      "days": 7,
+      "avg_temp": 9.536041247484908,
+      "lat": 37.186,
+      "lon": -88.751
+    },
+    {
+      "status": "success",
+      "state": "IL",
+      "usaf": "720319",
+      "wban": "63841",
+      "name": "ROBINSON MUNICIPAL AIRPORT, IL",
+      "days": 7,
+      "avg_temp": 6.608730158730159,
+      "lat": 39.016,
+      "lon": -87.65
+    },
+    {
+      "status": "success",
+      "state": "IL",
+      "usaf": "722076",
+      "wban": "94891",
+      "name": "VERMILION COUNTY AIRPORT, IL",
+      "days": 7,
+      "avg_temp": 5.472023809523809,
+      "lat": 40.2,
+      "lon": -87.6
+    },
+    {
+      "status": "success",
+      "state": "IL",
+      "usaf": "722171",
+      "wban": "04889",
+      "name": "PONTIAC MUNICIPAL AIRPORT, IL",
+      "days": 7,
+      "avg_temp": 3.070478426112229,
+      "lat": 40.924,
+      "lon": -88.624
+    },
+    {
+      "status": "success",
+      "state": "IN",
+      "usaf": "724320",
+      "wban": "93817",
+      "name": "EVANSVILLE REGIONAL AIRPORT, IN",
+      "days": 7,
+      "avg_temp": 8.452952794020835,
+      "lat": 38.05,
+      "lon": -87.515
+    },
+    {
+      "status": "success",
+      "state": "IN",
+      "usaf": "724386",
+      "wban": "14835",
+      "name": "PURDUE UNIVERSITY AIRPORT, IN",
+      "days": 7,
+      "avg_temp": 5.2173871500700715,
+      "lat": 40.412,
+      "lon": -86.947
+    },
+    {
+      "status": "success",
+      "state": "IN",
+      "usaf": "725350",
+      "wban": "14848",
+      "name": "SOUTH BEND REGIONAL AIRPORT, IN",
+      "days": 7,
+      "avg_temp": 4.151577588310935,
+      "lat": 41.707,
+      "lon": -86.316
+    },
+    {
+      "status": "success",
+      "state": "IN",
+      "usaf": "724363",
+      "wban": "13803",
+      "name": "COLUMBUS MUNICIPAL AIRPORT, IN",
+      "days": 7,
+      "avg_temp": 6.647525676937442,
+      "lat": 39.267,
+      "lon": -85.9
+    },
+    {
+      "status": "success",
+      "state": "IN",
+      "usaf": "725330",
+      "wban": "14827",
+      "name": "FORT WAYNE INTERNATIONAL AIRP, IN",
+      "days": 7,
+      "avg_temp": 4.836509564101596,
+      "lat": 40.972,
+      "lon": -85.206
+    },
+    {
+      "status": "success",
+      "state": "IN",
+      "usaf": "725337",
+      "wban": "04807",
+      "name": "GARY/CHICAGO AIRPORT, IN",
+      "days": 7,
+      "avg_temp": 2.6266118493332873,
+      "lat": 41.617,
+      "lon": -87.417
+    },
+    {
+      "status": "success",
+      "state": "KS",
+      "usaf": "724505",
+      "wban": "03923",
+      "name": "MCCONNELL AFB AIRPORT, KS",
+      "days": 7,
+      "avg_temp": 4.9883717346894025,
+      "lat": 37.617,
+      "lon": -97.267
+    },
+    {
+      "status": "success",
+      "state": "KS",
+      "usaf": "724510",
+      "wban": "13985",
+      "name": "DODGE CITY REGIONAL AIRPORT, KS",
+      "days": 7,
+      "avg_temp": 1.840603741496599,
+      "lat": 37.771,
+      "lon": -99.969
+    },
+    {
+      "status": "success",
+      "state": "KS",
+      "usaf": "724556",
+      "wban": "13989",
+      "name": "EMPORIA MUNICIPAL AIRPORT, KS",
+      "days": 7,
+      "avg_temp": 3.6357911656222837,
+      "lat": 38.329,
+      "lon": -96.195
+    },
+    {
+      "status": "success",
+      "state": "KS",
+      "usaf": "724580",
+      "wban": "13984",
+      "name": "BLOSSER MUNICIPAL AIRPORT, KS",
+      "days": 7,
+      "avg_temp": 1.9163225714689058,
+      "lat": 39.551,
+      "lon": -97.651
+    },
+    {
+      "status": "success",
+      "state": "KS",
+      "usaf": "724585",
+      "wban": "93997",
+      "name": "RUSSELL MUNICIPAL AIRPORT, KS",
+      "days": 7,
+      "avg_temp": 1.300104980126257,
+      "lat": 38.873,
+      "lon": -98.809
+    },
+    {
+      "status": "success",
+      "state": "KS",
+      "usaf": "724655",
+      "wban": "93990",
+      "name": "HILL CITY MUNICIPAL ARPT, KS",
+      "days": 7,
+      "avg_temp": 0.13280305564848896,
+      "lat": 39.374,
+      "lon": -99.83
+    },
+    {
+      "status": "no_data",
+      "state": "KS",
+      "usaf": "724650",
+      "wban": "23065",
+      "name": "RENNER FIELD/GOODLAND MINI AI, KS"
+    },
+    {
+      "status": "success",
+      "state": "KY",
+      "usaf": "724220",
+      "wban": "93820",
+      "name": "BLUE GRASS AIRPORT, KY",
+      "days": 7,
+      "avg_temp": 9.827230864093012,
+      "lat": 38.034,
+      "lon": -84.611
+    },
+    {
+      "status": "success",
+      "state": "KY",
+      "usaf": "724235",
+      "wban": "13810",
+      "name": "BOWMAN FIELD AIRPORT, KY",
+      "days": 7,
+      "avg_temp": 8.785949883449886,
+      "lat": 38.23,
+      "lon": -85.663
+    },
+    {
+      "status": "success",
+      "state": "KY",
+      "usaf": "746710",
+      "wban": "13806",
+      "name": "CAMPBELL AAF AIRPORT, KY",
+      "days": 7,
+      "avg_temp": 10.928303901980373,
+      "lat": 36.667,
+      "lon": -87.483
+    },
+    {
+      "status": "success",
+      "state": "LA",
+      "usaf": "722315",
+      "wban": "53917",
+      "name": "LAKEFRONT AIRPORT, LA",
+      "days": 7,
+      "avg_temp": 17.660752546259268,
+      "lat": 30.049,
+      "lon": -90.029
+    },
+    {
+      "status": "success",
+      "state": "LA",
+      "usaf": "722400",
+      "wban": "03937",
+      "name": "LAKE CHARLES REGIONAL AIRPORT, LA",
+      "days": 7,
+      "avg_temp": 17.336075259123113,
+      "lat": 30.126,
+      "lon": -93.228
+    },
+    {
+      "status": "success",
+      "state": "LA",
+      "usaf": "722405",
+      "wban": "13976",
+      "name": "LAFAYETTE REGIONAL AIRPORT, LA",
+      "days": 7,
+      "avg_temp": 18.35968606655707,
+      "lat": 30.199,
+      "lon": -91.99
+    },
+    {
+      "status": "success",
+      "state": "MA",
+      "usaf": "744915",
+      "wban": "14775",
+      "name": "BARNES MUNICIPAL AIRPORT, MA",
+      "days": 7,
+      "avg_temp": 2.8510637121083553,
+      "lat": 42.16,
+      "lon": -72.712
+    },
+    {
+      "status": "success",
+      "state": "MD",
+      "usaf": "724040",
+      "wban": "13721",
+      "name": "NAVAL AIR STATION, MD",
+      "days": 7,
+      "avg_temp": 13.217498371998373,
+      "lat": 38.3,
+      "lon": -76.417
+    },
+    {
+      "status": "success",
+      "state": "ME",
+      "usaf": "726185",
+      "wban": "14605",
+      "name": "AUGUSTA STATE AIRPORT, ME",
+      "days": 7,
+      "avg_temp": 1.661694897183674,
+      "lat": 44.316,
+      "lon": -69.797
+    },
+    {
+      "status": "success",
+      "state": "ME",
+      "usaf": "726196",
+      "wban": "14610",
+      "name": "MILLINOCKET MUNICIPAL ARPT, ME",
+      "days": 7,
+      "avg_temp": -0.8131501276146362,
+      "lat": 45.648,
+      "lon": -68.692
+    },
+    {
+      "status": "success",
+      "state": "MI",
+      "usaf": "725375",
+      "wban": "14822",
+      "name": "DETROIT CITY AIRPORT, MI",
+      "days": 7,
+      "avg_temp": 4.942916303212969,
+      "lat": 42.407,
+      "lon": -83.009
+    },
+    {
+      "status": "success",
+      "state": "MI",
+      "usaf": "725390",
+      "wban": "14836",
+      "name": "CAPITAL CITY AIRPORT, MI",
+      "days": 7,
+      "avg_temp": 2.8471227629511797,
+      "lat": 42.776,
+      "lon": -84.6
+    },
+    {
+      "status": "success",
+      "state": "MI",
+      "usaf": "726360",
+      "wban": "14840",
+      "name": "MUSKEGON COUNTY AIRPORT, MI",
+      "days": 7,
+      "avg_temp": 3.005607556133892,
+      "lat": 43.171,
+      "lon": -86.237
+    },
+    {
+      "status": "success",
+      "state": "MI",
+      "usaf": "726380",
+      "wban": "94814",
+      "name": "ROSCOMMON COUNTY AIRPORT, MI",
+      "days": 7,
+      "avg_temp": 0.29211460442668175,
+      "lat": 44.359,
+      "lon": -84.674
+    },
+    {
+      "status": "success",
+      "state": "MN",
+      "usaf": "726550",
+      "wban": "14926",
+      "name": "ST CLOUD REGIONAL AIRPORT, MN",
+      "days": 7,
+      "avg_temp": -7.080781212452396,
+      "lat": 45.544,
+      "lon": -94.052
+    },
+    {
+      "status": "success",
+      "state": "MN",
+      "usaf": "726557",
+      "wban": "14910",
+      "name": "CHANDLER FIELD AIRPORT, MN",
+      "days": 7,
+      "avg_temp": -9.34032892446716,
+      "lat": 45.868,
+      "lon": -95.394
+    },
+    {
+      "status": "success",
+      "state": "MN",
+      "usaf": "727450",
+      "wban": "14913",
+      "name": "DULUTH INTERNATIONAL AIRPORT, MN",
+      "days": 7,
+      "avg_temp": -6.299838200252836,
+      "lat": 46.844,
+      "lon": -92.187
+    },
+    {
+      "status": "success",
+      "state": "MN",
+      "usaf": "727470",
+      "wban": "14918",
+      "name": "FALLS INTERNATIONAL AIRPORT, MN",
+      "days": 7,
+      "avg_temp": -10.138362664063335,
+      "lat": 48.559,
+      "lon": -93.396
+    },
+    {
+      "status": "success",
+      "state": "MN",
+      "usaf": "726556",
+      "wban": "14992",
+      "name": "REDWOOD FALLS MUNI AIRPORT, MN",
+      "days": 7,
+      "avg_temp": -8.216284632700969,
+      "lat": 44.548,
+      "lon": -95.08
+    },
+    {
+      "status": "success",
+      "state": "MN",
+      "usaf": "726440",
+      "wban": "14925",
+      "name": "ROCHESTER INTERNATIONAL AIRPO, MN",
+      "days": 7,
+      "avg_temp": -4.796215203365306,
+      "lat": 43.904,
+      "lon": -92.492
+    },
+    {
+      "status": "success",
+      "state": "MN",
+      "usaf": "720258",
+      "wban": "04997",
+      "name": "ISEDOR IVERSON AIRPORT, MN",
+      "days": 7,
+      "avg_temp": -7.54563492063492,
+      "lat": 46.619,
+      "lon": -93.31
+    },
+    {
+      "status": "success",
+      "state": "MO",
+      "usaf": "723495",
+      "wban": "13987",
+      "name": "JOPLIN REGIONAL AIRPORT, MO",
+      "days": 7,
+      "avg_temp": 9.026593406593408,
+      "lat": 37.152,
+      "lon": -94.495
+    },
+    {
+      "status": "success",
+      "state": "MO",
+      "usaf": "724345",
+      "wban": "03966",
+      "name": "SPIRIT OF ST LOUIS AIRPORT, MO",
+      "days": 7,
+      "avg_temp": 6.8214294232898895,
+      "lat": 38.658,
+      "lon": -90.656
+    },
+    {
+      "status": "success",
+      "state": "MO",
+      "usaf": "724400",
+      "wban": "13995",
+      "name": "SPRINGFIELD-BRANSON REGIONAL, MO",
+      "days": 7,
+      "avg_temp": 8.104342039202947,
+      "lat": 37.24,
+      "lon": -93.39
+    },
+    {
+      "status": "success",
+      "state": "MO",
+      "usaf": "724450",
+      "wban": "03945",
+      "name": "COLUMBIA REGIONAL AIRPORT, MO",
+      "days": 7,
+      "avg_temp": 6.898480675098322,
+      "lat": 38.817,
+      "lon": -92.215
+    },
+    {
+      "status": "success",
+      "state": "MO",
+      "usaf": "724455",
+      "wban": "14938",
+      "name": "KIRKSVILLE REGIONAL ARPT, MO",
+      "days": 7,
+      "avg_temp": 1.9370958472376711,
+      "lat": 40.097,
+      "lon": -92.547
+    },
+    {
+      "status": "success",
+      "state": "MS",
+      "usaf": "722340",
+      "wban": "13865",
+      "name": "KEY FIELD AIRPORT, MS",
+      "days": 7,
+      "avg_temp": 14.326194619512373,
+      "lat": 32.335,
+      "lon": -88.751
+    },
+    {
+      "status": "success",
+      "state": "MS",
+      "usaf": "722350",
+      "wban": "03940",
+      "name": "JACKSON INTERNATIONAL AIRPORT, MS",
+      "days": 7,
+      "avg_temp": 15.812677045749881,
+      "lat": 32.32,
+      "lon": -90.078
+    },
+    {
+      "status": "success",
+      "state": "MS",
+      "usaf": "723306",
+      "wban": "13825",
+      "name": "COLUMBUS AFB AIRPORT, MS",
+      "days": 7,
+      "avg_temp": 13.87919341943443,
+      "lat": 33.65,
+      "lon": -88.45
+    },
+    {
+      "status": "success",
+      "state": "MT",
+      "usaf": "726776",
+      "wban": "24036",
+      "name": "LEWISTOWN MUNICIPAL ARPT, MT",
+      "days": 7,
+      "avg_temp": -2.517994505494506,
+      "lat": 47.054,
+      "lon": -109.457
+    },
+    {
+      "status": "success",
+      "state": "MT",
+      "usaf": "726797",
+      "wban": "24132",
+      "name": "GALLATIN FIELD AIRPORT, MT",
+      "days": 7,
+      "avg_temp": -7.89229441401748,
+      "lat": 45.788,
+      "lon": -111.162
+    },
+    {
+      "status": "success",
+      "state": "MT",
+      "usaf": "727770",
+      "wban": "94012",
+      "name": "HAVRE CITY-COUNTY AIRPORT, MT",
+      "days": 7,
+      "avg_temp": -12.683321701893542,
+      "lat": 48.543,
+      "lon": -109.764
+    },
+    {
+      "status": "success",
+      "state": "MT",
+      "usaf": "742300",
+      "wban": "24037",
+      "name": "FRANK WILEY FIELD AIRPORT, MT",
+      "days": 7,
+      "avg_temp": -7.625466918211279,
+      "lat": 46.426,
+      "lon": -105.883
+    },
+    {
+      "status": "success",
+      "state": "NC",
+      "usaf": "723030",
+      "wban": "13714",
+      "name": "POPE AFB AIRPORT, NC",
+      "days": 7,
+      "avg_temp": 12.688997422533605,
+      "lat": 35.174,
+      "lon": -79.009
+    },
+    {
+      "status": "success",
+      "state": "NC",
+      "usaf": "723066",
+      "wban": "13713",
+      "name": "SEYMOUR-JOHNSON AFB AIRPORT, NC",
+      "days": 7,
+      "avg_temp": 13.310181914646202,
+      "lat": 35.344,
+      "lon": -77.965
+    },
+    {
+      "status": "success",
+      "state": "NC",
+      "usaf": "723150",
+      "wban": "03812",
+      "name": "ASHEVILLE REGIONAL AIRPORT, NC",
+      "days": 7,
+      "avg_temp": 8.955892491379633,
+      "lat": 35.432,
+      "lon": -82.538
+    },
+    {
+      "status": "success",
+      "state": "NC",
+      "usaf": "723193",
+      "wban": "93807",
+      "name": "SMITH REYNOLDS AIRPORT, NC",
+      "days": 7,
+      "avg_temp": 11.600551526772453,
+      "lat": 36.133,
+      "lon": -80.224
+    },
+    {
+      "status": "success",
+      "state": "ND",
+      "usaf": "727530",
+      "wban": "14914",
+      "name": "HECTOR INTERNATIONAL AIRPORT, ND",
+      "days": 7,
+      "avg_temp": -13.152335926381559,
+      "lat": 46.924,
+      "lon": -96.812
+    },
+    {
+      "status": "success",
+      "state": "ND",
+      "usaf": "727535",
+      "wban": "14919",
+      "name": "JAMESTOWN REGIONAL AIRPORT, ND",
+      "days": 7,
+      "avg_temp": -12.132371925981861,
+      "lat": 46.926,
+      "lon": -98.67
+    },
+    {
+      "status": "success",
+      "state": "ND",
+      "usaf": "727575",
+      "wban": "94925",
+      "name": "GRAND FORKS AFB AIRPORT, ND",
+      "days": 7,
+      "avg_temp": -13.332853023869912,
+      "lat": 47.967,
+      "lon": -97.4
+    },
+    {
+      "status": "success",
+      "state": "ND",
+      "usaf": "727640",
+      "wban": "24011",
+      "name": "BISMARCK MUNICIPAL AIRPORT, ND",
+      "days": 7,
+      "avg_temp": -12.690705640620047,
+      "lat": 46.782,
+      "lon": -100.758
+    },
+    {
+      "status": "success",
+      "state": "ND",
+      "usaf": "727675",
+      "wban": "94011",
+      "name": "MINOT AFB AIRPORT, ND",
+      "days": 7,
+      "avg_temp": -14.12591440851703,
+      "lat": 48.417,
+      "lon": -101.35
+    },
+    {
+      "status": "success",
+      "state": "ND",
+      "usaf": "727573",
+      "wban": "94928",
+      "name": "DEVILS LAKE MUNI AIRPORT, ND",
+      "days": 7,
+      "avg_temp": -14.875487730624616,
+      "lat": 48.117,
+      "lon": -98.9
+    },
+    {
+      "status": "success",
+      "state": "NE",
+      "usaf": "725500",
+      "wban": "14942",
+      "name": "EPPLEY AIRFIELD AIRPORT, NE",
+      "days": 7,
+      "avg_temp": -1.2736863298989543,
+      "lat": 41.312,
+      "lon": -95.902
+    },
+    {
+      "status": "success",
+      "state": "NE",
+      "usaf": "725520",
+      "wban": "14935",
+      "name": "CENTRAL NEBRASKA REGIONAL AIR, NE",
+      "days": 7,
+      "avg_temp": -1.5057663899548808,
+      "lat": 40.961,
+      "lon": -98.313
+    },
+    {
+      "status": "success",
+      "state": "NE",
+      "usaf": "725560",
+      "wban": "14941",
+      "name": "KARL STEFAN MEMORIAL AIRPORT, NE",
+      "days": 7,
+      "avg_temp": -2.384211159211159,
+      "lat": 41.98,
+      "lon": -97.434
+    },
+    {
+      "status": "success",
+      "state": "NE",
+      "usaf": "725626",
+      "wban": "24091",
+      "name": "IMPERIAL MUNICIPAL AIRPORT, NE",
+      "days": 7,
+      "avg_temp": -3.6240909339773957,
+      "lat": 40.511,
+      "lon": -101.624
+    },
+    {
+      "status": "success",
+      "state": "NE",
+      "usaf": "725636",
+      "wban": "24017",
+      "name": "CHADRON MUNICIPAL AIRPORT, NE",
+      "days": 7,
+      "avg_temp": -4.81095643995644,
+      "lat": 42.837,
+      "lon": -103.098
+    },
+    {
+      "status": "success",
+      "state": "NE",
+      "usaf": "725670",
+      "wban": "24032",
+      "name": "MILLER FIELD AIRPORT, NE",
+      "days": 7,
+      "avg_temp": -5.541147915576487,
+      "lat": 42.859,
+      "lon": -100.551
+    },
+    {
+      "status": "success",
+      "state": "NE",
+      "usaf": "725610",
+      "wban": "24030",
+      "name": "SIDNEY MUNICIPAL AIRPORT, NE",
+      "days": 7,
+      "avg_temp": -3.3666922162775057,
+      "lat": 41.099,
+      "lon": -102.986
+    },
+    {
+      "status": "success",
+      "state": "NH",
+      "usaf": "726050",
+      "wban": "14745",
+      "name": "CONCORD MUNICIPAL AIRPORT, NH",
+      "days": 7,
+      "avg_temp": 1.9336091715323405,
+      "lat": 43.205,
+      "lon": -71.503
+    },
+    {
+      "status": "success",
+      "state": "NJ",
+      "usaf": "724075",
+      "wban": "13735",
+      "name": "MILLVILLE MUNICIPAL ARPT, NJ",
+      "days": 7,
+      "avg_temp": 10.344117539821235,
+      "lat": 39.366,
+      "lon": -75.078
+    },
+    {
+      "status": "success",
+      "state": "NM",
+      "usaf": "722686",
+      "wban": "23008",
+      "name": "CANNON AFB AIRPORT, NM",
+      "days": 7,
+      "avg_temp": 7.067818681318682,
+      "lat": 34.383,
+      "lon": -103.317
+    },
+    {
+      "status": "success",
+      "state": "NM",
+      "usaf": "722688",
+      "wban": "93034",
+      "name": "LEA COUNTY REGIONAL AIRPORT, NM",
+      "days": 7,
+      "avg_temp": 7.462898110215408,
+      "lat": 32.693,
+      "lon": -103.213
+    },
+    {
+      "status": "success",
+      "state": "NV",
+      "usaf": "724855",
+      "wban": "23153",
+      "name": "TONOPAH AIRPORT, NV",
+      "days": 7,
+      "avg_temp": 0.5764552361936085,
+      "lat": 38.05,
+      "lon": -117.091
+    },
+    {
+      "status": "success",
+      "state": "NV",
+      "usaf": "724860",
+      "wban": "23154",
+      "name": "ELY AIRPORT/YELLAND FIELD/AIR, NV",
+      "days": 7,
+      "avg_temp": -3.534594909433184,
+      "lat": 39.295,
+      "lon": -114.847
+    },
+    {
+      "status": "success",
+      "state": "NY",
+      "usaf": "725030",
+      "wban": "14732",
+      "name": "LA GUARDIA AIRPORT, NY",
+      "days": 7,
+      "avg_temp": 9.214907571492324,
+      "lat": 40.779,
+      "lon": -73.88
+    },
+    {
+      "status": "success",
+      "state": "NY",
+      "usaf": "725036",
+      "wban": "14757",
+      "name": "DUTCHESS COUNTY AIRPORT, NY",
+      "days": 7,
+      "avg_temp": 5.97078183171583,
+      "lat": 41.626,
+      "lon": -73.882
+    },
+    {
+      "status": "success",
+      "state": "NY",
+      "usaf": "725180",
+      "wban": "14735",
+      "name": "ALBANY INTERNATIONAL AIRPORT, NY",
+      "days": 7,
+      "avg_temp": 4.22732142851251,
+      "lat": 42.747,
+      "lon": -73.799
+    },
+    {
+      "status": "success",
+      "state": "OH",
+      "usaf": "724285",
+      "wban": "13812",
+      "name": "RICKENBACKER INTL AIRPORT, OH",
+      "days": 7,
+      "avg_temp": 7.695880952380953,
+      "lat": 39.817,
+      "lon": -82.933
+    },
+    {
+      "status": "success",
+      "state": "OH",
+      "usaf": "724286",
+      "wban": "93824",
+      "name": "ZANESVILLE MUNICIPAL ARPT, OH",
+      "days": 7,
+      "avg_temp": 8.269379041520255,
+      "lat": 39.946,
+      "lon": -81.893
+    },
+    {
+      "status": "success",
+      "state": "OH",
+      "usaf": "725250",
+      "wban": "14852",
+      "name": "YOUNGSTOWN-WARREN REGIONAL AI, OH",
+      "days": 7,
+      "avg_temp": 6.827238700906067,
+      "lat": 41.255,
+      "lon": -80.674
+    },
+    {
+      "status": "success",
+      "state": "OH",
+      "usaf": "725360",
+      "wban": "94830",
+      "name": "TOLEDO EXPRESS AIRPORT, OH",
+      "days": 7,
+      "avg_temp": 5.413937002321736,
+      "lat": 41.587,
+      "lon": -83.805
+    },
+    {
+      "status": "success",
+      "state": "OH",
+      "usaf": "745700",
+      "wban": "13840",
+      "name": "WRIGHT-PATTERSON AFB AIRPORT, OH",
+      "days": 7,
+      "avg_temp": 7.137498296530555,
+      "lat": 39.833,
+      "lon": -84.05
+    },
+    {
+      "status": "success",
+      "state": "OK",
+      "usaf": "723520",
+      "wban": "13902",
+      "name": "ALTUS AFB AIRPORT, OK",
+      "days": 7,
+      "avg_temp": 8.115339285714285,
+      "lat": 34.65,
+      "lon": -99.267
+    },
+    {
+      "status": "success",
+      "state": "OK",
+      "usaf": "723530",
+      "wban": "13967",
+      "name": "WILL ROGERS WORLD AIRPORT, OK",
+      "days": 7,
+      "avg_temp": 8.177794913419914,
+      "lat": 35.388,
+      "lon": -97.6
+    },
+    {
+      "status": "success",
+      "state": "OK",
+      "usaf": "723560",
+      "wban": "13968",
+      "name": "TULSA INTERNATIONAL AIRPORT, OK",
+      "days": 7,
+      "avg_temp": 9.382535050475251,
+      "lat": 36.199,
+      "lon": -95.878
+    },
+    {
+      "status": "success",
+      "state": "OK",
+      "usaf": "723566",
+      "wban": "93950",
+      "name": "MC ALESTER REGIONAL ARPT, OK",
+      "days": 7,
+      "avg_temp": 11.829977549332387,
+      "lat": 34.882,
+      "lon": -95.782
+    },
+    {
+      "status": "success",
+      "state": "OR",
+      "usaf": "725895",
+      "wban": "94236",
+      "name": "KLAMATH FALLS AIRPORT, OR",
+      "days": 7,
+      "avg_temp": 0.9229678656729148,
+      "lat": 42.147,
+      "lon": -121.726
+    },
+    {
+      "status": "success",
+      "state": "OR",
+      "usaf": "726830",
+      "wban": "94185",
+      "name": "BURNS MUNICIPAL AIRPORT, OR",
+      "days": 7,
+      "avg_temp": -5.774250538932864,
+      "lat": 43.595,
+      "lon": -118.958
+    },
+    {
+      "status": "success",
+      "state": "OR",
+      "usaf": "726837",
+      "wban": "24162",
+      "name": "ONTARIO MUNICIPAL AIRPORT, OR",
+      "days": 7,
+      "avg_temp": 0.8878314124899492,
+      "lat": 44.014,
+      "lon": -117.008
+    },
+    {
+      "status": "success",
+      "state": "PA",
+      "usaf": "724085",
+      "wban": "94732",
+      "name": "NE PHILADELPHIA AIRPORT, PA",
+      "days": 7,
+      "avg_temp": 10.037688759825977,
+      "lat": 40.079,
+      "lon": -75.013
+    },
+    {
+      "status": "success",
+      "state": "PA",
+      "usaf": "725140",
+      "wban": "14778",
+      "name": "WILLIAMSPORT REGIONAL AIRPORT, PA",
+      "days": 7,
+      "avg_temp": 7.253932608545724,
+      "lat": 41.243,
+      "lon": -76.922
+    },
+    {
+      "status": "success",
+      "state": "PA",
+      "usaf": "725205",
+      "wban": "14762",
+      "name": "ALLEGHENY COUNTY AIRPORT, PA",
+      "days": 7,
+      "avg_temp": 8.494537269431973,
+      "lat": 40.355,
+      "lon": -79.921
+    },
+    {
+      "status": "success",
+      "state": "RI",
+      "usaf": "725058",
+      "wban": "94793",
+      "name": "BLOCK ISLAND STATE AIRPORT, RI",
+      "days": 7,
+      "avg_temp": 6.424551373322137,
+      "lat": 41.168,
+      "lon": -71.578
+    },
+    {
+      "status": "success",
+      "state": "SC",
+      "usaf": "723100",
+      "wban": "13883",
+      "name": "COLUMBIA METROPOLITAN AIRPORT, SC",
+      "days": 7,
+      "avg_temp": 13.120168444220214,
+      "lat": 33.942,
+      "lon": -81.118
+    },
+    {
+      "status": "success",
+      "state": "SC",
+      "usaf": "723106",
+      "wban": "13744",
+      "name": "FLORENCE REGIONAL AIRPORT, SC",
+      "days": 7,
+      "avg_temp": 13.514738462952748,
+      "lat": 34.188,
+      "lon": -79.731
+    },
+    {
+      "status": "success",
+      "state": "SC",
+      "usaf": "747910",
+      "wban": "13717",
+      "name": "MYRTLE BEACH INTL AIRPORT, SC",
+      "days": 7,
+      "avg_temp": 13.39097178768539,
+      "lat": 33.683,
+      "lon": -78.933
+    },
+    {
+      "status": "success",
+      "state": "SD",
+      "usaf": "726510",
+      "wban": "14944",
+      "name": "JOE FOSS FIELD AIRPORT, SD",
+      "days": 7,
+      "avg_temp": -7.200305531710549,
+      "lat": 43.578,
+      "lon": -96.754
+    },
+    {
+      "status": "success",
+      "state": "SD",
+      "usaf": "726540",
+      "wban": "14936",
+      "name": "HURON REGIONAL AIRPORT, SD",
+      "days": 7,
+      "avg_temp": -9.808016344552527,
+      "lat": 44.379,
+      "lon": -98.223
+    },
+    {
+      "status": "success",
+      "state": "SD",
+      "usaf": "726546",
+      "wban": "14946",
+      "name": "WATERTOWN MUNICIPAL ARPT, SD",
+      "days": 7,
+      "avg_temp": -10.306399560375038,
+      "lat": 44.905,
+      "lon": -97.15
+    },
+    {
+      "status": "success",
+      "state": "SD",
+      "usaf": "726590",
+      "wban": "14929",
+      "name": "ABERDEEN REGIONAL AIRPORT, SD",
+      "days": 7,
+      "avg_temp": -10.530044683619277,
+      "lat": 45.444,
+      "lon": -98.414
+    },
+    {
+      "status": "success",
+      "state": "SD",
+      "usaf": "726620",
+      "wban": "24090",
+      "name": "RAPID CITY REGIONAL AIRPORT, SD",
+      "days": 7,
+      "avg_temp": -3.162665836774962,
+      "lat": 44.046,
+      "lon": -103.054
+    },
+    {
+      "status": "success",
+      "state": "TN",
+      "usaf": "723240",
+      "wban": "13882",
+      "name": "LOVELL FIELD AIRPORT, TN",
+      "days": 7,
+      "avg_temp": 12.252871951761717,
+      "lat": 35.034,
+      "lon": -85.2
+    },
+    {
+      "status": "success",
+      "state": "TN",
+      "usaf": "723260",
+      "wban": "13891",
+      "name": "MC GHEE TYSON AIRPORT, TN",
+      "days": 7,
+      "avg_temp": 10.340800404430723,
+      "lat": 35.818,
+      "lon": -83.986
+    },
+    {
+      "status": "success",
+      "state": "TN",
+      "usaf": "723340",
+      "wban": "13893",
+      "name": "MEMPHIS INTERNATIONAL AIRPORT, TN",
+      "days": 7,
+      "avg_temp": 13.284070070458919,
+      "lat": 35.056,
+      "lon": -89.986
+    },
+    {
+      "status": "success",
+      "state": "TX",
+      "usaf": "722410",
+      "wban": "12917",
+      "name": "SOUTHEAST TEXAS REGIONAL AIRP, TX",
+      "days": 7,
+      "avg_temp": 18.544864066383646,
+      "lat": 29.952,
+      "lon": -94.026
+    },
+    {
+      "status": "success",
+      "state": "TX",
+      "usaf": "722436",
+      "wban": "12906",
+      "name": "ELLINGTON FIELD AIRPORT, TX",
+      "days": 7,
+      "avg_temp": 19.256250168051412,
+      "lat": 29.617,
+      "lon": -95.167
+    },
+    {
+      "status": "success",
+      "state": "TX",
+      "usaf": "722446",
+      "wban": "93987",
+      "name": "ANGELINA COUNTY AIRPORT, TX",
+      "days": 7,
+      "avg_temp": 16.321108843537413,
+      "lat": 31.236,
+      "lon": -94.755
+    },
+    {
+      "status": "success",
+      "state": "TX",
+      "usaf": "722448",
+      "wban": "13972",
+      "name": "TYLER POUNDS REGIONAL ARPT, TX",
+      "days": 7,
+      "avg_temp": 16.003717920011024,
+      "lat": 32.359,
+      "lon": -95.404
+    },
+    {
+      "status": "success",
+      "state": "TX",
+      "usaf": "722533",
+      "wban": "12962",
+      "name": "HONDO MUNICIPAL AIRPORT, TX",
+      "days": 7,
+      "avg_temp": 17.067277167277165,
+      "lat": 29.36,
+      "lon": -99.174
+    },
+    {
+      "status": "success",
+      "state": "TX",
+      "usaf": "722550",
+      "wban": "12912",
+      "name": "VICTORIA REGIONAL AIRPORT, TX",
+      "days": 7,
+      "avg_temp": 18.4936474985251,
+      "lat": 28.862,
+      "lon": -96.93
+    },
+    {
+      "status": "success",
+      "state": "TX",
+      "usaf": "722560",
+      "wban": "13959",
+      "name": "WACO REGIONAL AIRPORT, TX",
+      "days": 7,
+      "avg_temp": 13.58845609732309,
+      "lat": 31.618,
+      "lon": -97.228
+    },
+    {
+      "status": "success",
+      "state": "TX",
+      "usaf": "722580",
+      "wban": "13960",
+      "name": "DALLAS LOVE FIELD AIRPORT, TX",
+      "days": 7,
+      "avg_temp": 14.877243314743314,
+      "lat": 32.838,
+      "lon": -96.836
+    },
+    {
+      "status": "success",
+      "state": "TX",
+      "usaf": "722597",
+      "wban": "93985",
+      "name": "MINERAL WELLS AIRPORT, TX",
+      "days": 7,
+      "avg_temp": 12.976054112554113,
+      "lat": 32.782,
+      "lon": -98.06
+    },
+    {
+      "status": "success",
+      "state": "TX",
+      "usaf": "722610",
+      "wban": "22010",
+      "name": "DEL RIO INTERNATIONAL AIRPORT, TX",
+      "days": 7,
+      "avg_temp": 17.949893345642195,
+      "lat": 29.378,
+      "lon": -100.927
+    },
+    {
+      "status": "success",
+      "state": "TX",
+      "usaf": "722630",
+      "wban": "23034",
+      "name": "SAN ANGELO REGIONAL/MATHS FIE, TX",
+      "days": 7,
+      "avg_temp": 13.700784125562452,
+      "lat": 31.352,
+      "lon": -100.495
+    },
+    {
+      "status": "no_data",
+      "state": "TX",
+      "usaf": "722640",
+      "wban": "93035",
+      "name": "MARFA MUNICIPAL AIRPORT, TX"
+    },
+    {
+      "status": "success",
+      "state": "TX",
+      "usaf": "722650",
+      "wban": "23023",
+      "name": "MIDLAND INTERNATIONAL AIRPORT, TX",
+      "days": 7,
+      "avg_temp": 11.754285714285714,
+      "lat": 31.948,
+      "lon": -102.209
+    },
+    {
+      "status": "success",
+      "state": "TX",
+      "usaf": "722660",
+      "wban": "13962",
+      "name": "ABILENE REGIONAL AIRPORT, TX",
+      "days": 7,
+      "avg_temp": 13.383560090702947,
+      "lat": 32.411,
+      "lon": -99.682
+    },
+    {
+      "status": "success",
+      "state": "TX",
+      "usaf": "722670",
+      "wban": "23042",
+      "name": "LUBBOCK INTERNATIONAL AIRPORT, TX",
+      "days": 7,
+      "avg_temp": 9.626917663617172,
+      "lat": 33.666,
+      "lon": -101.823
+    },
+    {
+      "status": "success",
+      "state": "UT",
+      "usaf": "724755",
+      "wban": "93129",
+      "name": "CEDAR CITY REGIONAL ARPT, UT",
+      "days": 7,
+      "avg_temp": 0.04497242519223827,
+      "lat": 37.707,
+      "lon": -113.097
+    },
+    {
+      "status": "success",
+      "state": "UT",
+      "usaf": "724756",
+      "wban": "23159",
+      "name": "BRYCE CANYON AIRPORT, UT",
+      "days": 7,
+      "avg_temp": -6.125153464830839,
+      "lat": 37.701,
+      "lon": -112.149
+    },
+    {
+      "status": "success",
+      "state": "VA",
+      "usaf": "723080",
+      "wban": "13737",
+      "name": "NORFOLK INTERNATIONAL AIRPORT, VA",
+      "days": 7,
+      "avg_temp": 13.315614048822423,
+      "lat": 36.904,
+      "lon": -76.193
+    },
+    {
+      "status": "success",
+      "state": "VA",
+      "usaf": "724037",
+      "wban": "93728",
+      "name": "DAVISON AAF AIRPORT, VA",
+      "days": 7,
+      "avg_temp": 10.29054627349024,
+      "lat": 38.717,
+      "lon": -77.183
+    },
+    {
+      "status": "success",
+      "state": "VA",
+      "usaf": "724106",
+      "wban": "13728",
+      "name": "DANVILLE REGIONAL AIRPORT, VA",
+      "days": 7,
+      "avg_temp": 10.150097501083348,
+      "lat": 36.573,
+      "lon": -79.335
+    },
+    {
+      "status": "success",
+      "state": "VT",
+      "usaf": "726140",
+      "wban": "54742",
+      "name": "ST. JOHNSBURY(AMOS), VT",
+      "days": 7,
+      "avg_temp": 1.8892857142857142,
+      "lat": 44.42,
+      "lon": -72.019
+    },
+    {
+      "status": "success",
+      "state": "WA",
+      "usaf": "726988",
+      "wban": "24219",
+      "name": "MUNICIPAL AIRPORT, WA",
+      "days": 7,
+      "avg_temp": 3.3864421116685333,
+      "lat": 45.619,
+      "lon": -121.166
+    },
+    {
+      "status": "success",
+      "state": "WA",
+      "usaf": "727827",
+      "wban": "24110",
+      "name": "GRANT COUNTY INTL AIRPORT, WA",
+      "days": 7,
+      "avg_temp": -0.41321402009128244,
+      "lat": 47.193,
+      "lon": -119.315
+    },
+    {
+      "status": "success",
+      "state": "WA",
+      "usaf": "727845",
+      "wban": "24163",
+      "name": "TRI-CITIES AIRPORT, WA",
+      "days": 7,
+      "avg_temp": 1.026936995172289,
+      "lat": 46.27,
+      "lon": -119.118
+    },
+    {
+      "status": "success",
+      "state": "WI",
+      "usaf": "726405",
+      "wban": "94869",
+      "name": "LAWRENCE J TIMMERMAN AIRPORT, WI",
+      "days": 7,
+      "avg_temp": 0.36924777034925504,
+      "lat": 43.109,
+      "lon": -88.031
+    },
+    {
+      "status": "success",
+      "state": "WI",
+      "usaf": "726410",
+      "wban": "14837",
+      "name": "DANE CO REGIONAL-TRUAX FIELD, WI",
+      "days": 7,
+      "avg_temp": -0.4730062665460276,
+      "lat": 43.141,
+      "lon": -89.345
+    },
+    {
+      "status": "success",
+      "state": "WI",
+      "usaf": "726430",
+      "wban": "14920",
+      "name": "LA CROSSE MUNICIPAL AIRPORT, WI",
+      "days": 7,
+      "avg_temp": -2.1428018600252203,
+      "lat": 43.879,
+      "lon": -91.253
+    },
+    {
+      "status": "success",
+      "state": "WI",
+      "usaf": "726463",
+      "wban": "14897",
+      "name": "WAUSAU DOWNTOWN AIRPORT, WI",
+      "days": 7,
+      "avg_temp": -1.9424142868091725,
+      "lat": 44.927,
+      "lon": -89.625
+    },
+    {
+      "status": "success",
+      "state": "WI",
+      "usaf": "726450",
+      "wban": "14898",
+      "name": "AUSTIN STRAUBEL INTERNATIONAL, WI",
+      "days": 7,
+      "avg_temp": -0.4026230260220035,
+      "lat": 44.48,
+      "lon": -88.137
+    },
+    {
+      "status": "success",
+      "state": "WV",
+      "usaf": "724140",
+      "wban": "13866",
+      "name": "YEAGER AIRPORT, WV",
+      "days": 7,
+      "avg_temp": 10.008038274979516,
+      "lat": 38.38,
+      "lon": -81.591
+    },
+    {
+      "status": "success",
+      "state": "WV",
+      "usaf": "724125",
+      "wban": "03859",
+      "name": "MERCER COUNTY AIRPORT, WV",
+      "days": 7,
+      "avg_temp": 8.950078492935635,
+      "lat": 37.298,
+      "lon": -81.204
+    },
+    {
+      "status": "success",
+      "state": "WY",
+      "usaf": "725640",
+      "wban": "24018",
+      "name": "CHEYENNE AIRPORT, WY",
+      "days": 7,
+      "avg_temp": -2.676298310247097,
+      "lat": 41.158,
+      "lon": -104.808
+    },
+    {
+      "status": "success",
+      "state": "WY",
+      "usaf": "725645",
+      "wban": "24022",
+      "name": "LARAMIE REGIONAL AIRPORT, WY",
+      "days": 7,
+      "avg_temp": -4.920248074849029,
+      "lat": 41.317,
+      "lon": -105.673
+    }
+  ],
+  "by_state": {
+    "AK": [
+      {
+        "status": "success",
+        "state": "AK",
+        "usaf": "700637",
+        "wban": "27406",
+        "name": "DEADHORSE AIRPORT, AK",
+        "days": 7,
+        "avg_temp": -15.737825551317647,
+        "lat": 70.191,
+        "lon": -148.48
+      },
+      {
+        "status": "success",
+        "state": "AK",
+        "usaf": "700860",
+        "wban": "27401",
+        "name": "BARTER ISLAND AIRPORT, AK",
+        "days": 7,
+        "avg_temp": -13.991908957870622,
+        "lat": 70.134,
+        "lon": -143.577
+      },
+      {
+        "status": "success",
+        "state": "AK",
+        "usaf": "701330",
+        "wban": "26616",
+        "name": "RALPH WIEN MEMORIAL AIRPORT, AK",
+        "days": 7,
+        "avg_temp": -12.689077380952382,
+        "lat": 66.886,
+        "lon": -162.607
+      },
+      {
+        "status": "success",
+        "state": "AK",
+        "usaf": "701740",
+        "wban": "26533",
+        "name": "BETTLES AIRPORT, AK",
+        "days": 7,
+        "avg_temp": -16.32722978080121,
+        "lat": 66.918,
+        "lon": -151.519
+      },
+      {
+        "status": "success",
+        "state": "AK",
+        "usaf": "701940",
+        "wban": "26413",
+        "name": "FORT YUKON AIRPORT, AK",
+        "days": 7,
+        "avg_temp": -20.197977653898608,
+        "lat": 66.567,
+        "lon": -145.267
+      },
+      {
+        "status": "success",
+        "state": "AK",
+        "usaf": "702000",
+        "wban": "26617",
+        "name": "NOME AIRPORT, AK",
+        "days": 7,
+        "avg_temp": -8.338651778788998,
+        "lat": 64.511,
+        "lon": -165.44
+      },
+      {
+        "status": "success",
+        "state": "AK",
+        "usaf": "702070",
+        "wban": "26627",
+        "name": "UNALAKLEET AIRPORT, AK",
+        "days": 7,
+        "avg_temp": -8.414238347859035,
+        "lat": 63.883,
+        "lon": -160.8
+      },
+      {
+        "status": "success",
+        "state": "AK",
+        "usaf": "702190",
+        "wban": "26615",
+        "name": "BETHEL AIRPORT, AK",
+        "days": 7,
+        "avg_temp": -10.62237100628749,
+        "lat": 60.785,
+        "lon": -161.829
+      },
+      {
+        "status": "success",
+        "state": "AK",
+        "usaf": "702310",
+        "wban": "26510",
+        "name": "MCGRATH AIRPORT, AK",
+        "days": 7,
+        "avg_temp": -18.308007424568704,
+        "lat": 62.957,
+        "lon": -155.61
+      },
+      {
+        "status": "success",
+        "state": "AK",
+        "usaf": "702320",
+        "wban": "26516",
+        "name": "ANIAK AIRPORT, AK",
+        "days": 7,
+        "avg_temp": -11.82077543412519,
+        "lat": 61.582,
+        "lon": -159.543
+      }
+    ],
+    "AL": [
+      {
+        "status": "success",
+        "state": "AL",
+        "usaf": "722230",
+        "wban": "13894",
+        "name": "MOBILE REGIONAL AIRPORT, AL",
+        "days": 7,
+        "avg_temp": 17.353470678039773,
+        "lat": 30.688,
+        "lon": -88.246
+      },
+      {
+        "status": "success",
+        "state": "AL",
+        "usaf": "722265",
+        "wban": "13821",
+        "name": "MAXWELL AFB AIRPORT, AL",
+        "days": 7,
+        "avg_temp": 14.22012536751822,
+        "lat": 32.383,
+        "lon": -86.35
+      },
+      {
+        "status": "success",
+        "state": "AL",
+        "usaf": "722267",
+        "wban": "03878",
+        "name": "TROY MUNICIPAL AIRPORT, AL",
+        "days": 7,
+        "avg_temp": 15.416637616769195,
+        "lat": 31.857,
+        "lon": -86.01
+      }
+    ],
+    "AR": [
+      {
+        "status": "success",
+        "state": "AR",
+        "usaf": "723405",
+        "wban": "03930",
+        "name": "LITTLE ROCK AFB AIRPORT, AR",
+        "days": 7,
+        "avg_temp": 11.457237148705635,
+        "lat": 34.917,
+        "lon": -92.15
+      },
+      {
+        "status": "success",
+        "state": "AR",
+        "usaf": "723417",
+        "wban": "93988",
+        "name": "GRIDER FIELD AIRPORT, AR",
+        "days": 7,
+        "avg_temp": 14.178727114221441,
+        "lat": 34.18,
+        "lon": -91.934
+      },
+      {
+        "status": "success",
+        "state": "AR",
+        "usaf": "723418",
+        "wban": "13977",
+        "name": "TEXARKANA REGIONAL AIRPORT-WE, AR",
+        "days": 7,
+        "avg_temp": 16.029004329004326,
+        "lat": 33.456,
+        "lon": -93.988
+      }
+    ],
+    "AZ": [
+      {
+        "status": "success",
+        "state": "AZ",
+        "usaf": "722730",
+        "wban": "03124",
+        "name": "SIERRA VISTA MUNICIPAL-LIBBY, AZ",
+        "days": 7,
+        "avg_temp": 8.49221258816089,
+        "lat": 31.588,
+        "lon": -110.344
+      },
+      {
+        "status": "success",
+        "state": "AZ",
+        "usaf": "722740",
+        "wban": "23160",
+        "name": "TUCSON INTERNATIONAL AIRPORT, AZ",
+        "days": 7,
+        "avg_temp": 11.601885995777621,
+        "lat": 32.132,
+        "lon": -110.956
+      }
+    ],
+    "CA": [
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "722886",
+        "wban": "23130",
+        "name": "VAN NUYS AIRPORT, CA",
+        "days": 7,
+        "avg_temp": 12.726464999331082,
+        "lat": 34.212,
+        "lon": -118.491
+      },
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "723815",
+        "wban": "23161",
+        "name": "BARSTOW-DAGGETT AIRPORT, CA",
+        "days": 7,
+        "avg_temp": 9.403119047619047,
+        "lat": 34.854,
+        "lon": -116.787
+      },
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "723840",
+        "wban": "23155",
+        "name": "MEADOWS FIELD AIRPORT, CA",
+        "days": 7,
+        "avg_temp": 10.958676633444075,
+        "lat": 35.434,
+        "lon": -119.055
+      },
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "723925",
+        "wban": "23190",
+        "name": "SANTA BARBARA MUNICIPAL AIRPO, CA",
+        "days": 7,
+        "avg_temp": 12.824966166742415,
+        "lat": 34.424,
+        "lon": -119.842
+      },
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "723965",
+        "wban": "93209",
+        "name": "PASO ROBLES MUNICIPAL ARPT, CA",
+        "days": 7,
+        "avg_temp": 9.128243027678879,
+        "lat": 35.669,
+        "lon": -120.629
+      },
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "724800",
+        "wban": "23157",
+        "name": "BISHOP AIRPORT, CA",
+        "days": 7,
+        "avg_temp": 2.3434746206174775,
+        "lat": 37.371,
+        "lon": -118.359
+      },
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "724830",
+        "wban": "23232",
+        "name": "SACRAMENTO EXECUTIVE AIRPORT, CA",
+        "days": 7,
+        "avg_temp": 9.835488276161527,
+        "lat": 38.507,
+        "lon": -121.496
+      },
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "725905",
+        "wban": "23275",
+        "name": "UKIAH MUNICIPAL AIRPORT, CA",
+        "days": 7,
+        "avg_temp": 7.701825519094482,
+        "lat": 39.128,
+        "lon": -123.2
+      },
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "725910",
+        "wban": "24216",
+        "name": "RED BLUFF MUNICIPAL ARPT, CA",
+        "days": 7,
+        "avg_temp": 8.610771663148755,
+        "lat": 40.152,
+        "lon": -122.255
+      },
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "725945",
+        "wban": "24283",
+        "name": "ARCATA AIRPORT, CA",
+        "days": 7,
+        "avg_temp": 10.04522187336473,
+        "lat": 40.978,
+        "lon": -124.105
+      },
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "725955",
+        "wban": "24259",
+        "name": "SISKIYOU COUNTY AIRPORT, CA",
+        "days": 7,
+        "avg_temp": 4.009239795918367,
+        "lat": 41.774,
+        "lon": -122.468
+      },
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "747188",
+        "wban": "23158",
+        "name": "BLYTHE AIRPORT, CA",
+        "days": 7,
+        "avg_temp": 13.791836523691362,
+        "lat": 33.619,
+        "lon": -114.715
+      },
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "723805",
+        "wban": "23179",
+        "name": "NEEDLES AIRPORT, CA",
+        "days": 7,
+        "avg_temp": 12.83392857142857,
+        "lat": 34.768,
+        "lon": -114.618
+      },
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "725847",
+        "wban": "93230",
+        "name": "LAKE TAHOE AIRPORT, CA",
+        "days": 7,
+        "avg_temp": -3.0163412807843026,
+        "lat": 38.898,
+        "lon": -119.996
+      },
+      {
+        "status": "success",
+        "state": "CA",
+        "usaf": "722900",
+        "wban": "23188",
+        "name": "SAN DIEGO INTERNATIONAL AIRPO, CA",
+        "days": 7,
+        "avg_temp": 14.536484761933268,
+        "lat": 32.734,
+        "lon": -117.183
+      }
+    ],
+    "CO": [
+      {
+        "status": "success",
+        "state": "CO",
+        "usaf": "724620",
+        "wban": "23061",
+        "name": "SAN LUIS VALLEY REGIONAL AIRP, CO",
+        "days": 7,
+        "avg_temp": -4.899293563579277,
+        "lat": 37.439,
+        "lon": -105.862
+      },
+      {
+        "status": "success",
+        "state": "CO",
+        "usaf": "724635",
+        "wban": "23067",
+        "name": "LA JUNTA MUNICIPAL AIRPORT, CO",
+        "days": 7,
+        "avg_temp": -0.8007739840804359,
+        "lat": 38.049,
+        "lon": -103.513
+      },
+      {
+        "status": "success",
+        "state": "CO",
+        "usaf": "724640",
+        "wban": "93058",
+        "name": "PUEBLO MEMORIAL AIRPORT, CO",
+        "days": 7,
+        "avg_temp": -0.02683525622108168,
+        "lat": 38.289,
+        "lon": -104.506
+      }
+    ],
+    "CT": [
+      {
+        "status": "success",
+        "state": "CT",
+        "usaf": "725045",
+        "wban": "14758",
+        "name": "TWEED-NEW HAVEN AIRPORT, CT",
+        "days": 7,
+        "avg_temp": 7.593225294352465,
+        "lat": 41.259,
+        "lon": -72.889
+      }
+    ],
+    "DE": [
+      {
+        "status": "success",
+        "state": "DE",
+        "usaf": "724088",
+        "wban": "13707",
+        "name": "DOVER AFB AIRPORT, DE",
+        "days": 7,
+        "avg_temp": 11.379754064407937,
+        "lat": 39.133,
+        "lon": -75.467
+      }
+    ],
+    "FL": [
+      {
+        "status": "success",
+        "state": "FL",
+        "usaf": "722020",
+        "wban": "12839",
+        "name": "MIAMI INTERNATIONAL AIRPORT, FL",
+        "days": 7,
+        "avg_temp": 24.03677584670232,
+        "lat": 25.788,
+        "lon": -80.317
+      },
+      {
+        "status": "success",
+        "state": "FL",
+        "usaf": "722050",
+        "wban": "12815",
+        "name": "ORLANDO INTERNATIONAL AIRPORT, FL",
+        "days": 7,
+        "avg_temp": 19.921267454350165,
+        "lat": 28.418,
+        "lon": -81.324
+      },
+      {
+        "status": "success",
+        "state": "FL",
+        "usaf": "722106",
+        "wban": "12835",
+        "name": "PAGE FIELD AIRPORT, FL",
+        "days": 7,
+        "avg_temp": 22.329285264543888,
+        "lat": 26.585,
+        "lon": -81.861
+      }
+    ],
+    "GA": [
+      {
+        "status": "success",
+        "state": "GA",
+        "usaf": "722130",
+        "wban": "13861",
+        "name": "WAYCROSS-WARE CO. AIRPORT, GA",
+        "days": 7,
+        "avg_temp": 16.524653194611176,
+        "lat": 31.25,
+        "lon": -82.4
+      },
+      {
+        "status": "success",
+        "state": "GA",
+        "usaf": "722137",
+        "wban": "13878",
+        "name": "MALCOLM MC KINNON AIRPORT, GA",
+        "days": 7,
+        "avg_temp": 15.340373553388975,
+        "lat": 31.153,
+        "lon": -81.391
+      },
+      {
+        "status": "success",
+        "state": "GA",
+        "usaf": "722160",
+        "wban": "13869",
+        "name": "SW GEORGIA REGIONAL ARPT, GA",
+        "days": 7,
+        "avg_temp": 14.838357077411379,
+        "lat": 31.536,
+        "lon": -84.196
+      },
+      {
+        "status": "success",
+        "state": "GA",
+        "usaf": "722170",
+        "wban": "03813",
+        "name": "MIDDLE GEORGIA REGIONAL AIRPO, GA",
+        "days": 7,
+        "avg_temp": 13.668311291340862,
+        "lat": 32.689,
+        "lon": -83.653
+      }
+    ],
+    "HI": [
+      {
+        "status": "success",
+        "state": "HI",
+        "usaf": "911650",
+        "wban": "22536",
+        "name": "LIHUE AIRPORT, HI",
+        "days": 7,
+        "avg_temp": 22.9692912164866,
+        "lat": 21.98,
+        "lon": -159.339
+      }
+    ],
+    "IA": [
+      {
+        "status": "success",
+        "state": "IA",
+        "usaf": "725450",
+        "wban": "14990",
+        "name": "EASTERN IOWA REGIONAL AIRPORT, IA",
+        "days": 7,
+        "avg_temp": -2.1448935851595943,
+        "lat": 41.883,
+        "lon": -91.725
+      },
+      {
+        "status": "success",
+        "state": "IA",
+        "usaf": "725470",
+        "wban": "94908",
+        "name": "DUBUQUE REGIONAL AIRPORT, IA",
+        "days": 7,
+        "avg_temp": -1.5191810570382,
+        "lat": 42.398,
+        "lon": -90.709
+      },
+      {
+        "status": "success",
+        "state": "IA",
+        "usaf": "725485",
+        "wban": "14940",
+        "name": "MASON CITY MUNICIPAL ARPT, IA",
+        "days": 7,
+        "avg_temp": -4.777945269016697,
+        "lat": 43.154,
+        "lon": -93.326
+      },
+      {
+        "status": "success",
+        "state": "IA",
+        "usaf": "725460",
+        "wban": "14933",
+        "name": "DES MOINES INTERNATIONAL AIRP, IA",
+        "days": 7,
+        "avg_temp": -0.901998245264861,
+        "lat": 41.534,
+        "lon": -93.653
+      },
+      {
+        "status": "success",
+        "state": "IA",
+        "usaf": "725570",
+        "wban": "14943",
+        "name": "SIOUX GATEWAY/COL BUD DAY FIE, IA",
+        "days": 7,
+        "avg_temp": -3.878326247165534,
+        "lat": 42.392,
+        "lon": -96.379
+      },
+      {
+        "status": "success",
+        "state": "IA",
+        "usaf": "725420",
+        "wban": "14931",
+        "name": "SE IOWA REGIONAL AIRPORT, IA",
+        "days": 7,
+        "avg_temp": 1.2631864649995903,
+        "lat": 40.773,
+        "lon": -91.125
+      },
+      {
+        "status": "success",
+        "state": "IA",
+        "usaf": "722097",
+        "wban": "04936",
+        "name": "HARLAN MUNICIPAL AIRPORT, IA",
+        "days": 7,
+        "avg_temp": -2.2025765705343168,
+        "lat": 41.584,
+        "lon": -95.339
+      },
+      {
+        "status": "success",
+        "state": "IA",
+        "usaf": "725476",
+        "wban": "04916",
+        "name": "DECORAH MUNICIPAL AIRPORT, IA",
+        "days": 7,
+        "avg_temp": -2.996031746031746,
+        "lat": 43.275,
+        "lon": -91.739
+      }
+    ],
+    "ID": [
+      {
+        "status": "success",
+        "state": "ID",
+        "usaf": "725780",
+        "wban": "24156",
+        "name": "POCATELLO REGIONAL AIRPORT, ID",
+        "days": 7,
+        "avg_temp": -1.6248616841752497,
+        "lat": 42.92,
+        "lon": -112.572
+      },
+      {
+        "status": "success",
+        "state": "ID",
+        "usaf": "725785",
+        "wban": "24145",
+        "name": "IDAHO FALLS REGIONAL ARPT, ID",
+        "days": 7,
+        "avg_temp": -3.6191610657985325,
+        "lat": 43.52,
+        "lon": -112.068
+      },
+      {
+        "status": "no_data",
+        "state": "ID",
+        "usaf": "725786",
+        "wban": "24151",
+        "name": "MALAD CITY AIRPORT, ID"
+      }
+    ],
+    "IL": [
+      {
+        "status": "success",
+        "state": "IL",
+        "usaf": "725320",
+        "wban": "14842",
+        "name": "GREATER PEORIA REGIONAL AIRPO, IL",
+        "days": 7,
+        "avg_temp": 3.3797875901980547,
+        "lat": 40.667,
+        "lon": -89.684
+      },
+      {
+        "status": "success",
+        "state": "IL",
+        "usaf": "725430",
+        "wban": "94822",
+        "name": "GREATER ROCKFORD AIRPORT, IL",
+        "days": 7,
+        "avg_temp": 0.38192608155560925,
+        "lat": 42.193,
+        "lon": -89.093
+      },
+      {
+        "status": "success",
+        "state": "IL",
+        "usaf": "724338",
+        "wban": "13802",
+        "name": "SCOTT AIR FORCE BASE/MIDAMERI, IL",
+        "days": 7,
+        "avg_temp": 7.464513850612022,
+        "lat": 38.55,
+        "lon": -89.85
+      },
+      {
+        "status": "success",
+        "state": "IL",
+        "usaf": "725300",
+        "wban": "94846",
+        "name": "CHICAGO O'HARE INTERNATIONAL, IL",
+        "days": 7,
+        "avg_temp": 2.1614970675277254,
+        "lat": 41.96,
+        "lon": -87.932
+      },
+      {
+        "status": "success",
+        "state": "IL",
+        "usaf": "720170",
+        "wban": "63851",
+        "name": "METROPOLIS MUNICIPAL AIRPORT, IL",
+        "days": 7,
+        "avg_temp": 9.536041247484908,
+        "lat": 37.186,
+        "lon": -88.751
+      },
+      {
+        "status": "success",
+        "state": "IL",
+        "usaf": "720319",
+        "wban": "63841",
+        "name": "ROBINSON MUNICIPAL AIRPORT, IL",
+        "days": 7,
+        "avg_temp": 6.608730158730159,
+        "lat": 39.016,
+        "lon": -87.65
+      },
+      {
+        "status": "success",
+        "state": "IL",
+        "usaf": "722076",
+        "wban": "94891",
+        "name": "VERMILION COUNTY AIRPORT, IL",
+        "days": 7,
+        "avg_temp": 5.472023809523809,
+        "lat": 40.2,
+        "lon": -87.6
+      },
+      {
+        "status": "success",
+        "state": "IL",
+        "usaf": "722171",
+        "wban": "04889",
+        "name": "PONTIAC MUNICIPAL AIRPORT, IL",
+        "days": 7,
+        "avg_temp": 3.070478426112229,
+        "lat": 40.924,
+        "lon": -88.624
+      }
+    ],
+    "IN": [
+      {
+        "status": "success",
+        "state": "IN",
+        "usaf": "724320",
+        "wban": "93817",
+        "name": "EVANSVILLE REGIONAL AIRPORT, IN",
+        "days": 7,
+        "avg_temp": 8.452952794020835,
+        "lat": 38.05,
+        "lon": -87.515
+      },
+      {
+        "status": "success",
+        "state": "IN",
+        "usaf": "724386",
+        "wban": "14835",
+        "name": "PURDUE UNIVERSITY AIRPORT, IN",
+        "days": 7,
+        "avg_temp": 5.2173871500700715,
+        "lat": 40.412,
+        "lon": -86.947
+      },
+      {
+        "status": "success",
+        "state": "IN",
+        "usaf": "725350",
+        "wban": "14848",
+        "name": "SOUTH BEND REGIONAL AIRPORT, IN",
+        "days": 7,
+        "avg_temp": 4.151577588310935,
+        "lat": 41.707,
+        "lon": -86.316
+      },
+      {
+        "status": "success",
+        "state": "IN",
+        "usaf": "724363",
+        "wban": "13803",
+        "name": "COLUMBUS MUNICIPAL AIRPORT, IN",
+        "days": 7,
+        "avg_temp": 6.647525676937442,
+        "lat": 39.267,
+        "lon": -85.9
+      },
+      {
+        "status": "success",
+        "state": "IN",
+        "usaf": "725330",
+        "wban": "14827",
+        "name": "FORT WAYNE INTERNATIONAL AIRP, IN",
+        "days": 7,
+        "avg_temp": 4.836509564101596,
+        "lat": 40.972,
+        "lon": -85.206
+      },
+      {
+        "status": "success",
+        "state": "IN",
+        "usaf": "725337",
+        "wban": "04807",
+        "name": "GARY/CHICAGO AIRPORT, IN",
+        "days": 7,
+        "avg_temp": 2.6266118493332873,
+        "lat": 41.617,
+        "lon": -87.417
+      }
+    ],
+    "KS": [
+      {
+        "status": "success",
+        "state": "KS",
+        "usaf": "724505",
+        "wban": "03923",
+        "name": "MCCONNELL AFB AIRPORT, KS",
+        "days": 7,
+        "avg_temp": 4.9883717346894025,
+        "lat": 37.617,
+        "lon": -97.267
+      },
+      {
+        "status": "success",
+        "state": "KS",
+        "usaf": "724510",
+        "wban": "13985",
+        "name": "DODGE CITY REGIONAL AIRPORT, KS",
+        "days": 7,
+        "avg_temp": 1.840603741496599,
+        "lat": 37.771,
+        "lon": -99.969
+      },
+      {
+        "status": "success",
+        "state": "KS",
+        "usaf": "724556",
+        "wban": "13989",
+        "name": "EMPORIA MUNICIPAL AIRPORT, KS",
+        "days": 7,
+        "avg_temp": 3.6357911656222837,
+        "lat": 38.329,
+        "lon": -96.195
+      },
+      {
+        "status": "success",
+        "state": "KS",
+        "usaf": "724580",
+        "wban": "13984",
+        "name": "BLOSSER MUNICIPAL AIRPORT, KS",
+        "days": 7,
+        "avg_temp": 1.9163225714689058,
+        "lat": 39.551,
+        "lon": -97.651
+      },
+      {
+        "status": "success",
+        "state": "KS",
+        "usaf": "724585",
+        "wban": "93997",
+        "name": "RUSSELL MUNICIPAL AIRPORT, KS",
+        "days": 7,
+        "avg_temp": 1.300104980126257,
+        "lat": 38.873,
+        "lon": -98.809
+      },
+      {
+        "status": "success",
+        "state": "KS",
+        "usaf": "724655",
+        "wban": "93990",
+        "name": "HILL CITY MUNICIPAL ARPT, KS",
+        "days": 7,
+        "avg_temp": 0.13280305564848896,
+        "lat": 39.374,
+        "lon": -99.83
+      },
+      {
+        "status": "no_data",
+        "state": "KS",
+        "usaf": "724650",
+        "wban": "23065",
+        "name": "RENNER FIELD/GOODLAND MINI AI, KS"
+      }
+    ],
+    "KY": [
+      {
+        "status": "success",
+        "state": "KY",
+        "usaf": "724220",
+        "wban": "93820",
+        "name": "BLUE GRASS AIRPORT, KY",
+        "days": 7,
+        "avg_temp": 9.827230864093012,
+        "lat": 38.034,
+        "lon": -84.611
+      },
+      {
+        "status": "success",
+        "state": "KY",
+        "usaf": "724235",
+        "wban": "13810",
+        "name": "BOWMAN FIELD AIRPORT, KY",
+        "days": 7,
+        "avg_temp": 8.785949883449886,
+        "lat": 38.23,
+        "lon": -85.663
+      },
+      {
+        "status": "success",
+        "state": "KY",
+        "usaf": "746710",
+        "wban": "13806",
+        "name": "CAMPBELL AAF AIRPORT, KY",
+        "days": 7,
+        "avg_temp": 10.928303901980373,
+        "lat": 36.667,
+        "lon": -87.483
+      }
+    ],
+    "LA": [
+      {
+        "status": "success",
+        "state": "LA",
+        "usaf": "722315",
+        "wban": "53917",
+        "name": "LAKEFRONT AIRPORT, LA",
+        "days": 7,
+        "avg_temp": 17.660752546259268,
+        "lat": 30.049,
+        "lon": -90.029
+      },
+      {
+        "status": "success",
+        "state": "LA",
+        "usaf": "722400",
+        "wban": "03937",
+        "name": "LAKE CHARLES REGIONAL AIRPORT, LA",
+        "days": 7,
+        "avg_temp": 17.336075259123113,
+        "lat": 30.126,
+        "lon": -93.228
+      },
+      {
+        "status": "success",
+        "state": "LA",
+        "usaf": "722405",
+        "wban": "13976",
+        "name": "LAFAYETTE REGIONAL AIRPORT, LA",
+        "days": 7,
+        "avg_temp": 18.35968606655707,
+        "lat": 30.199,
+        "lon": -91.99
+      }
+    ],
+    "MA": [
+      {
+        "status": "success",
+        "state": "MA",
+        "usaf": "744915",
+        "wban": "14775",
+        "name": "BARNES MUNICIPAL AIRPORT, MA",
+        "days": 7,
+        "avg_temp": 2.8510637121083553,
+        "lat": 42.16,
+        "lon": -72.712
+      }
+    ],
+    "MD": [
+      {
+        "status": "success",
+        "state": "MD",
+        "usaf": "724040",
+        "wban": "13721",
+        "name": "NAVAL AIR STATION, MD",
+        "days": 7,
+        "avg_temp": 13.217498371998373,
+        "lat": 38.3,
+        "lon": -76.417
+      }
+    ],
+    "ME": [
+      {
+        "status": "success",
+        "state": "ME",
+        "usaf": "726185",
+        "wban": "14605",
+        "name": "AUGUSTA STATE AIRPORT, ME",
+        "days": 7,
+        "avg_temp": 1.661694897183674,
+        "lat": 44.316,
+        "lon": -69.797
+      },
+      {
+        "status": "success",
+        "state": "ME",
+        "usaf": "726196",
+        "wban": "14610",
+        "name": "MILLINOCKET MUNICIPAL ARPT, ME",
+        "days": 7,
+        "avg_temp": -0.8131501276146362,
+        "lat": 45.648,
+        "lon": -68.692
+      }
+    ],
+    "MI": [
+      {
+        "status": "success",
+        "state": "MI",
+        "usaf": "725375",
+        "wban": "14822",
+        "name": "DETROIT CITY AIRPORT, MI",
+        "days": 7,
+        "avg_temp": 4.942916303212969,
+        "lat": 42.407,
+        "lon": -83.009
+      },
+      {
+        "status": "success",
+        "state": "MI",
+        "usaf": "725390",
+        "wban": "14836",
+        "name": "CAPITAL CITY AIRPORT, MI",
+        "days": 7,
+        "avg_temp": 2.8471227629511797,
+        "lat": 42.776,
+        "lon": -84.6
+      },
+      {
+        "status": "success",
+        "state": "MI",
+        "usaf": "726360",
+        "wban": "14840",
+        "name": "MUSKEGON COUNTY AIRPORT, MI",
+        "days": 7,
+        "avg_temp": 3.005607556133892,
+        "lat": 43.171,
+        "lon": -86.237
+      },
+      {
+        "status": "success",
+        "state": "MI",
+        "usaf": "726380",
+        "wban": "94814",
+        "name": "ROSCOMMON COUNTY AIRPORT, MI",
+        "days": 7,
+        "avg_temp": 0.29211460442668175,
+        "lat": 44.359,
+        "lon": -84.674
+      }
+    ],
+    "MN": [
+      {
+        "status": "success",
+        "state": "MN",
+        "usaf": "726550",
+        "wban": "14926",
+        "name": "ST CLOUD REGIONAL AIRPORT, MN",
+        "days": 7,
+        "avg_temp": -7.080781212452396,
+        "lat": 45.544,
+        "lon": -94.052
+      },
+      {
+        "status": "success",
+        "state": "MN",
+        "usaf": "726557",
+        "wban": "14910",
+        "name": "CHANDLER FIELD AIRPORT, MN",
+        "days": 7,
+        "avg_temp": -9.34032892446716,
+        "lat": 45.868,
+        "lon": -95.394
+      },
+      {
+        "status": "success",
+        "state": "MN",
+        "usaf": "727450",
+        "wban": "14913",
+        "name": "DULUTH INTERNATIONAL AIRPORT, MN",
+        "days": 7,
+        "avg_temp": -6.299838200252836,
+        "lat": 46.844,
+        "lon": -92.187
+      },
+      {
+        "status": "success",
+        "state": "MN",
+        "usaf": "727470",
+        "wban": "14918",
+        "name": "FALLS INTERNATIONAL AIRPORT, MN",
+        "days": 7,
+        "avg_temp": -10.138362664063335,
+        "lat": 48.559,
+        "lon": -93.396
+      },
+      {
+        "status": "success",
+        "state": "MN",
+        "usaf": "726556",
+        "wban": "14992",
+        "name": "REDWOOD FALLS MUNI AIRPORT, MN",
+        "days": 7,
+        "avg_temp": -8.216284632700969,
+        "lat": 44.548,
+        "lon": -95.08
+      },
+      {
+        "status": "success",
+        "state": "MN",
+        "usaf": "726440",
+        "wban": "14925",
+        "name": "ROCHESTER INTERNATIONAL AIRPO, MN",
+        "days": 7,
+        "avg_temp": -4.796215203365306,
+        "lat": 43.904,
+        "lon": -92.492
+      },
+      {
+        "status": "success",
+        "state": "MN",
+        "usaf": "720258",
+        "wban": "04997",
+        "name": "ISEDOR IVERSON AIRPORT, MN",
+        "days": 7,
+        "avg_temp": -7.54563492063492,
+        "lat": 46.619,
+        "lon": -93.31
+      }
+    ],
+    "MO": [
+      {
+        "status": "success",
+        "state": "MO",
+        "usaf": "723495",
+        "wban": "13987",
+        "name": "JOPLIN REGIONAL AIRPORT, MO",
+        "days": 7,
+        "avg_temp": 9.026593406593408,
+        "lat": 37.152,
+        "lon": -94.495
+      },
+      {
+        "status": "success",
+        "state": "MO",
+        "usaf": "724345",
+        "wban": "03966",
+        "name": "SPIRIT OF ST LOUIS AIRPORT, MO",
+        "days": 7,
+        "avg_temp": 6.8214294232898895,
+        "lat": 38.658,
+        "lon": -90.656
+      },
+      {
+        "status": "success",
+        "state": "MO",
+        "usaf": "724400",
+        "wban": "13995",
+        "name": "SPRINGFIELD-BRANSON REGIONAL, MO",
+        "days": 7,
+        "avg_temp": 8.104342039202947,
+        "lat": 37.24,
+        "lon": -93.39
+      },
+      {
+        "status": "success",
+        "state": "MO",
+        "usaf": "724450",
+        "wban": "03945",
+        "name": "COLUMBIA REGIONAL AIRPORT, MO",
+        "days": 7,
+        "avg_temp": 6.898480675098322,
+        "lat": 38.817,
+        "lon": -92.215
+      },
+      {
+        "status": "success",
+        "state": "MO",
+        "usaf": "724455",
+        "wban": "14938",
+        "name": "KIRKSVILLE REGIONAL ARPT, MO",
+        "days": 7,
+        "avg_temp": 1.9370958472376711,
+        "lat": 40.097,
+        "lon": -92.547
+      }
+    ],
+    "MS": [
+      {
+        "status": "success",
+        "state": "MS",
+        "usaf": "722340",
+        "wban": "13865",
+        "name": "KEY FIELD AIRPORT, MS",
+        "days": 7,
+        "avg_temp": 14.326194619512373,
+        "lat": 32.335,
+        "lon": -88.751
+      },
+      {
+        "status": "success",
+        "state": "MS",
+        "usaf": "722350",
+        "wban": "03940",
+        "name": "JACKSON INTERNATIONAL AIRPORT, MS",
+        "days": 7,
+        "avg_temp": 15.812677045749881,
+        "lat": 32.32,
+        "lon": -90.078
+      },
+      {
+        "status": "success",
+        "state": "MS",
+        "usaf": "723306",
+        "wban": "13825",
+        "name": "COLUMBUS AFB AIRPORT, MS",
+        "days": 7,
+        "avg_temp": 13.87919341943443,
+        "lat": 33.65,
+        "lon": -88.45
+      }
+    ],
+    "MT": [
+      {
+        "status": "success",
+        "state": "MT",
+        "usaf": "726776",
+        "wban": "24036",
+        "name": "LEWISTOWN MUNICIPAL ARPT, MT",
+        "days": 7,
+        "avg_temp": -2.517994505494506,
+        "lat": 47.054,
+        "lon": -109.457
+      },
+      {
+        "status": "success",
+        "state": "MT",
+        "usaf": "726797",
+        "wban": "24132",
+        "name": "GALLATIN FIELD AIRPORT, MT",
+        "days": 7,
+        "avg_temp": -7.89229441401748,
+        "lat": 45.788,
+        "lon": -111.162
+      },
+      {
+        "status": "success",
+        "state": "MT",
+        "usaf": "727770",
+        "wban": "94012",
+        "name": "HAVRE CITY-COUNTY AIRPORT, MT",
+        "days": 7,
+        "avg_temp": -12.683321701893542,
+        "lat": 48.543,
+        "lon": -109.764
+      },
+      {
+        "status": "success",
+        "state": "MT",
+        "usaf": "742300",
+        "wban": "24037",
+        "name": "FRANK WILEY FIELD AIRPORT, MT",
+        "days": 7,
+        "avg_temp": -7.625466918211279,
+        "lat": 46.426,
+        "lon": -105.883
+      }
+    ],
+    "NC": [
+      {
+        "status": "success",
+        "state": "NC",
+        "usaf": "723030",
+        "wban": "13714",
+        "name": "POPE AFB AIRPORT, NC",
+        "days": 7,
+        "avg_temp": 12.688997422533605,
+        "lat": 35.174,
+        "lon": -79.009
+      },
+      {
+        "status": "success",
+        "state": "NC",
+        "usaf": "723066",
+        "wban": "13713",
+        "name": "SEYMOUR-JOHNSON AFB AIRPORT, NC",
+        "days": 7,
+        "avg_temp": 13.310181914646202,
+        "lat": 35.344,
+        "lon": -77.965
+      },
+      {
+        "status": "success",
+        "state": "NC",
+        "usaf": "723150",
+        "wban": "03812",
+        "name": "ASHEVILLE REGIONAL AIRPORT, NC",
+        "days": 7,
+        "avg_temp": 8.955892491379633,
+        "lat": 35.432,
+        "lon": -82.538
+      },
+      {
+        "status": "success",
+        "state": "NC",
+        "usaf": "723193",
+        "wban": "93807",
+        "name": "SMITH REYNOLDS AIRPORT, NC",
+        "days": 7,
+        "avg_temp": 11.600551526772453,
+        "lat": 36.133,
+        "lon": -80.224
+      }
+    ],
+    "ND": [
+      {
+        "status": "success",
+        "state": "ND",
+        "usaf": "727530",
+        "wban": "14914",
+        "name": "HECTOR INTERNATIONAL AIRPORT, ND",
+        "days": 7,
+        "avg_temp": -13.152335926381559,
+        "lat": 46.924,
+        "lon": -96.812
+      },
+      {
+        "status": "success",
+        "state": "ND",
+        "usaf": "727535",
+        "wban": "14919",
+        "name": "JAMESTOWN REGIONAL AIRPORT, ND",
+        "days": 7,
+        "avg_temp": -12.132371925981861,
+        "lat": 46.926,
+        "lon": -98.67
+      },
+      {
+        "status": "success",
+        "state": "ND",
+        "usaf": "727575",
+        "wban": "94925",
+        "name": "GRAND FORKS AFB AIRPORT, ND",
+        "days": 7,
+        "avg_temp": -13.332853023869912,
+        "lat": 47.967,
+        "lon": -97.4
+      },
+      {
+        "status": "success",
+        "state": "ND",
+        "usaf": "727640",
+        "wban": "24011",
+        "name": "BISMARCK MUNICIPAL AIRPORT, ND",
+        "days": 7,
+        "avg_temp": -12.690705640620047,
+        "lat": 46.782,
+        "lon": -100.758
+      },
+      {
+        "status": "success",
+        "state": "ND",
+        "usaf": "727675",
+        "wban": "94011",
+        "name": "MINOT AFB AIRPORT, ND",
+        "days": 7,
+        "avg_temp": -14.12591440851703,
+        "lat": 48.417,
+        "lon": -101.35
+      },
+      {
+        "status": "success",
+        "state": "ND",
+        "usaf": "727573",
+        "wban": "94928",
+        "name": "DEVILS LAKE MUNI AIRPORT, ND",
+        "days": 7,
+        "avg_temp": -14.875487730624616,
+        "lat": 48.117,
+        "lon": -98.9
+      }
+    ],
+    "NE": [
+      {
+        "status": "success",
+        "state": "NE",
+        "usaf": "725500",
+        "wban": "14942",
+        "name": "EPPLEY AIRFIELD AIRPORT, NE",
+        "days": 7,
+        "avg_temp": -1.2736863298989543,
+        "lat": 41.312,
+        "lon": -95.902
+      },
+      {
+        "status": "success",
+        "state": "NE",
+        "usaf": "725520",
+        "wban": "14935",
+        "name": "CENTRAL NEBRASKA REGIONAL AIR, NE",
+        "days": 7,
+        "avg_temp": -1.5057663899548808,
+        "lat": 40.961,
+        "lon": -98.313
+      },
+      {
+        "status": "success",
+        "state": "NE",
+        "usaf": "725560",
+        "wban": "14941",
+        "name": "KARL STEFAN MEMORIAL AIRPORT, NE",
+        "days": 7,
+        "avg_temp": -2.384211159211159,
+        "lat": 41.98,
+        "lon": -97.434
+      },
+      {
+        "status": "success",
+        "state": "NE",
+        "usaf": "725626",
+        "wban": "24091",
+        "name": "IMPERIAL MUNICIPAL AIRPORT, NE",
+        "days": 7,
+        "avg_temp": -3.6240909339773957,
+        "lat": 40.511,
+        "lon": -101.624
+      },
+      {
+        "status": "success",
+        "state": "NE",
+        "usaf": "725636",
+        "wban": "24017",
+        "name": "CHADRON MUNICIPAL AIRPORT, NE",
+        "days": 7,
+        "avg_temp": -4.81095643995644,
+        "lat": 42.837,
+        "lon": -103.098
+      },
+      {
+        "status": "success",
+        "state": "NE",
+        "usaf": "725670",
+        "wban": "24032",
+        "name": "MILLER FIELD AIRPORT, NE",
+        "days": 7,
+        "avg_temp": -5.541147915576487,
+        "lat": 42.859,
+        "lon": -100.551
+      },
+      {
+        "status": "success",
+        "state": "NE",
+        "usaf": "725610",
+        "wban": "24030",
+        "name": "SIDNEY MUNICIPAL AIRPORT, NE",
+        "days": 7,
+        "avg_temp": -3.3666922162775057,
+        "lat": 41.099,
+        "lon": -102.986
+      }
+    ],
+    "NH": [
+      {
+        "status": "success",
+        "state": "NH",
+        "usaf": "726050",
+        "wban": "14745",
+        "name": "CONCORD MUNICIPAL AIRPORT, NH",
+        "days": 7,
+        "avg_temp": 1.9336091715323405,
+        "lat": 43.205,
+        "lon": -71.503
+      }
+    ],
+    "NJ": [
+      {
+        "status": "success",
+        "state": "NJ",
+        "usaf": "724075",
+        "wban": "13735",
+        "name": "MILLVILLE MUNICIPAL ARPT, NJ",
+        "days": 7,
+        "avg_temp": 10.344117539821235,
+        "lat": 39.366,
+        "lon": -75.078
+      }
+    ],
+    "NM": [
+      {
+        "status": "success",
+        "state": "NM",
+        "usaf": "722686",
+        "wban": "23008",
+        "name": "CANNON AFB AIRPORT, NM",
+        "days": 7,
+        "avg_temp": 7.067818681318682,
+        "lat": 34.383,
+        "lon": -103.317
+      },
+      {
+        "status": "success",
+        "state": "NM",
+        "usaf": "722688",
+        "wban": "93034",
+        "name": "LEA COUNTY REGIONAL AIRPORT, NM",
+        "days": 7,
+        "avg_temp": 7.462898110215408,
+        "lat": 32.693,
+        "lon": -103.213
+      }
+    ],
+    "NV": [
+      {
+        "status": "success",
+        "state": "NV",
+        "usaf": "724855",
+        "wban": "23153",
+        "name": "TONOPAH AIRPORT, NV",
+        "days": 7,
+        "avg_temp": 0.5764552361936085,
+        "lat": 38.05,
+        "lon": -117.091
+      },
+      {
+        "status": "success",
+        "state": "NV",
+        "usaf": "724860",
+        "wban": "23154",
+        "name": "ELY AIRPORT/YELLAND FIELD/AIR, NV",
+        "days": 7,
+        "avg_temp": -3.534594909433184,
+        "lat": 39.295,
+        "lon": -114.847
+      }
+    ],
+    "NY": [
+      {
+        "status": "success",
+        "state": "NY",
+        "usaf": "725030",
+        "wban": "14732",
+        "name": "LA GUARDIA AIRPORT, NY",
+        "days": 7,
+        "avg_temp": 9.214907571492324,
+        "lat": 40.779,
+        "lon": -73.88
+      },
+      {
+        "status": "success",
+        "state": "NY",
+        "usaf": "725036",
+        "wban": "14757",
+        "name": "DUTCHESS COUNTY AIRPORT, NY",
+        "days": 7,
+        "avg_temp": 5.97078183171583,
+        "lat": 41.626,
+        "lon": -73.882
+      },
+      {
+        "status": "success",
+        "state": "NY",
+        "usaf": "725180",
+        "wban": "14735",
+        "name": "ALBANY INTERNATIONAL AIRPORT, NY",
+        "days": 7,
+        "avg_temp": 4.22732142851251,
+        "lat": 42.747,
+        "lon": -73.799
+      }
+    ],
+    "OH": [
+      {
+        "status": "success",
+        "state": "OH",
+        "usaf": "724285",
+        "wban": "13812",
+        "name": "RICKENBACKER INTL AIRPORT, OH",
+        "days": 7,
+        "avg_temp": 7.695880952380953,
+        "lat": 39.817,
+        "lon": -82.933
+      },
+      {
+        "status": "success",
+        "state": "OH",
+        "usaf": "724286",
+        "wban": "93824",
+        "name": "ZANESVILLE MUNICIPAL ARPT, OH",
+        "days": 7,
+        "avg_temp": 8.269379041520255,
+        "lat": 39.946,
+        "lon": -81.893
+      },
+      {
+        "status": "success",
+        "state": "OH",
+        "usaf": "725250",
+        "wban": "14852",
+        "name": "YOUNGSTOWN-WARREN REGIONAL AI, OH",
+        "days": 7,
+        "avg_temp": 6.827238700906067,
+        "lat": 41.255,
+        "lon": -80.674
+      },
+      {
+        "status": "success",
+        "state": "OH",
+        "usaf": "725360",
+        "wban": "94830",
+        "name": "TOLEDO EXPRESS AIRPORT, OH",
+        "days": 7,
+        "avg_temp": 5.413937002321736,
+        "lat": 41.587,
+        "lon": -83.805
+      },
+      {
+        "status": "success",
+        "state": "OH",
+        "usaf": "745700",
+        "wban": "13840",
+        "name": "WRIGHT-PATTERSON AFB AIRPORT, OH",
+        "days": 7,
+        "avg_temp": 7.137498296530555,
+        "lat": 39.833,
+        "lon": -84.05
+      }
+    ],
+    "OK": [
+      {
+        "status": "success",
+        "state": "OK",
+        "usaf": "723520",
+        "wban": "13902",
+        "name": "ALTUS AFB AIRPORT, OK",
+        "days": 7,
+        "avg_temp": 8.115339285714285,
+        "lat": 34.65,
+        "lon": -99.267
+      },
+      {
+        "status": "success",
+        "state": "OK",
+        "usaf": "723530",
+        "wban": "13967",
+        "name": "WILL ROGERS WORLD AIRPORT, OK",
+        "days": 7,
+        "avg_temp": 8.177794913419914,
+        "lat": 35.388,
+        "lon": -97.6
+      },
+      {
+        "status": "success",
+        "state": "OK",
+        "usaf": "723560",
+        "wban": "13968",
+        "name": "TULSA INTERNATIONAL AIRPORT, OK",
+        "days": 7,
+        "avg_temp": 9.382535050475251,
+        "lat": 36.199,
+        "lon": -95.878
+      },
+      {
+        "status": "success",
+        "state": "OK",
+        "usaf": "723566",
+        "wban": "93950",
+        "name": "MC ALESTER REGIONAL ARPT, OK",
+        "days": 7,
+        "avg_temp": 11.829977549332387,
+        "lat": 34.882,
+        "lon": -95.782
+      }
+    ],
+    "OR": [
+      {
+        "status": "success",
+        "state": "OR",
+        "usaf": "725895",
+        "wban": "94236",
+        "name": "KLAMATH FALLS AIRPORT, OR",
+        "days": 7,
+        "avg_temp": 0.9229678656729148,
+        "lat": 42.147,
+        "lon": -121.726
+      },
+      {
+        "status": "success",
+        "state": "OR",
+        "usaf": "726830",
+        "wban": "94185",
+        "name": "BURNS MUNICIPAL AIRPORT, OR",
+        "days": 7,
+        "avg_temp": -5.774250538932864,
+        "lat": 43.595,
+        "lon": -118.958
+      },
+      {
+        "status": "success",
+        "state": "OR",
+        "usaf": "726837",
+        "wban": "24162",
+        "name": "ONTARIO MUNICIPAL AIRPORT, OR",
+        "days": 7,
+        "avg_temp": 0.8878314124899492,
+        "lat": 44.014,
+        "lon": -117.008
+      }
+    ],
+    "PA": [
+      {
+        "status": "success",
+        "state": "PA",
+        "usaf": "724085",
+        "wban": "94732",
+        "name": "NE PHILADELPHIA AIRPORT, PA",
+        "days": 7,
+        "avg_temp": 10.037688759825977,
+        "lat": 40.079,
+        "lon": -75.013
+      },
+      {
+        "status": "success",
+        "state": "PA",
+        "usaf": "725140",
+        "wban": "14778",
+        "name": "WILLIAMSPORT REGIONAL AIRPORT, PA",
+        "days": 7,
+        "avg_temp": 7.253932608545724,
+        "lat": 41.243,
+        "lon": -76.922
+      },
+      {
+        "status": "success",
+        "state": "PA",
+        "usaf": "725205",
+        "wban": "14762",
+        "name": "ALLEGHENY COUNTY AIRPORT, PA",
+        "days": 7,
+        "avg_temp": 8.494537269431973,
+        "lat": 40.355,
+        "lon": -79.921
+      }
+    ],
+    "RI": [
+      {
+        "status": "success",
+        "state": "RI",
+        "usaf": "725058",
+        "wban": "94793",
+        "name": "BLOCK ISLAND STATE AIRPORT, RI",
+        "days": 7,
+        "avg_temp": 6.424551373322137,
+        "lat": 41.168,
+        "lon": -71.578
+      }
+    ],
+    "SC": [
+      {
+        "status": "success",
+        "state": "SC",
+        "usaf": "723100",
+        "wban": "13883",
+        "name": "COLUMBIA METROPOLITAN AIRPORT, SC",
+        "days": 7,
+        "avg_temp": 13.120168444220214,
+        "lat": 33.942,
+        "lon": -81.118
+      },
+      {
+        "status": "success",
+        "state": "SC",
+        "usaf": "723106",
+        "wban": "13744",
+        "name": "FLORENCE REGIONAL AIRPORT, SC",
+        "days": 7,
+        "avg_temp": 13.514738462952748,
+        "lat": 34.188,
+        "lon": -79.731
+      },
+      {
+        "status": "success",
+        "state": "SC",
+        "usaf": "747910",
+        "wban": "13717",
+        "name": "MYRTLE BEACH INTL AIRPORT, SC",
+        "days": 7,
+        "avg_temp": 13.39097178768539,
+        "lat": 33.683,
+        "lon": -78.933
+      }
+    ],
+    "SD": [
+      {
+        "status": "success",
+        "state": "SD",
+        "usaf": "726510",
+        "wban": "14944",
+        "name": "JOE FOSS FIELD AIRPORT, SD",
+        "days": 7,
+        "avg_temp": -7.200305531710549,
+        "lat": 43.578,
+        "lon": -96.754
+      },
+      {
+        "status": "success",
+        "state": "SD",
+        "usaf": "726540",
+        "wban": "14936",
+        "name": "HURON REGIONAL AIRPORT, SD",
+        "days": 7,
+        "avg_temp": -9.808016344552527,
+        "lat": 44.379,
+        "lon": -98.223
+      },
+      {
+        "status": "success",
+        "state": "SD",
+        "usaf": "726546",
+        "wban": "14946",
+        "name": "WATERTOWN MUNICIPAL ARPT, SD",
+        "days": 7,
+        "avg_temp": -10.306399560375038,
+        "lat": 44.905,
+        "lon": -97.15
+      },
+      {
+        "status": "success",
+        "state": "SD",
+        "usaf": "726590",
+        "wban": "14929",
+        "name": "ABERDEEN REGIONAL AIRPORT, SD",
+        "days": 7,
+        "avg_temp": -10.530044683619277,
+        "lat": 45.444,
+        "lon": -98.414
+      },
+      {
+        "status": "success",
+        "state": "SD",
+        "usaf": "726620",
+        "wban": "24090",
+        "name": "RAPID CITY REGIONAL AIRPORT, SD",
+        "days": 7,
+        "avg_temp": -3.162665836774962,
+        "lat": 44.046,
+        "lon": -103.054
+      }
+    ],
+    "TN": [
+      {
+        "status": "success",
+        "state": "TN",
+        "usaf": "723240",
+        "wban": "13882",
+        "name": "LOVELL FIELD AIRPORT, TN",
+        "days": 7,
+        "avg_temp": 12.252871951761717,
+        "lat": 35.034,
+        "lon": -85.2
+      },
+      {
+        "status": "success",
+        "state": "TN",
+        "usaf": "723260",
+        "wban": "13891",
+        "name": "MC GHEE TYSON AIRPORT, TN",
+        "days": 7,
+        "avg_temp": 10.340800404430723,
+        "lat": 35.818,
+        "lon": -83.986
+      },
+      {
+        "status": "success",
+        "state": "TN",
+        "usaf": "723340",
+        "wban": "13893",
+        "name": "MEMPHIS INTERNATIONAL AIRPORT, TN",
+        "days": 7,
+        "avg_temp": 13.284070070458919,
+        "lat": 35.056,
+        "lon": -89.986
+      }
+    ],
+    "TX": [
+      {
+        "status": "success",
+        "state": "TX",
+        "usaf": "722410",
+        "wban": "12917",
+        "name": "SOUTHEAST TEXAS REGIONAL AIRP, TX",
+        "days": 7,
+        "avg_temp": 18.544864066383646,
+        "lat": 29.952,
+        "lon": -94.026
+      },
+      {
+        "status": "success",
+        "state": "TX",
+        "usaf": "722436",
+        "wban": "12906",
+        "name": "ELLINGTON FIELD AIRPORT, TX",
+        "days": 7,
+        "avg_temp": 19.256250168051412,
+        "lat": 29.617,
+        "lon": -95.167
+      },
+      {
+        "status": "success",
+        "state": "TX",
+        "usaf": "722446",
+        "wban": "93987",
+        "name": "ANGELINA COUNTY AIRPORT, TX",
+        "days": 7,
+        "avg_temp": 16.321108843537413,
+        "lat": 31.236,
+        "lon": -94.755
+      },
+      {
+        "status": "success",
+        "state": "TX",
+        "usaf": "722448",
+        "wban": "13972",
+        "name": "TYLER POUNDS REGIONAL ARPT, TX",
+        "days": 7,
+        "avg_temp": 16.003717920011024,
+        "lat": 32.359,
+        "lon": -95.404
+      },
+      {
+        "status": "success",
+        "state": "TX",
+        "usaf": "722533",
+        "wban": "12962",
+        "name": "HONDO MUNICIPAL AIRPORT, TX",
+        "days": 7,
+        "avg_temp": 17.067277167277165,
+        "lat": 29.36,
+        "lon": -99.174
+      },
+      {
+        "status": "success",
+        "state": "TX",
+        "usaf": "722550",
+        "wban": "12912",
+        "name": "VICTORIA REGIONAL AIRPORT, TX",
+        "days": 7,
+        "avg_temp": 18.4936474985251,
+        "lat": 28.862,
+        "lon": -96.93
+      },
+      {
+        "status": "success",
+        "state": "TX",
+        "usaf": "722560",
+        "wban": "13959",
+        "name": "WACO REGIONAL AIRPORT, TX",
+        "days": 7,
+        "avg_temp": 13.58845609732309,
+        "lat": 31.618,
+        "lon": -97.228
+      },
+      {
+        "status": "success",
+        "state": "TX",
+        "usaf": "722580",
+        "wban": "13960",
+        "name": "DALLAS LOVE FIELD AIRPORT, TX",
+        "days": 7,
+        "avg_temp": 14.877243314743314,
+        "lat": 32.838,
+        "lon": -96.836
+      },
+      {
+        "status": "success",
+        "state": "TX",
+        "usaf": "722597",
+        "wban": "93985",
+        "name": "MINERAL WELLS AIRPORT, TX",
+        "days": 7,
+        "avg_temp": 12.976054112554113,
+        "lat": 32.782,
+        "lon": -98.06
+      },
+      {
+        "status": "success",
+        "state": "TX",
+        "usaf": "722610",
+        "wban": "22010",
+        "name": "DEL RIO INTERNATIONAL AIRPORT, TX",
+        "days": 7,
+        "avg_temp": 17.949893345642195,
+        "lat": 29.378,
+        "lon": -100.927
+      },
+      {
+        "status": "success",
+        "state": "TX",
+        "usaf": "722630",
+        "wban": "23034",
+        "name": "SAN ANGELO REGIONAL/MATHS FIE, TX",
+        "days": 7,
+        "avg_temp": 13.700784125562452,
+        "lat": 31.352,
+        "lon": -100.495
+      },
+      {
+        "status": "no_data",
+        "state": "TX",
+        "usaf": "722640",
+        "wban": "93035",
+        "name": "MARFA MUNICIPAL AIRPORT, TX"
+      },
+      {
+        "status": "success",
+        "state": "TX",
+        "usaf": "722650",
+        "wban": "23023",
+        "name": "MIDLAND INTERNATIONAL AIRPORT, TX",
+        "days": 7,
+        "avg_temp": 11.754285714285714,
+        "lat": 31.948,
+        "lon": -102.209
+      },
+      {
+        "status": "success",
+        "state": "TX",
+        "usaf": "722660",
+        "wban": "13962",
+        "name": "ABILENE REGIONAL AIRPORT, TX",
+        "days": 7,
+        "avg_temp": 13.383560090702947,
+        "lat": 32.411,
+        "lon": -99.682
+      },
+      {
+        "status": "success",
+        "state": "TX",
+        "usaf": "722670",
+        "wban": "23042",
+        "name": "LUBBOCK INTERNATIONAL AIRPORT, TX",
+        "days": 7,
+        "avg_temp": 9.626917663617172,
+        "lat": 33.666,
+        "lon": -101.823
+      }
+    ],
+    "UT": [
+      {
+        "status": "success",
+        "state": "UT",
+        "usaf": "724755",
+        "wban": "93129",
+        "name": "CEDAR CITY REGIONAL ARPT, UT",
+        "days": 7,
+        "avg_temp": 0.04497242519223827,
+        "lat": 37.707,
+        "lon": -113.097
+      },
+      {
+        "status": "success",
+        "state": "UT",
+        "usaf": "724756",
+        "wban": "23159",
+        "name": "BRYCE CANYON AIRPORT, UT",
+        "days": 7,
+        "avg_temp": -6.125153464830839,
+        "lat": 37.701,
+        "lon": -112.149
+      }
+    ],
+    "VA": [
+      {
+        "status": "success",
+        "state": "VA",
+        "usaf": "723080",
+        "wban": "13737",
+        "name": "NORFOLK INTERNATIONAL AIRPORT, VA",
+        "days": 7,
+        "avg_temp": 13.315614048822423,
+        "lat": 36.904,
+        "lon": -76.193
+      },
+      {
+        "status": "success",
+        "state": "VA",
+        "usaf": "724037",
+        "wban": "93728",
+        "name": "DAVISON AAF AIRPORT, VA",
+        "days": 7,
+        "avg_temp": 10.29054627349024,
+        "lat": 38.717,
+        "lon": -77.183
+      },
+      {
+        "status": "success",
+        "state": "VA",
+        "usaf": "724106",
+        "wban": "13728",
+        "name": "DANVILLE REGIONAL AIRPORT, VA",
+        "days": 7,
+        "avg_temp": 10.150097501083348,
+        "lat": 36.573,
+        "lon": -79.335
+      }
+    ],
+    "VT": [
+      {
+        "status": "success",
+        "state": "VT",
+        "usaf": "726140",
+        "wban": "54742",
+        "name": "ST. JOHNSBURY(AMOS), VT",
+        "days": 7,
+        "avg_temp": 1.8892857142857142,
+        "lat": 44.42,
+        "lon": -72.019
+      }
+    ],
+    "WA": [
+      {
+        "status": "success",
+        "state": "WA",
+        "usaf": "726988",
+        "wban": "24219",
+        "name": "MUNICIPAL AIRPORT, WA",
+        "days": 7,
+        "avg_temp": 3.3864421116685333,
+        "lat": 45.619,
+        "lon": -121.166
+      },
+      {
+        "status": "success",
+        "state": "WA",
+        "usaf": "727827",
+        "wban": "24110",
+        "name": "GRANT COUNTY INTL AIRPORT, WA",
+        "days": 7,
+        "avg_temp": -0.41321402009128244,
+        "lat": 47.193,
+        "lon": -119.315
+      },
+      {
+        "status": "success",
+        "state": "WA",
+        "usaf": "727845",
+        "wban": "24163",
+        "name": "TRI-CITIES AIRPORT, WA",
+        "days": 7,
+        "avg_temp": 1.026936995172289,
+        "lat": 46.27,
+        "lon": -119.118
+      }
+    ],
+    "WI": [
+      {
+        "status": "success",
+        "state": "WI",
+        "usaf": "726405",
+        "wban": "94869",
+        "name": "LAWRENCE J TIMMERMAN AIRPORT, WI",
+        "days": 7,
+        "avg_temp": 0.36924777034925504,
+        "lat": 43.109,
+        "lon": -88.031
+      },
+      {
+        "status": "success",
+        "state": "WI",
+        "usaf": "726410",
+        "wban": "14837",
+        "name": "DANE CO REGIONAL-TRUAX FIELD, WI",
+        "days": 7,
+        "avg_temp": -0.4730062665460276,
+        "lat": 43.141,
+        "lon": -89.345
+      },
+      {
+        "status": "success",
+        "state": "WI",
+        "usaf": "726430",
+        "wban": "14920",
+        "name": "LA CROSSE MUNICIPAL AIRPORT, WI",
+        "days": 7,
+        "avg_temp": -2.1428018600252203,
+        "lat": 43.879,
+        "lon": -91.253
+      },
+      {
+        "status": "success",
+        "state": "WI",
+        "usaf": "726463",
+        "wban": "14897",
+        "name": "WAUSAU DOWNTOWN AIRPORT, WI",
+        "days": 7,
+        "avg_temp": -1.9424142868091725,
+        "lat": 44.927,
+        "lon": -89.625
+      },
+      {
+        "status": "success",
+        "state": "WI",
+        "usaf": "726450",
+        "wban": "14898",
+        "name": "AUSTIN STRAUBEL INTERNATIONAL, WI",
+        "days": 7,
+        "avg_temp": -0.4026230260220035,
+        "lat": 44.48,
+        "lon": -88.137
+      }
+    ],
+    "WV": [
+      {
+        "status": "success",
+        "state": "WV",
+        "usaf": "724140",
+        "wban": "13866",
+        "name": "YEAGER AIRPORT, WV",
+        "days": 7,
+        "avg_temp": 10.008038274979516,
+        "lat": 38.38,
+        "lon": -81.591
+      },
+      {
+        "status": "success",
+        "state": "WV",
+        "usaf": "724125",
+        "wban": "03859",
+        "name": "MERCER COUNTY AIRPORT, WV",
+        "days": 7,
+        "avg_temp": 8.950078492935635,
+        "lat": 37.298,
+        "lon": -81.204
+      }
+    ],
+    "WY": [
+      {
+        "status": "success",
+        "state": "WY",
+        "usaf": "725640",
+        "wban": "24018",
+        "name": "CHEYENNE AIRPORT, WY",
+        "days": 7,
+        "avg_temp": -2.676298310247097,
+        "lat": 41.158,
+        "lon": -104.808
+      },
+      {
+        "status": "success",
+        "state": "WY",
+        "usaf": "725645",
+        "wban": "24022",
+        "name": "LARAMIE REGIONAL AIRPORT, WY",
+        "days": 7,
+        "avg_temp": -4.920248074849029,
+        "lat": 41.317,
+        "lon": -105.673
+      }
+    ]
+  }
+}

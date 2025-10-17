@@ -21,10 +21,11 @@ from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWith
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 
 
-# NOAA ISD 観測地点マッピング（自動選定197地点）
+# NOAA ISD 観測地点マッピング（自動選定194地点）
 # アメリカ全50州、農業重要度と気候多様性を考慮
 # Generated from NOAA isd-history.txt (2024-10-17)
-# Total: 197 stations across 50 states
+# Validated: 2023-01-01 data availability tested (98.5% success rate)
+# Total: 194 stations across 50 states (3 stations removed due to no data)
 #
 # Selection criteria:
 # 1. Geographic coverage: All 50 states
@@ -112,10 +113,9 @@ LOCATION_MAPPING: Dict[Tuple[float, float], Tuple[str, str, str, float, float]] 
     (41.58, -95.34): ("722097", "04936", "HARLAN MUNICIPAL AIRPORT, IA", 41.5840, -95.3390),
     (43.27, -91.74): ("725476", "04916", "DECORAH MUNICIPAL AIRPORT, IA", 43.2750, -91.7390),
 
-    # ID - 3 stations
+    # ID - 2 stations (1 removed: MALAD CITY - no data)
     (42.92, -112.57): ("725780", "24156", "POCATELLO REGIONAL AIRPORT, ID", 42.9200, -112.5720),
     (43.52, -112.07): ("725785", "24145", "IDAHO FALLS REGIONAL ARPT, ID", 43.5200, -112.0680),
-    (42.19, -112.25): ("725786", "24151", "MALAD CITY AIRPORT, ID", 42.1890, -112.2490),
 
     # IL - 8 stations
     (40.67, -89.68): ("725320", "14842", "GREATER PEORIA REGIONAL AIRPO, IL", 40.6670, -89.6840),
@@ -135,14 +135,13 @@ LOCATION_MAPPING: Dict[Tuple[float, float], Tuple[str, str, str, float, float]] 
     (40.97, -85.21): ("725330", "14827", "FORT WAYNE INTERNATIONAL AIRP, IN", 40.9720, -85.2060),
     (41.62, -87.42): ("725337", "04807", "GARY/CHICAGO AIRPORT, IN", 41.6170, -87.4170),
 
-    # KS - 7 stations
+    # KS - 6 stations (1 removed: RENNER FIELD/GOODLAND - no data)
     (37.62, -97.27): ("724505", "03923", "MCCONNELL AFB AIRPORT, KS", 37.6170, -97.2670),
     (37.77, -99.97): ("724510", "13985", "DODGE CITY REGIONAL AIRPORT, KS", 37.7710, -99.9690),
     (38.33, -96.19): ("724556", "13989", "EMPORIA MUNICIPAL AIRPORT, KS", 38.3290, -96.1950),
     (39.55, -97.65): ("724580", "13984", "BLOSSER MUNICIPAL AIRPORT, KS", 39.5510, -97.6510),
     (38.87, -98.81): ("724585", "93997", "RUSSELL MUNICIPAL AIRPORT, KS", 38.8730, -98.8090),
     (39.37, -99.83): ("724655", "93990", "HILL CITY MUNICIPAL ARPT, KS", 39.3740, -99.8300),
-    (39.37, -101.69): ("724650", "23065", "RENNER FIELD/GOODLAND MINI AI, KS", 39.3670, -101.6930),
 
     # KY - 3 stations
     (38.03, -84.61): ("724220", "93820", "BLUE GRASS AIRPORT, KY", 38.0340, -84.6110),
@@ -282,7 +281,7 @@ LOCATION_MAPPING: Dict[Tuple[float, float], Tuple[str, str, str, float, float]] 
     (35.82, -83.99): ("723260", "13891", "MC GHEE TYSON AIRPORT, TN", 35.8180, -83.9860),
     (35.06, -89.99): ("723340", "13893", "MEMPHIS INTERNATIONAL AIRPORT, TN", 35.0560, -89.9860),
 
-    # TX - 15 stations
+    # TX - 14 stations (1 removed: MARFA MUNICIPAL - no data)
     (29.95, -94.03): ("722410", "12917", "SOUTHEAST TEXAS REGIONAL AIRP, TX", 29.9520, -94.0260),
     (29.62, -95.17): ("722436", "12906", "ELLINGTON FIELD AIRPORT, TX", 29.6170, -95.1670),
     (31.24, -94.75): ("722446", "93987", "ANGELINA COUNTY AIRPORT, TX", 31.2360, -94.7550),
@@ -294,7 +293,6 @@ LOCATION_MAPPING: Dict[Tuple[float, float], Tuple[str, str, str, float, float]] 
     (32.78, -98.06): ("722597", "93985", "MINERAL WELLS AIRPORT, TX", 32.7820, -98.0600),
     (29.38, -100.93): ("722610", "22010", "DEL RIO INTERNATIONAL AIRPORT, TX", 29.3780, -100.9270),
     (31.35, -100.5): ("722630", "23034", "SAN ANGELO REGIONAL/MATHS FIE, TX", 31.3520, -100.4950),
-    (30.37, -104.02): ("722640", "93035", "MARFA MUNICIPAL AIRPORT, TX", 30.3710, -104.0170),
     (31.95, -102.21): ("722650", "23023", "MIDLAND INTERNATIONAL AIRPORT, TX", 31.9480, -102.2090),
     (32.41, -99.68): ("722660", "13962", "ABILENE REGIONAL AIRPORT, TX", 32.4110, -99.6820),
     (33.67, -101.82): ("722670", "23042", "LUBBOCK INTERNATIONAL AIRPORT, TX", 33.6660, -101.8230),

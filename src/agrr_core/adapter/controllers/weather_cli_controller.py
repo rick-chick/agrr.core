@@ -145,9 +145,9 @@ Output (JSON):
         # Data source selection
         weather_parser.add_argument(
             '--data-source',
-            choices=['openmeteo', 'jma', 'noaa-ftp'],
+            choices=['openmeteo', 'jma', 'noaa-ftp', 'nasa-power'],
             default='openmeteo',
-            help='Weather data source: openmeteo (global, default), jma (Japan only), or noaa-ftp (US long-term historical data 2000+)'
+            help='Weather data source: openmeteo (global, default), jma (Japan only), noaa-ftp (US long-term historical data 2000+), or nasa-power (global grid-based, ideal for India)'
         )
         
         # Date range arguments

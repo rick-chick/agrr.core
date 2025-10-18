@@ -123,7 +123,22 @@ agrr weather --location 40.7128,-74.0060 --days 5 --json
 
 # Short options
 agrr weather -l 35.6762,139.6503 -d 7 --json
+
+# Get India weather data using NASA POWER (2000-2024, 24 years)
+agrr weather --location 28.6139,77.2090 --start-date 2000-01-01 --end-date 2024-12-31 --data-source nasa-power --json
+
+# Get Japan weather data using JMA (high quality)
+agrr weather --location 35.6895,139.6917 --days 30 --data-source jma
+
+# Get USA weather data using NOAA FTP (long-term historical)
+agrr weather --location 40.7128,-74.0060 --start-date 2000-01-01 --end-date 2023-12-31 --data-source noaa-ftp --json
 ```
+
+**Available Data Sources:**
+- `openmeteo` (default): Global, 2-3 years
+- `jma`: Japan only, high quality
+- `noaa-ftp`: USA only, 1901-present
+- `nasa-power`: **Global, 1984-present** ⭐ Recommended for India
 
 #### Growth Progress Calculation
 
@@ -335,7 +350,14 @@ Date         Max Temp   Min Temp   Avg Temp   Precip   Sunshine
 
 ## Features
 
-- 🌤️ **Weather Data Fetching**: Get historical weather data from Open-Meteo API
+- 🌤️ **Weather Data Fetching**: Get historical weather data from multiple sources
+  - **Open-Meteo API**: Global coverage, 2-3 years historical data (default)
+  - **JMA (Japan)**: High quality data from Japan Meteorological Agency
+  - **NOAA (USA)**: Long-term historical data from US weather stations (1901-present)
+  - **NASA POWER (Global)**: Grid-based satellite data for any location worldwide (1984-present)
+    - ✨ **New!** Ideal for India, developing countries, and remote areas
+    - No API key required, completely free
+    - Any latitude/longitude supported
 - 🔮 **Weather Prediction**: Predict future weather using Prophet time series model
 - 🌱 **Growth Progress Calculation**: Calculate daily growth progress based on GDD (Growing Degree Days)
 - 🏗️ **Clean Architecture**: Implemented following clean architecture principles

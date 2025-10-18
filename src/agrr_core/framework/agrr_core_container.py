@@ -11,6 +11,7 @@ from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway
 from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway
 from agrr_core.adapter.gateways.weather_noaa_gateway import WeatherNOAAGateway
 from agrr_core.adapter.gateways.weather_noaa_ftp_gateway import WeatherNOAAFTPGateway
+from agrr_core.adapter.gateways.weather_nasa_power_gateway import WeatherNASAPowerGateway
 from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway
 from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAdapter
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
@@ -85,6 +86,8 @@ class AgrrCoreContainer:
                 weather_api_gateway = self.get_weather_noaa_gateway()
             elif data_source == 'noaa-ftp':
                 weather_api_gateway = self.get_weather_noaa_ftp_gateway()
+            elif data_source == 'nasa-power':
+                weather_api_gateway = self.get_weather_nasa_power_gateway()
             else:
                 weather_api_gateway = self.get_weather_api_gateway()
             
@@ -201,6 +204,13 @@ class AgrrCoreContainer:
         if 'weather_noaa_ftp_gateway' not in self._instances:
             self._instances['weather_noaa_ftp_gateway'] = WeatherNOAAFTPGateway()
         return self._instances['weather_noaa_ftp_gateway']
+    
+    def get_weather_nasa_power_gateway(self) -> WeatherNASAPowerGateway:
+        """Get NASA POWER weather gateway instance (global coverage: 1984-present)."""
+        if 'weather_nasa_power_gateway' not in self._instances:
+            http_client = self.get_http_service_impl()
+            self._instances['weather_nasa_power_gateway'] = WeatherNASAPowerGateway(http_client)
+        return self._instances['weather_nasa_power_gateway']
     
     def get_weather_gateway(self) -> WeatherGateway:
         """Get weather gateway instance."""

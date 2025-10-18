@@ -2,6 +2,8 @@
 
 プロジェクトの全ドキュメントへのナビゲーション
 
+> **📦 アーカイブについて**: 過去の実装レポート、テスト結果、完了報告などは`archive/`ディレクトリに整理されています（151ドキュメント）。現在アクティブなドキュメントのみがこのディレクトリに配置されています（25ドキュメント）。
+
 ---
 
 ## 🎯 目的別ガイド
@@ -12,7 +14,7 @@
    - [../README.md](../README.md) - プロジェクト紹介、インストール方法
    
 2. **アーキテクチャ理解**
-   - [ARCHITECTURE_SUMMARY.md](ARCHITECTURE_SUMMARY.md) ⭐ **まずここから**
+   - [architecture/ARCHITECTURE_SUMMARY.md](architecture/ARCHITECTURE_SUMMARY.md) ⭐ **まずここから**
    - [../ARCHITECTURE.md](../ARCHITECTURE.md) - 詳細設計
 
 3. **使い方**
@@ -22,14 +24,14 @@
 ### 🔧 開発者向け
 
 1. **アーキテクチャ詳細**
-   - [ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md](ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md) - 全体俯瞰と提案
-   - [REFACTORING_ROADMAP.md](REFACTORING_ROADMAP.md) - リファクタリング計画
+   - [architecture/ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md](architecture/ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md) - 全体俯瞰と提案
+   - [architecture/CLEAN_ARCHITECTURE_GATEWAY_GUIDELINES.md](architecture/CLEAN_ARCHITECTURE_GATEWAY_GUIDELINES.md) - Gateway設計ガイドライン
+   - [architecture/REFACTORING_ROADMAP.md](architecture/REFACTORING_ROADMAP.md) - リファクタリング計画
 
 2. **アルゴリズム**
-   - [../test_data/DP_OPTIMIZATION_BENCHMARK.md](../test_data/DP_OPTIMIZATION_BENCHMARK.md) - DP vs Greedy (4作物)
-   - [../test_data/DP_VS_GREEDY_6CROPS_ANALYSIS.md](../test_data/DP_VS_GREEDY_6CROPS_ANALYSIS.md) - DP vs Greedy (6作物)
-   - [FINAL_DP_ALNS_SUMMARY.md](FINAL_DP_ALNS_SUMMARY.md) - DP+ALNS実装レポート
-   - [LOCAL_SEARCH_ALNS_UNIFICATION.md](LOCAL_SEARCH_ALNS_UNIFICATION.md) - ALNS統合詳細
+   - [algorithms/QUICK_START_DP_ALNS.md](algorithms/QUICK_START_DP_ALNS.md) - DP+ALNSクイックスタート
+   - [algorithms/ALNS_INTEGRATION_GUIDE.md](algorithms/ALNS_INTEGRATION_GUIDE.md) - ALNS統合ガイド
+   - [algorithms/algorithm_selection_guide.md](algorithms/algorithm_selection_guide.md) - アルゴリズム選択ガイド
 
 3. **API Reference**
    - [api/README.md](api/README.md) - CLI API
@@ -39,58 +41,73 @@
 ### 🚀 アルゴリズム研究者向け
 
 1. **最適化アルゴリズム**
-   - [OPTIMIZATION_ALGORITHM_REVIEW.md](../test_data/OPTIMIZATION_ALGORITHM_REVIEW.md) - アルゴリズムレビュー
-   - [DP_ALNS_INTEGRATION.md](DP_ALNS_INTEGRATION.md) - DP+ALNS統合
+   - [algorithms/algorithm_selection_guide.md](algorithms/algorithm_selection_guide.md) - アルゴリズム選択ガイド
+   - [algorithms/optimization_algorithm_greedy_approach.md](algorithms/optimization_algorithm_greedy_approach.md) - Greedyアプローチ
+   - [algorithms/optimization_design_multi_field_crop_allocation.md](algorithms/optimization_design_multi_field_crop_allocation.md) - 複数圃場最適化設計
 
-2. **ベンチマーク結果**
-   - [DP_OPTIMIZATION_BENCHMARK.md](../test_data/DP_OPTIMIZATION_BENCHMARK.md) - 4作物問題
-   - [DP_VS_GREEDY_6CROPS_ANALYSIS.md](../test_data/DP_VS_GREEDY_6CROPS_ANALYSIS.md) - 6作物問題
-
-3. **実験データ**
+2. **実験データ**
    - `test_data/` - 実験用データセット
-   - `test_data/ANALYSIS_SUMMARY.md` - 分析サマリー
 
 ---
 
-## 📁 ドキュメント一覧
+## 📁 アクティブドキュメント一覧
 
-### アーキテクチャ
+### 📐 アーキテクチャ
 
 | ドキュメント | 説明 | 対象者 |
 |------------|------|--------|
-| [ARCHITECTURE_SUMMARY.md](ARCHITECTURE_SUMMARY.md) | プロジェクト全体俯瞰 | 全員 ⭐ |
+| [architecture/ARCHITECTURE_SUMMARY.md](architecture/ARCHITECTURE_SUMMARY.md) | プロジェクト全体俯瞰 | 全員 ⭐ |
 | [../ARCHITECTURE.md](../ARCHITECTURE.md) | Clean Architecture詳細 | 開発者 |
-| [ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md](ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md) | 改善提案 | 開発者 |
-| [REFACTORING_ROADMAP.md](REFACTORING_ROADMAP.md) | リファクタリング計画 | 開発者 |
+| [architecture/ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md](architecture/ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md) | 改善提案 | 開発者 |
+| [architecture/CLEAN_ARCHITECTURE_GATEWAY_GUIDELINES.md](architecture/CLEAN_ARCHITECTURE_GATEWAY_GUIDELINES.md) | Gateway設計ガイドライン | 開発者 |
+| [architecture/REFACTORING_ROADMAP.md](architecture/REFACTORING_ROADMAP.md) | リファクタリング計画 | 開発者 |
+| [architecture/FINAL_IMPLEMENTATION_POLICY.md](architecture/FINAL_IMPLEMENTATION_POLICY.md) | 実装ポリシー | 開発者 |
 
-### アルゴリズム
-
-| ドキュメント | 説明 | 対象者 |
-|------------|------|--------|
-| [../test_data/DP_OPTIMIZATION_BENCHMARK.md](../test_data/DP_OPTIMIZATION_BENCHMARK.md) | DP vs Greedy (4作物) | 研究者 |
-| [../test_data/DP_VS_GREEDY_6CROPS_ANALYSIS.md](../test_data/DP_VS_GREEDY_6CROPS_ANALYSIS.md) | DP vs Greedy (6作物) | 研究者 |
-| [FINAL_DP_ALNS_SUMMARY.md](FINAL_DP_ALNS_SUMMARY.md) | DP+ALNS実装レポート | 開発者 |
-| [LOCAL_SEARCH_ALNS_UNIFICATION.md](LOCAL_SEARCH_ALNS_UNIFICATION.md) | ALNS統合詳細 | 開発者 |
-| [DP_ALNS_INTEGRATION.md](DP_ALNS_INTEGRATION.md) | 統合プロセス | 開発者 |
-
-### 技術詳細
+### 🔬 アルゴリズム・最適化
 
 | ドキュメント | 説明 | 対象者 |
 |------------|------|--------|
-| [OPTIMIZATION_ALGORITHM_IMPROVEMENTS.md](OPTIMIZATION_ALGORITHM_IMPROVEMENTS.md) | 最適化改善履歴 | 研究者 |
-| [../test_data/OPTIMIZATION_ALGORITHM_REVIEW.md](../test_data/OPTIMIZATION_ALGORITHM_REVIEW.md) | アルゴリズムレビュー | 研究者 |
-| [../test_data/HYBRID_MODEL_INTEGRATION.md](../test_data/HYBRID_MODEL_INTEGRATION.md) | ハイブリッドモデル | 開発者 |
-| [../test_data/WEATHER_INTERPOLATION_IMPLEMENTATION.md](../test_data/WEATHER_INTERPOLATION_IMPLEMENTATION.md) | 天気補間 | 開発者 |
+| [algorithms/QUICK_START_DP_ALNS.md](algorithms/QUICK_START_DP_ALNS.md) | DP+ALNSクイックスタート | 開発者 |
+| [algorithms/ALNS_INTEGRATION_GUIDE.md](algorithms/ALNS_INTEGRATION_GUIDE.md) | ALNS統合ガイド | 開発者 |
+| [algorithms/algorithm_selection_guide.md](algorithms/algorithm_selection_guide.md) | アルゴリズム選択ガイド | 研究者 |
+| [algorithms/optimization_algorithm_greedy_approach.md](algorithms/optimization_algorithm_greedy_approach.md) | Greedyアプローチ | 研究者 |
+| [algorithms/optimization_design_multi_field_crop_allocation.md](algorithms/optimization_design_multi_field_crop_allocation.md) | 複数圃場最適化設計 | 研究者 |
 
-### API Reference
+### 📖 ガイド・マニュアル
+
+| ドキュメント | 説明 | 対象者 |
+|------------|------|--------|
+| [guides/ALLOCATION_ADJUST_GUIDE.md](guides/ALLOCATION_ADJUST_GUIDE.md) | 配分調整ガイド | ユーザー |
+| [guides/CLI_USER_GUIDE_FALLOW_PERIOD.md](guides/CLI_USER_GUIDE_FALLOW_PERIOD.md) | 休閑期間ユーザーガイド | ユーザー |
+| [guides/MIGRATION_GUIDE_MAX_TEMPERATURE.md](guides/MIGRATION_GUIDE_MAX_TEMPERATURE.md) | 最高温度マイグレーションガイド | 開発者 |
+| [guides/TEST_EXECUTION_GUIDE.md](guides/TEST_EXECUTION_GUIDE.md) | テスト実行ガイド | 開発者 |
+| [guides/TEST_FIX_GUIDE.md](guides/TEST_FIX_GUIDE.md) | テスト修正ガイド | 開発者 |
+| [guides/US_WEATHER_GUIDE.md](guides/US_WEATHER_GUIDE.md) | US天気ガイド | ユーザー |
+| [guides/US_WEATHER_LONG_TERM_GUIDE.md](guides/US_WEATHER_LONG_TERM_GUIDE.md) | US天気長期ガイド | ユーザー |
+
+### 🔄 データフロー
+
+| ドキュメント | 説明 | 対象者 |
+|------------|------|--------|
+| [data_flows/CLI_DATA_FLOW.md](data_flows/CLI_DATA_FLOW.md) | CLIデータフロー | 開発者 |
+| [data_flows/CLI_DATA_FLOW_JMA.md](data_flows/CLI_DATA_FLOW_JMA.md) | 気象庁データフロー | 開発者 |
+| [data_flows/DATA_FLOW_CROP_FAMILY.md](data_flows/DATA_FLOW_CROP_FAMILY.md) | 作物ファミリーデータフロー | 開発者 |
+| [data_flows/FIELD_DATA_FLOW_SIMPLIFIED.md](data_flows/FIELD_DATA_FLOW_SIMPLIFIED.md) | 圃場データフロー（簡易版） | 開発者 |
+
+### 🛠️ 技術リファレンス
+
+| ドキュメント | 説明 | 対象者 |
+|------------|------|--------|
+| [technical/AUTO_ESTIMATION_EXPLANATION.md](technical/AUTO_ESTIMATION_EXPLANATION.md) | 自動推定の説明 | 開発者 |
+| [technical/DISTRIBUTION.md](technical/DISTRIBUTION.md) | 配布方法 | 開発者 |
+| [technical/FIELD_CONFIG_FORMAT.md](technical/FIELD_CONFIG_FORMAT.md) | 圃場設定フォーマット | ユーザー |
+
+### 📊 API Reference
 
 | ドキュメント | 説明 |
 |------------|------|
 | [api/README.md](api/README.md) | CLI API概要 |
-| [api/adapter/cli_controller.md](api/adapter/cli_controller.md) | Controller API |
 | [api/adapter/cli_presenter.md](api/adapter/cli_presenter.md) | Presenter API |
-| [api/framework/cli_container.md](api/framework/cli_container.md) | DIコンテナ |
-| [api/framework/cli_entry_point.md](api/framework/cli_entry_point.md) | CLIエントリ |
 
 ---
 
@@ -116,8 +133,8 @@
 
 ```
 Day 1: アーキテクチャ理解
-  1. ARCHITECTURE_SUMMARY.md (1時間)
-  2. ARCHITECTURE.md (2時間)
+  1. architecture/ARCHITECTURE_SUMMARY.md (1時間)
+  2. ../ARCHITECTURE.md (2時間)
   3. コードベース探索 (3時間)
 
 Day 2: ドメイン理解
@@ -156,29 +173,60 @@ docs/
 │   └── ../README.md (プロジェクト概要)
 │
 ├── 🏗️ アーキテクチャ編
-│   ├── ARCHITECTURE_SUMMARY.md          ⭐ 全体俯瞰
-│   ├── ../ARCHITECTURE.md               ⭐ Clean Architecture詳細
-│   ├── ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md
-│   └── REFACTORING_ROADMAP.md
+│   └── architecture/
+│       ├── ARCHITECTURE_SUMMARY.md                      ⭐ 全体俯瞰
+│       ├── ../ARCHITECTURE.md                           ⭐ Clean Architecture詳細
+│       ├── ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md
+│       ├── CLEAN_ARCHITECTURE_GATEWAY_GUIDELINES.md
+│       ├── REFACTORING_ROADMAP.md
+│       └── FINAL_IMPLEMENTATION_POLICY.md
 │
-├── 🔬 アルゴリズム編
-│   ├── DP_OPTIMIZATION_BENCHMARK.md      ⭐ ベンチマーク
-│   ├── DP_VS_GREEDY_6CROPS_ANALYSIS.md   ⭐ 詳細分析
-│   ├── FINAL_DP_ALNS_SUMMARY.md
-│   ├── LOCAL_SEARCH_ALNS_UNIFICATION.md
-│   ├── DP_ALNS_INTEGRATION.md
-│   └── OPTIMIZATION_ALGORITHM_IMPROVEMENTS.md
+├── 🔬 アルゴリズム・最適化編
+│   └── algorithms/
+│       ├── QUICK_START_DP_ALNS.md                       ⭐ クイックスタート
+│       ├── ALNS_INTEGRATION_GUIDE.md
+│       ├── algorithm_selection_guide.md
+│       ├── optimization_algorithm_greedy_approach.md
+│       └── optimization_design_multi_field_crop_allocation.md
 │
-├── 🔧 技術編
-│   ├── HYBRID_MODEL_INTEGRATION.md
-│   ├── WEATHER_INTERPOLATION_IMPLEMENTATION.md
-│   ├── INTERPOLATION_REFACTORING_REPORT.md
-│   └── OPTIMIZATION_INVESTIGATION_REPORT.md
+├── 📖 ガイド・マニュアル編
+│   └── guides/
+│       ├── ALLOCATION_ADJUST_GUIDE.md
+│       ├── CLI_USER_GUIDE_FALLOW_PERIOD.md
+│       ├── MIGRATION_GUIDE_MAX_TEMPERATURE.md
+│       ├── TEST_EXECUTION_GUIDE.md
+│       ├── TEST_FIX_GUIDE.md
+│       ├── US_WEATHER_GUIDE.md
+│       └── US_WEATHER_LONG_TERM_GUIDE.md
 │
-└── 📖 API編
-    ├── api/README.md
-    ├── api/adapter/
-    └── api/framework/
+├── 🔄 データフロー編
+│   └── data_flows/
+│       ├── CLI_DATA_FLOW.md
+│       ├── CLI_DATA_FLOW_JMA.md
+│       ├── DATA_FLOW_CROP_FAMILY.md
+│       └── FIELD_DATA_FLOW_SIMPLIFIED.md
+│
+├── 🛠️ 技術リファレンス編
+│   └── technical/
+│       ├── AUTO_ESTIMATION_EXPLANATION.md
+│       ├── DISTRIBUTION.md
+│       └── FIELD_CONFIG_FORMAT.md
+│
+├── 📊 API編
+│   └── api/
+│       ├── README.md
+│       └── adapter/
+│
+├── 📊 調査レポート編
+│   └── reports/
+│
+└── 📦 アーカイブ編 (過去のレポート)
+    └── archive/
+        ├── implementation_reports/
+        ├── test_reports/
+        ├── refactoring_reports/
+        ├── feature_development/
+        └── algorithm_research/
 ```
 
 ---
@@ -211,7 +259,7 @@ docs/
 
 ### 質問・相談
 
-- **アーキテクチャ**: [ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md](ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md) 参照
+- **アーキテクチャ**: [architecture/ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md](architecture/ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md) 参照
 - **アルゴリズム選択**: [DP_VS_GREEDY_6CROPS_ANALYSIS.md](../test_data/DP_VS_GREEDY_6CROPS_ANALYSIS.md) 参照
 - **実装詳細**: コード内のdocstring参照
 
@@ -223,7 +271,7 @@ docs/
 4. テスト
 5. PR作成
 
-詳細: [REFACTORING_ROADMAP.md](REFACTORING_ROADMAP.md)
+詳細: [architecture/REFACTORING_ROADMAP.md](architecture/REFACTORING_ROADMAP.md)
 
 ---
 

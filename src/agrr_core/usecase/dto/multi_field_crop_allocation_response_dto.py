@@ -58,6 +58,7 @@ class MultiFieldCropAllocationResponseDTO:
                     {
                         "field_id": schedule.field.field_id,
                         "field_name": schedule.field.name,
+                        "total_area_used": schedule.total_area_used,
                         "total_cost": schedule.total_cost,
                         "total_revenue": schedule.total_revenue,
                         "total_profit": schedule.total_profit,
@@ -73,6 +74,7 @@ class MultiFieldCropAllocationResponseDTO:
                                 "start_date": alloc.start_date.isoformat(),
                                 "completion_date": alloc.completion_date.isoformat(),
                                 "growth_days": alloc.growth_days,
+                                "accumulated_gdd": alloc.accumulated_gdd,
                                 "total_cost": alloc.total_cost,
                                 "expected_revenue": alloc.expected_revenue,
                                 "profit": alloc.profit,

@@ -26,8 +26,13 @@ from agrr_core.usecase.dto.multi_field_crop_allocation_request_dto import (
 
 
 @pytest.mark.asyncio
+@pytest.mark.slow
 class TestFilterRedundantComparison:
-    """Compare optimization results with filter_redundant_candidates ON vs OFF."""
+    """Compare optimization results with filter_redundant_candidates ON vs OFF.
+    
+    Note: These tests are compute-intensive and take 2-80 seconds each.
+    Run with: pytest -m slow
+    """
 
     @pytest.fixture
     def test_data_dir(self):

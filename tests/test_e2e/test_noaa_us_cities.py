@@ -1,24 +1,24 @@
-"""E2E tests for NOAA weather gateway with real US cities.
+"""E2E tests for NOAA FTP weather gateway with real US cities.
 
-This test verifies that NOAA weather data can be fetched for major US cities.
+This test verifies that NOAA weather data can be fetched for major US cities
+using the NOAA FTP data source (more stable than HTTP access).
 """
 
 import pytest
 from datetime import datetime, timedelta
-from agrr_core.adapter.gateways.weather_noaa_gateway import WeatherNOAAGateway
-from agrr_core.framework.services.clients.http_client import HttpClient
+from agrr_core.adapter.gateways.weather_noaa_ftp_gateway import WeatherNOAAFTPGateway
 
 
 @pytest.mark.asyncio
 @pytest.mark.slow
+@pytest.mark.e2e
 class TestNOAAUSCities:
-    """E2E tests for NOAA weather gateway with real US cities."""
+    """E2E tests for NOAA FTP weather gateway with real US cities."""
     
     @pytest.fixture
     def gateway(self):
-        """Create gateway with real HTTP client."""
-        http_client = HttpClient()
-        return WeatherNOAAGateway(http_client)
+        """Create NOAA FTP gateway."""
+        return WeatherNOAAFTPGateway()
     
     @pytest.mark.parametrize("city_name,latitude,longitude", [
         ("New York", 40.7128, -74.0060),
@@ -27,9 +27,9 @@ class TestNOAAUSCities:
     ])
     async def test_fetch_weather_for_us_cities(self, gateway, city_name, latitude, longitude):
         """Test fetching weather data for major US cities."""
-        # Get data for last 7 days
-        end_date = datetime.now().date() - timedelta(days=1)  # Yesterday
-        start_date = end_date - timedelta(days=6)  # 7 days total
+        # Use historical data (2023) instead of recent data to avoid availability issues
+        start_date = datetime(2023, 1, 1).date()
+        end_date = datetime(2023, 1, 7).date()
         
         # Fetch data
         result = await gateway.get_by_location_and_date_range(
@@ -88,9 +88,9 @@ class TestNOAAUSCities:
     
     async def test_fetch_data_new_york_full_week(self, gateway):
         """Test fetching a full week of data for New York."""
-        # Get last week's data
-        end_date = datetime.now().date() - timedelta(days=1)
-        start_date = end_date - timedelta(days=6)
+        # Use historical data to ensure availability
+        start_date = datetime(2023, 6, 1).date()
+        end_date = datetime(2023, 6, 7).date()
         
         result = await gateway.get_by_location_and_date_range(
             latitude=40.7128,

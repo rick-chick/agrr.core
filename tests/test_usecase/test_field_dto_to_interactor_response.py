@@ -124,6 +124,8 @@ class TestFieldDTOToInteractorResponse:
             completion_date=datetime(2024, 8, 9),
             growth_days=growth_days,
             total_cost=total_cost,
+            revenue=None,  # 追加
+            profit=-total_cost,  # 追加: revenue がない場合は -cost
             daily_fixed_cost=field.daily_fixed_cost,
             field=field,
             candidates=[]
@@ -165,6 +167,8 @@ class TestFieldDTOToInteractorResponse:
             completion_date=datetime(2024, 8, 2),
             growth_days=growth_days,
             total_cost=expected_total_cost,
+            revenue=None,  # 追加
+            profit=-expected_total_cost,  # 追加
             daily_fixed_cost=field.daily_fixed_cost,
             field=field,
             candidates=[]
@@ -211,6 +215,8 @@ class TestFieldDTOToInteractorResponse:
             completion_date=datetime(2024, 9, 30),
             growth_days=182,
             total_cost=910000.0,
+            revenue=None,  # 追加
+            profit=-910000.0,  # 追加
             daily_fixed_cost=field.daily_fixed_cost,
             field=field,
             candidates=[]
@@ -251,6 +257,8 @@ class TestFieldDTOToInteractorResponse:
             completion_date=datetime(2024, 9, 30),
             growth_days=growth_days,
             total_cost=0.0,
+            revenue=None,  # 追加
+            profit=0.0,  # 追加: cost=0の場合は profit=0
             daily_fixed_cost=0.0,
             field=field,
             candidates=[]

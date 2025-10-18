@@ -43,7 +43,7 @@ Available Commands:
   forecast          Get 16-day weather forecast from tomorrow
   crop              Get crop growth profiles using AI
   progress          Calculate crop growth progress based on weather data
-  optimize          Optimization tools (period, allocate)
+  optimize          Optimization tools (period, allocate, adjust)
   predict           Predict future weather using ML models (ARIMA, LightGBM)
 
 Examples:
@@ -83,6 +83,11 @@ Examples:
   agrr optimize allocate --fields-file fields.json --crops-file crops.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31 \\
     --weather-file weather.json
+
+  # Adjust existing allocation (manual correction)
+  agrr optimize adjust --current-allocation current_allocation.json \\
+    --moves moves.json --weather-file weather.json \\
+    --planning-start 2024-04-01 --planning-end 2024-10-31
 
   # Predict future weather with ARIMA model (short-term, 30-90 days)
   agrr weather --location 35.6762,139.6503 --days 90 --json > historical.json
@@ -271,6 +276,7 @@ Usage:
 Available Subcommands:
   period      Find optimal cultivation period to minimize costs
   allocate    Optimize crop allocation across multiple fields
+  adjust      Adjust existing allocation based on move instructions
 
 Examples:
   # Find optimal planting date
@@ -283,9 +289,15 @@ Examples:
     --planning-start 2024-04-01 --planning-end 2024-10-31 \\
     --weather-file weather.json
 
+  # Adjust existing allocation
+  agrr optimize adjust --current-allocation current_allocation.json \\
+    --moves moves.json --weather-file weather.json \\
+    --planning-start 2024-04-01 --planning-end 2024-10-31
+
 For detailed help on each subcommand:
   agrr optimize period --help
   agrr optimize allocate --help
+  agrr optimize adjust --help
 """)
                 sys.exit(0)
             
@@ -502,9 +514,171 @@ For detailed help on each subcommand:
                 )
                 asyncio.run(controller.run(args[2:]))  # Skip 'optimize' and 'allocate'
             
+            elif subcommand == 'adjust':
+                # Run allocation adjustment CLI
+                
+                # Check if help is requested
+                if '--help' in args or '-h' in args:
+                    # Create minimal controller just to show help
+                    from agrr_core.adapter.gateways.allocation_result_file_gateway import AllocationResultFileGateway
+                    from agrr_core.adapter.gateways.move_instruction_file_gateway import MoveInstructionFileGateway
+                    from agrr_core.adapter.controllers.allocation_adjust_cli_controller import AllocationAdjustCliController
+                    from agrr_core.adapter.presenters.allocation_adjust_cli_presenter import AllocationAdjustCliPresenter
+                    
+                    file_repository = FileService()
+                    allocation_result_gateway = AllocationResultFileGateway(file_repository, "")
+                    move_instruction_gateway = MoveInstructionFileGateway(file_repository, "")
+                    field_gateway = FieldFileGateway(file_repository, "")
+                    weather_gateway = WeatherFileGateway(file_repository=file_repository, file_path="")
+                    crop_profile_gateway = CropProfileFileGateway(file_repository=file_repository, file_path="")
+                    crop_profile_gateway_internal = CropProfileInMemoryGateway()
+                    presenter = AllocationAdjustCliPresenter(output_format="table")
+                    
+                    controller = AllocationAdjustCliController(
+                        allocation_result_gateway=allocation_result_gateway,
+                        move_instruction_gateway=move_instruction_gateway,
+                        field_gateway=field_gateway,
+                        crop_gateway=crop_profile_gateway,
+                        weather_gateway=weather_gateway,
+                        crop_profile_gateway_internal=crop_profile_gateway_internal,
+                        presenter=presenter,
+                    )
+                    asyncio.run(controller.run(args[2:]))  # Skip 'optimize' and 'adjust'
+                    return
+                
+                # Setup file-based repositories
+                file_repository = FileService()
+                
+                # Parse args to extract file paths
+                current_allocation_path = ""
+                if '--current-allocation' in args or '-ca' in args:
+                    try:
+                        ca_index = args.index('--current-allocation') if '--current-allocation' in args else args.index('-ca')
+                        if ca_index + 1 < len(args):
+                            current_allocation_path = args[ca_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+                
+                if not current_allocation_path:
+                    print("Error: --current-allocation is required for adjust command")
+                    sys.exit(1)
+                
+                # Parse moves file path
+                moves_path = ""
+                if '--moves' in args or '-m' in args:
+                    try:
+                        m_index = args.index('--moves') if '--moves' in args else args.index('-m')
+                        if m_index + 1 < len(args):
+                            moves_path = args[m_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+                
+                if not moves_path:
+                    print("Error: --moves is required for adjust command")
+                    sys.exit(1)
+                
+                # Parse weather file path
+                weather_file_path = ""
+                if '--weather-file' in args or '-w' in args:
+                    try:
+                        wf_index = args.index('--weather-file') if '--weather-file' in args else args.index('-w')
+                        if wf_index + 1 < len(args):
+                            weather_file_path = args[wf_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+                
+                if not weather_file_path:
+                    print("Error: --weather-file is required for adjust command")
+                    sys.exit(1)
+                
+                # Setup gateways
+                from agrr_core.adapter.gateways.allocation_result_file_gateway import AllocationResultFileGateway
+                from agrr_core.adapter.gateways.move_instruction_file_gateway import MoveInstructionFileGateway
+                from agrr_core.adapter.controllers.allocation_adjust_cli_controller import AllocationAdjustCliController
+                from agrr_core.adapter.presenters.allocation_adjust_cli_presenter import AllocationAdjustCliPresenter
+                
+                allocation_result_gateway = AllocationResultFileGateway(
+                    file_repository=file_repository,
+                    file_path=current_allocation_path
+                )
+                
+                move_instruction_gateway = MoveInstructionFileGateway(
+                    file_repository=file_repository,
+                    file_path=moves_path
+                )
+                
+                weather_gateway = WeatherFileGateway(
+                    file_repository=file_repository,
+                    file_path=weather_file_path
+                )
+                
+                # Parse optional fields and crops files
+                fields_file_path = ""
+                if '--fields-file' in args or '-fs' in args:
+                    try:
+                        ff_index = args.index('--fields-file') if '--fields-file' in args else args.index('-fs')
+                        if ff_index + 1 < len(args):
+                            fields_file_path = args[ff_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+                
+                field_gateway = FieldFileGateway(
+                    file_repository=file_repository,
+                    file_path=fields_file_path
+                )
+                
+                crops_file_path = ""
+                if '--crops-file' in args or '-cs' in args:
+                    try:
+                        cf_index = args.index('--crops-file') if '--crops-file' in args else args.index('-cs')
+                        if cf_index + 1 < len(args):
+                            crops_file_path = args[cf_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+                
+                crop_profile_gateway = CropProfileFileGateway(
+                    file_repository=file_repository,
+                    file_path=crops_file_path
+                )
+                
+                # Setup interaction rule gateway (optional)
+                interaction_rules_path = ""
+                if '--interaction-rules-file' in args or '-irf' in args:
+                    try:
+                        irf_index = args.index('--interaction-rules-file') if '--interaction-rules-file' in args else args.index('-irf')
+                        if irf_index + 1 < len(args):
+                            interaction_rules_path = args[irf_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+                
+                interaction_rule_gateway = InteractionRuleFileGateway(
+                    file_repository=file_repository,
+                    file_path=interaction_rules_path
+                )
+                
+                # Setup internal crop profile gateway
+                crop_profile_gateway_internal = CropProfileInMemoryGateway()
+                
+                # Setup presenter
+                presenter = AllocationAdjustCliPresenter(output_format="table")
+                
+                # Create controller
+                controller = AllocationAdjustCliController(
+                    allocation_result_gateway=allocation_result_gateway,
+                    move_instruction_gateway=move_instruction_gateway,
+                    field_gateway=field_gateway,
+                    crop_gateway=crop_profile_gateway,
+                    weather_gateway=weather_gateway,
+                    crop_profile_gateway_internal=crop_profile_gateway_internal,
+                    presenter=presenter,
+                    interaction_rule_gateway=interaction_rule_gateway,
+                )
+                
+                asyncio.run(controller.run(args[2:]))  # Skip 'optimize' and 'adjust'
+            
             else:
                 print(f"Error: Unknown optimize subcommand '{subcommand}'")
-                print("Available: period, allocate")
+                print("Available: period, allocate, adjust")
                 print("Run 'agrr optimize --help' for more information")
                 sys.exit(1)
         else:

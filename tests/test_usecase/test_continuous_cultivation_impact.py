@@ -45,14 +45,20 @@ class TestAllocationCandidateWithInteractionImpact:
             growth_days=150,
             accumulated_gdd=2000.0,
             area_used=500.0,
-            previous_crop=None,
-            interaction_impact=1.0  # No impact
         )
         
-        metrics = candidate.get_metrics()
+        # No previous crop, no interaction rules
+        # Note: When field_schedules is empty dict and no planning_start_date,
+        # soil_recovery_factor defaults to 1.1 (maximum bonus)
+        metrics = candidate.get_metrics(
+            current_allocations=[],
+            field_schedules={},
+            interaction_rules=[]
+        )
         
-        # Revenue should be: 500 * 50000 = 25,000,000
-        assert metrics.revenue == 25000000.0
+        # Revenue should be: 500 * 50000 * 1.1 = 27,500,000
+        # (1.1 = soil_recovery_factor when no previous crop and no planning_start_date)
+        assert metrics.revenue == pytest.approx(27500000.0, rel=0.001)
         assert metrics.cost == 150 * 5000.0  # 750,000
     
     def test_candidate_with_continuous_cultivation_penalty(self):
@@ -60,6 +66,31 @@ class TestAllocationCandidateWithInteractionImpact:
         field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
         crop = Crop("eggplant", "Eggplant", 0.5, revenue_per_area=50000.0, groups=["Solanaceae"])
         previous_crop = Crop("tomato", "Tomato", 0.5, groups=["Solanaceae"])
+        
+        # Create previous allocation (tomato)
+        previous_allocation = CropAllocation(
+            allocation_id="prior",
+            field=field,
+            crop=previous_crop,
+            area_used=500.0,
+            start_date=datetime(2025, 4, 1),
+            completion_date=datetime(2025, 8, 31),
+            growth_days=150,
+            accumulated_gdd=2000.0,
+            total_cost=750000.0,
+            expected_revenue=None,
+            profit=None
+        )
+        
+        # Create interaction rule (Solanaceae continuous cultivation)
+        interaction_rule = InteractionRule(
+            rule_id="rule_001",
+            rule_type=RuleType.CONTINUOUS_CULTIVATION,
+            source_group="Solanaceae",
+            target_group="Solanaceae",
+            impact_ratio=0.7,  # 30% penalty
+            is_directional=True
+        )
         
         candidate = AllocationCandidate(
             field=field,
@@ -69,11 +100,14 @@ class TestAllocationCandidateWithInteractionImpact:
             growth_days=150,
             accumulated_gdd=2000.0,
             area_used=500.0,
-            previous_crop=previous_crop,
-            interaction_impact=0.7  # 30% penalty due to continuous cultivation
         )
         
-        metrics = candidate.get_metrics()
+        # Get metrics with context
+        metrics = candidate.get_metrics(
+            current_allocations=[],
+            field_schedules={"f1": [previous_allocation]},
+            interaction_rules=[interaction_rule]
+        )
         
         # Revenue should be: 500 * 50000 * 0.7 = 17,500,000 (30% reduced)
         assert metrics.revenue == 17500000.0
@@ -92,6 +126,32 @@ class TestAllocationCandidateWithInteractionImpact:
             max_revenue=15000000.0,  # Revenue cap
             groups=["Solanaceae"]
         )
+        previous_crop = Crop("tomato", "Tomato", 0.5, groups=["Solanaceae"])
+        
+        # Create previous allocation (tomato - same crop)
+        previous_allocation = CropAllocation(
+            allocation_id="prior",
+            field=field,
+            crop=previous_crop,
+            area_used=500.0,
+            start_date=datetime(2025, 1, 1),
+            completion_date=datetime(2025, 3, 31),
+            growth_days=90,
+            accumulated_gdd=1000.0,
+            total_cost=450000.0,
+            expected_revenue=None,
+            profit=None
+        )
+        
+        # Create interaction rule (20% penalty)
+        interaction_rule = InteractionRule(
+            rule_id="rule_001",
+            rule_type=RuleType.CONTINUOUS_CULTIVATION,
+            source_group="Solanaceae",
+            target_group="Solanaceae",
+            impact_ratio=0.8,  # 20% penalty
+            is_directional=True
+        )
         
         candidate = AllocationCandidate(
             field=field,
@@ -101,237 +161,20 @@ class TestAllocationCandidateWithInteractionImpact:
             growth_days=150,
             accumulated_gdd=2000.0,
             area_used=500.0,
-            interaction_impact=0.8  # 20% penalty
         )
         
-        metrics = candidate.get_metrics()
-        
-        # Base revenue: 500 * 50000 = 25,000,000
-        # With impact: 25,000,000 * 0.8 = 20,000,000
-        # Max revenue with impact: 15,000,000 * 0.8 = 12,000,000
-        # Final revenue: min(20,000,000, 12,000,000) = 12,000,000
-        assert metrics.revenue == 12000000.0
-
-
-class TestInteractionRuleServiceIntegration:
-    """Test InteractionRuleService integration with Optimizer."""
-    
-    def test_get_previous_crop_no_allocations(self, mock_crop_profile_gateway_internal):
-        """Test getting previous crop when there are no allocations."""
-        rules = []
-        interaction_rule_service = InteractionRuleService(rules)
-        
-        interactor = MultiFieldCropAllocationGreedyInteractor(
-            field_gateway=None,  # Mock
-            crop_gateway=None,  # Mock
-            weather_gateway=None,  # Mock
-            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
-            interaction_rules=rules
+        # Get metrics with context
+        metrics = candidate.get_metrics(
+            current_allocations=[],
+            field_schedules={"f1": [previous_allocation]},
+            interaction_rules=[interaction_rule]
         )
         
-        field_schedules = {}
-        previous_crop = interactor._get_previous_crop(
-            field_id="f1",
-            start_date=datetime(2025, 9, 1),
-            field_schedules=field_schedules
-        )
-        
-        assert previous_crop is None
-    
-    def test_get_previous_crop_with_prior_allocation(self, mock_crop_profile_gateway_internal):
-        """Test getting previous crop from prior allocation."""
-        rules = []
-        interactor = MultiFieldCropAllocationGreedyInteractor(
-            field_gateway=None,
-            crop_gateway=None,
-            weather_gateway=None,
-            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
-            interaction_rules=rules
-        )
-        
-        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
-        tomato = Crop("tomato", "Tomato", 0.5, groups=["Solanaceae"])
-        
-        # Create a prior allocation
-        prior_allocation = CropAllocation(
-            allocation_id="alloc_001",
-            field=field,
-            crop=tomato,
-            area_used=500.0,
-            start_date=datetime(2025, 4, 1),
-            completion_date=datetime(2025, 8, 31),
-            growth_days=150,
-            accumulated_gdd=2000.0,
-            total_cost=750000.0
-        )
-        
-        field_schedules = {"f1": [prior_allocation]}
-        
-        previous_crop = interactor._get_previous_crop(
-            field_id="f1",
-            start_date=datetime(2025, 9, 1),  # After completion
-            field_schedules=field_schedules
-        )
-        
-        assert previous_crop is not None
-        assert previous_crop.crop_id == "tomato"
-    
-    def test_apply_interaction_rules_no_previous_crop(self, mock_crop_profile_gateway_internal):
-        """Test applying interaction rules when there's no previous crop."""
-        rules = [
-            InteractionRule(
-                rule_id="rule_001",
-                rule_type=RuleType.CONTINUOUS_CULTIVATION,
-                source_group="Solanaceae",
-                target_group="Solanaceae",
-                impact_ratio=0.7,
-                is_directional=True
-            )
-        ]
-        
-        interactor = MultiFieldCropAllocationGreedyInteractor(
-            field_gateway=None,
-            crop_gateway=None,
-            weather_gateway=None,
-            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
-            interaction_rules=rules
-        )
-        
-        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
-        tomato = Crop("tomato", "Tomato", 0.5, groups=["Solanaceae"])
-        
-        candidate = AllocationCandidate(
-            field=field,
-            crop=tomato,
-            start_date=datetime(2025, 4, 1),
-            completion_date=datetime(2025, 8, 31),
-            growth_days=150,
-            accumulated_gdd=2000.0,
-            area_used=500.0
-        )
-        
-        field_schedules = {}
-        
-        updated_candidate = interactor._apply_interaction_rules(candidate, field_schedules)
-        
-        # No previous crop, so impact should be 1.0
-        assert updated_candidate.interaction_impact == 1.0
-        assert updated_candidate.previous_crop is None
-    
-    def test_apply_interaction_rules_continuous_cultivation_detected(self, mock_crop_profile_gateway_internal):
-        """Test that continuous cultivation is detected and penalty applied."""
-        rules = [
-            InteractionRule(
-                rule_id="rule_001",
-                rule_type=RuleType.CONTINUOUS_CULTIVATION,
-                source_group="Solanaceae",
-                target_group="Solanaceae",
-                impact_ratio=0.7,
-                is_directional=True,
-                description="Solanaceae continuous cultivation damage"
-            )
-        ]
-        
-        interactor = MultiFieldCropAllocationGreedyInteractor(
-            field_gateway=None,
-            crop_gateway=None,
-            weather_gateway=None,
-            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
-            interaction_rules=rules
-        )
-        
-        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
-        tomato = Crop("tomato", "Tomato", 0.5, groups=["Solanaceae"])
-        eggplant = Crop("eggplant", "Eggplant", 0.5, groups=["Solanaceae"])
-        
-        # Prior allocation: tomato
-        prior_allocation = CropAllocation(
-            allocation_id="alloc_001",
-            field=field,
-            crop=tomato,
-            area_used=500.0,
-            start_date=datetime(2025, 4, 1),
-            completion_date=datetime(2025, 8, 31),
-            growth_days=150,
-            accumulated_gdd=2000.0,
-            total_cost=750000.0
-        )
-        
-        # Current candidate: eggplant (same family as tomato)
-        candidate = AllocationCandidate(
-            field=field,
-            crop=eggplant,
-            start_date=datetime(2025, 9, 1),
-            completion_date=datetime(2026, 1, 31),
-            growth_days=150,
-            accumulated_gdd=2000.0,
-            area_used=500.0
-        )
-        
-        field_schedules = {"f1": [prior_allocation]}
-        
-        updated_candidate = interactor._apply_interaction_rules(candidate, field_schedules)
-        
-        # Continuous cultivation detected: impact = 0.7
-        assert updated_candidate.interaction_impact == 0.7
-        assert updated_candidate.previous_crop is not None
-        assert updated_candidate.previous_crop.crop_id == "tomato"
-    
-    def test_apply_interaction_rules_no_continuous_cultivation(self, mock_crop_profile_gateway_internal):
-        """Test that different families don't trigger continuous cultivation penalty."""
-        rules = [
-            InteractionRule(
-                rule_id="rule_001",
-                rule_type=RuleType.CONTINUOUS_CULTIVATION,
-                source_group="Solanaceae",
-                target_group="Solanaceae",
-                impact_ratio=0.7,
-                is_directional=True
-            )
-        ]
-        
-        interactor = MultiFieldCropAllocationGreedyInteractor(
-            field_gateway=None,
-            crop_gateway=None,
-            weather_gateway=None,
-            crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
-            interaction_rules=rules
-        )
-        
-        field = Field("f1", "Field 1", 1000.0, 5000.0, fallow_period_days=0)
-        tomato = Crop("tomato", "Tomato", 0.5, groups=["Solanaceae"])
-        soybean = Crop("soybean", "Soybean", 0.15, groups=["Fabaceae"])
-        
-        # Prior allocation: tomato (Solanaceae)
-        prior_allocation = CropAllocation(
-            allocation_id="alloc_001",
-            field=field,
-            crop=tomato,
-            area_used=500.0,
-            start_date=datetime(2025, 4, 1),
-            completion_date=datetime(2025, 8, 31),
-            growth_days=150,
-            accumulated_gdd=2000.0,
-            total_cost=750000.0
-        )
-        
-        # Current candidate: soybean (Fabaceae - different family)
-        candidate = AllocationCandidate(
-            field=field,
-            crop=soybean,
-            start_date=datetime(2025, 9, 1),
-            completion_date=datetime(2026, 1, 31),
-            growth_days=120,
-            accumulated_gdd=1500.0,
-            area_used=200.0
-        )
-        
-        field_schedules = {"f1": [prior_allocation]}
-        
-        updated_candidate = interactor._apply_interaction_rules(candidate, field_schedules)
-        
-        # Different families, no penalty: impact = 1.0
-        assert updated_candidate.interaction_impact == 1.0
-        assert updated_candidate.previous_crop is not None
-        assert updated_candidate.previous_crop.crop_id == "tomato"
+        # Calculation order:
+        # 1. Base revenue: 500 * 50000 = 25,000,000
+        # 2. × interaction_impact (0.8) = 20,000,000
+        # 3. × soil_recovery_factor (1.1) = 22,000,000
+        # 4. Apply max_revenue: min(22,000,000, 15,000,000) = 15,000,000
+        # Note: max_revenue is applied AFTER all multipliers in the new design
+        assert metrics.revenue == pytest.approx(15000000.0, rel=0.001)
 

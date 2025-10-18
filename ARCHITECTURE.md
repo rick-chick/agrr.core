@@ -178,6 +178,56 @@ src/agrr.core/framework/
 - 具体的な実装は外側層で行う
 - 依存性注入により結合度を下げる
 
+### Gateway設計の原則
+
+**黄金ルール**: Gateway Interface（UseCase層）は技術詳細を知らない
+
+#### ✅ 正しい設計
+```python
+# UseCase層 - Gateway Interface
+class EntityGateway(ABC):
+    @abstractmethod
+    async def get(self) -> Optional[Entity]:
+        """Get entity from configured source."""  # ← "configured source"
+        pass
+    
+    @abstractmethod
+    async def get_all(self) -> List[Entity]:
+        """Get all entities from configured source."""
+        pass
+```
+
+#### ❌ 禁止パターン
+```python
+# ❌ メソッド名に技術用語を含めない
+async def load_from_file(self):      # file, database, api等は禁止
+async def save_to_database(self):
+async def fetch_from_api(self):
+```
+
+#### 実装のポイント
+1. **データソース設定は初期化時に注入**
+   ```python
+   gateway = EntityFileGateway(file_service, file_path)  # ← 初期化時
+   result = await gateway.get()  # ← 呼び出し時はデータソース不問
+   ```
+
+2. **技術詳細はAdapter層の実装内に隠蔽**
+   ```python
+   # Adapter層 - Gateway Implementation
+   class EntityFileGateway(EntityGateway):
+       async def get(self):
+           # ← この中でファイル読み込み（技術詳細）
+           content = await self.file_repository.read(self.file_path)
+           return self._parse(content)
+   ```
+
+3. **推奨メソッド名**: `get()`, `get_all()`, `get_by_id()`, `save()`, `delete()`
+
+4. **参考実装**: `FieldGateway`, `CropProfileGateway`, `WeatherGateway`
+
+詳細: `docs/CLEAN_ARCHITECTURE_GATEWAY_GUIDELINES.md`
+
 ## 例外処理の流れ
 
 各層で適切な例外を定義し、上位層でキャッチして処理：

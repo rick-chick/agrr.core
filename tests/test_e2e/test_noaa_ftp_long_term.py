@@ -10,6 +10,7 @@ from agrr_core.adapter.gateways.weather_noaa_ftp_gateway import WeatherNOAAFTPGa
 
 @pytest.mark.asyncio
 @pytest.mark.slow
+@pytest.mark.e2e
 class TestNOAAFTPLongTerm:
     """E2E tests for NOAA FTP gateway with long-term data."""
     
@@ -129,6 +130,7 @@ class TestNOAAFTPLongTerm:
 
 @pytest.mark.asyncio
 @pytest.mark.slow
+@pytest.mark.e2e
 class TestNOAAFTPDataQuality:
     """Tests for data quality and edge cases."""
     

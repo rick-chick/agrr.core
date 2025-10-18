@@ -81,13 +81,6 @@ Examples:
     --current-allocation current_allocation.json \\
     --moves moves.json \\
     --weather-file weather.json \\
-    --planning-start 2024-04-01 --planning-end 2024-10-31
-
-  # With fields and crops override
-  agrr optimize adjust \\
-    --current-allocation current_allocation.json \\
-    --moves moves.json \\
-    --weather-file weather.json \\
     --fields-file fields.json \\
     --crops-file crops.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31
@@ -97,6 +90,8 @@ Examples:
     --current-allocation current_allocation.json \\
     --moves moves.json \\
     --weather-file weather.json \\
+    --fields-file fields.json \\
+    --crops-file crops.json \\
     --interaction-rules-file interaction_rules.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31
 
@@ -105,6 +100,8 @@ Examples:
     --current-allocation current_allocation.json \\
     --moves moves.json \\
     --weather-file weather.json \\
+    --fields-file fields.json \\
+    --crops-file crops.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31 \\
     --format json
 
@@ -115,7 +112,22 @@ Input Files:
    {
      "optimization_result": {
        "optimization_id": "opt_001",
-       "field_schedules": [...],
+       "field_schedules": [
+         {
+           "field_id": "field_1",
+           "field_name": "Field 1",
+           "allocations": [
+             {
+               "allocation_id": "alloc_001",  // <- Use this ID in moves file
+               "crop_id": "tomato",
+               "crop_name": "Tomato",
+               "start_date": "2024-05-01T00:00:00",
+               "completion_date": "2024-08-15T00:00:00",
+               ...
+             }
+           ]
+         }
+       ],
        "total_profit": 150000.0
      }
    }
@@ -147,7 +159,7 @@ Move Actions:
 Notes:
   - After applying moves, the system re-optimizes the remaining allocations
   - All constraints (fallow period, interaction rules) are enforced
-  - You can override fields and crops using --fields-file and --crops-file
+  - Fields and crops files are required for re-optimization (use same files as original allocation)
   - Planning period must cover all allocations in the result
 """
         )
@@ -185,14 +197,14 @@ Notes:
         parser.add_argument(
             "--fields-file",
             "-fs",
-            required=False,
-            help="Path to fields configuration file (JSON) - overrides fields from current allocation",
+            required=True,
+            help="Path to fields configuration file (JSON) - required for re-optimization",
         )
         parser.add_argument(
             "--crops-file",
             "-cs",
-            required=False,
-            help="Path to crops configuration file (JSON) - overrides crops from current allocation",
+            required=True,
+            help="Path to crops configuration file (JSON) - required for re-optimization (must include stage_requirements)",
         )
         parser.add_argument(
             "--interaction-rules-file",

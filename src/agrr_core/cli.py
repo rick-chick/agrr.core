@@ -87,6 +87,7 @@ Examples:
   # Adjust existing allocation (manual correction)
   agrr optimize adjust --current-allocation current_allocation.json \\
     --moves moves.json --weather-file weather.json \\
+    --fields-file fields.json --crops-file crops.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31
 
   # Predict future weather with ARIMA model (short-term, 30-90 days)
@@ -292,6 +293,7 @@ Examples:
   # Adjust existing allocation
   agrr optimize adjust --current-allocation current_allocation.json \\
     --moves moves.json --weather-file weather.json \\
+    --fields-file fields.json --crops-file crops.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31
 
 For detailed help on each subcommand:

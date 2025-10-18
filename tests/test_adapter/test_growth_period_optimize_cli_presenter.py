@@ -54,6 +54,8 @@ class TestGrowthPeriodOptimizeCliPresenter:
             completion_date=datetime(2024, 4, 10),
             growth_days=6,
             total_cost=6000.0,
+            revenue=None,  # No revenue in this test
+            profit=-6000.0,  # Loss (no revenue, cost=6000)
             daily_fixed_cost=1000.0,
             field=test_field,
             candidates=candidates,
@@ -107,6 +109,8 @@ class TestGrowthPeriodOptimizeCliPresenter:
             completion_date=datetime(2024, 5, 5),
             growth_days=5,
             total_cost=2500.0,
+            revenue=None,  # No revenue in this test
+            profit=-2500.0,  # Loss (no revenue, cost=2500)
             daily_fixed_cost=500.0,
             field=test_field,
             candidates=candidates,
@@ -155,6 +159,8 @@ class TestGrowthPeriodOptimizeCliPresenter:
             completion_date=datetime(2024, 4, 10),
             growth_days=6,
             total_cost=6000.0,
+            revenue=None,  # No revenue in this test
+            profit=-6000.0,  # Loss (no revenue, cost=6000)
             daily_fixed_cost=1000.0,
             field=test_field,
             candidates=candidates,
@@ -211,6 +217,8 @@ class TestGrowthPeriodOptimizeCliPresenter:
             completion_date=datetime(2024, 4, 10),
             growth_days=10,
             total_cost=10000.0,
+            revenue=None,  # No revenue in this test
+            profit=-10000.0,  # Loss (no revenue, cost=10000)
             daily_fixed_cost=1000.0,
             field=test_field,
             candidates=candidates,
@@ -252,6 +260,8 @@ class TestGrowthPeriodOptimizeCliPresenter:
             completion_date=datetime(2024, 4, 10),
             growth_days=10,
             total_cost=10000.0,
+            revenue=None,  # No revenue in this test
+            profit=-10000.0,  # Loss (no revenue, cost=10000)
             daily_fixed_cost=1000.0,
             field=test_field,
             candidates=candidates,
@@ -265,4 +275,3 @@ class TestGrowthPeriodOptimizeCliPresenter:
         assert output["crop_name"] == "Rice"
         assert output["variety"] == "Koshihikari"
         assert output["growth_days"] == 10
-

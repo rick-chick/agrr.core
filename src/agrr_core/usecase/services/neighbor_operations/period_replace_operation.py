@@ -84,15 +84,14 @@ class PeriodReplaceOperation(NeighborOperation):
         candidate: Any,
         area_used: float,
     ) -> CropAllocation:
-        """Convert candidate to allocation with specified area."""
+        """Convert candidate to allocation with specified area.
+        
+        Note: revenue/profit are set to None and will be recalculated
+        by OptimizationMetrics with full context (soil recovery, interaction, etc.)
+        """
         cost = candidate.cost
         
-        revenue = None
-        if candidate.crop.revenue_per_area is not None:
-            revenue = area_used * candidate.crop.revenue_per_area
-        
-        profit = (revenue - cost) if revenue is not None else None
-        
+        # Revenue/profit set to None - will be recalculated with full context
         return CropAllocation(
             allocation_id=str(uuid.uuid4()),
             field=candidate.field,
@@ -103,7 +102,7 @@ class PeriodReplaceOperation(NeighborOperation):
             growth_days=candidate.growth_days,
             accumulated_gdd=candidate.accumulated_gdd,
             total_cost=cost,
-            expected_revenue=revenue,
-            profit=profit,
+            expected_revenue=None,  # Recalculated later
+            profit=None,  # Recalculated later
         )
 

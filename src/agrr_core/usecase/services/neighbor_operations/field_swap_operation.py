@@ -122,23 +122,13 @@ class FieldSwapOperation(NeighborOperation):
         if area_a > available_in_field_b:
             return None
         
-        # Calculate new costs and revenues
+        # Note: cost/revenue/profit will be recalculated by OptimizationMetrics later
+        # These values are just placeholders and will be overwritten
         cost_a_in_field_b = alloc_a.growth_days * alloc_b.field.daily_fixed_cost
         cost_b_in_field_a = alloc_b.growth_days * alloc_a.field.daily_fixed_cost
         
-        revenue_a_in_field_b = None
-        if alloc_a.crop.revenue_per_area is not None:
-            revenue_a_in_field_b = area_a * alloc_a.crop.revenue_per_area
-        
-        revenue_b_in_field_a = None
-        if alloc_b.crop.revenue_per_area is not None:
-            revenue_b_in_field_a = area_b * alloc_b.crop.revenue_per_area
-        
-        # Calculate profits
-        profit_a_in_field_b = (revenue_a_in_field_b - cost_a_in_field_b) if revenue_a_in_field_b is not None else None
-        profit_b_in_field_a = (revenue_b_in_field_a - cost_b_in_field_a) if revenue_b_in_field_a is not None else None
-        
         # Create swapped allocations
+        # Revenue/profit set to None - will be recalculated with full context
         new_alloc_a = CropAllocation(
             allocation_id=str(uuid.uuid4()),
             field=alloc_b.field,
@@ -149,8 +139,8 @@ class FieldSwapOperation(NeighborOperation):
             growth_days=alloc_a.growth_days,
             accumulated_gdd=alloc_a.accumulated_gdd,
             total_cost=cost_a_in_field_b,
-            expected_revenue=revenue_a_in_field_b,
-            profit=profit_a_in_field_b,
+            expected_revenue=None,  # Recalculated later
+            profit=None,  # Recalculated later
         )
         
         new_alloc_b = CropAllocation(
@@ -163,8 +153,8 @@ class FieldSwapOperation(NeighborOperation):
             growth_days=alloc_b.growth_days,
             accumulated_gdd=alloc_b.accumulated_gdd,
             total_cost=cost_b_in_field_a,
-            expected_revenue=revenue_b_in_field_a,
-            profit=profit_b_in_field_a,
+            expected_revenue=None,  # Recalculated later
+            profit=None,  # Recalculated later
         )
         
         return (new_alloc_a, new_alloc_b)

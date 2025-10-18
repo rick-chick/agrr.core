@@ -58,14 +58,11 @@ class AreaAdjustOperation(NeighborOperation):
                 if new_area < 0.1 * alloc.area_used:
                     continue
                 
-                # Recalculate revenue and profit
-                new_revenue = None
-                if alloc.crop.revenue_per_area is not None:
-                    new_revenue = new_area * alloc.crop.revenue_per_area
-                
-                new_profit = (new_revenue - alloc.total_cost) if new_revenue is not None else None
+                # Note: revenue/profit will be recalculated by OptimizationMetrics later
+                # with full context (soil recovery, interaction, etc.)
                 
                 # Create adjusted allocation
+                # Revenue/profit set to None - will be recalculated with full context
                 adjusted_alloc = CropAllocation(
                     allocation_id=str(uuid.uuid4()),
                     field=alloc.field,
@@ -76,8 +73,8 @@ class AreaAdjustOperation(NeighborOperation):
                     growth_days=alloc.growth_days,
                     accumulated_gdd=alloc.accumulated_gdd,
                     total_cost=alloc.total_cost,
-                    expected_revenue=new_revenue,
-                    profit=new_profit,
+                    expected_revenue=None,  # Recalculated later
+                    profit=None,  # Recalculated later
                 )
                 
                 neighbor = solution.copy()

@@ -256,4 +256,115 @@ class TestNASAPowerRealAPI:
         assert gateway._request_count == 5
         
         print(f"\n✅ Rate limiting: {gateway._request_count} requests completed successfully")
+    
+    @pytest.mark.asyncio
+    @pytest.mark.e2e
+    async def test_json_output_format(self, gateway):
+        """Test that JSON output format is correct for NASA POWER data.
+        
+        This test verifies that the data can be properly formatted for JSON output,
+        including location information (without elevation/timezone which NASA POWER doesn't provide).
+        """
+        import json
+        
+        # Delhi, India
+        latitude = 28.6139
+        longitude = 77.2090
+        start_date = "2023-01-01"
+        end_date = "2023-01-07"
+        
+        result = await gateway.get_by_location_and_date_range(
+            latitude, longitude, start_date, end_date
+        )
+        
+        # Verify result structure
+        assert result is not None
+        assert result.location is not None
+        assert result.weather_data_list is not None
+        assert len(result.weather_data_list) == 7
+        
+        # Verify location data (NASA POWER specific: no elevation/timezone)
+        assert result.location.latitude == latitude
+        assert result.location.longitude == longitude
+        assert result.location.elevation is None
+        assert result.location.timezone is None
+        
+        # Verify data can be converted to JSON format
+        from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
+        from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataListResponseDTO
+        from agrr_core.usecase.dto.location_response_dto import LocationResponseDTO
+        
+        # Convert to DTOs (as done in presenter)
+        dto_list = []
+        for weather_data in result.weather_data_list:
+            dto = WeatherDataResponseDTO(
+                time=weather_data.time.isoformat(),
+                temperature_2m_max=weather_data.temperature_2m_max,
+                temperature_2m_min=weather_data.temperature_2m_min,
+                temperature_2m_mean=weather_data.temperature_2m_mean,
+                precipitation_sum=weather_data.precipitation_sum,
+                sunshine_duration=weather_data.sunshine_duration,
+                sunshine_hours=weather_data.sunshine_hours,
+                wind_speed_10m=weather_data.wind_speed_10m,
+                weather_code=weather_data.weather_code,
+            )
+            dto_list.append(dto)
+        
+        location_dto = LocationResponseDTO(
+            latitude=result.location.latitude,
+            longitude=result.location.longitude,
+            elevation=result.location.elevation,
+            timezone=result.location.timezone
+        )
+        
+        weather_list_dto = WeatherDataListResponseDTO(
+            data=dto_list,
+            total_count=len(dto_list),
+            location=location_dto
+        )
+        
+        # Convert to JSON-serializable format
+        json_data = {
+            "data": [
+                {
+                    "time": item.time,
+                    "temperature_2m_max": item.temperature_2m_max,
+                    "temperature_2m_min": item.temperature_2m_min,
+                    "temperature_2m_mean": item.temperature_2m_mean,
+                    "precipitation_sum": item.precipitation_sum,
+                    "sunshine_duration": item.sunshine_duration,
+                    "sunshine_hours": item.sunshine_hours,
+                    "wind_speed_10m": item.wind_speed_10m,
+                    "weather_code": item.weather_code,
+                }
+                for item in weather_list_dto.data
+            ],
+            "total_count": weather_list_dto.total_count,
+            "location": {
+                "latitude": weather_list_dto.location.latitude,
+                "longitude": weather_list_dto.location.longitude,
+                "elevation": weather_list_dto.location.elevation,
+                "timezone": weather_list_dto.location.timezone,
+            }
+        }
+        
+        # Verify JSON can be serialized
+        json_str = json.dumps(json_data, indent=2, ensure_ascii=False)
+        assert json_str is not None
+        assert len(json_str) > 0
+        
+        # Verify JSON structure
+        parsed = json.loads(json_str)
+        assert "data" in parsed
+        assert "total_count" in parsed
+        assert "location" in parsed
+        assert parsed["total_count"] == 7
+        assert parsed["location"]["latitude"] == latitude
+        assert parsed["location"]["longitude"] == longitude
+        assert parsed["location"]["elevation"] is None
+        assert parsed["location"]["timezone"] is None
+        
+        print(f"\n✅ JSON output format validated")
+        print(f"   Total records: {parsed['total_count']}")
+        print(f"   Location: {parsed['location']['latitude']}, {parsed['location']['longitude']}")
 

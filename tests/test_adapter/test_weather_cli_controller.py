@@ -442,3 +442,75 @@ class TestWeatherCliFetchController:
         
         # Verify repository was called
         self.mock_gateway.get_by_location_and_date_range.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_handle_weather_command_nasa_power_json_output(self):
+        """Test handling weather command with NASA POWER data source and JSON output."""
+        # Mock arguments for NASA POWER
+        args = MagicMock()
+        args.location = "28.6139,77.2090"  # Delhi, India
+        args.start_date = "2023-01-01"
+        args.end_date = "2023-01-07"
+        args.days = 7
+        args.data_source = "nasa-power"
+        args.json = True
+        
+        # Mock interactor response with NASA POWER data
+        mock_response = {
+            'success': True,
+            'data': {
+                'data': [
+                    {
+                        'time': '2023-01-01',
+                        'temperature_2m_max': 20.21,
+                        'temperature_2m_min': 6.12,
+                        'temperature_2m_mean': 12.9,
+                        'precipitation_sum': 0.0,
+                        'sunshine_duration': 11050.0,
+                        'sunshine_hours': 3.07,
+                        'wind_speed_10m': 1.03,
+                        'weather_code': None
+                    },
+                    {
+                        'time': '2023-01-02',
+                        'temperature_2m_max': 19.49,
+                        'temperature_2m_min': 5.85,
+                        'temperature_2m_mean': 12.26,
+                        'precipitation_sum': 0.0,
+                        'sunshine_duration': 6660.0,
+                        'sunshine_hours': 1.85,
+                        'wind_speed_10m': 1.09,
+                        'weather_code': None
+                    }
+                ],
+                'total_count': 2,
+                'location': {
+                    'latitude': 28.6139,
+                    'longitude': 77.2090,
+                    'elevation': None,  # NASA POWER doesn't provide elevation
+                    'timezone': None    # NASA POWER doesn't provide timezone
+                }
+            }
+        }
+        
+        # Mock interactor execute method
+        self.controller.weather_interactor.execute = AsyncMock(return_value=mock_response)
+        
+        await self.controller.handle_weather_command(args)
+        
+        # Verify interactor was called
+        self.controller.weather_interactor.execute.assert_called_once()
+        
+        # Verify JSON display method was called
+        self.mock_presenter.display_weather_data_json.assert_called()
+        
+        # Verify the call was made with correct data structure
+        call_args = self.mock_presenter.display_weather_data_json.call_args
+        assert call_args is not None
+        weather_list_dto = call_args[0][0]
+        assert weather_list_dto.total_count == 2
+        assert weather_list_dto.location is not None
+        assert weather_list_dto.location.latitude == 28.6139
+        assert weather_list_dto.location.longitude == 77.2090
+        assert weather_list_dto.location.elevation is None  # NASA POWER specific
+        assert weather_list_dto.location.timezone is None   # NASA POWER specific

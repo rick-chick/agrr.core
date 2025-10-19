@@ -116,11 +116,15 @@ if [ "$BUILD_FORMAT" = "onefile" ]; then
         --collect-all agrr_core \
         --add-data "prompts:prompts" \
         --paths src \
+        --hidden-import agrr_core.daemon \
+        --hidden-import agrr_core.daemon.server \
+        --hidden-import agrr_core.daemon.client \
+        --hidden-import agrr_core.daemon.manager \
         --exclude-module matplotlib \
         --exclude-module pytest \
         --exclude-module pygments \
         --exclude-module py \
-        src/agrr_core/cli.py
+        src/agrr_core/__main__.py
 
     if [ -f dist/agrr ]; then
         echo ""
@@ -147,11 +151,15 @@ else
         --collect-all agrr_core \
         --add-data "prompts:prompts" \
         --paths src \
+        --hidden-import agrr_core.daemon \
+        --hidden-import agrr_core.daemon.server \
+        --hidden-import agrr_core.daemon.client \
+        --hidden-import agrr_core.daemon.manager \
         --exclude-module matplotlib \
         --exclude-module pytest \
         --exclude-module pygments \
         --exclude-module py \
-        src/agrr_core/cli.py
+        src/agrr_core/__main__.py
 
     if [ -f dist/agrr/agrr ]; then
         echo ""

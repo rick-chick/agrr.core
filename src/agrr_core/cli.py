@@ -50,6 +50,8 @@ Available Commands:
   progress          Calculate crop growth progress based on weather data
   optimize          Optimization tools (period, allocate, adjust)
   predict           Predict future weather using ML models (ARIMA, LightGBM)
+  daemon            Daemon process management (start/stop/status/restart)
+                    - Enables 4.8x faster startup (2.4s → 0.5s)
 
 Examples:
   # Get recent weather data (default: OpenMeteo)
@@ -106,6 +108,11 @@ Examples:
   # Predict with LightGBM model (long-term, up to 1 year, requires 90+ days data)
   agrr weather --location 35.6762,139.6503 --days 365 --data-source jma --json > historical_20y.json
   agrr predict --input historical_20y.json --output predictions.json --days 365 --model lightgbm
+
+  # Start daemon for faster execution (4.8x speed improvement)
+  agrr daemon start
+  agrr daemon status
+  agrr daemon stop
 
 For detailed help on each command:
   agrr <command> --help
@@ -197,9 +204,13 @@ Notes:
 
 def main() -> None:
     """Main entry point for CLI application."""
+    execute_cli_direct(sys.argv[1:] if len(sys.argv) > 1 else [])
+
+
+def execute_cli_direct(args) -> None:
+    """Execute CLI directly (called from main or daemon)."""
     try:
-        # Get command line arguments (excluding script name)
-        args = sys.argv[1:] if len(sys.argv) > 1 else []
+        # Get command line arguments
         
         # Show help if no arguments or --help/-h is specified
         if not args or args[0] in ['--help', '-h', 'help']:

@@ -75,8 +75,23 @@ class AllocationAdjustCliController:
             description="Allocation Adjustment - Adjust existing allocation based on move instructions",
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog="""
-Examples:
-  # Basic adjustment
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 WORKFLOW: How to Use This Command
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Step 1: Run initial optimization (if not done yet)
+  agrr optimize allocate \\
+    --fields-file fields.json \\
+    --crops-file crops.json \\
+    --planning-start 2024-04-01 --planning-end 2024-10-31 \\
+    --weather-file weather.json \\
+    --format json > current_allocation.json
+
+Step 2: Create a moves file (moves.json)
+  Specify which allocations to move or remove.
+  See "Moves File Format" section below for details.
+
+Step 3: Run adjustment
   agrr optimize adjust \\
     --current-allocation current_allocation.json \\
     --moves moves.json \\
@@ -85,7 +100,26 @@ Examples:
     --crops-file crops.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31
 
-  # With interaction rules
+  ⚠️ Important: Use the SAME files from Step 1:
+    - Same fields.json
+    - Same crops.json
+    - Same weather.json
+    - Same planning-start and planning-end dates
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 EXAMPLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Example 1: Basic adjustment
+  agrr optimize adjust \\
+    --current-allocation current_allocation.json \\
+    --moves moves.json \\
+    --weather-file weather.json \\
+    --fields-file fields.json \\
+    --crops-file crops.json \\
+    --planning-start 2024-04-01 --planning-end 2024-10-31
+
+Example 2: With interaction rules
   agrr optimize adjust \\
     --current-allocation current_allocation.json \\
     --moves moves.json \\
@@ -95,7 +129,7 @@ Examples:
     --interaction-rules-file interaction_rules.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31
 
-  # With JSON output
+Example 3: With JSON output (for further processing)
   agrr optimize adjust \\
     --current-allocation current_allocation.json \\
     --moves moves.json \\
@@ -103,9 +137,11 @@ Examples:
     --fields-file fields.json \\
     --crops-file crops.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31 \\
-    --format json
+    --format json > adjusted_allocation.json
 
-Input Files:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 INPUT FILE FORMATS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 1. Current Allocation File (JSON):
    Output from 'agrr optimize allocate' command:
@@ -118,12 +154,18 @@ Input Files:
            "field_name": "Field 1",
            "allocations": [
              {
-               "allocation_id": "alloc_001",  // <- Use this ID in moves file
+               "allocation_id": "alloc_001",        // <- Use this ID in moves file
                "crop_id": "tomato",
                "crop_name": "Tomato",
-               "start_date": "2024-05-01T00:00:00",
-               "completion_date": "2024-08-15T00:00:00",
-               ...
+               "variety": "Momotaro",
+               "area_used": 500.0,                  // <- Required: Area in m²
+               "start_date": "2024-05-01",
+               "completion_date": "2024-08-15",
+               "growth_days": 106,
+               "accumulated_gdd": 1520.5,
+               "total_cost": 530000,
+               "expected_revenue": 750000,
+               "profit": 220000
              }
            ]
          }
@@ -131,6 +173,9 @@ Input Files:
        "total_profit": 150000.0
      }
    }
+   
+   ⚠️ Note: The 'area_used' field in each allocation is required.
+             Use the exact JSON output from 'agrr optimize allocate --format json'
 
 2. Moves File (JSON):
    {
@@ -156,11 +201,63 @@ Move Actions:
   - "remove": Remove allocation from schedule
     * No additional fields required
 
-Notes:
-  - After applying moves, the system re-optimizes the remaining allocations
-  - All constraints (fallow period, interaction rules) are enforced
-  - Fields and crops files are required for re-optimization (use same files as original allocation)
-  - Planning period must cover all allocations in the result
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📤 OUTPUT FORMAT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Table Format (default):
+  - Shows before/after comparison
+  - Displays applied moves
+  - Shows re-optimized field schedules
+  - Financial summary (cost, revenue, profit)
+
+JSON Format (--format json):
+  - Same structure as 'agrr optimize allocate' output
+  - Can be used as input for another 'agrr optimize adjust' call
+  - Suitable for automation and further processing
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 WHAT THIS COMMAND DOES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Loads existing allocation result
+2. Applies your move instructions (move/remove allocations)
+3. Re-optimizes remaining allocations to maximize profit
+4. Validates all constraints (fallow period, interaction rules, etc.)
+
+Use Cases:
+  - Manual correction of automated allocation results
+  - What-if analysis (test different scenarios)
+  - Fixing constraint violations discovered after optimization
+  - Adjusting allocation based on real-world changes
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ COMMON ERRORS & SOLUTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Error: "KeyError: 'area_used'"
+  Solution: Make sure current_allocation.json is from 'agrr optimize allocate --format json'
+            Do NOT create the file manually or edit it.
+
+Error: "allocation_id not found"
+  Solution: Check that allocation IDs in moves.json exist in current_allocation.json
+            Use exact IDs from the "allocations" array in field_schedules.
+
+Error: "Invalid date format"
+  Solution: Use YYYY-MM-DD format for to_start_date in moves.json
+            Example: "2024-05-15", not "05/15/2024"
+
+Error: "Field not found"
+  Solution: Make sure to_field_id in moves.json matches a field_id in fields.json
+            Use exact same fields.json as original optimization.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📚 RELATED COMMANDS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  agrr optimize allocate --help    Create initial allocation
+  agrr optimize period --help      Optimize planting date for single crop
+
 """
         )
         

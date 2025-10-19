@@ -221,7 +221,8 @@ Crops File Format (JSON):
               "optimal_max": 30.0,
               "low_stress_threshold": 15.0,
               "high_stress_threshold": 35.0,
-              "frost_threshold": 5.0
+              "frost_threshold": 5.0,
+              "max_temperature": 42.0
             },
             "thermal": {"required_gdd": 1500.0},
             "sunshine": {
@@ -250,7 +251,8 @@ Crops File Format (JSON):
               "optimal_max": 28.0,
               "low_stress_threshold": 13.0,
               "high_stress_threshold": 32.0,
-              "frost_threshold": 2.0
+              "frost_threshold": 2.0,
+              "max_temperature": 40.0
             },
             "thermal": {"required_gdd": 1200.0},
             "sunshine": {
@@ -338,16 +340,72 @@ Output (Table):
   - Detailed field schedules with allocations
 
 Output (JSON):
+  Complete JSON schema with all fields:
   {
     "optimization_result": {
-      "optimization_id": "...",
+      "optimization_id": "opt_1234567890",        // Unique optimization ID
+      "algorithm_used": "dp",                     // Algorithm: "dp" or "greedy"
+      "is_optimal": true,                         // Whether solution is optimal
+      "optimization_time": 2.5,                   // Computation time in seconds
+      "total_cost": 1500000,                      // Total cost in ¥
+      "total_revenue": 2500000,                   // Total revenue in ¥
+      "total_profit": 1000000,                    // Total profit in ¥
+      "crop_areas": {                             // Total area by crop (m²)
+        "rice": 2000.0,
+        "tomato": 800.0
+      },
+      "field_schedules": [                        // Array of field schedules
+        {
+          "field_id": "field_01",                 // Field identifier
+          "field_name": "北圃場",                  // Field name
+          "total_area_used": 1000.0,              // Total area used (m²)
+          "total_cost": 600000,                   // Field total cost (¥)
+          "total_revenue": 1200000,               // Field total revenue (¥)
+          "total_profit": 600000,                 // Field total profit (¥)
+          "utilization_rate": 85.5,               // Utilization rate (%)
+          "allocation_count": 3,                  // Number of allocations
+          "allocations": [                        // Array of crop allocations
+            {
+              "allocation_id": "alloc_001",       // Unique allocation ID
+              "crop_id": "rice",                  // Crop identifier
+              "crop_name": "Rice",                // Crop name
+              "variety": "Koshihikari",           // Variety name (optional)
+              "area_used": 500.0,                 // ⚠️ Area used for this allocation (m²)
+              "start_date": "2024-05-01",         // Start date (ISO format)
+              "completion_date": "2024-08-15",    // Completion date (ISO format)
+              "growth_days": 106,                 // Growth period (days)
+              "accumulated_gdd": 1520.5,          // Accumulated GDD (°C·day)
+              "total_cost": 530000,               // Allocation cost (¥)
+              "expected_revenue": 750000,         // Expected revenue (¥)
+              "profit": 220000                    // Profit (¥)
+            }
+          ]
+        }
+      ]
+    },
+    "summary": {                                  // Human-readable summary
+      "optimization_id": "opt_1234567890",
+      "algorithm_used": "dp",
+      "is_optimal": true,
+      "computation_time_seconds": 2.5,
+      "total_fields": 3,
+      "total_allocations": 8,
       "total_cost": 1500000,
       "total_revenue": 2500000,
       "total_profit": 1000000,
-      "field_schedules": [...]
-    },
-    "summary": {...}
+      "profit_rate_percent": 66.7,
+      "average_field_utilization_percent": 75.3,
+      "crop_diversity": 4,
+      "crop_areas": {
+        "rice": 2000.0,
+        "tomato": 800.0
+      }
+    }
   }
+  
+  ⚠️ Important: Each allocation in field_schedules[].allocations[] contains:
+    - area_used: The area (m²) allocated to this specific crop instance
+    - This field is required by 'agrr optimize adjust' command
 
 Notes:
   - Two algorithms available:
@@ -518,10 +576,12 @@ Growth Period Candidate Filtering (Default: Enabled):
         # Update presenter format
         self.presenter.output_format = args.format
 
-        # Update optimization config
-        config = OptimizationConfig()
+        # Use instance config as base and update based on args
+        from dataclasses import replace
+        config = self.config
         if getattr(args, 'enable_parallel', False):
-            config.enable_parallel_candidate_generation = True
+            # Create a new config with updated parallel setting
+            config = replace(config, enable_parallel_candidate_generation=True)
         
         # Create request DTO
         # Note: crops are loaded by Interactor via CropProfileGateway

@@ -90,10 +90,11 @@ Examples:
   # Optimize crop allocation across multiple fields
   agrr optimize allocate --fields-file fields.json --crops-file crops.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31 \\
-    --weather-file weather.json
+    --weather-file weather.json --format json > allocation_result.json
 
   # Adjust existing allocation (manual correction)
-  agrr optimize adjust --current-allocation current_allocation.json \\
+  # Note: Requires JSON output from 'agrr optimize allocate --format json'
+  agrr optimize adjust --current-allocation allocation_result.json \\
     --moves moves.json --weather-file weather.json \\
     --fields-file fields.json --crops-file crops.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31

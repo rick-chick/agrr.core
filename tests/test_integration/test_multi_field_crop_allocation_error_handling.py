@@ -17,6 +17,7 @@ from agrr_core.usecase.interactors.multi_field_crop_allocation_greedy_interactor
 from agrr_core.usecase.dto.multi_field_crop_allocation_request_dto import (
     MultiFieldCropAllocationRequestDTO,
 )
+from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 
 
 @pytest.mark.asyncio
@@ -50,12 +51,18 @@ async def test_partial_crop_failure_continues_with_real_data():
     # Internal crop profile gateway
     crop_profile_gateway_internal = CropProfileInMemoryGateway()
     
+    # Create config with legacy candidate pool strategy
+    config = OptimizationConfig(
+        candidate_generation_strategy="candidate_pool"
+    )
+    
     # Create interactor
     interactor = MultiFieldCropAllocationGreedyInteractor(
         field_gateway=field_gateway,
         crop_gateway=crop_gateway,
         weather_gateway=weather_gateway,
         crop_profile_gateway_internal=crop_profile_gateway_internal,
+        config=config,
     )
     
     # Execute with autumn start (summer crops will fail, winter crops should succeed)
@@ -114,12 +121,18 @@ async def test_all_crops_fail_raises_error_with_real_data():
     # Internal crop profile gateway
     crop_profile_gateway_internal = CropProfileInMemoryGateway()
     
+    # Create config with legacy candidate pool strategy
+    config = OptimizationConfig(
+        candidate_generation_strategy="candidate_pool"
+    )
+    
     # Create interactor
     interactor = MultiFieldCropAllocationGreedyInteractor(
         field_gateway=field_gateway,
         crop_gateway=crop_gateway,
         weather_gateway=weather_gateway,
         crop_profile_gateway_internal=crop_profile_gateway_internal,
+        config=config,
     )
     
     # Execute with very late start (all crops will fail)

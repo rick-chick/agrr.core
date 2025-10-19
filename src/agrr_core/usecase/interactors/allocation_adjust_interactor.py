@@ -1,16 +1,14 @@
 """Allocation adjustment interactor.
 
-This interactor adjusts an existing allocation based on user-specified move instructions,
-then re-optimizes the allocation while respecting constraints.
+This interactor adjusts an existing allocation based on user-specified move instructions.
 
 Algorithm:
 1. Load current optimization result
 2. Apply move instructions (remove, move allocations)
-3. Re-run optimization with:
-   - Remaining allocations as constraints
-   - Available fields and time slots
-   - Same optimization objectives and constraints as original allocate command
-4. Return adjusted and re-optimized result
+3. For moved allocations:
+   - Calculate completion date from new start date using GDD calculation
+   - Recalculate cost, revenue, and profit
+4. Return adjusted result
 
 Constraints:
 - Fallow period compliance
@@ -21,7 +19,7 @@ Constraints:
 
 import uuid
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Dict, Optional, Tuple
 
 from agrr_core.entity.entities.field_entity import Field
@@ -33,20 +31,17 @@ from agrr_core.entity.entities.multi_field_optimization_result_entity import (
 )
 from agrr_core.entity.entities.move_instruction_entity import MoveInstruction, MoveAction
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
+from agrr_core.entity.value_objects.optimization_objective import OptimizationMetrics
 from agrr_core.usecase.dto.allocation_adjust_request_dto import AllocationAdjustRequestDTO
 from agrr_core.usecase.dto.allocation_adjust_response_dto import AllocationAdjustResponseDTO
-from agrr_core.usecase.dto.multi_field_crop_allocation_request_dto import (
-    MultiFieldCropAllocationRequestDTO,
-)
-from agrr_core.usecase.dto.optimization_config import OptimizationConfig
+from agrr_core.usecase.dto.growth_period_optimize_request_dto import OptimalGrowthPeriodRequestDTO
 from agrr_core.usecase.gateways.allocation_result_gateway import AllocationResultGateway
-from agrr_core.usecase.gateways.move_instruction_gateway import MoveInstructionGateway
 from agrr_core.usecase.gateways.field_gateway import FieldGateway
 from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.interaction_rule_gateway import InteractionRuleGateway
-from agrr_core.usecase.interactors.multi_field_crop_allocation_greedy_interactor import (
-    MultiFieldCropAllocationGreedyInteractor,
+from agrr_core.usecase.interactors.growth_period_optimize_interactor import (
+    GrowthPeriodOptimizeInteractor,
 )
 
 
@@ -56,65 +51,49 @@ class AllocationAdjustInteractor:
     def __init__(
         self,
         allocation_result_gateway: AllocationResultGateway,
-        move_instruction_gateway: MoveInstructionGateway,
         field_gateway: FieldGateway,
         crop_gateway: CropProfileGateway,
         weather_gateway: WeatherGateway,
         crop_profile_gateway_internal: CropProfileGateway,
         interaction_rule_gateway: Optional[InteractionRuleGateway] = None,
-        config: Optional[OptimizationConfig] = None,
     ):
         """Initialize with injected dependencies.
         
         Args:
-            optimization_result_gateway: Gateway for loading current optimization result
-            move_instruction_gateway: Gateway for loading move instructions
+            allocation_result_gateway: Gateway for loading current allocation result
             field_gateway: Gateway for field operations
             crop_gateway: Gateway for crop operations
             weather_gateway: Gateway for weather data operations
             crop_profile_gateway_internal: Internal gateway for growth period optimization
             interaction_rule_gateway: Optional gateway for interaction rules
-            config: Optional optimization configuration
         """
         self.allocation_result_gateway = allocation_result_gateway
-        self.move_instruction_gateway = move_instruction_gateway
         self.field_gateway = field_gateway
         self.crop_gateway = crop_gateway
         self.weather_gateway = weather_gateway
         self.crop_profile_gateway_internal = crop_profile_gateway_internal
         self.interaction_rule_gateway = interaction_rule_gateway
-        self.config = config or OptimizationConfig()
         
-        # Load interaction rules
+        # Interaction rules loaded on demand
         self.interaction_rules: List[InteractionRule] = []
         
-        # Create allocation optimizer for re-optimization
-        self.allocation_optimizer = MultiFieldCropAllocationGreedyInteractor(
-            field_gateway=field_gateway,
-            crop_gateway=crop_gateway,
+        # Create growth period optimizer for GDD calculation
+        self.growth_period_optimizer = GrowthPeriodOptimizeInteractor(
+            crop_profile_gateway=crop_profile_gateway_internal,
             weather_gateway=weather_gateway,
-            crop_profile_gateway_internal=crop_profile_gateway_internal,
-            config=self.config,
-            interaction_rules=self.interaction_rules,
         )
     
     async def execute(
         self,
         request: AllocationAdjustRequestDTO,
-        enable_local_search: bool = True,
-        config: Optional[OptimizationConfig] = None,
-        algorithm: str = "dp",
     ) -> AllocationAdjustResponseDTO:
         """Execute allocation adjustment use case.
         
         Args:
             request: Request DTO containing adjustment parameters
-            enable_local_search: Whether to enable local search optimization
-            config: Optional optimization configuration
-            algorithm: Algorithm to use ('dp' or 'greedy')
             
         Returns:
-            Response DTO containing adjusted and re-optimized result
+            Response DTO containing adjusted result
         """
         start_time = time.time()
         
@@ -136,15 +115,16 @@ class AllocationAdjustInteractor:
         if self.interaction_rule_gateway:
             try:
                 self.interaction_rules = await self.interaction_rule_gateway.get_rules()
-                self.allocation_optimizer.interaction_rule_service.rules = self.interaction_rules
             except Exception as e:
                 # Continue without interaction rules
                 pass
         
-        # Apply move instructions
+        # Apply move instructions with GDD calculation
         adjusted_result, applied_moves, rejected_moves = await self._apply_moves(
             current_result=current_result,
             move_instructions=move_instructions,
+            planning_period_start=request.planning_period_start,
+            planning_period_end=request.planning_period_end,
         )
         
         # If no moves were applied successfully, return error
@@ -157,40 +137,19 @@ class AllocationAdjustInteractor:
                 message="No moves were applied successfully. All moves were rejected.",
             )
         
-        # Re-optimize with remaining allocations as constraints
-        # Create request for re-optimization
-        field_ids = [schedule.field.field_id for schedule in adjusted_result.field_schedules]
-        
-        reopt_request = MultiFieldCropAllocationRequestDTO(
-            field_ids=field_ids,
-            planning_period_start=request.planning_period_start,
-            planning_period_end=request.planning_period_end,
-            optimization_objective=request.optimization_objective,
-            max_computation_time=request.max_computation_time,
-            filter_redundant_candidates=request.filter_redundant_candidates,
-        )
-        
-        # Execute re-optimization
-        reopt_response = await self.allocation_optimizer.execute(
-            request=reopt_request,
-            enable_local_search=enable_local_search,
-            config=config or self.config,
-            algorithm=algorithm,
-        )
-        
         computation_time = time.time() - start_time
         
-        # Create final result with updated optimization metadata
+        # Update optimization metadata
         final_result = MultiFieldOptimizationResult(
             optimization_id=str(uuid.uuid4()),
-            field_schedules=reopt_response.optimization_result.field_schedules,
-            total_cost=reopt_response.optimization_result.total_cost,
-            total_revenue=reopt_response.optimization_result.total_revenue,
-            total_profit=reopt_response.optimization_result.total_profit,
-            crop_areas=reopt_response.optimization_result.crop_areas,
+            field_schedules=adjusted_result.field_schedules,
+            total_cost=adjusted_result.total_cost,
+            total_revenue=adjusted_result.total_revenue,
+            total_profit=adjusted_result.total_profit,
+            crop_areas=adjusted_result.crop_areas,
             optimization_time=computation_time,
-            algorithm_used=f"adjust+{algorithm}",
-            is_optimal=reopt_response.optimization_result.is_optimal,
+            algorithm_used="adjust",
+            is_optimal=False,  # Manual adjustment
         )
         
         return AllocationAdjustResponseDTO(
@@ -206,12 +165,16 @@ class AllocationAdjustInteractor:
         self,
         current_result: MultiFieldOptimizationResult,
         move_instructions: List[MoveInstruction],
+        planning_period_start: datetime,
+        planning_period_end: datetime,
     ) -> Tuple[MultiFieldOptimizationResult, List[MoveInstruction], List[Dict[str, str]]]:
         """Apply move instructions to current result.
         
         Args:
             current_result: Current optimization result
             move_instructions: List of move instructions to apply
+            planning_period_start: Planning period start date
+            planning_period_end: Planning period end date
             
         Returns:
             Tuple of (adjusted_result, applied_moves, rejected_moves)
@@ -222,15 +185,18 @@ class AllocationAdjustInteractor:
         # Create mapping of allocation_id to allocation for fast lookup
         allocation_map: Dict[str, CropAllocation] = {}
         field_schedule_map: Dict[str, FieldSchedule] = {}
+        field_map: Dict[str, Field] = {}
         
         for schedule in current_result.field_schedules:
             field_schedule_map[schedule.field.field_id] = schedule
+            field_map[schedule.field.field_id] = schedule.field
             for allocation in schedule.allocations:
                 allocation_map[allocation.allocation_id] = allocation
         
         # Process each move instruction
         modified_schedules = {fid: list(schedule.allocations) 
                             for fid, schedule in field_schedule_map.items()}
+        new_allocations = []  # Track new allocations for recalculation
         
         for move in move_instructions:
             try:
@@ -261,9 +227,76 @@ class AllocationAdjustInteractor:
                         if a.allocation_id != move.allocation_id
                     ]
                     
-                    # Note: The actual move (adding to target field) will be handled
-                    # by re-optimization. Here we just mark the instruction as applied.
-                    # The interactor will create new candidates and optimize placement.
+                    # Get target field
+                    if move.to_field_id not in field_map:
+                        # Target field may not exist in current schedules, load it
+                        target_field = await self.field_gateway.get(move.to_field_id)
+                        if target_field is None:
+                            rejected_moves.append({
+                                "move": move,
+                                "reason": f"Target field {move.to_field_id} not found",
+                            })
+                            continue
+                        field_map[move.to_field_id] = target_field
+                        modified_schedules[move.to_field_id] = []
+                    
+                    target_field = field_map[move.to_field_id]
+                    
+                    # Calculate completion date using GDD calculation
+                    try:
+                        completion_date, growth_days = await self._calculate_completion_date(
+                            crop=allocation.crop,
+                            field=target_field,
+                            start_date=move.to_start_date,
+                            planning_period_end=planning_period_end,
+                        )
+                    except ValueError as e:
+                        rejected_moves.append({
+                            "move": move,
+                            "reason": f"Cannot complete growth in planning period: {str(e)}",
+                        })
+                        continue
+                    
+                    # Determine area to use
+                    area_used = move.to_area if move.to_area is not None else allocation.area_used
+                    
+                    # Create new allocation with basic values
+                    # Cost/revenue/profit will be recalculated after all moves are applied
+                    cost = growth_days * target_field.daily_fixed_cost
+                    
+                    new_allocation = CropAllocation(
+                        allocation_id=str(uuid.uuid4()),
+                        field=target_field,
+                        crop=allocation.crop,
+                        area_used=area_used,
+                        start_date=move.to_start_date,
+                        completion_date=completion_date,
+                        growth_days=growth_days,
+                        accumulated_gdd=0.0,  # TODO: Get from GDD calculation
+                        total_cost=cost,
+                        expected_revenue=None,  # Will be recalculated with full context
+                        profit=None,  # Will be recalculated with full context
+                    )
+                    
+                    # Check for overlap with existing allocations in target field
+                    has_overlap = False
+                    overlap_with_id = None
+                    for existing in modified_schedules.get(move.to_field_id, []):
+                        if new_allocation.overlaps_with_fallow(existing):
+                            has_overlap = True
+                            overlap_with_id = existing.allocation_id
+                            break
+                    
+                    if has_overlap:
+                        rejected_moves.append({
+                            "move": move,
+                            "reason": f"Time overlap with allocation {overlap_with_id} (considering {target_field.fallow_period_days}-day fallow period)",
+                        })
+                        continue
+                    
+                    # Add to target field
+                    modified_schedules[move.to_field_id].append(new_allocation)
+                    new_allocations.append(new_allocation)  # Track for recalculation
                     applied_moves.append(move)
                 
             except Exception as e:
@@ -272,13 +305,40 @@ class AllocationAdjustInteractor:
                     "reason": str(e),
                 })
         
-        # Rebuild field schedules with modified allocations
-        new_schedules = []
-        for field_id, allocations in modified_schedules.items():
-            if field_id not in field_schedule_map:
-                continue
+        # Recalculate only new allocations with full context after all moves are applied
+        if new_allocations:
+            # Get all allocations for context (including existing + new)
+            all_final_allocations = []
+            for allocs in modified_schedules.values():
+                all_final_allocations.extend(allocs)
             
-            original_schedule = field_schedule_map[field_id]
+            # Build field schedules dict for interaction rules
+            field_schedules_dict = {fid: allocs for fid, allocs in modified_schedules.items()}
+            
+            # Recalculate revenue and profit only for new allocations with final context
+            recalculated_new = OptimizationMetrics.recalculate_allocations_with_context(
+                new_allocations,
+                field_schedules_dict,
+                self.interaction_rules,
+                planning_period_start
+            )
+            
+            # Create mapping of new allocation IDs to recalculated allocations
+            recalc_map = {alloc.allocation_id: alloc for alloc in recalculated_new}
+            
+            # Update modified_schedules with recalculated values
+            for field_id, allocs in modified_schedules.items():
+                modified_schedules[field_id] = [
+                    recalc_map.get(alloc.allocation_id, alloc) for alloc in allocs
+                ]
+        
+        # Use updated modified_schedules
+        recalc_by_field = modified_schedules
+        
+        # Rebuild field schedules with recalculated allocations
+        new_schedules = []
+        for field_id, allocations in recalc_by_field.items():
+            field = field_map.get(field_id) or field_schedule_map[field_id].field
             
             # Recalculate totals
             total_cost = sum(a.total_cost for a in allocations)
@@ -288,11 +348,11 @@ class AllocationAdjustInteractor:
             # Calculate utilization (time-integrated)
             total_area_used = sum(a.area_used for a in allocations)
             utilization_rate = 0.0
-            if original_schedule.field.area > 0:
-                utilization_rate = (total_area_used / original_schedule.field.area) * 100.0
+            if field.area > 0:
+                utilization_rate = (total_area_used / field.area) * 100.0
             
             new_schedule = FieldSchedule(
-                field=original_schedule.field,
+                field=field,
                 allocations=allocations,
                 total_area_used=total_area_used,
                 total_cost=total_cost,
@@ -321,10 +381,81 @@ class AllocationAdjustInteractor:
             total_revenue=total_revenue,
             total_profit=total_profit,
             crop_areas=crop_areas,
-            optimization_time=0.0,  # Will be updated after re-optimization
+            optimization_time=0.0,
             algorithm_used=current_result.algorithm_used + "_adjusted",
             is_optimal=False,  # No longer optimal after manual adjustment
         )
         
         return adjusted_result, applied_moves, rejected_moves
+    
+    async def _calculate_completion_date(
+        self,
+        crop: Crop,
+        field: Field,
+        start_date: datetime,
+        planning_period_end: datetime,
+    ) -> Tuple[datetime, int]:
+        """Calculate completion date from start date using GDD calculation.
+        
+        Args:
+            crop: Crop to be grown
+            field: Field where crop will be grown
+            start_date: Start date of cultivation
+            planning_period_end: Planning period end date
+            
+        Returns:
+            Tuple of (completion_date, growth_days)
+            
+        Raises:
+            ValueError: If crop cannot complete growth by planning_period_end
+        """
+        # Get crop profile from gateway (includes stage requirements for GDD calculation)
+        all_crops = await self.crop_gateway.get_all()
+        crop_profile = None
+        for cp in all_crops:
+            if cp.crop.crop_id == crop.crop_id:
+                crop_profile = cp
+                break
+        
+        if crop_profile is None:
+            raise ValueError(f"Crop profile not found for crop {crop.crop_id}")
+        
+        # Set crop in internal gateway for GrowthPeriodOptimizeInteractor
+        await self.crop_profile_gateway_internal.save(crop_profile)
+        
+        try:
+            # Use GrowthPeriodOptimizeInteractor to find valid cultivation periods
+            # We use a narrow evaluation window (start_date to planning_period_end)
+            # and check if starting on start_date allows completion
+            request = OptimalGrowthPeriodRequestDTO(
+                crop_id=crop.crop_id,
+                variety=crop.variety,
+                evaluation_period_start=start_date,
+                evaluation_period_end=planning_period_end,
+                field=field,
+                filter_redundant_candidates=False,
+            )
+            
+            response = await self.growth_period_optimizer.execute(request)
+            
+            # Find candidate starting on or after the specified date (choose nearest)
+            best_candidate = None
+            for candidate in response.candidates:
+                if candidate.start_date >= start_date:
+                    if candidate.completion_date is None:
+                        continue
+                    if best_candidate is None or candidate.start_date < best_candidate.start_date:
+                        best_candidate = candidate
+            
+            if best_candidate is None:
+                raise ValueError(
+                    f"Crop {crop.name} cannot complete growth starting on or after {start_date} "
+                    f"by planning period end {planning_period_end}"
+                )
+            
+            return best_candidate.completion_date, best_candidate.growth_days
+        
+        finally:
+            # Clean up
+            await self.crop_profile_gateway_internal.delete()
 

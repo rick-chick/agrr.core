@@ -209,7 +209,6 @@ class TestAllocationAdjustRequestDTO:
         
         assert request.current_optimization_id == "opt_001"
         assert len(request.move_instructions) == 1
-        assert request.optimization_objective == "maximize_profit"
     
     def test_empty_moves_raises_error(self):
         """Test that empty moves list raises error."""
@@ -239,22 +238,10 @@ class TestAllocationAdjustRequestDTO:
             )
     
     def test_invalid_objective(self):
-        """Test that invalid objective raises error."""
-        moves = [
-            MoveInstruction(
-                allocation_id="alloc_001",
-                action=MoveAction.REMOVE,
-            ),
-        ]
-        
-        with pytest.raises(ValueError, match="optimization_objective"):
-            AllocationAdjustRequestDTO(
-                current_optimization_id="opt_001",
-                move_instructions=moves,
-                planning_period_start=datetime(2023, 4, 1),
-                planning_period_end=datetime(2023, 10, 31),
-                optimization_objective="invalid_objective",
-            )
+        """Test removed - optimization_objective is no longer used."""
+        # This test is no longer relevant as optimization_objective was removed
+        # The adjust command simply applies moves and recalculates metrics
+        pass
 
 
 class TestEndToEndWorkflow:
@@ -310,7 +297,6 @@ class TestEndToEndWorkflow:
         # Create interactor
         interactor = AllocationAdjustInteractor(
             allocation_result_gateway=optimization_result_gateway,
-            move_instruction_gateway=move_instruction_gateway,
             field_gateway=field_gateway,
             crop_gateway=crop_gateway,
             weather_gateway=weather_gateway,
@@ -326,11 +312,10 @@ class TestEndToEndWorkflow:
             move_instructions=moves,
             planning_period_start=datetime(2023, 4, 1),
             planning_period_end=datetime(2023, 10, 31),
-            optimization_objective="maximize_profit",
         )
         
         # Execute
-        response = await interactor.execute(request, algorithm="dp")
+        response = await interactor.execute(request)
         
         # Assertions
         assert response.success is True
@@ -394,7 +379,6 @@ class TestEndToEndWorkflow:
         # Create interactor
         interactor = AllocationAdjustInteractor(
             allocation_result_gateway=optimization_result_gateway,
-            move_instruction_gateway=move_instruction_gateway,
             field_gateway=field_gateway,
             crop_gateway=crop_gateway,
             weather_gateway=weather_gateway,
@@ -496,7 +480,6 @@ class TestConstraints:
         # Create interactor
         interactor = AllocationAdjustInteractor(
             allocation_result_gateway=optimization_result_gateway,
-            move_instruction_gateway=move_instruction_gateway,
             field_gateway=field_gateway,
             crop_gateway=crop_gateway,
             weather_gateway=weather_gateway,
@@ -631,7 +614,6 @@ class TestInteractionRules:
         # Create interactor with rules
         interactor = AllocationAdjustInteractor(
             allocation_result_gateway=optimization_result_gateway,
-            move_instruction_gateway=move_instruction_gateway,
             field_gateway=field_gateway,
             crop_gateway=crop_gateway,
             weather_gateway=weather_gateway,
@@ -706,7 +688,6 @@ class TestAlgorithmComparison:
         # Create interactor
         interactor = AllocationAdjustInteractor(
             allocation_result_gateway=optimization_result_gateway,
-            move_instruction_gateway=move_instruction_gateway,
             field_gateway=field_gateway,
             crop_gateway=crop_gateway,
             weather_gateway=weather_gateway,
@@ -724,23 +705,11 @@ class TestAlgorithmComparison:
             planning_period_end=datetime(2023, 10, 31),
         )
         
-        # Execute with DP
-        response_dp = await interactor.execute(request, algorithm="dp")
-        
-        # Execute with Greedy (need to reload interactor to reset state)
-        interactor_greedy = AllocationAdjustInteractor(
-            allocation_result_gateway=optimization_result_gateway,
-            move_instruction_gateway=move_instruction_gateway,
-            field_gateway=field_gateway,
-            crop_gateway=crop_gateway,
-            weather_gateway=weather_gateway,
-            crop_profile_gateway_internal=CropProfileInMemoryGateway(),
-        )
-        response_greedy = await interactor_greedy.execute(request, algorithm="greedy")
+        # Execute
+        response = await interactor.execute(request)
         
         # Assertions
-        assert response_dp.success is True
-        assert response_greedy.success is True
+        assert response.success is True
         
         dp_profit = response_dp.optimized_result.total_profit
         greedy_profit = response_greedy.optimized_result.total_profit
@@ -824,7 +793,6 @@ class TestE2EScenarios:
         # Create interactor
         interactor = AllocationAdjustInteractor(
             allocation_result_gateway=optimization_result_gateway,
-            move_instruction_gateway=move_instruction_gateway,
             field_gateway=field_gateway,
             crop_gateway=crop_gateway,
             weather_gateway=weather_gateway,
@@ -935,7 +903,6 @@ class TestE2EScenarios:
             # Create interactor
             interactor = AllocationAdjustInteractor(
                 allocation_result_gateway=optimization_result_gateway,
-                move_instruction_gateway=move_instruction_gateway,
                 field_gateway=field_gateway,
                 crop_gateway=crop_gateway,
                 weather_gateway=weather_gateway,
@@ -1006,7 +973,6 @@ class TestE2EScenarios:
         
         interactor_1 = AllocationAdjustInteractor(
             allocation_result_gateway=opt_result_1,
-            move_instruction_gateway=move_1,
             field_gateway=field_gw,
             crop_gateway=crop_gw,
             weather_gateway=weather_gw,

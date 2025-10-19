@@ -92,19 +92,17 @@ class MultiFieldCropAllocationCliPresenter(MultiFieldCropAllocationOutputPort):
             print()
 
             if schedule.allocations:
-                print(f"  {'Crop':<20} {'Variety':<15} {'Area (m²)':>12} {'Start Date':<12} {'End Date':<12} {'Days':>6} {'Profit':>15}")
-                print(f"  {'-'*96}")
+                print(f"  {'Allocation ID':<40} {'Crop':<15} {'Start → End':>25} {'Days':>6} {'Profit':>15}")
+                print(f"  {'-'*105}")
                 
                 for alloc in sorted(schedule.allocations, key=lambda a: a.start_date):
-                    crop_name = alloc.crop.name[:20]
-                    variety = (alloc.crop.variety or "")[:15]
-                    area_str = f"{alloc.area_used:,.1f}"
-                    start_str = alloc.start_date.strftime("%Y-%m-%d")
-                    end_str = alloc.completion_date.strftime("%Y-%m-%d")
+                    alloc_id = alloc.allocation_id
+                    crop_name = alloc.crop.name[:15]
+                    date_range = f"{alloc.start_date.strftime('%Y-%m-%d')} → {alloc.completion_date.strftime('%Y-%m-%d')}"
                     days_str = str(alloc.growth_days)
                     profit_str = f"¥{alloc.profit:,.0f}" if alloc.profit is not None else "N/A"
                     
-                    print(f"  {crop_name:<20} {variety:<15} {area_str:>12} {start_str:<12} {end_str:<12} {days_str:>6} {profit_str:>15}")
+                    print(f"  {alloc_id:<40} {crop_name:<15} {date_range:>25} {days_str:>6} {profit_str:>15}")
             else:
                 print(f"  No allocations")
             

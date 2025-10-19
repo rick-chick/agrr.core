@@ -266,11 +266,18 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         fields = await self._load_fields(request.field_ids)
         crops = await self.crop_gateway.get_all()
         
-        # Phase 1: Generate candidates (with parallel generation if enabled)
-        if optimization_config.enable_parallel_candidate_generation:
-            candidates = await self._generate_candidates_parallel(fields, crops, request, optimization_config)
+        # Phase 1: Generate candidates based on strategy
+        if optimization_config.candidate_generation_strategy == "period_template":
+            # Use Period Template strategy
+            candidates = await self._generate_candidates_with_period_template(
+                fields, crops, request, optimization_config, algorithm
+            )
         else:
-            candidates = await self._generate_candidates(fields, crops, request, optimization_config)
+            # Use legacy candidate pool strategy
+            if optimization_config.enable_parallel_candidate_generation:
+                candidates = await self._generate_candidates_parallel(fields, crops, request, optimization_config)
+            else:
+                candidates = await self._generate_candidates(fields, crops, request, optimization_config)
         
         # Check if any candidates were generated
         if not candidates:
@@ -407,7 +414,17 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                             area_used=area_used,
                         )
                         
-                        # ===== Phase 1: Quality Filtering =====
+                        # ===== ⚠️ LEGACY FILTERING CODE - DO NOT REPLICATE =====
+                        # This filtering logic is DISABLED by default (enable_candidate_filtering=False)
+                        # because economic filtering often excludes ALL viable candidates in real-world scenarios.
+                        # 
+                        # IMPORTANT: New implementations should NOT copy this pattern.
+                        # This code is kept only for backward compatibility with legacy behavior.
+                        # 
+                        # See OptimizationConfig.enable_candidate_filtering documentation for rationale.
+                        # See Period Template implementation (_generate_candidates_with_period_template)
+                        # for the correct approach (no filtering).
+                        # ===== Phase 1: Quality Filtering (LEGACY - NOT RECOMMENDED) =====
                         if cfg.enable_candidate_filtering:
                             # Get baseline metrics (no context - this is pre-allocation filtering)
                             baseline_metrics = candidate.get_metrics()
@@ -433,7 +450,8 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                         
                         candidates.append(candidate)
         
-        # Post-filtering: Limit candidates per field×crop
+        # ===== LEGACY POST-FILTERING - DO NOT REPLICATE =====
+        # See warning above about legacy filtering code.
         if cfg.enable_candidate_filtering and cfg.max_candidates_per_field_crop > 0:
             candidates = self._post_filter_candidates(candidates, cfg)
         
@@ -469,11 +487,123 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         for candidate_list in candidate_lists:
             all_candidates.extend(candidate_list)
         
-        # Post-filtering
+        # ===== LEGACY POST-FILTERING - DO NOT REPLICATE =====
+        # See _generate_candidates() for warning about legacy filtering code.
         if config.enable_candidate_filtering and config.max_candidates_per_field_crop > 0:
             all_candidates = self._post_filter_candidates(all_candidates, config)
         
         return all_candidates
+    
+    async def _generate_candidates_with_period_template(
+        self,
+        fields: List[Field],
+        crops: List,
+        request: MultiFieldCropAllocationRequestDTO,
+        config: OptimizationConfig,
+        algorithm: str,
+    ) -> List[AllocationCandidate]:
+        """Generate candidates using Period Template strategy (recommended).
+        
+        Memory efficient: Generates Crop × Period templates using GrowthPeriodOptimizeInteractor,
+        then applies them to fields dynamically.
+        
+        Args:
+            fields: List of fields
+            crops: List of crop aggregates
+            request: Allocation request
+            config: Optimization config
+            algorithm: Algorithm name ("greedy" or "dp")
+            
+        Returns:
+            List of AllocationCandidate
+        """
+        from agrr_core.usecase.dto.growth_period_optimize_request_dto import (
+            OptimalGrowthPeriodRequestDTO
+        )
+        from agrr_core.entity.entities.period_template_entity import PeriodTemplate
+        
+        # Generate period templates for each crop using GrowthPeriodOptimizeInteractor
+        # Use a single "reference field" for template generation (templates are field-independent)
+        reference_field = fields[0] if fields else Field(
+            field_id="template_field",
+            name="Template Reference Field",
+            area=1000.0,
+            daily_fixed_cost=0.0
+        )
+        
+        templates_by_crop = {}
+        
+        for crop_aggregate in crops:
+            crop = crop_aggregate.crop
+            
+            # Generate templates for this crop using GrowthPeriodOptimizeInteractor
+            optimization_request = OptimalGrowthPeriodRequestDTO(
+                crop_id=crop.crop_id,
+                variety=crop.variety,
+                evaluation_period_start=request.planning_period_start,
+                evaluation_period_end=request.planning_period_end,
+                field=reference_field,
+                filter_redundant_candidates=False,  # We want all possible templates
+            )
+            
+            # Set crop requirement in growth period optimizer gateway
+            await self.crop_profile_gateway_internal.save(crop_aggregate)
+            
+            try:
+                optimization_result = await self.growth_period_optimizer.execute(optimization_request)
+                
+                # Convert CandidateResultDTO to PeriodTemplate using factory method
+                templates = []
+                limit = min(len(optimization_result.candidates), config.max_templates_per_crop)
+                
+                for assessment in optimization_result.candidates[:limit]:
+                    template = PeriodTemplate.from_candidate_result(
+                        candidate=assessment,
+                        crop=crop,
+                        accumulated_gdd=0.0  # TODO: Add accumulated_gdd to CandidateResultDTO
+                    )
+                    if template is not None:
+                        templates.append(template)
+                
+                templates_by_crop[crop.crop_id] = templates
+                
+            except ValueError as e:
+                # Crop cannot complete growth in the planning period
+                templates_by_crop[crop.crop_id] = []
+        
+        # Generate candidates by applying templates to fields
+        candidates = []
+        area_levels = config.area_levels or [1.0]
+        
+        # Determine template limit based on algorithm
+        template_limits = {
+            "greedy": 50,
+            "dp": 200,
+        }
+        limit = template_limits.get(algorithm, 50)
+        
+        for crop_aggregate in crops:
+            crop = crop_aggregate.crop
+            templates = templates_by_crop.get(crop.crop_id, [])
+            
+            # Use top N templates
+            for template in templates[:limit]:
+                for field in fields:
+                    for area_level in area_levels:
+                        area = field.area * area_level
+                        
+                        # Dynamically apply template to field
+                        candidate = template.apply_to_field(
+                            field=field,
+                            area_used=area
+                        )
+                        
+                        # No filtering: Let optimizer handle all candidates
+                        # Economic filtering often excludes all viable candidates in real-world scenarios
+                        # (see OptimizationConfig.enable_candidate_filtering documentation)
+                        candidates.append(candidate)
+        
+        return candidates
     
     async def _generate_candidates_for_field_crop(
         self,
@@ -557,7 +687,8 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                     area_used=area_used,
                 )
                 
-                # Quality filtering
+                # ===== LEGACY FILTERING - DO NOT REPLICATE =====
+                # See _generate_candidates() for detailed warning.
                 if config.enable_candidate_filtering:
                     # Get baseline metrics (no context - this is pre-allocation filtering)
                     baseline_metrics = candidate.get_metrics()

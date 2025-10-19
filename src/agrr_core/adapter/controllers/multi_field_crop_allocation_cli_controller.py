@@ -570,8 +570,9 @@ Growth Period Candidate Filtering (Default: Enabled):
                 # Update interactor with loaded rules
                 self.interactor.interaction_rule_service.rules = interaction_rules
             except Exception as e:
-                print(f'Warning: Failed to load interaction rules: {str(e)}')
-                print('Continuing without interaction rules...')
+                import sys
+                print(f'Warning: Failed to load interaction rules: {str(e)}', file=sys.stderr)
+                print('Continuing without interaction rules...', file=sys.stderr)
 
         # Update presenter format
         self.presenter.output_format = args.format

@@ -14,6 +14,24 @@ class OptimizationConfig:
     
     # ===== Candidate Generation =====
     
+    candidate_generation_strategy: str = "period_template"
+    """Candidate generation strategy.
+    
+    Options:
+        - "period_template": Period template strategy (default, recommended)
+                           Memory efficient, flexible exploration (200 periods/crop)
+        - "candidate_pool": Legacy candidate pool strategy (backward compatibility)
+                          Memory scales with fields, limited exploration (10 periods/crop)
+    """
+    
+    max_templates_per_crop: int = 200
+    """Maximum number of period templates per crop (for period_template strategy).
+    
+    This defines how many different start dates to consider for each crop.
+    Higher values increase exploration but also memory usage.
+    Default: 200 (covers most viable planting dates)
+    """
+    
     area_levels: List[float] = field(
         default_factory=lambda: [1.0, 0.75, 0.5, 0.25]
     )

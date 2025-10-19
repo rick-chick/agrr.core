@@ -30,6 +30,7 @@ from agrr_core.entity.entities.multi_field_optimization_result_entity import (
 from agrr_core.usecase.dto.multi_field_crop_allocation_response_dto import (
     MultiFieldCropAllocationResponseDTO,
 )
+from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 from argparse import Namespace
 
 
@@ -37,7 +38,7 @@ from argparse import Namespace
 class TestMultiFieldCropAllocationCliController:
     """Test cases for CLI controller for multi-field crop allocation."""
 
-    async def test_optimize_command_basic(self):
+    async def test_optimize_command_basic(self, optimization_config_legacy):
         """Test that basic optimization command works correctly."""
         # Setup mocks
         mock_field_gateway = AsyncMock()
@@ -134,6 +135,7 @@ class TestMultiFieldCropAllocationCliController:
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
             crop_profile_gateway_internal=mock_crop_gateway,
+            config=optimization_config_legacy,
         )
 
         # Create temporary files for fields and crops
@@ -176,7 +178,7 @@ class TestMultiFieldCropAllocationCliController:
         # Verify that presenter was called
         mock_presenter.present.assert_called_once()
 
-    async def test_optimize_command_with_target_area(self):
+    async def test_optimize_command_with_target_area(self, optimization_config_legacy):
         """Test optimization with target area specification."""
         # Setup mocks
         mock_field_gateway = AsyncMock()
@@ -250,6 +252,7 @@ class TestMultiFieldCropAllocationCliController:
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
             crop_profile_gateway_internal=mock_crop_gateway,
+            config=optimization_config_legacy,
         )
 
         # Create temporary files for fields and crops
@@ -288,7 +291,7 @@ class TestMultiFieldCropAllocationCliController:
         # Verify presenter was called
         mock_presenter.present.assert_called_once()
 
-    async def test_optimize_command_with_json_output(self):
+    async def test_optimize_command_with_json_output(self, optimization_config_legacy):
         """Test optimization with JSON output format."""
         # Setup mocks
         mock_field_gateway = AsyncMock()
@@ -362,6 +365,7 @@ class TestMultiFieldCropAllocationCliController:
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
             crop_profile_gateway_internal=mock_crop_gateway,
+            config=optimization_config_legacy,
         )
 
         # Create temporary files for fields and crops
@@ -400,7 +404,7 @@ class TestMultiFieldCropAllocationCliController:
         assert mock_presenter.output_format == "json"
         mock_presenter.present.assert_called_once()
 
-    async def test_optimize_command_with_interaction_rules(self):
+    async def test_optimize_command_with_interaction_rules(self, optimization_config_legacy):
         """Test optimization with interaction rules."""
         # Setup mocks
         mock_field_gateway = AsyncMock()
@@ -479,6 +483,7 @@ class TestMultiFieldCropAllocationCliController:
             presenter=mock_presenter,
             crop_profile_gateway_internal=mock_crop_gateway,
             interaction_rule_gateway=mock_interaction_rule_gateway,
+            config=optimization_config_legacy,
         )
 
         # Create temporary files for fields and crops
@@ -516,7 +521,7 @@ class TestMultiFieldCropAllocationCliController:
         mock_interaction_rule_gateway.get_rules.assert_called_once()
         mock_presenter.present.assert_called_once()
 
-    async def test_optimize_command_with_parallel_enabled(self):
+    async def test_optimize_command_with_parallel_enabled(self, optimization_config_legacy):
         """Test optimization with parallel candidate generation enabled."""
         # Setup mocks
         mock_field_gateway = AsyncMock()
@@ -590,6 +595,7 @@ class TestMultiFieldCropAllocationCliController:
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
             crop_profile_gateway_internal=mock_crop_gateway,
+            config=optimization_config_legacy,
         )
 
         # Create temporary files for fields and crops
@@ -627,7 +633,7 @@ class TestMultiFieldCropAllocationCliController:
         # Verify presenter was called
         mock_presenter.present.assert_called_once()
 
-    async def test_optimize_command_with_local_search_disabled(self):
+    async def test_optimize_command_with_local_search_disabled(self, optimization_config_legacy):
         """Test optimization with local search disabled."""
         # Setup mocks
         mock_field_gateway = AsyncMock()
@@ -701,6 +707,7 @@ class TestMultiFieldCropAllocationCliController:
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
             crop_profile_gateway_internal=mock_crop_gateway,
+            config=optimization_config_legacy,
         )
 
         # Create temporary files for fields and crops
@@ -738,7 +745,7 @@ class TestMultiFieldCropAllocationCliController:
         # Verify presenter was called
         mock_presenter.present.assert_called_once()
 
-    async def test_flag_transfer_with_default_filtering_enabled(self):
+    async def test_flag_transfer_with_default_filtering_enabled(self, optimization_config_legacy):
         """Test that filter_redundant_candidates=True is passed by default."""
         # Setup mocks
         mock_field_gateway = AsyncMock()
@@ -762,6 +769,7 @@ class TestMultiFieldCropAllocationCliController:
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
             crop_profile_gateway_internal=mock_crop_gateway,
+            config=optimization_config_legacy,
         )
 
         # Create mock args without --no-filter-redundant flag
@@ -795,7 +803,7 @@ class TestMultiFieldCropAllocationCliController:
         assert captured_request.filter_redundant_candidates is True, \
             "Expected filter_redundant_candidates=True by default"
 
-    async def test_flag_transfer_with_filtering_disabled(self):
+    async def test_flag_transfer_with_filtering_disabled(self, optimization_config_legacy):
         """Test that filter_redundant_candidates=False is passed when --no-filter-redundant is specified."""
         # Setup mocks
         mock_field_gateway = AsyncMock()
@@ -819,6 +827,7 @@ class TestMultiFieldCropAllocationCliController:
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
             crop_profile_gateway_internal=mock_crop_gateway,
+            config=optimization_config_legacy,
         )
 
         # Create mock args with --no-filter-redundant flag
@@ -859,6 +868,11 @@ class TestMultiFieldCropAllocationCliController:
         mock_crop_gateway = MagicMock()
         mock_weather_gateway = MagicMock()
         mock_presenter = MagicMock()
+        
+        # Create config with legacy strategy
+        config = OptimizationConfig(
+            candidate_generation_strategy="candidate_pool"
+        )
 
         controller = MultiFieldCropAllocationCliController(
             field_gateway=mock_field_gateway,
@@ -866,6 +880,7 @@ class TestMultiFieldCropAllocationCliController:
             weather_gateway=mock_weather_gateway,
             presenter=mock_presenter,
             crop_profile_gateway_internal=mock_crop_gateway,
+            config=config,
         )
 
         parser = controller.create_argument_parser()

@@ -13,7 +13,6 @@ from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.interaction_rule_gateway import InteractionRuleGateway
 from agrr_core.usecase.interactors.allocation_adjust_interactor import AllocationAdjustInteractor
 from agrr_core.usecase.dto.allocation_adjust_request_dto import AllocationAdjustRequestDTO
-from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 from agrr_core.adapter.presenters.allocation_adjust_cli_presenter import (
     AllocationAdjustCliPresenter,
 )
@@ -32,7 +31,6 @@ class AllocationAdjustCliController:
         crop_profile_gateway_internal: CropProfileGateway,
         presenter: AllocationAdjustCliPresenter,
         interaction_rule_gateway: Optional[InteractionRuleGateway] = None,
-        config: Optional[OptimizationConfig] = None,
     ):
         """Initialize with injected dependencies.
         
@@ -45,7 +43,6 @@ class AllocationAdjustCliController:
             crop_profile_gateway_internal: Internal gateway for growth period optimization
             presenter: Presenter for output formatting
             interaction_rule_gateway: Optional gateway for interaction rules
-            config: Optional optimization configuration
         """
         self.allocation_result_gateway = allocation_result_gateway
         self.move_instruction_gateway = move_instruction_gateway
@@ -55,18 +52,15 @@ class AllocationAdjustCliController:
         self.crop_profile_gateway_internal = crop_profile_gateway_internal
         self.presenter = presenter
         self.interaction_rule_gateway = interaction_rule_gateway
-        self.config = config or OptimizationConfig()
         
         # Instantiate interactor
         self.interactor = AllocationAdjustInteractor(
             allocation_result_gateway=allocation_result_gateway,
-            move_instruction_gateway=move_instruction_gateway,
             field_gateway=field_gateway,
             crop_gateway=crop_gateway,
             weather_gateway=weather_gateway,
             crop_profile_gateway_internal=crop_profile_gateway_internal,
             interaction_rule_gateway=interaction_rule_gateway,
-            config=self.config,
         )
     
     def create_argument_parser(self) -> argparse.ArgumentParser:
@@ -208,13 +202,14 @@ Move Actions:
 Table Format (default):
   - Shows before/after comparison
   - Displays applied moves
-  - Shows re-optimized field schedules
+  - Shows adjusted field schedules
   - Financial summary (cost, revenue, profit)
 
 JSON Format (--format json):
   - Same structure as 'agrr optimize allocate' output
   - Can be used as input for another 'agrr optimize adjust' call
   - Suitable for automation and further processing
+  - Shows updated cost, revenue, and profit for adjusted allocations
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💡 WHAT THIS COMMAND DOES
@@ -222,7 +217,9 @@ JSON Format (--format json):
 
 1. Loads existing allocation result
 2. Applies your move instructions (move/remove allocations)
-3. Re-optimizes remaining allocations to maximize profit
+3. For moved allocations:
+   - Calculates completion date from new start date using GDD calculation
+   - Recalculates cost, revenue, and profit for affected fields
 4. Validates all constraints (fallow period, interaction rules, etc.)
 
 Use Cases:
@@ -250,6 +247,12 @@ Error: "Invalid date format"
 Error: "Field not found"
   Solution: Make sure to_field_id in moves.json matches a field_id in fields.json
             Use exact same fields.json as original optimization.
+
+Error: "Time overlap with allocation ... (considering X-day fallow period)"
+  Solution: The target field has existing allocations. Choose a different:
+            - Start date (avoid overlap + fallow period)
+            - Target field (check field availability using command above)
+            Or remove conflicting allocations first.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📚 RELATED COMMANDS
@@ -295,13 +298,13 @@ Error: "Field not found"
             "--fields-file",
             "-fs",
             required=True,
-            help="Path to fields configuration file (JSON) - required for re-optimization",
+            help="Path to fields configuration file (JSON) - required for GDD calculation",
         )
         parser.add_argument(
             "--crops-file",
             "-cs",
             required=True,
-            help="Path to crops configuration file (JSON) - required for re-optimization (must include stage_requirements)",
+            help="Path to crops configuration file (JSON) - required for GDD calculation (must include stage_requirements)",
         )
         parser.add_argument(
             "--interaction-rules-file",
@@ -310,47 +313,11 @@ Error: "Field not found"
             help="Path to interaction rules JSON file (optional)",
         )
         parser.add_argument(
-            "--objective",
-            "-obj",
-            choices=["maximize_profit", "minimize_cost"],
-            default="maximize_profit",
-            help="Optimization objective (default: maximize_profit)",
-        )
-        parser.add_argument(
-            "--max-time",
-            "-mt",
-            type=float,
-            required=False,
-            help="Maximum computation time in seconds (optional)",
-        )
-        parser.add_argument(
             "--format",
             "-fmt",
             choices=["table", "json"],
             default="table",
             help="Output format (default: table)",
-        )
-        parser.add_argument(
-            "--enable-parallel",
-            action="store_true",
-            help="Enable parallel candidate generation for faster computation",
-        )
-        parser.add_argument(
-            "--disable-local-search",
-            action="store_true",
-            help="Disable local search (initial allocation only)",
-        )
-        parser.add_argument(
-            "--algorithm",
-            "-alg",
-            choices=["greedy", "dp"],
-            default="dp",
-            help="Algorithm for re-optimization: 'dp' (optimal per-field) or 'greedy' (fast heuristic). Default: dp",
-        )
-        parser.add_argument(
-            "--no-filter-redundant",
-            action="store_true",
-            help="Disable filtering of redundant growth period candidates",
         )
         
         return parser
@@ -387,33 +354,17 @@ Error: "Field not found"
         # Update presenter format
         self.presenter.output_format = args.format
         
-        # Update optimization config
-        config = OptimizationConfig()
-        if getattr(args, "enable_parallel", False):
-            config.enable_parallel_candidate_generation = True
-        
         # Create request DTO
         request = AllocationAdjustRequestDTO(
             current_optimization_id="",  # Will be loaded from file
             move_instructions=move_instructions,
             planning_period_start=planning_start,
             planning_period_end=planning_end,
-            optimization_objective=args.objective,
-            max_computation_time=getattr(args, "max_time", None),
-            filter_redundant_candidates=not getattr(args, "no_filter_redundant", False),
         )
         
         # Execute use case
         try:
-            enable_local_search = not getattr(args, "disable_local_search", False)
-            algorithm = getattr(args, "algorithm", "dp")
-            
-            response = await self.interactor.execute(
-                request,
-                enable_local_search=enable_local_search,
-                config=config,
-                algorithm=algorithm,
-            )
+            response = await self.interactor.execute(request)
             
             self.presenter.present(response)
             

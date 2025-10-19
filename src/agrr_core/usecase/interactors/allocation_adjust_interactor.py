@@ -77,6 +77,12 @@ class AllocationAdjustInteractor:
         # Interaction rules loaded on demand
         self.interaction_rules: List[InteractionRule] = []
         
+        # GDD candidate cache for performance optimization
+        # Key: "{crop_id}_{variety}_{field_id}_{period_end}"
+        # Value: List of candidate periods from GrowthPeriodOptimizeInteractor
+        # Note: We don't include start_date in key to allow reuse across different move dates
+        self._gdd_candidate_cache: Dict[str, List] = {}
+        
         # Create growth period optimizer for GDD calculation
         self.growth_period_optimizer = GrowthPeriodOptimizeInteractor(
             crop_profile_gateway=crop_profile_gateway_internal,
@@ -264,8 +270,9 @@ class AllocationAdjustInteractor:
                     # Cost/revenue/profit will be recalculated after all moves are applied
                     cost = growth_days * target_field.daily_fixed_cost
                     
+                    # IMPORTANT: Keep original allocation_id for tracking
                     new_allocation = CropAllocation(
-                        allocation_id=str(uuid.uuid4()),
+                        allocation_id=allocation.allocation_id,
                         field=target_field,
                         crop=allocation.crop,
                         area_used=area_used,
@@ -424,23 +431,39 @@ class AllocationAdjustInteractor:
         await self.crop_profile_gateway_internal.save(crop_profile)
         
         try:
-            # Use GrowthPeriodOptimizeInteractor to find valid cultivation periods
-            # We use a narrow evaluation window (start_date to planning_period_end)
-            # and check if starting on start_date allows completion
-            request = OptimalGrowthPeriodRequestDTO(
-                crop_id=crop.crop_id,
-                variety=crop.variety,
-                evaluation_period_start=start_date,
-                evaluation_period_end=planning_period_end,
-                field=field,
-                filter_redundant_candidates=False,
+            # Create cache key for GDD candidates
+            # Key only on crop, field, and planning period (not start_date)
+            # This allows reuse for different start dates within same planning period
+            cache_key = (
+                f"{crop.crop_id}_{crop.variety or 'default'}_{field.field_id}_"
+                f"{planning_period_end.date()}"
             )
             
-            response = await self.growth_period_optimizer.execute(request)
+            # Check cache first (significant performance improvement for multiple moves)
+            if cache_key in self._gdd_candidate_cache:
+                candidates = self._gdd_candidate_cache[cache_key]
+            else:
+                # Use GrowthPeriodOptimizeInteractor to find valid cultivation periods
+                # We use a narrow evaluation window (start_date to planning_period_end)
+                # and check if starting on start_date allows completion
+                request = OptimalGrowthPeriodRequestDTO(
+                    crop_id=crop.crop_id,
+                    variety=crop.variety,
+                    evaluation_period_start=start_date,
+                    evaluation_period_end=planning_period_end,
+                    field=field,
+                    filter_redundant_candidates=True,  # Enable filtering for performance
+                )
+                
+                response = await self.growth_period_optimizer.execute(request)
+                candidates = response.candidates
+                
+                # Cache the candidates for future moves
+                self._gdd_candidate_cache[cache_key] = candidates
             
             # Find candidate starting on or after the specified date (choose nearest)
             best_candidate = None
-            for candidate in response.candidates:
+            for candidate in candidates:
                 if candidate.start_date >= start_date:
                     if candidate.completion_date is None:
                         continue

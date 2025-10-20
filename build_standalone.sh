@@ -33,6 +33,10 @@ while [[ $# -gt 0 ]]; do
             echo "  --no-package    Skip packaging step for onedir build"
             echo "  --help          Show this help message"
             echo ""
+            echo "Automatic Deployment:"
+            echo "  When building with --onedir, if ../agrr/lib/core exists, the build will"
+            echo "  be automatically deployed there. The existing binary will be backed up."
+            echo ""
             echo "Examples:"
             echo "  $0              # Build onedir with packaging (recommended)"
             echo "  $0 --onefile    # Build single binary"
@@ -114,12 +118,37 @@ if [ "$BUILD_FORMAT" = "onefile" ]; then
         --clean \
         --noconfirm \
         --collect-all agrr_core \
+        --collect-all pandas \
+        --collect-all numpy \
+        --collect-all pydantic \
+        --collect-all pydantic_core \
+        --collect-all scipy \
+        --collect-all lightgbm \
+        --collect-all sklearn \
         --add-data "prompts:prompts" \
         --paths src \
         --hidden-import agrr_core.daemon \
         --hidden-import agrr_core.daemon.server \
         --hidden-import agrr_core.daemon.client \
         --hidden-import agrr_core.daemon.manager \
+        --hidden-import pandas \
+        --hidden-import numpy \
+        --hidden-import numpy.core._multiarray_umath \
+        --hidden-import requests \
+        --hidden-import pydantic \
+        --hidden-import pydantic_core \
+        --hidden-import aiohttp \
+        --hidden-import beautifulsoup4 \
+        --hidden-import bs4 \
+        --hidden-import lxml \
+        --hidden-import lxml.etree \
+        --hidden-import scipy \
+        --hidden-import scipy.special._ufuncs_cxx \
+        --hidden-import statsmodels \
+        --hidden-import lightgbm \
+        --hidden-import sklearn \
+        --hidden-import openai \
+        --hidden-import dotenv \
         --exclude-module matplotlib \
         --exclude-module pytest \
         --exclude-module pygments \
@@ -149,12 +178,37 @@ else
         --clean \
         --noconfirm \
         --collect-all agrr_core \
+        --collect-all pandas \
+        --collect-all numpy \
+        --collect-all pydantic \
+        --collect-all pydantic_core \
+        --collect-all scipy \
+        --collect-all lightgbm \
+        --collect-all sklearn \
         --add-data "prompts:prompts" \
         --paths src \
         --hidden-import agrr_core.daemon \
         --hidden-import agrr_core.daemon.server \
         --hidden-import agrr_core.daemon.client \
         --hidden-import agrr_core.daemon.manager \
+        --hidden-import pandas \
+        --hidden-import numpy \
+        --hidden-import numpy.core._multiarray_umath \
+        --hidden-import requests \
+        --hidden-import pydantic \
+        --hidden-import pydantic_core \
+        --hidden-import aiohttp \
+        --hidden-import beautifulsoup4 \
+        --hidden-import bs4 \
+        --hidden-import lxml \
+        --hidden-import lxml.etree \
+        --hidden-import scipy \
+        --hidden-import scipy.special._ufuncs_cxx \
+        --hidden-import statsmodels \
+        --hidden-import lightgbm \
+        --hidden-import sklearn \
+        --hidden-import openai \
+        --hidden-import dotenv \
         --exclude-module matplotlib \
         --exclude-module pytest \
         --exclude-module pygments \
@@ -288,4 +342,46 @@ if [ "$BUILD_FORMAT" = "onedir" ]; then
     fi
     echo ""
     echo "Performance: ~2s startup (vs ~6s for --onefile)"
+fi
+
+# Deploy to ../agrr/lib/core if it exists
+DEPLOY_TARGET="../agrr/lib/core"
+if [ -d "$DEPLOY_TARGET" ] && [ "$BUILD_FORMAT" = "onedir" ]; then
+    echo ""
+    echo "Step 5: Deploying to $DEPLOY_TARGET..."
+    
+    # Stop any running agrr process to avoid "Text file busy" error
+    if pgrep -f "$DEPLOY_TARGET/agrr" > /dev/null; then
+        echo "Stopping running agrr processes..."
+        pkill -f "$DEPLOY_TARGET/agrr" || true
+        sleep 1
+    fi
+    
+    # Backup existing binary if it exists
+    if [ -f "$DEPLOY_TARGET/agrr" ]; then
+        BACKUP_NAME="$DEPLOY_TARGET/agrr.backup.$(date +%Y%m%d_%H%M%S)"
+        echo "Backing up existing binary to $BACKUP_NAME"
+        mv "$DEPLOY_TARGET/agrr" "$BACKUP_NAME"
+    fi
+    
+    # Copy all files from dist/agrr to the target
+    echo "Copying files..."
+    cp -rf dist/agrr/* "$DEPLOY_TARGET/"
+    
+    # Verify deployment
+    if [ -f "$DEPLOY_TARGET/agrr" ]; then
+        echo ""
+        echo "✓ Successfully deployed to $DEPLOY_TARGET"
+        echo "✓ Binary size:"
+        ls -lh "$DEPLOY_TARGET/agrr"
+    else
+        echo ""
+        echo "❌ Deployment failed. Binary not found in $DEPLOY_TARGET"
+        exit 1
+    fi
+else
+    if [ ! -d "$DEPLOY_TARGET" ]; then
+        echo ""
+        echo "Note: Skipping deployment. Target directory $DEPLOY_TARGET does not exist."
+    fi
 fi

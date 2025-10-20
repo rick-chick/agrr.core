@@ -35,9 +35,10 @@ pip install -e .
 # Now you can use 'agrr' command anywhere
 agrr --help
 agrr weather --location 35.6762,139.6503 --days 7
-agrr crop crop --query "トマト"
-agrr progress --crop rice --variety Koshihikari --start-date 2024-05-01 --weather-file weather_data.json
-agrr optimize-period optimize --crop rice --variety Koshihikari --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 --weather-file weather_data.json --field-config examples/field_01.json
+agrr crop --query "トマト"
+agrr crop --query "rice Koshihikari" > rice_profile.json
+agrr progress --crop-file rice_profile.json --start-date 2024-05-01 --weather-file weather_data.json
+agrr optimize period --crop-file rice_profile.json --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 --weather-file weather_data.json --field-file field_01.json
 ```
 
 ### Distribution
@@ -46,16 +47,22 @@ agrr optimize-period optimize --crop rice --variety Koshihikari --evaluation-sta
 
 1. **ネイティブバイナリ配布** ⭐️ Python環境不要
    ```bash
-   # ビルド
-   ./build_standalone.sh
+   # ビルド（高速起動版、推奨）
+   ./build_standalone.sh --onedir
+   
+   # または単一バイナリ版
+   ./build_standalone.sh --onefile
    
    # 配布
-   # dist/agrr (113MB) をユーザーに配布
+   # --onedir: dist/agrr/ ディレクトリ全体をtar.gz化 (353MB)
+   # --onefile: dist/agrr 単一ファイル (125MB)
    
    # 実行（Python不要）
-   chmod +x agrr
-   ./agrr --help
+   ./agrr/agrr --help  # onedir形式
+   ./agrr --help       # onefile形式
    ```
+   
+   詳細は[配布方法ガイド](docs/technical/DISTRIBUTION.md)を参照してください。
 
 2. **Wheelパッケージ配布** - Python環境が必要
    ```bash

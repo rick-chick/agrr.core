@@ -82,7 +82,7 @@ Step 1: Run initial optimization (if not done yet)
     --format json > current_allocation.json
 
 Step 2: Create a moves file (moves.json)
-  Specify which allocations to move or remove.
+  Specify which allocations to move, remove, or add.
   See "Moves File Format" section below for details.
 
 Step 3: Run adjustment
@@ -184,16 +184,27 @@ Example 3: With JSON output (for further processing)
        {
          "allocation_id": "alloc_002",
          "action": "remove"
+       },
+       {
+         "action": "add",
+         "crop_id": "tomato",
+         "to_field_id": "field_1",
+         "to_start_date": "2024-06-01",
+         "to_area": 15.0
        }
      ]
    }
 
 Move Actions:
   - "move": Move allocation to different field, start date, or area
-    * Required fields: to_field_id, to_start_date
+    * Required fields: allocation_id, to_field_id, to_start_date
     * Optional field: to_area (if omitted, uses original area)
   - "remove": Remove allocation from schedule
-    * No additional fields required
+    * Required fields: allocation_id
+  - "add": Add new crop allocation
+    * Required fields: crop_id, to_field_id, to_start_date, to_area
+    * Optional field: variety (if omitted, uses default variety from crops file)
+    * Note: allocation_id is not needed for "add" action
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📤 OUTPUT FORMAT
@@ -216,11 +227,15 @@ JSON Format (--format json):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 1. Loads existing allocation result
-2. Applies your move instructions (move/remove allocations)
+2. Applies your move instructions (move/remove/add allocations)
 3. For moved allocations:
    - Calculates completion date from new start date using GDD calculation
    - Recalculates cost, revenue, and profit for affected fields
-4. Validates all constraints (fallow period, interaction rules, etc.)
+4. For added allocations:
+   - Creates new crop allocation from crops file
+   - Calculates completion date using GDD calculation
+   - Calculates cost, revenue, and profit
+5. Validates all constraints (fallow period, interaction rules, etc.)
 
 Use Cases:
   - Manual correction of automated allocation results

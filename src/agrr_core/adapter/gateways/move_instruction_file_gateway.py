@@ -45,6 +45,14 @@ class MoveInstructionFileGateway(MoveInstructionGateway):
             {
               "allocation_id": "alloc_002",
               "action": "remove"
+            },
+            {
+              "action": "add",
+              "to_field_id": "field_1",
+              "to_start_date": "2024-06-01",
+              "to_area": 50.0,
+              "crop_id": "tomato",
+              "variety": "beefsteak"
             }
           ]
         }
@@ -72,8 +80,10 @@ class MoveInstructionFileGateway(MoveInstructionGateway):
                     action = MoveAction.MOVE
                 elif action_str == "remove":
                     action = MoveAction.REMOVE
+                elif action_str == "add":
+                    action = MoveAction.ADD
                 else:
-                    raise ValueError(f"Invalid action: {action_str}. Must be 'move' or 'remove'")
+                    raise ValueError(f"Invalid action: {action_str}. Must be 'move', 'remove', or 'add'")
                 
                 # Parse optional fields
                 to_field_id = move_data.get("to_field_id")
@@ -91,13 +101,22 @@ class MoveInstructionFileGateway(MoveInstructionGateway):
                 if to_area is not None:
                     to_area = float(to_area)
                 
+                # Parse ADD-specific fields
+                crop_id = move_data.get("crop_id")
+                variety = move_data.get("variety")
+                
+                # allocation_id is optional for ADD action
+                allocation_id = move_data.get("allocation_id", "")
+                
                 # Create move instruction entity
                 move = MoveInstruction(
-                    allocation_id=move_data["allocation_id"],
+                    allocation_id=allocation_id,
                     action=action,
                     to_field_id=to_field_id,
                     to_start_date=to_start_date,
                     to_area=to_area,
+                    crop_id=crop_id,
+                    variety=variety,
                 )
                 moves.append(move)
             

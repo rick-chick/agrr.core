@@ -188,6 +188,39 @@ Input File Formats:
      }
    ]
 
+4. Moves File (JSON) - for 'agrr optimize adjust':
+   {
+     "moves": [
+       {
+         "allocation_id": "alloc_001",      // ID from current allocation
+         "action": "move",                  // "move", "remove", or "add"
+         "to_field_id": "field_2",          // Target field ID
+         "to_start_date": "2024-05-15",     // New start date (YYYY-MM-DD)
+         "to_area": 12.0                    // Optional: area in m²
+       },
+       {
+         "allocation_id": "alloc_002",
+         "action": "remove"                 // Remove allocation
+       },
+       {
+         "action": "add",                   // Add new crop allocation (no allocation_id needed)
+         "crop_id": "tomato",               // Crop ID from crops.json
+         "variety": "Momotaro",             // Optional: variety name
+         "to_field_id": "field_1",          // Target field ID
+         "to_start_date": "2024-06-01",     // Start date (YYYY-MM-DD)
+         "to_area": 15.0                    // Required for add: area in m²
+       }
+     ]
+   }
+
+   Actions:
+     - "move": Move existing allocation to different field/date/area
+       * Requires: allocation_id
+     - "remove": Remove allocation from schedule
+       * Requires: allocation_id
+     - "add": Add new crop allocation
+       * Note: allocation_id is not needed (omit it or leave empty)
+
 Notes:
   - You can generate weather data using 'agrr weather' command with --json flag.
   - Crop profiles can be auto-generated using 'agrr crop' command and used directly

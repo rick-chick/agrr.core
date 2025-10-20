@@ -87,4 +87,94 @@ class TestMoveInstruction:
         
         with pytest.raises(AttributeError):
             move.allocation_id = "alloc_002"
+    
+    def test_create_move_instruction_add_action(self):
+        """Test creating a move instruction with ADD action."""
+        move = MoveInstruction(
+            allocation_id="",  # Ignored for ADD action
+            action=MoveAction.ADD,
+            to_field_id="field_2",
+            to_start_date=datetime(2024, 5, 15),
+            to_area=12.0,
+            crop_id="tomato",
+            variety="beefsteak",
+        )
+        
+        assert move.action == MoveAction.ADD
+        assert move.to_field_id == "field_2"
+        assert move.to_start_date == datetime(2024, 5, 15)
+        assert move.to_area == 12.0
+        assert move.crop_id == "tomato"
+        assert move.variety == "beefsteak"
+    
+    def test_add_action_without_variety(self):
+        """Test creating ADD action without variety (optional)."""
+        move = MoveInstruction(
+            allocation_id="",
+            action=MoveAction.ADD,
+            to_field_id="field_2",
+            to_start_date=datetime(2024, 5, 15),
+            to_area=12.0,
+            crop_id="tomato",
+        )
+        
+        assert move.crop_id == "tomato"
+        assert move.variety is None
+    
+    def test_add_action_requires_to_field_id(self):
+        """Test that ADD action requires to_field_id."""
+        with pytest.raises(ValueError, match="to_field_id is required for ADD action"):
+            MoveInstruction(
+                allocation_id="",
+                action=MoveAction.ADD,
+                to_start_date=datetime(2024, 5, 15),
+                to_area=12.0,
+                crop_id="tomato",
+            )
+    
+    def test_add_action_requires_to_start_date(self):
+        """Test that ADD action requires to_start_date."""
+        with pytest.raises(ValueError, match="to_start_date is required for ADD action"):
+            MoveInstruction(
+                allocation_id="",
+                action=MoveAction.ADD,
+                to_field_id="field_2",
+                to_area=12.0,
+                crop_id="tomato",
+            )
+    
+    def test_add_action_requires_positive_area(self):
+        """Test that ADD action requires positive area."""
+        with pytest.raises(ValueError, match="to_area must be positive for ADD action"):
+            MoveInstruction(
+                allocation_id="",
+                action=MoveAction.ADD,
+                to_field_id="field_2",
+                to_start_date=datetime(2024, 5, 15),
+                to_area=-5.0,
+                crop_id="tomato",
+            )
+    
+    def test_add_action_requires_crop_id(self):
+        """Test that ADD action requires crop_id."""
+        with pytest.raises(ValueError, match="crop_id is required for ADD action"):
+            MoveInstruction(
+                allocation_id="",
+                action=MoveAction.ADD,
+                to_field_id="field_2",
+                to_start_date=datetime(2024, 5, 15),
+                to_area=12.0,
+            )
+    
+    def test_add_action_with_zero_area(self):
+        """Test that ADD action with zero area raises error."""
+        with pytest.raises(ValueError, match="to_area must be positive for ADD action"):
+            MoveInstruction(
+                allocation_id="",
+                action=MoveAction.ADD,
+                to_field_id="field_2",
+                to_start_date=datetime(2024, 5, 15),
+                to_area=0.0,
+                crop_id="tomato",
+            )
 

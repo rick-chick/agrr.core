@@ -12,3 +12,4 @@ from agrr_core.cli import execute_cli_direct
 
 execute_cli_direct(sys.argv[1:] if len(sys.argv) > 1 else [])
 
+

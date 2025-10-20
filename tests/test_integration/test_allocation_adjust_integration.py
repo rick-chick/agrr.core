@@ -996,3 +996,292 @@ class TestE2EScenarios:
         # For now, just verify first adjustment succeeded
         assert profit_1 > 0
 
+
+class TestAddNewCropAllocation:
+    """Test cases for ADD action to add new crop allocations."""
+    
+    @pytest.mark.asyncio
+    async def test_add_new_crop_allocation(self, tmp_path):
+        """Test adding a new crop allocation using ADD action."""
+        file_service = FileService()
+        test_data_dir = Path(__file__).parent.parent.parent / "test_data"
+        
+        # Create ADD move instruction
+        # Use a date where the crop can complete growth by planning period end (2023-10-31)
+        add_moves = {
+            "moves": [
+                {
+                    "allocation_id": "",  # Ignored for ADD action
+                    "action": "add",
+                    "to_field_id": "field_2",  # Use field_2 which might have space
+                    "to_start_date": "2023-04-15T00:00:00",
+                    "to_area": 10.0,  # Smaller area to avoid conflicts
+                    "crop_id": "ニンジン",  # Use a crop that appears in test data
+                    "variety": None
+                }
+            ]
+        }
+        
+        add_moves_file = tmp_path / "add_moves.json"
+        add_moves_file.write_text(json.dumps(add_moves))
+        
+        # Setup gateways
+        optimization_result_gateway = AllocationResultFileGateway(
+            file_service,
+            str(test_data_dir / "test_current_allocation.json")
+        )
+        
+        move_instruction_gateway = MoveInstructionFileGateway(
+            file_service,
+            str(add_moves_file)
+        )
+        
+        field_gateway = FieldFileGateway(
+            file_service,
+            str(test_data_dir / "allocation_fields_with_fallow.json")
+        )
+        
+        crop_gateway = CropProfileFileGateway(
+            file_service,
+            str(test_data_dir / "allocation_crops_1760447748.json")
+        )
+        
+        weather_gateway = WeatherFileGateway(
+            file_service,
+            str(test_data_dir / "weather_2023_full.json")
+        )
+        
+        crop_profile_gateway_internal = CropProfileInMemoryGateway()
+        
+        # Create interactor
+        interactor = AllocationAdjustInteractor(
+            allocation_result_gateway=optimization_result_gateway,
+            field_gateway=field_gateway,
+            crop_gateway=crop_gateway,
+            weather_gateway=weather_gateway,
+            crop_profile_gateway_internal=crop_profile_gateway_internal,
+        )
+        
+        # Get current allocation count
+        current_result = await optimization_result_gateway.get()
+        current_allocation_count = sum(
+            len(s.allocations) for s in current_result.field_schedules
+        )
+        
+        # Load moves
+        moves = await move_instruction_gateway.get_all()
+        
+        # Create request
+        request = AllocationAdjustRequestDTO(
+            current_optimization_id="",
+            move_instructions=moves,
+            planning_period_start=datetime(2023, 4, 1),
+            planning_period_end=datetime(2023, 10, 31),
+        )
+        
+        # Execute
+        response = await interactor.execute(request)
+        
+        # Assertions
+        assert response.success is True
+        assert len(response.applied_moves) == 1
+        assert len(response.rejected_moves) == 0
+        
+        # Verify new allocation was added
+        new_allocation_count = sum(
+            len(s.allocations) for s in response.optimized_result.field_schedules
+        )
+        assert new_allocation_count == current_allocation_count + 1
+        
+        # Verify the new allocation exists in field_2
+        field_2_schedule = next(
+            (s for s in response.optimized_result.field_schedules if s.field.field_id == "field_2"),
+            None
+        )
+        assert field_2_schedule is not None
+        
+        # Find the new ニンジン allocation
+        ninjin_allocations = [
+            a for a in field_2_schedule.allocations
+            if a.crop.crop_id == "ニンジン" and a.start_date == datetime(2023, 4, 15)
+        ]
+        assert len(ninjin_allocations) >= 1  # May be one or more
+        # Find the one with area 10.0
+        new_alloc = next((a for a in ninjin_allocations if a.area_used == 10.0), None)
+        assert new_alloc is not None
+        assert new_alloc.allocation_id is not None
+        assert new_alloc.allocation_id != ""
+    
+    @pytest.mark.asyncio
+    async def test_add_crop_with_overlap_rejected(self, tmp_path):
+        """Test that ADD action is rejected when there's overlap with existing allocation."""
+        file_service = FileService()
+        test_data_dir = Path(__file__).parent.parent.parent / "test_data"
+        
+        # Get existing allocation date to create overlap
+        current_file = test_data_dir / "test_current_allocation.json"
+        content = await file_service.read(str(current_file))
+        data = json.loads(content)
+        
+        # Get first allocation
+        first_schedule = data["optimization_result"]["field_schedules"][0]
+        first_alloc = first_schedule["allocations"][0]
+        overlap_field_id = first_schedule["field"]["field_id"]
+        overlap_date = first_alloc["start_date"]  # Use same start date to create overlap
+        
+        # Create ADD move with overlapping date
+        add_moves = {
+            "moves": [
+                {
+                    "allocation_id": "",
+                    "action": "add",
+                    "to_field_id": overlap_field_id,
+                    "to_start_date": overlap_date,
+                    "to_area": 50.0,
+                    "crop_id": "ナス",
+                    "variety": None
+                }
+            ]
+        }
+        
+        add_moves_file = tmp_path / "add_overlap_moves.json"
+        add_moves_file.write_text(json.dumps(add_moves))
+        
+        # Setup gateways
+        optimization_result_gateway = AllocationResultFileGateway(
+            file_service,
+            str(test_data_dir / "test_current_allocation.json")
+        )
+        
+        move_instruction_gateway = MoveInstructionFileGateway(
+            file_service,
+            str(add_moves_file)
+        )
+        
+        field_gateway = FieldFileGateway(
+            file_service,
+            str(test_data_dir / "allocation_fields_with_fallow.json")
+        )
+        
+        crop_gateway = CropProfileFileGateway(
+            file_service,
+            str(test_data_dir / "allocation_crops_1760447748.json")
+        )
+        
+        weather_gateway = WeatherFileGateway(
+            file_service,
+            str(test_data_dir / "weather_2023_full.json")
+        )
+        
+        crop_profile_gateway_internal = CropProfileInMemoryGateway()
+        
+        # Create interactor
+        interactor = AllocationAdjustInteractor(
+            allocation_result_gateway=optimization_result_gateway,
+            field_gateway=field_gateway,
+            crop_gateway=crop_gateway,
+            weather_gateway=weather_gateway,
+            crop_profile_gateway_internal=crop_profile_gateway_internal,
+        )
+        
+        # Load moves
+        moves = await move_instruction_gateway.get_all()
+        
+        # Create request
+        request = AllocationAdjustRequestDTO(
+            current_optimization_id="",
+            move_instructions=moves,
+            planning_period_start=datetime(2023, 4, 1),
+            planning_period_end=datetime(2023, 10, 31),
+        )
+        
+        # Execute
+        response = await interactor.execute(request)
+        
+        # Assertions - should be rejected due to overlap
+        assert response.success is False
+        assert len(response.applied_moves) == 0
+        assert len(response.rejected_moves) == 1
+        assert "overlap" in response.rejected_moves[0]["reason"].lower()
+    
+    @pytest.mark.asyncio
+    async def test_add_nonexistent_crop_rejected(self, tmp_path):
+        """Test that ADD action is rejected when crop_id doesn't exist."""
+        file_service = FileService()
+        test_data_dir = Path(__file__).parent.parent.parent / "test_data"
+        
+        # Create ADD move with non-existent crop
+        add_moves = {
+            "moves": [
+                {
+                    "allocation_id": "",
+                    "action": "add",
+                    "to_field_id": "field_1",
+                    "to_start_date": "2023-09-01T00:00:00",
+                    "to_area": 50.0,
+                    "crop_id": "nonexistent_crop",
+                    "variety": None
+                }
+            ]
+        }
+        
+        add_moves_file = tmp_path / "add_nonexistent_crop.json"
+        add_moves_file.write_text(json.dumps(add_moves))
+        
+        # Setup gateways
+        optimization_result_gateway = AllocationResultFileGateway(
+            file_service,
+            str(test_data_dir / "test_current_allocation.json")
+        )
+        
+        move_instruction_gateway = MoveInstructionFileGateway(
+            file_service,
+            str(add_moves_file)
+        )
+        
+        field_gateway = FieldFileGateway(
+            file_service,
+            str(test_data_dir / "allocation_fields_with_fallow.json")
+        )
+        
+        crop_gateway = CropProfileFileGateway(
+            file_service,
+            str(test_data_dir / "allocation_crops_1760447748.json")
+        )
+        
+        weather_gateway = WeatherFileGateway(
+            file_service,
+            str(test_data_dir / "weather_2023_full.json")
+        )
+        
+        crop_profile_gateway_internal = CropProfileInMemoryGateway()
+        
+        # Create interactor
+        interactor = AllocationAdjustInteractor(
+            allocation_result_gateway=optimization_result_gateway,
+            field_gateway=field_gateway,
+            crop_gateway=crop_gateway,
+            weather_gateway=weather_gateway,
+            crop_profile_gateway_internal=crop_profile_gateway_internal,
+        )
+        
+        # Load moves
+        moves = await move_instruction_gateway.get_all()
+        
+        # Create request
+        request = AllocationAdjustRequestDTO(
+            current_optimization_id="",
+            move_instructions=moves,
+            planning_period_start=datetime(2023, 4, 1),
+            planning_period_end=datetime(2023, 10, 31),
+        )
+        
+        # Execute
+        response = await interactor.execute(request)
+        
+        # Assertions - should be rejected due to non-existent crop
+        assert response.success is False
+        assert len(response.applied_moves) == 0
+        assert len(response.rejected_moves) == 1
+        assert "not found" in response.rejected_moves[0]["reason"].lower()
+

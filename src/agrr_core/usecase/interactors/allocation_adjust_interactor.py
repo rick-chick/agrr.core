@@ -206,15 +206,17 @@ class AllocationAdjustInteractor:
         
         for move in move_instructions:
             try:
-                # Check if allocation exists
-                if move.allocation_id not in allocation_map:
-                    rejected_moves.append({
-                        "move": move,
-                        "reason": f"Allocation {move.allocation_id} not found",
-                    })
-                    continue
-                
-                allocation = allocation_map[move.allocation_id]
+                # For ADD action, allocation_id is not required (will be auto-generated)
+                if move.action != MoveAction.ADD:
+                    # Check if allocation exists for MOVE/REMOVE
+                    if move.allocation_id not in allocation_map:
+                        rejected_moves.append({
+                            "move": move,
+                            "reason": f"Allocation {move.allocation_id} not found",
+                        })
+                        continue
+                    
+                    allocation = allocation_map[move.allocation_id]
                 
                 if move.action == MoveAction.REMOVE:
                     # Remove allocation from its field
@@ -276,6 +278,98 @@ class AllocationAdjustInteractor:
                         field=target_field,
                         crop=allocation.crop,
                         area_used=area_used,
+                        start_date=move.to_start_date,
+                        completion_date=completion_date,
+                        growth_days=growth_days,
+                        accumulated_gdd=0.0,  # TODO: Get from GDD calculation
+                        total_cost=cost,
+                        expected_revenue=None,  # Will be recalculated with full context
+                        profit=None,  # Will be recalculated with full context
+                    )
+                    
+                    # Check for overlap with existing allocations in target field
+                    has_overlap = False
+                    overlap_with_id = None
+                    for existing in modified_schedules.get(move.to_field_id, []):
+                        if new_allocation.overlaps_with_fallow(existing):
+                            has_overlap = True
+                            overlap_with_id = existing.allocation_id
+                            break
+                    
+                    if has_overlap:
+                        rejected_moves.append({
+                            "move": move,
+                            "reason": f"Time overlap with allocation {overlap_with_id} (considering {target_field.fallow_period_days}-day fallow period)",
+                        })
+                        continue
+                    
+                    # Add to target field
+                    modified_schedules[move.to_field_id].append(new_allocation)
+                    new_allocations.append(new_allocation)  # Track for recalculation
+                    applied_moves.append(move)
+                
+                elif move.action == MoveAction.ADD:
+                    # Add new crop allocation
+                    # Get target field
+                    if move.to_field_id not in field_map:
+                        # Target field may not exist in current schedules, load it
+                        target_field = await self.field_gateway.get(move.to_field_id)
+                        if target_field is None:
+                            rejected_moves.append({
+                                "move": move,
+                                "reason": f"Target field {move.to_field_id} not found",
+                            })
+                            continue
+                        field_map[move.to_field_id] = target_field
+                        modified_schedules[move.to_field_id] = []
+                    
+                    target_field = field_map[move.to_field_id]
+                    
+                    # Get crop from gateway
+                    all_crops = await self.crop_gateway.get_all()
+                    crop = None
+                    for crop_profile in all_crops:
+                        if crop_profile.crop.crop_id == move.crop_id:
+                            # Check variety match if specified
+                            if move.variety is None or crop_profile.crop.variety == move.variety:
+                                crop = crop_profile.crop
+                                break
+                    
+                    if crop is None:
+                        rejected_moves.append({
+                            "move": move,
+                            "reason": f"Crop {move.crop_id} (variety: {move.variety or 'default'}) not found",
+                        })
+                        continue
+                    
+                    # Calculate completion date using GDD calculation
+                    try:
+                        completion_date, growth_days = await self._calculate_completion_date(
+                            crop=crop,
+                            field=target_field,
+                            start_date=move.to_start_date,
+                            planning_period_end=planning_period_end,
+                        )
+                    except ValueError as e:
+                        rejected_moves.append({
+                            "move": move,
+                            "reason": f"Cannot complete growth in planning period: {str(e)}",
+                        })
+                        continue
+                    
+                    # Calculate cost
+                    cost = growth_days * target_field.daily_fixed_cost
+                    
+                    # Generate new allocation_id
+                    new_allocation_id = str(uuid.uuid4())
+                    
+                    # Create new allocation with basic values
+                    # Cost/revenue/profit will be recalculated after all moves are applied
+                    new_allocation = CropAllocation(
+                        allocation_id=new_allocation_id,
+                        field=target_field,
+                        crop=crop,
+                        area_used=move.to_area,
                         start_date=move.to_start_date,
                         completion_date=completion_date,
                         growth_days=growth_days,

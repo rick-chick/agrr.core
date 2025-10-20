@@ -43,6 +43,7 @@ class TestWeatherCliPredictController:
         assert 'days' in actions
         assert 'model' in actions  # New: model selection option
         assert 'confidence' in actions  # New: confidence level option
+        assert 'metrics' in actions  # New: metrics option
     
     # ===== Input Validation Tests =====
     

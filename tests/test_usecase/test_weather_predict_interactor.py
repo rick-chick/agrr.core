@@ -34,7 +34,7 @@ class TestWeatherPredictInteractor:
     
     @pytest.mark.asyncio
     async def test_execute_success(self):
-        """Test successful prediction execution."""
+        """Test successful prediction execution (single metric mode)."""
         # Setup mocks
         weather_data = [
             WeatherData(time=datetime(2024, 1, i), temperature_2m_mean=15.0) 
@@ -47,11 +47,12 @@ class TestWeatherPredictInteractor:
         ]
         self.mock_prediction_gateway.predict.return_value = predictions
         
-        # Execute
+        # Execute with single metric mode
         result = await self.interactor.execute(
             input_source="input.json",
             output_destination="output.json",
-            prediction_days=7
+            prediction_days=7,
+            predict_all_temperature_metrics=False  # Single metric mode
         )
         
         # Verify calls
@@ -153,10 +154,52 @@ class TestWeatherPredictInteractor:
         result = await self.interactor.execute(
             input_source="input.json",
             output_destination="output.json",
-            prediction_days=7
+            prediction_days=7,
+            predict_all_temperature_metrics=False  # Single metric mode
         )
         
         assert result == predictions
+    
+    @pytest.mark.asyncio
+    async def test_execute_multi_metric_mode(self):
+        """Test execute with multi-metric mode (temperature, temperature_max, temperature_min)."""
+        from datetime import timedelta
+        
+        # Setup mocks
+        base_date = datetime(2024, 1, 1)
+        weather_data = [
+            WeatherData(
+                time=base_date + timedelta(days=i),
+                temperature_2m_mean=15.0,
+                temperature_2m_max=20.0,
+                temperature_2m_min=10.0
+            )
+            for i in range(120)  # 120 records for LightGBM
+        ]
+        self.mock_prediction_gateway.read_historical_data.return_value = weather_data
+        
+        # Mock multi-metric predictions
+        all_predictions = {
+            'temperature': [Forecast(date=datetime(2024, 5, 1), predicted_value=15.0)],
+            'temperature_max': [Forecast(date=datetime(2024, 5, 1), predicted_value=20.0)],
+            'temperature_min': [Forecast(date=datetime(2024, 5, 1), predicted_value=10.0)]
+        }
+        self.mock_prediction_gateway.predict_multiple_metrics = AsyncMock(return_value=all_predictions)
+        
+        # Execute with multi-metric mode
+        result = await self.interactor.execute(
+            input_source="input.json",
+            output_destination="output.json",
+            prediction_days=7,
+            predict_all_temperature_metrics=True
+        )
+        
+        # Verify calls
+        self.mock_prediction_gateway.read_historical_data.assert_called_once_with("input.json")
+        self.mock_prediction_gateway.predict_multiple_metrics.assert_called_once()
+        
+        # Verify result (should return temperature predictions for backward compatibility)
+        assert result == all_predictions['temperature']
     
     @pytest.mark.asyncio
     async def test_execute_file_error(self):

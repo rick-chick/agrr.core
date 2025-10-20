@@ -1,6 +1,6 @@
 """Prediction gateway implementation."""
 
-from typing import List
+from typing import List, Dict
 
 from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.entity.entities.prediction_forecast_entity import Forecast
@@ -71,5 +71,27 @@ class PredictionGatewayImpl(PredictionGateway):
             historical_data=historical_data,
             metric=metric,
             prediction_days=prediction_days,
+            model_config=config
+        )
+    
+    async def predict_multiple_metrics(
+        self,
+        historical_data: List[WeatherData],
+        metrics: List[str],
+        config: dict
+    ) -> Dict[str, List[Forecast]]:
+        """Predict multiple weather metrics using historical data.
+        
+        Args:
+            historical_data: Historical weather data
+            metrics: List of metrics to predict (e.g., ['temperature', 'temperature_max', 'temperature_min'])
+            config: Prediction configuration including 'prediction_days'
+            
+        Returns:
+            Dictionary mapping metric names to forecast lists
+        """
+        return await self.prediction_service.predict_multiple_metrics(
+            historical_data=historical_data,
+            metrics=metrics,
             model_config=config
         )

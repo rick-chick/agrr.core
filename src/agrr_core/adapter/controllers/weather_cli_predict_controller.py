@@ -42,6 +42,14 @@ Examples:
   # Use LightGBM model (higher accuracy, requires 90+ days of data)
   agrr predict --input historical.json --output forecast.json --days 30 --model lightgbm
   
+  # Predict temperature_max and temperature_min with LightGBM (NEW!)
+  agrr predict --input historical.json --output forecast.json --days 30 --model lightgbm \\
+               --metrics temperature,temperature_max,temperature_min
+  
+  # Predict only temperature_max
+  agrr predict --input historical.json --output forecast_max.json --days 30 --model lightgbm \\
+               --metrics temperature_max
+  
   # Use ensemble of multiple models (best accuracy)
   agrr predict --input historical.json --output forecast.json --days 30 --model ensemble
   
@@ -164,14 +172,25 @@ Notes:
             help='Confidence level for prediction intervals (default: 0.95)'
         )
         
+        # Metrics argument (NEW: for temperature_max/min support)
+        parser.add_argument(
+            '--metrics',
+            type=str,
+            default='temperature',
+            help='Metrics to predict (comma-separated). Options: temperature, temperature_max, temperature_min. '
+                 'Example: --metrics temperature,temperature_max,temperature_min'
+        )
+        
         return parser
     
     
     async def handle_predict_command(self, args) -> None:
         """Handle predict command execution."""
         try:
-            # Get model type from args
+            # Get model type and metrics from args
             model_type = getattr(args, 'model', 'arima')
+            metrics_str = getattr(args, 'metrics', 'temperature')
+            metrics = [m.strip() for m in metrics_str.split(',')]
             
             # Display model name
             model_names = {
@@ -181,7 +200,34 @@ Notes:
             }
             model_display = model_names.get(model_type, model_type.upper())
             
-            # Execute prediction using use case interactor
+            # Check if multiple metrics or non-temperature metric is requested
+            if len(metrics) > 1 or metrics[0] != 'temperature':
+                # Multiple metrics or temperature_max/min requested
+                if model_type != 'lightgbm':
+                    self.cli_presenter.display_error(
+                        "temperature_max and temperature_min predictions are only supported with LightGBM model.\n"
+                        "Please add --model lightgbm option.",
+                        "VALIDATION_ERROR"
+                    )
+                    return
+                
+                # Use multi-metric prediction (requires direct service access)
+                self.cli_presenter.display_success_message(
+                    f"⚠ Multi-metric prediction ({', '.join(metrics)}) with LightGBM\n"
+                    f"  This feature requires API-level access.\n"
+                    f"  Please use Python API directly:\n\n"
+                    f"  from agrr_core.framework.services.ml.lightgbm_prediction_service import LightGBMPredictionService\n"
+                    f"  service = LightGBMPredictionService()\n"
+                    f"  results = await service.predict_multiple_metrics(\n"
+                    f"      historical_data=weather_data,\n"
+                    f"      metrics={metrics},\n"
+                    f"      model_config={{'prediction_days': {args.days}}}\n"
+                    f"  )\n\n"
+                    f"  See docs/features/TEMPERATURE_MAX_MIN_PREDICTION.md for details."
+                )
+                return
+            
+            # Single temperature metric - use existing interactor
             predictions = await self.predict_interactor.execute(
                 input_source=args.input,
                 output_destination=args.output,

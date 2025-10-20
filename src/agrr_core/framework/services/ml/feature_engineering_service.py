@@ -324,6 +324,8 @@ class FeatureEngineeringService:
         """Get target column name for metric."""
         metric_mapping = {
             'temperature': 'temperature',
+            'temperature_max': 'temp_max',
+            'temperature_min': 'temp_min',
             'precipitation': 'precipitation',
             'sunshine': 'sunshine',
         }

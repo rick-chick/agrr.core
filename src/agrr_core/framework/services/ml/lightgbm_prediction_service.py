@@ -230,6 +230,10 @@ class LightGBMPredictionService(PredictionServiceInterface):
             value = None
             if metric == 'temperature':
                 value = weather_data.temperature_2m_mean
+            elif metric == 'temperature_max':
+                value = weather_data.temperature_2m_max
+            elif metric == 'temperature_min':
+                value = weather_data.temperature_2m_min
             elif metric == 'precipitation':
                 value = weather_data.precipitation_sum
             elif metric == 'sunshine':

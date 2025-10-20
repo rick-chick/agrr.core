@@ -63,6 +63,7 @@ class TestWeatherCliPredictController:
         args.output = "output.json"
         args.days = 7
         args.model = 'arima'  # Add model type
+        args.metrics = 'temperature'  # Add metrics (default)
         
         # Execute
         await self.controller.handle_predict_command(args)
@@ -87,6 +88,7 @@ class TestWeatherCliPredictController:
         args.output = "output.json"
         args.days = 7
         args.model = 'arima'
+        args.metrics = 'temperature'  # Add metrics
         
         await self.controller.handle_predict_command(args)
         
@@ -106,6 +108,7 @@ class TestWeatherCliPredictController:
         args.output = "output.json"
         args.days = 7
         args.model = 'arima'
+        args.metrics = 'temperature'  # Add metrics
         
         await self.controller.handle_predict_command(args)
         

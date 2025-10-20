@@ -113,9 +113,12 @@ class WeatherPredictInteractor:
             
             prediction_dict = {
                 'date': temp_pred.date.isoformat(),
+                'predicted_value': temp_pred.predicted_value,  # 後方互換性のため
                 'temperature': temp_pred.predicted_value,
                 'temperature_max': temp_max_pred.predicted_value,
                 'temperature_min': temp_min_pred.predicted_value,
+                'confidence_lower': temp_pred.confidence_lower,  # 後方互換性のため
+                'confidence_upper': temp_pred.confidence_upper,  # 後方互換性のため
                 'temperature_confidence_lower': temp_pred.confidence_lower,
                 'temperature_confidence_upper': temp_pred.confidence_upper,
                 'temperature_max_confidence_lower': temp_max_pred.confidence_lower,

@@ -226,10 +226,10 @@ python3 -m agrr_core weather --location 35.6762,139.6503 --days 7
 
 ```bash
 # デーモンサポート付きでビルド
-./build_standalone.sh
+./scripts/build_standalone.sh
 
 # または
-./build_standalone.sh --onefile
+./scripts/build_standalone.sh --onefile
 ```
 
 ### 使用方法

@@ -15,7 +15,7 @@
    
 2. **アーキテクチャ理解**
    - [architecture/ARCHITECTURE_SUMMARY.md](architecture/ARCHITECTURE_SUMMARY.md) ⭐ **まずここから**
-   - [../ARCHITECTURE.md](../ARCHITECTURE.md) - 詳細設計
+   - [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md) - 詳細設計
 
 3. **使い方**
    - [api/README.md](api/README.md) - CLI使い方
@@ -57,7 +57,7 @@
 | ドキュメント | 説明 | 対象者 |
 |------------|------|--------|
 | [architecture/ARCHITECTURE_SUMMARY.md](architecture/ARCHITECTURE_SUMMARY.md) | プロジェクト全体俯瞰 | 全員 ⭐ |
-| [../ARCHITECTURE.md](../ARCHITECTURE.md) | Clean Architecture詳細 | 開発者 |
+| [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md) | Clean Architecture詳細 | 開発者 |
 | [architecture/ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md](architecture/ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md) | 改善提案 | 開発者 |
 | [architecture/CLEAN_ARCHITECTURE_GATEWAY_GUIDELINES.md](architecture/CLEAN_ARCHITECTURE_GATEWAY_GUIDELINES.md) | Gateway設計ガイドライン | 開発者 |
 | [architecture/REFACTORING_ROADMAP.md](architecture/REFACTORING_ROADMAP.md) | リファクタリング計画 | 開発者 |
@@ -134,7 +134,7 @@
 ```
 Day 1: アーキテクチャ理解
   1. architecture/ARCHITECTURE_SUMMARY.md (1時間)
-  2. ../ARCHITECTURE.md (2時間)
+  2. architecture/ARCHITECTURE.md (2時間)
   3. コードベース探索 (3時間)
 
 Day 2: ドメイン理解
@@ -175,7 +175,7 @@ docs/
 ├── 🏗️ アーキテクチャ編
 │   └── architecture/
 │       ├── ARCHITECTURE_SUMMARY.md                      ⭐ 全体俯瞰
-│       ├── ../ARCHITECTURE.md                           ⭐ Clean Architecture詳細
+│       ├── ARCHITECTURE.md                              ⭐ Clean Architecture詳細
 │       ├── ARCHITECTURE_OVERVIEW_AND_RECOMMENDATIONS.md
 │       ├── CLEAN_ARCHITECTURE_GATEWAY_GUIDELINES.md
 │       ├── REFACTORING_ROADMAP.md

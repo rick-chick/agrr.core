@@ -67,7 +67,7 @@ pip install -e .
 #### onedir形式（推奨：高速起動）
 
 ```bash
-./build_standalone.sh --onedir
+./scripts/build_standalone.sh --onedir
 ```
 
 - **起動時間**: 約2秒
@@ -77,7 +77,7 @@ pip install -e .
 #### onefile形式（コンパクト）
 
 ```bash
-./build_standalone.sh --onefile
+./scripts/build_standalone.sh --onefile
 ```
 
 - **起動時間**: 約6秒
@@ -130,7 +130,7 @@ agrr --help
 
 1. `requirements.txt`に追加
 2. `agrr.spec`に追加（hiddenimportsとcollect_all）
-3. `build_standalone.sh`に追加（--hidden-importと--collect-all）
+3. `scripts/build_standalone.sh`に追加（--hidden-importと--collect-all）
 4. 再ビルド
 
 詳細は各ファイルの既存パッケージを参考にしてください。
@@ -145,7 +145,7 @@ ModuleNotFoundError: No module named 'pandas'
 ImportError: numpy.core._multiarray_umath
 ```
 
-**解決策**: `agrr.spec`と`build_standalone.sh`に該当パッケージを追加して再ビルド
+**解決策**: `agrr.spec`と`scripts/build_standalone.sh`に該当パッケージを追加して再ビルド
 
 #### Python 3.12 with shared library support not found
 

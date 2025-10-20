@@ -46,12 +46,12 @@ agrr optimize period --crop-file rice_profile.json --evaluation-start 2024-04-01
 **配布方法 (Distribution Methods):**
 
 1. **ネイティブバイナリ配布** ⭐️ Python環境不要
-   ```bash
-   # ビルド（高速起動版、推奨）
-   ./build_standalone.sh --onedir
-   
-   # または単一バイナリ版
-   ./build_standalone.sh --onefile
+  ```bash
+  # ビルド（高速起動版、推奨）
+  ./scripts/build_standalone.sh --onedir
+  
+  # または単一バイナリ版
+  ./scripts/build_standalone.sh --onefile
    
    # 配布
    # --onedir: dist/agrr/ ディレクトリ全体をtar.gz化 (353MB)
@@ -413,7 +413,7 @@ mypy src
 
 詳細なドキュメントは[docs/README.md](docs/README.md)を参照してください。
 
-- [アーキテクチャ設計](ARCHITECTURE.md)
+- [アーキテクチャ設計](docs/architecture/ARCHITECTURE.md)
 - [CLI API Reference](docs/api/README.md)
 
 ## License

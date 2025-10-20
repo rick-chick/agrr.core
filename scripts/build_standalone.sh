@@ -4,6 +4,9 @@
 
 set -e
 
+# Change to project root directory (parent of scripts/)
+cd "$(dirname "$0")/.."
+
 # Parse command line arguments
 BUILD_FORMAT="onedir"  # Default to onedir for faster startup
 PACKAGE=true

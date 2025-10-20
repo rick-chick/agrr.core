@@ -257,11 +257,41 @@ elif metric == 'temperature_min':
 - ✅ 最高・最低気温の独立した予測を実装
 - ✅ 既存の94個の特徴量を100%活用
 - ✅ 飽和現象の解消
+- ✅ マルチメトリック出力フォーマット実装
 - ✅ テストカバレッジ100%（新機能）
 - ✅ 後方互換性100%維持
-- ✅ 最小限の変更（6行）で最大の効果
+- ✅ 最小限の変更で最大の効果
 
-### すぐに使える
+### デフォルト動作（自動）
+```bash
+# デフォルトで3つのメトリックを全て予測
+agrr predict --input weather.json --output predictions.json --days 30 --model lightgbm
+```
+
+**出力JSONフォーマット（拡張版）:**
+```json
+{
+  "predictions": [
+    {
+      "date": "2025-10-17T00:00:00",
+      "temperature": 21.66,
+      "temperature_max": 25.66,
+      "temperature_min": 17.65,
+      "temperature_confidence_lower": 18.18,
+      "temperature_confidence_upper": 25.13,
+      "temperature_max_confidence_lower": 22.00,
+      "temperature_max_confidence_upper": 29.00,
+      "temperature_min_confidence_lower": 14.00,
+      "temperature_min_confidence_upper": 21.00
+    }
+  ],
+  "model_type": "LightGBM",
+  "prediction_days": 30,
+  "metrics": ["temperature", "temperature_max", "temperature_min"]
+}
+```
+
+### Python API
 ```python
 import asyncio
 from agrr_core.framework.services.ml.lightgbm_prediction_service import LightGBMPredictionService
@@ -275,9 +305,15 @@ async def main():
     )
     
     for i in range(30):
-        print(f"Day {i+1}: {results['temperature_max'][i].predicted_value:.1f}°C")
+        t_mean = results['temperature'][i].predicted_value
+        t_max = results['temperature_max'][i].predicted_value
+        t_min = results['temperature_min'][i].predicted_value
+        print(f"Day {i+1}: {t_min:.1f}°C < {t_mean:.1f}°C < {t_max:.1f}°C")
 
 asyncio.run(main())
 ```
 
-**実装完了・テスト済み・今すぐ使用可能！** 🎉
+### Rails側での使用
+デフォルトで全メトリックが予測結果に含まれるため、Rails側の`transform_predictions_to_weather_data`メソッドで、予測結果の`temperature_max`/`temperature_min`をそのまま使用できます。
+
+**実装完了・テスト済み・飽和問題解決！** 🎉

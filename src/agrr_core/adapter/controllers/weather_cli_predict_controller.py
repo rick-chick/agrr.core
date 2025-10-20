@@ -72,22 +72,41 @@ Input File Format (JSON):
   }
 
 Output Format (JSON):
+  
+  ARIMA output (single metric):
   {
     "predictions": [
       {
         "date": "2024-11-01",
         "predicted_value": 18.5,
         "confidence_lower": 16.2,
-        "confidence_upper": 20.8,
-        "metric": "temperature"
+        "confidence_upper": 20.8
       }
     ],
     "model_type": "ARIMA",
+    "prediction_days": 30
+  }
+  
+  LightGBM output (multi-metric, automatically includes temperature_max/min):
+  {
+    "predictions": [
+      {
+        "date": "2024-11-01",
+        "predicted_value": 18.5,
+        "temperature": 18.5,
+        "temperature_max": 22.0,
+        "temperature_min": 15.0,
+        "confidence_lower": 16.2,
+        "confidence_upper": 20.8,
+        "temperature_max_confidence_lower": 19.0,
+        "temperature_max_confidence_upper": 25.0,
+        "temperature_min_confidence_lower": 12.0,
+        "temperature_min_confidence_upper": 18.0
+      }
+    ],
+    "model_type": "LightGBM",
     "prediction_days": 30,
-    "model_params": {
-      "order": [1, 1, 1],
-      "seasonal_order": [1, 1, 1, 12]
-    }
+    "metrics": ["temperature", "temperature_max", "temperature_min"]
   }
 
 How it works:
@@ -107,13 +126,15 @@ Model Details:
     - Includes seasonal components
 
   LightGBM (Light Gradient Boosting Machine):
-    - Machine learning model with 50+ features
+    - Machine learning model with 94+ features
     - Best for: Medium to long-term (90-365 days)
     - Minimum data: 90 days
     - Recommended data: 365+ days (multi-year preferred)
     - Accuracy: MAE ~2.2°C (90-365 days)
     - Uses climatological approach (past same-period data)
     - Higher accuracy for long-term predictions
+    - Automatically predicts temperature, temperature_max, and temperature_min
+      (avoids temperature range saturation issue)
 
   Ensemble (Future):
     - Combines ARIMA + LightGBM
@@ -128,7 +149,10 @@ Model Selection Guide:
 
 Notes:
   - These are statistical/ML models, not real-time forecasts
-  - LightGBM uses historical climate patterns for long-term prediction
+  - LightGBM automatically predicts temperature, temperature_max, and temperature_min
+    in a single execution (no additional cost)
+  - This avoids the temperature range saturation issue (fixed daily range)
+  - ARIMA model predicts temperature only (temperature_max/min are estimated)
   - For crop planning (1+ year), use LightGBM with 20 years of historical data
   - Data quality significantly affects prediction accuracy
             """
@@ -178,6 +202,7 @@ Notes:
             type=str,
             default='temperature',
             help='Metrics to predict (comma-separated). Options: temperature, temperature_max, temperature_min. '
+                 'Note: LightGBM model automatically predicts all 3 metrics regardless of this option. '
                  'Example: --metrics temperature,temperature_max,temperature_min'
         )
         

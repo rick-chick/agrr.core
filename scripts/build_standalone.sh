@@ -8,8 +8,8 @@ set -e
 cd "$(dirname "$0")/.."
 
 # Parse command line arguments
-BUILD_FORMAT="onedir"  # Default to onedir for faster startup
-PACKAGE=true
+BUILD_FORMAT="onefile"  # Default to onefile for simpler distribution
+PACKAGE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -222,6 +222,19 @@ else
         echo ""
         echo "✓ Successfully built standalone binary (--onedir)!"
         echo "✓ Location: dist/agrr/"
+        
+        # ソースコード(.py)を削除して編集を防止
+        echo ""
+        echo "Step 3.5: Removing source code (.py files) to prevent editing..."
+        PY_COUNT=$(find dist/agrr/_internal/agrr_core -name "*.py" 2>/dev/null | wc -l)
+        if [ "$PY_COUNT" -gt 0 ]; then
+            echo "Found $PY_COUNT .py files in agrr_core, removing..."
+            find dist/agrr/_internal/agrr_core -name "*.py" -delete
+            echo "✓ Removed all .py files (bytecode .pyc remains)"
+        else
+            echo "No .py files found in agrr_core (already optimized)"
+        fi
+        
         echo "✓ Size:"
         du -sh dist/agrr
         
@@ -349,7 +362,7 @@ fi
 
 # Deploy to ../agrr/lib/core if it exists
 DEPLOY_TARGET="../agrr/lib/core"
-if [ -d "$DEPLOY_TARGET" ] && [ "$BUILD_FORMAT" = "onedir" ]; then
+if [ -d "$DEPLOY_TARGET" ]; then
     echo ""
     echo "Step 5: Deploying to $DEPLOY_TARGET..."
     
@@ -367,9 +380,34 @@ if [ -d "$DEPLOY_TARGET" ] && [ "$BUILD_FORMAT" = "onedir" ]; then
         mv "$DEPLOY_TARGET/agrr" "$BACKUP_NAME"
     fi
     
-    # Copy all files from dist/agrr to the target
-    echo "Copying files..."
-    cp -rf dist/agrr/* "$DEPLOY_TARGET/"
+    # Deploy based on build format
+    if [ "$BUILD_FORMAT" = "onefile" ]; then
+        # onefile: 単一バイナリをコピー
+        echo "Copying single binary..."
+        cp dist/agrr "$DEPLOY_TARGET/"
+    else
+        # onedir: ディレクトリ全体をコピー
+        echo "Copying files..."
+        
+        # _internalディレクトリが存在する場合、バックアップ
+        if [ -d "$DEPLOY_TARGET/_internal" ]; then
+            BACKUP_INTERNAL="$DEPLOY_TARGET/_internal.backup.$(date +%Y%m%d_%H%M%S)"
+            echo "Backing up _internal to $BACKUP_INTERNAL"
+            mv "$DEPLOY_TARGET/_internal" "$BACKUP_INTERNAL"
+        fi
+        
+        cp -rf dist/agrr/* "$DEPLOY_TARGET/"
+        
+        # agrr_coreのソースコード(.py)を削除（編集防止）
+        if [ -d "$DEPLOY_TARGET/_internal/agrr_core" ]; then
+            PY_COUNT=$(find "$DEPLOY_TARGET/_internal/agrr_core" -name "*.py" 2>/dev/null | wc -l)
+            if [ "$PY_COUNT" -gt 0 ]; then
+                echo "Removing $PY_COUNT .py files from deployed agrr_core..."
+                find "$DEPLOY_TARGET/_internal/agrr_core" -name "*.py" -delete
+                echo "✓ Source code removed (editing prevented)"
+            fi
+        fi
+    fi
     
     # Verify deployment
     if [ -f "$DEPLOY_TARGET/agrr" ]; then

@@ -4,12 +4,8 @@ from PyInstaller.utils.hooks import collect_all
 datas = [('prompts', 'prompts')]
 binaries = []
 hiddenimports = ['agrr_core.daemon', 'agrr_core.daemon.server', 'agrr_core.daemon.client', 'agrr_core.daemon.manager', 'pandas', 'numpy', 'numpy.core._multiarray_umath', 'requests', 'pydantic', 'pydantic_core', 'aiohttp', 'beautifulsoup4', 'bs4', 'lxml', 'lxml.etree', 'scipy', 'scipy.special._ufuncs_cxx', 'statsmodels', 'lightgbm', 'sklearn', 'openai', 'dotenv']
-
-# agrr_core: バイナリとhiddenimportsのみ収集、ソースコード（.py）は除外
 tmp_ret = collect_all('agrr_core')
-binaries += tmp_ret[1]
-hiddenimports += tmp_ret[2]
-# datas += tmp_ret[0]  # ソースコードを含めない（バイトコードのみ）
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('pandas')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('numpy')
@@ -37,33 +33,27 @@ a = Analysis(
     runtime_hooks=[],
     excludes=['matplotlib', 'pytest', 'pygments', 'py'],
     noarchive=False,
-    optimize=2,  # バイトコード最適化（.pyファイルを完全にバイトコード化）
+    optimize=0,
 )
 pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
+    a.binaries,
+    a.datas,
     [],
-    exclude_binaries=True,
     name='agrr',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
+    upx_exclude=[],
+    runtime_tmpdir=None,
     console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-)
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name='agrr',
 )

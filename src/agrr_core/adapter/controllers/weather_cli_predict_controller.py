@@ -21,9 +21,14 @@ class WeatherCliPredictController:
         cli_presenter: WeatherCLIPresenter
     ):
         """Initialize CLI weather file prediction controller."""
-        # Store gateways for direct use
-        self.weather_gateway = weather_gateway
-        self.prediction_gateway = prediction_gateway
+        # Import here to avoid circular import
+        from agrr_core.usecase.interactors.weather_predict_interactor import WeatherPredictInteractor
+        
+        # Instantiate interactor with injected dependencies
+        self.predict_interactor = WeatherPredictInteractor(
+            weather_gateway=weather_gateway,
+            prediction_gateway=prediction_gateway
+        )
         self.cli_presenter = cli_presenter
     
     def create_argument_parser(self) -> argparse.ArgumentParser:
@@ -256,19 +261,13 @@ Notes:
                 )
                 return
             
-            # Single temperature metric - use direct gateway calls
-            # Load historical data
-            historical_data = await self.weather_gateway.load_weather_data(args.input)
-            
-            # Generate predictions
-            predictions = await self.prediction_gateway.predict(
-                historical_data, 
-                'temperature', 
-                {'prediction_days': args.days}
+            # Single temperature metric - use existing interactor
+            predictions = await self.predict_interactor.execute(
+                input_source=args.input,
+                output_destination=args.output,
+                prediction_days=args.days,
+                predict_all_temperature_metrics=False
             )
-            
-            # Save predictions
-            await self.prediction_gateway.create(predictions, args.output)
             
             # Display success message
             self.cli_presenter.display_success_message(

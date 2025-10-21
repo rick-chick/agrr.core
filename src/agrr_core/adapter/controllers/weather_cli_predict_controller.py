@@ -217,7 +217,12 @@ Notes:
             # Get model type and metrics from args
             model_type = getattr(args, 'model', 'arima')
             metrics_str = getattr(args, 'metrics', 'temperature')
-            metrics = [m.strip() for m in metrics_str.split(',')]
+            
+            # LightGBMの場合は自動的に全メトリックを予測（CLIヘルプに記載済み）
+            if model_type == 'lightgbm':
+                metrics = ['temperature', 'temperature_max', 'temperature_min']
+            else:
+                metrics = [m.strip() for m in metrics_str.split(',')]
             
             # 厳密な入力バリデーション
             try:
@@ -234,40 +239,30 @@ Notes:
             }
             model_display = model_names.get(model_type, model_type.upper())
             
-            # Check if multiple metrics or non-temperature metric is requested
-            if len(metrics) > 1 or metrics[0] != 'temperature':
-                # Multiple metrics or temperature_max/min requested
-                if model_type != 'lightgbm':
+            # LightGBMの場合は自動的に全メトリック予測
+            if model_type == 'lightgbm':
+                predictions = await self.predict_interactor.execute(
+                    input_source=args.input,
+                    output_destination=args.output,
+                    prediction_days=args.days,
+                    predict_all_temperature_metrics=True
+                )
+            else:
+                # ARIMA等は単一メトリックのみ
+                if len(metrics) > 1:
                     self.cli_presenter.display_error(
-                        "temperature_max and temperature_min predictions are only supported with LightGBM model.\n"
-                        "Please add --model lightgbm option.",
+                        "Multiple metrics are only supported with LightGBM model.\n"
+                        "Please use --model lightgbm for multi-metric prediction.",
                         "VALIDATION_ERROR"
                     )
                     return
                 
-                # Use multi-metric prediction (requires direct service access)
-                self.cli_presenter.display_success_message(
-                    f"⚠ Multi-metric prediction ({', '.join(metrics)}) with LightGBM\n"
-                    f"  This feature requires API-level access.\n"
-                    f"  Please use Python API directly:\n\n"
-                    f"  from agrr_core.framework.services.ml.lightgbm_prediction_service import LightGBMPredictionService\n"
-                    f"  service = LightGBMPredictionService()\n"
-                    f"  results = await service.predict_multiple_metrics(\n"
-                    f"      historical_data=weather_data,\n"
-                    f"      metrics={metrics},\n"
-                    f"      model_config={{'prediction_days': {args.days}}}\n"
-                    f"  )\n\n"
-                    f"  See docs/features/TEMPERATURE_MAX_MIN_PREDICTION.md for details."
+                predictions = await self.predict_interactor.execute(
+                    input_source=args.input,
+                    output_destination=args.output,
+                    prediction_days=args.days,
+                    predict_all_temperature_metrics=False
                 )
-                return
-            
-            # Single temperature metric - use existing interactor
-            predictions = await self.predict_interactor.execute(
-                input_source=args.input,
-                output_destination=args.output,
-                prediction_days=args.days,
-                predict_all_temperature_metrics=False
-            )
             
             # Display success message
             self.cli_presenter.display_success_message(

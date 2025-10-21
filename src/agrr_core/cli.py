@@ -36,15 +36,17 @@ Available Commands:
   weather           Get historical weather data
                     - openmeteo: Global coverage, 2-3 years historical data (default)
                     - jma: Japan only, high quality, recent years
+                    - noaa: US + India stations, high-resolution observed data (2000+)
+                      * 66 stations: 17 US + 49 India (major agricultural regions)
+                      * Hourly data → daily statistics
+                      * India: Punjab, UP, Maharashtra, Karnataka, Tamil Nadu, etc.
+                      * Free, no registration required
                     - noaa-ftp: US only, long-term historical data (1901-present, 2000+ recommended)
                       * 194 stations across all 50 US states (98.5% validated)
                       * Automatic year-by-year fetching for multi-year requests
-                      * Free, no registration required
                     - nasa-power: Global coverage, grid-based data (1984-present)
-                      * Any location worldwide (latitude/longitude)
-                      * Satellite + ground observation fusion
-                      * Free, no API key required
-                      * Ideal for India, developing countries, remote areas
+                      * Coarse resolution (0.5° grid, ~50km)
+                      * Not recommended for agricultural applications
   forecast          Get 16-day weather forecast from tomorrow
   crop              Get crop growth profiles using AI
   progress          Calculate crop growth progress based on weather data
@@ -60,11 +62,11 @@ Examples:
   # Get Japan weather data (high quality, JMA)
   agrr weather --location 35.6762,139.6503 --days 7 --data-source jma
   
+  # Get India weather data (2000-2024, NOAA ISD, 49 agricultural stations)
+  agrr weather --location 28.5844,77.2031 --start-date 2023-01-01 --end-date 2023-12-31 --data-source noaa --json
+
   # Get US long-term weather data (2000-2023, NOAA FTP, auto year-split)
   agrr weather --location 40.7128,-74.0060 --start-date 2000-01-01 --end-date 2023-12-31 --data-source noaa-ftp --json
-
-  # Get India weather data (2000-2024, NASA POWER, any location)
-  agrr weather --location 28.6139,77.2090 --start-date 2000-01-01 --end-date 2024-12-31 --data-source nasa-power --json
 
   # Get 16-day weather forecast
   agrr forecast --location 35.6762,139.6503

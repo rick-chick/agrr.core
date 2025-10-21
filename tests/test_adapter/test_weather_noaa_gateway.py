@@ -3,7 +3,12 @@
 import pytest
 from datetime import datetime
 from unittest.mock import Mock, AsyncMock
-from agrr_core.adapter.gateways.weather_noaa_gateway import WeatherNOAAGateway, LOCATION_MAPPING
+from agrr_core.adapter.gateways.weather_noaa_gateway import (
+    WeatherNOAAGateway, 
+    LOCATION_MAPPING,
+    US_LOCATION_MAPPING,
+    INDIA_LOCATION_MAPPING,
+)
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 
@@ -199,6 +204,47 @@ class TestWeatherNOAAGateway:
         
         for coords, city_name in cities.items():
             assert coords in LOCATION_MAPPING, f"{city_name} not in mapping"
+    
+    def test_find_nearest_location_delhi(self, gateway):
+        """Test finding nearest location for Delhi, India."""
+        usaf, wban, name, lat, lon = gateway._find_nearest_location(28.5844, 77.2031)
+        
+        assert usaf == "421820"
+        assert wban == "99999"
+        assert "Delhi" in name
+        assert "Safdarjung" in name
+        assert lat == pytest.approx(28.5844, abs=0.01)
+        assert lon == pytest.approx(77.2031, abs=0.01)
+    
+    def test_find_nearest_location_mumbai(self, gateway):
+        """Test finding nearest location for Mumbai, India."""
+        usaf, wban, name, lat, lon = gateway._find_nearest_location(19.0896, 72.8681)
+        
+        assert usaf == "430030"
+        assert wban == "99999"
+        assert "Mumbai" in name
+        assert lat == pytest.approx(19.0896, abs=0.01)
+        assert lon == pytest.approx(72.8681, abs=0.01)
+    
+    def test_find_nearest_location_bangalore(self, gateway):
+        """Test finding nearest location for Bangalore, India."""
+        usaf, wban, name, lat, lon = gateway._find_nearest_location(12.9500, 77.6681)
+        
+        assert usaf == "432940"
+        assert wban == "99999"
+        assert "Bangalore" in name
+        assert lat == pytest.approx(12.9500, abs=0.01)
+        assert lon == pytest.approx(77.6681, abs=0.01)
+    
+    def test_find_nearest_location_ludhiana(self, gateway):
+        """Test finding nearest location for Ludhiana, Punjab (agricultural region)."""
+        usaf, wban, name, lat, lon = gateway._find_nearest_location(30.9000, 75.8500)
+        
+        assert usaf == "421650"
+        assert wban == "99999"
+        assert "Ludhiana" in name
+        assert lat == pytest.approx(30.9000, abs=0.01)
+        assert lon == pytest.approx(75.8500, abs=0.01)
 
 
 class TestNOAALocationMapping:
@@ -228,4 +274,74 @@ class TestNOAALocationMapping:
             # Validate name
             assert isinstance(name, str), "Name should be string"
             assert len(name) > 0, "Name should not be empty"
+    
+    def test_us_india_mapping_count(self):
+        """Test that we have correct number of stations for US and India."""
+        # US has 17 stations
+        assert len(US_LOCATION_MAPPING) == 17, f"Expected 17 US stations, got {len(US_LOCATION_MAPPING)}"
+        
+        # India has 49 stations (50地点を目標としたが、重複を除いて49地点)
+        assert len(INDIA_LOCATION_MAPPING) == 49, f"Expected 49 India stations, got {len(INDIA_LOCATION_MAPPING)}"
+        
+        # Combined mapping
+        assert len(LOCATION_MAPPING) == 66, f"Expected 66 total stations, got {len(LOCATION_MAPPING)}"
+    
+    def test_india_mapping_major_states(self):
+        """Test that India mapping includes major agricultural states."""
+        # Extract state names from station names
+        state_keywords = {
+            "Punjab": ["Ludhiana", "Amritsar", "Bathinda", "Patiala"],
+            "Uttar Pradesh": ["Lucknow", "Kanpur", "Varanasi", "Agra"],
+            "Maharashtra": ["Mumbai", "Pune", "Nagpur"],
+            "Gujarat": ["Ahmedabad", "Surat"],
+            "Karnataka": ["Bangalore", "Mysore"],
+            "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai"],
+        }
+        
+        for state, keywords in state_keywords.items():
+            found = False
+            for coords, (usaf, wban, name, lat, lon) in INDIA_LOCATION_MAPPING.items():
+                if any(keyword in name for keyword in keywords):
+                    found = True
+                    break
+            assert found, f"No stations found for {state}"
+    
+    def test_india_stations_coordinate_ranges(self):
+        """Test that India stations have valid coordinate ranges."""
+        # India latitude range: approximately 8°N to 35°N
+        # India longitude range: approximately 68°E to 97°E
+        for coords, (usaf, wban, name, lat, lon) in INDIA_LOCATION_MAPPING.items():
+            assert 8 <= lat <= 35, f"Station {name} latitude {lat} out of India range"
+            assert 68 <= lon <= 97, f"Station {name} longitude {lon} out of India range"
+    
+    def test_india_stations_wban_code(self):
+        """Test that India stations have WBAN code 99999 (international stations)."""
+        for coords, (usaf, wban, name, lat, lon) in INDIA_LOCATION_MAPPING.items():
+            assert wban == "99999", f"Station {name} should have WBAN 99999, got {wban}"
+    
+    def test_india_agricultural_regions_coverage(self):
+        """Test that India mapping covers major agricultural regions."""
+        # Punjab - wheat and rice belt
+        ludhiana_found = any("Ludhiana" in name for _, (_, _, name, _, _) in INDIA_LOCATION_MAPPING.items())
+        assert ludhiana_found, "Ludhiana (Punjab wheat belt) not found"
+        
+        # Uttar Pradesh - largest agricultural state
+        lucknow_found = any("Lucknow" in name for _, (_, _, name, _, _) in INDIA_LOCATION_MAPPING.items())
+        kanpur_found = any("Kanpur" in name for _, (_, _, name, _, _) in INDIA_LOCATION_MAPPING.items())
+        assert lucknow_found, "Lucknow (UP capital) not found"
+        assert kanpur_found, "Kanpur (UP industrial/agricultural center) not found"
+        
+        # Maharashtra - cotton and sugarcane
+        mumbai_found = any("Mumbai" in name for _, (_, _, name, _, _) in INDIA_LOCATION_MAPPING.items())
+        pune_found = any("Pune" in name for _, (_, _, name, _, _) in INDIA_LOCATION_MAPPING.items())
+        assert mumbai_found, "Mumbai (Maharashtra) not found"
+        assert pune_found, "Pune (Maharashtra agricultural region) not found"
+        
+        # Karnataka - rice and coffee
+        bangalore_found = any("Bangalore" in name for _, (_, _, name, _, _) in INDIA_LOCATION_MAPPING.items())
+        assert bangalore_found, "Bangalore (Karnataka) not found"
+        
+        # Tamil Nadu - rice
+        chennai_found = any("Chennai" in name for _, (_, _, name, _, _) in INDIA_LOCATION_MAPPING.items())
+        assert chennai_found, "Chennai (Tamil Nadu) not found"
 

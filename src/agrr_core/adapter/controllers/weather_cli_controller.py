@@ -47,6 +47,9 @@ Examples:
   # Get weather from JMA (Japan Meteorological Agency) for Tokyo
   agrr weather --location 35.6762,139.6503 --days 7 --data-source jma
   
+  # Get India weather from NOAA ISD (49 agricultural region stations, 2000+)
+  agrr weather --location 28.5844,77.2031 --start-date 2023-01-01 --end-date 2023-12-31 --data-source noaa --json
+  
   # Get long-term historical data from NOAA FTP (US 2000+)
   agrr weather --location 40.7128,-74.0060 --start-date 2000-01-01 --end-date 2023-12-31 --data-source noaa-ftp
   
@@ -60,11 +63,20 @@ Examples:
   agrr forecast --location 35.6762,139.6503
 
 Major Cities Coordinates:
-  Tokyo:     35.6762,139.6503
-  Osaka:     34.6937,135.5023
-  New York:  40.7128,-74.0060
-  London:    51.5074,-0.1278
-  Paris:     48.8566,2.3522
+  Tokyo:       35.6762,139.6503
+  Osaka:       34.6937,135.5023
+  New York:    40.7128,-74.0060
+  London:      51.5074,-0.1278
+  
+  # India (NOAA ISD - 49 agricultural stations)
+  Delhi:       28.5844,77.2031    (NCR)
+  Mumbai:      19.0896,72.8681    (Maharashtra)
+  Bangalore:   12.9500,77.6681    (Karnataka)
+  Chennai:     12.9900,80.1692    (Tamil Nadu)
+  Kolkata:     22.6544,88.4467    (West Bengal)
+  Ludhiana:    30.9000,75.8500    (Punjab - wheat belt)
+  Lucknow:     26.7600,80.8800    (Uttar Pradesh)
+  Pune:        18.5800,73.9200    (Maharashtra)
 
 JSON Output Format:
   {
@@ -103,6 +115,9 @@ Examples:
   # Get historical weather for Tokyo for the last 7 days
   agrr weather --location 35.6762,139.6503 --days 7
   
+  # Get India weather from NOAA ISD (49 agricultural stations)
+  agrr weather --location 28.5844,77.2031 --start-date 2023-01-01 --end-date 2023-12-31 --data-source noaa --json
+  
   # Get weather for specific date range
   agrr weather --location 35.6762,139.6503 --start-date 2024-01-01 --end-date 2024-01-07
   
@@ -110,10 +125,15 @@ Examples:
   agrr weather --location 40.7128,-74.0060 --days 5 --json > weather.json
 
 Major Cities:
-  Tokyo:     35.6762,139.6503
-  Osaka:     34.6937,135.5023
-  New York:  40.7128,-74.0060
-  London:    51.5074,-0.1278
+  Tokyo:       35.6762,139.6503
+  Osaka:       34.6937,135.5023
+  New York:    40.7128,-74.0060
+  
+  # India (NOAA ISD - 49 agricultural stations)
+  Delhi:       28.5844,77.2031
+  Mumbai:      19.0896,72.8681
+  Bangalore:   12.9500,77.6681
+  Ludhiana:    30.9000,75.8500  (Punjab wheat belt)
 
 Output (JSON):
   {
@@ -145,9 +165,9 @@ Output (JSON):
         # Data source selection
         weather_parser.add_argument(
             '--data-source',
-            choices=['openmeteo', 'jma', 'noaa-ftp', 'nasa-power'],
+            choices=['openmeteo', 'jma', 'noaa', 'noaa-ftp', 'nasa-power'],
             default='openmeteo',
-            help='Weather data source: openmeteo (global, default), jma (Japan only), noaa-ftp (US long-term historical data 2000+), or nasa-power (global grid-based, ideal for India)'
+            help='Weather data source: openmeteo (global, default), jma (Japan only), noaa (US + India 66 stations, 2000+), noaa-ftp (US long-term FTP 2000+), or nasa-power (global grid-based)'
         )
         
         # Date range arguments

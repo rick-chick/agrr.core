@@ -1008,13 +1008,17 @@ class TestAddNewCropAllocation:
         
         # Create ADD move instruction
         # Use a date where the crop can complete growth by planning period end (2023-10-31)
+        # field_2 existing allocations: 2023-05-14 ~ 2023-07-13, 2023-08-24 ~ 2023-10-31
+        # ニンジン grows in ~61 days + 28 days fallow = 89 days total
+        # To avoid overlap with 2023-05-14, end must be before that:
+        # 2023-02-01 + 61 days = 2023-04-03 + 28 days fallow = 2023-05-01 < 2023-05-14 ✓
         add_moves = {
             "moves": [
                 {
                     "allocation_id": "",  # Ignored for ADD action
                     "action": "add",
                     "to_field_id": "field_2",  # Use field_2 which might have space
-                    "to_start_date": "2023-04-15T00:00:00",
+                    "to_start_date": "2023-02-01T00:00:00",  # Fixed: even earlier to avoid overlap
                     "to_area": 10.0,  # Smaller area to avoid conflicts
                     "crop_id": "ニンジン",  # Use a crop that appears in test data
                     "variety": None
@@ -1072,10 +1076,11 @@ class TestAddNewCropAllocation:
         moves = await move_instruction_gateway.get_all()
         
         # Create request
+        # Note: planning_period_start adjusted to 2023-02-01 to allow early planting
         request = AllocationAdjustRequestDTO(
             current_optimization_id="",
             move_instructions=moves,
-            planning_period_start=datetime(2023, 4, 1),
+            planning_period_start=datetime(2023, 2, 1),  # Fixed: match the move start date
             planning_period_end=datetime(2023, 10, 31),
         )
         
@@ -1103,7 +1108,7 @@ class TestAddNewCropAllocation:
         # Find the new ニンジン allocation
         ninjin_allocations = [
             a for a in field_2_schedule.allocations
-            if a.crop.crop_id == "ニンジン" and a.start_date == datetime(2023, 4, 15)
+            if a.crop.crop_id == "ニンジン" and a.start_date == datetime(2023, 2, 1)
         ]
         assert len(ninjin_allocations) >= 1  # May be one or more
         # Find the one with area 10.0
@@ -1126,7 +1131,7 @@ class TestAddNewCropAllocation:
         # Get first allocation
         first_schedule = data["optimization_result"]["field_schedules"][0]
         first_alloc = first_schedule["allocations"][0]
-        overlap_field_id = first_schedule["field"]["field_id"]
+        overlap_field_id = first_schedule["field_id"]  # Fixed: field_id is directly in schedule
         overlap_date = first_alloc["start_date"]  # Use same start date to create overlap
         
         # Create ADD move with overlapping date

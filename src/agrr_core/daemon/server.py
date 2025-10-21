@@ -21,6 +21,7 @@ class AgrrDaemon:
         
         # 事前に重いモジュールをすべてインポート
         try:
+            # Basic modules
             from agrr_core.framework.agrr_core_container import WeatherCliContainer
             from agrr_core.adapter.gateways.crop_profile_file_gateway import CropProfileFileGateway
             from agrr_core.adapter.gateways.crop_profile_inmemory_gateway import CropProfileInMemoryGateway
@@ -31,6 +32,15 @@ class AgrrDaemon:
             from agrr_core.adapter.controllers.crop_cli_craft_controller import CropCliCraftController
             from agrr_core.framework.services.clients.llm_client import LLMClient
             from agrr_core.framework.services.io.file_service import FileService
+            
+            # Optimize-related modules (for allocation adjust performance)
+            from agrr_core.adapter.controllers.allocation_adjust_cli_controller import AllocationAdjustCliController
+            from agrr_core.adapter.gateways.allocation_result_file_gateway import AllocationResultFileGateway
+            from agrr_core.adapter.gateways.move_instruction_file_gateway import MoveInstructionFileGateway
+            from agrr_core.usecase.interactors.allocation_adjust_interactor import AllocationAdjustInteractor
+            from agrr_core.usecase.interactors.growth_period_optimize_interactor import GrowthPeriodOptimizeInteractor
+            from agrr_core.adapter.gateways.interaction_rule_file_gateway import InteractionRuleFileGateway
+            
             print("✓ Modules loaded", file=sys.stderr)
         except Exception as e:
             print(f"Warning: Error loading modules: {e}", file=sys.stderr)

@@ -117,6 +117,9 @@ class AllocationAdjustInteractor:
         # Load move instructions
         move_instructions = request.move_instructions
         
+        # Note: crop_gateway now handles caching internally (Adapter layer responsibility)
+        # No need to cache in UseCase layer - gateway will cache on first get_all() call
+        
         # Load interaction rules if gateway is provided
         if self.interaction_rule_gateway:
             try:
@@ -325,7 +328,7 @@ class AllocationAdjustInteractor:
                     
                     target_field = field_map[move.to_field_id]
                     
-                    # Get crop from gateway
+                    # Get crop from gateway (gateway handles caching internally)
                     all_crops = await self.crop_gateway.get_all()
                     crop = None
                     for crop_profile in all_crops:
@@ -510,7 +513,7 @@ class AllocationAdjustInteractor:
         Raises:
             ValueError: If crop cannot complete growth by planning_period_end
         """
-        # Get crop profile from gateway (includes stage requirements for GDD calculation)
+        # Get crop profile from gateway (gateway handles caching internally)
         all_crops = await self.crop_gateway.get_all()
         crop_profile = None
         for cp in all_crops:

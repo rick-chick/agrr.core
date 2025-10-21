@@ -5,10 +5,10 @@ import asyncio
 from typing import Optional, List
 from datetime import datetime, timedelta
 
-from agrr_core.usecase.interactors.weather_predict_interactor import WeatherPredictInteractor
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.prediction_gateway import PredictionGateway
+from agrr_core.framework.validation.output_validator import OutputValidator, OutputValidationError
 
 
 class WeatherCliPredictController:
@@ -21,11 +21,9 @@ class WeatherCliPredictController:
         cli_presenter: WeatherCLIPresenter
     ):
         """Initialize CLI weather file prediction controller."""
-        # Instantiate interactor directly with injected dependencies
-        self.predict_interactor = WeatherPredictInteractor(
-            weather_gateway=weather_gateway,
-            prediction_gateway=prediction_gateway
-        )
+        # Store gateways for direct use
+        self.weather_gateway = weather_gateway
+        self.prediction_gateway = prediction_gateway
         self.cli_presenter = cli_presenter
     
     def create_argument_parser(self) -> argparse.ArgumentParser:
@@ -78,9 +76,9 @@ Output Format (JSON):
     "predictions": [
       {
         "date": "2024-11-01",
-        "predicted_value": 18.5,
-        "confidence_lower": 16.2,
-        "confidence_upper": 20.8
+        "temperature": 18.5,
+        "temperature_confidence_lower": 16.2,
+        "temperature_confidence_upper": 20.8
       }
     ],
     "model_type": "ARIMA",
@@ -92,12 +90,11 @@ Output Format (JSON):
     "predictions": [
       {
         "date": "2024-11-01",
-        "predicted_value": 18.5,
         "temperature": 18.5,
         "temperature_max": 22.0,
         "temperature_min": 15.0,
-        "confidence_lower": 16.2,
-        "confidence_upper": 20.8,
+        "temperature_confidence_lower": 16.2,
+        "temperature_confidence_upper": 20.8,
         "temperature_max_confidence_lower": 19.0,
         "temperature_max_confidence_upper": 25.0,
         "temperature_min_confidence_lower": 12.0,
@@ -217,6 +214,13 @@ Notes:
             metrics_str = getattr(args, 'metrics', 'temperature')
             metrics = [m.strip() for m in metrics_str.split(',')]
             
+            # 厳密な入力バリデーション
+            try:
+                OutputValidator.validate_input_metrics(metrics, model_type)
+            except OutputValidationError as e:
+                self.cli_presenter.display_error(f"Invalid input: {e}")
+                return
+            
             # Display model name
             model_names = {
                 'arima': 'ARIMA (AutoRegressive Integrated Moving Average)',
@@ -252,12 +256,19 @@ Notes:
                 )
                 return
             
-            # Single temperature metric - use existing interactor
-            predictions = await self.predict_interactor.execute(
-                input_source=args.input,
-                output_destination=args.output,
-                prediction_days=args.days
+            # Single temperature metric - use direct gateway calls
+            # Load historical data
+            historical_data = await self.weather_gateway.load_weather_data(args.input)
+            
+            # Generate predictions
+            predictions = await self.prediction_gateway.predict(
+                historical_data, 
+                'temperature', 
+                {'prediction_days': args.days}
             )
+            
+            # Save predictions
+            await self.prediction_gateway.create(predictions, args.output)
             
             # Display success message
             self.cli_presenter.display_success_message(

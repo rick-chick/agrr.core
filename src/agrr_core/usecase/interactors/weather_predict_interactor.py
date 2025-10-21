@@ -6,6 +6,7 @@ from agrr_core.entity.entities.prediction_forecast_entity import Forecast
 from agrr_core.entity.validators.weather_validator import WeatherValidator
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.prediction_gateway import PredictionGateway
+from agrr_core.framework.validation.output_validator import OutputValidator, OutputValidationError
 
 
 class WeatherPredictInteractor:
@@ -113,12 +114,9 @@ class WeatherPredictInteractor:
             
             prediction_dict = {
                 'date': temp_pred.date.isoformat(),
-                'predicted_value': temp_pred.predicted_value,  # 後方互換性のため
                 'temperature': temp_pred.predicted_value,
                 'temperature_max': temp_max_pred.predicted_value,
                 'temperature_min': temp_min_pred.predicted_value,
-                'confidence_lower': temp_pred.confidence_lower,  # 後方互換性のため
-                'confidence_upper': temp_pred.confidence_upper,  # 後方互換性のため
                 'temperature_confidence_lower': temp_pred.confidence_lower,
                 'temperature_confidence_upper': temp_pred.confidence_upper,
                 'temperature_max_confidence_lower': temp_max_pred.confidence_lower,
@@ -135,5 +133,11 @@ class WeatherPredictInteractor:
             'prediction_days': prediction_count,
             'metrics': ['temperature', 'temperature_max', 'temperature_min']
         }
+        
+        # 厳密なIFバリデーション
+        try:
+            OutputValidator.validate_lightgbm_output(output_data)
+        except OutputValidationError as e:
+            raise PredictionError(f"Output validation failed: {e}")
         
         Path(destination).write_text(json.dumps(output_data, indent=2, ensure_ascii=False))

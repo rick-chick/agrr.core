@@ -17,7 +17,6 @@ from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAda
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
 from agrr_core.adapter.controllers.weather_cli_predict_controller import WeatherCliPredictController
-from agrr_core.usecase.interactors.weather_predict_interactor import WeatherPredictInteractor
 from agrr_core.adapter.gateways.prediction_gateway_impl import PredictionGatewayImpl
 from agrr_core.framework.services.ml.arima_prediction_service import ARIMAPredictionService
 from agrr_core.framework.services.ml.time_series_arima_service import TimeSeriesARIMAService
@@ -236,8 +235,11 @@ class AgrrCoreContainer:
             prediction_service=prediction_service
         )
     
-    def get_weather_predict_interactor(self) -> WeatherPredictInteractor:
-        """Get weather prediction interactor instance."""
+    def get_weather_predict_interactor(self):
+        """Get weather prediction interactor instance (deprecated - use direct gateways)."""
+        # Import here to avoid circular import
+        from agrr_core.usecase.interactors.weather_predict_interactor import WeatherPredictInteractor
+        
         if 'weather_predict_interactor' not in self._instances:
             weather_gateway = self.get_weather_gateway()
             prediction_gateway = self.get_prediction_gateway()

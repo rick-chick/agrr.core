@@ -200,9 +200,19 @@ class FeatureEngineeringService:
                     val = None
                     if metric == 'temperature':
                         val = hist_data.temperature_2m_mean
-                        # Also collect temp_max and temp_min
+                        # Also collect temp_max and temp_min for cross-metric features
                         if hist_data.temperature_2m_max is not None:
                             same_period_max_values.append(hist_data.temperature_2m_max)
+                        if hist_data.temperature_2m_min is not None:
+                            same_period_min_values.append(hist_data.temperature_2m_min)
+                    elif metric == 'temperature_max':
+                        val = hist_data.temperature_2m_max
+                        # Also collect for self-features
+                        if hist_data.temperature_2m_max is not None:
+                            same_period_max_values.append(hist_data.temperature_2m_max)
+                    elif metric == 'temperature_min':
+                        val = hist_data.temperature_2m_min
+                        # Also collect for self-features
                         if hist_data.temperature_2m_min is not None:
                             same_period_min_values.append(hist_data.temperature_2m_min)
                     elif metric == 'precipitation':
@@ -240,64 +250,41 @@ class FeatureEngineeringService:
                 
                 # Add temp_max and temp_min lag features (for temperature metric)
                 if metric == 'temperature':
-                    if same_period_max_values:
-                        climatological_max = np.mean(same_period_max_values)
-                        for lag in lookback_days:
-                            future_df.loc[i, f'temp_max_lag{lag}'] = climatological_max
-                        
-                        # Rolling statistics for temp_max
-                        future_df.loc[i, 'temp_max_ma7'] = climatological_max
-                        future_df.loc[i, 'temp_max_ma14'] = climatological_max
-                        future_df.loc[i, 'temp_max_ma30'] = climatological_max
-                        future_df.loc[i, 'temp_max_std7'] = np.std(same_period_max_values) if len(same_period_max_values) > 1 else 0
-                        future_df.loc[i, 'temp_max_std14'] = np.std(same_period_max_values) if len(same_period_max_values) > 1 else 0
-                        future_df.loc[i, 'temp_max_std30'] = np.std(same_period_max_values) if len(same_period_max_values) > 1 else 0
+                    if not same_period_max_values:
+                        raise ValueError(f"No temp_max data for date {future_date.strftime('%Y-%m-%d')}")
+                    if not same_period_min_values:
+                        raise ValueError(f"No temp_min data for date {future_date.strftime('%Y-%m-%d')}")
                     
-                    if same_period_min_values:
-                        climatological_min = np.mean(same_period_min_values)
-                        for lag in lookback_days:
-                            future_df.loc[i, f'temp_min_lag{lag}'] = climatological_min
-                        
-                        # Rolling statistics for temp_min
-                        future_df.loc[i, 'temp_min_ma7'] = climatological_min
-                        future_df.loc[i, 'temp_min_ma14'] = climatological_min
-                        future_df.loc[i, 'temp_min_ma30'] = climatological_min
-                        future_df.loc[i, 'temp_min_std7'] = np.std(same_period_min_values) if len(same_period_min_values) > 1 else 0
-                        future_df.loc[i, 'temp_min_std14'] = np.std(same_period_min_values) if len(same_period_min_values) > 1 else 0
-                        future_df.loc[i, 'temp_min_std30'] = np.std(same_period_min_values) if len(same_period_min_values) > 1 else 0
-            else:
-                # Fallback to last known values
-                for lag in lookback_days:
-                    future_df.loc[i, f'{target_col}_lag{lag}'] = historical_features[f'{target_col}_lag{lag}'].iloc[-1]
-                
-                for window in [7, 14, 30]:
-                    future_df.loc[i, f'{target_col}_ma{window}'] = historical_features[f'{target_col}_ma{window}'].iloc[-1]
-                    future_df.loc[i, f'{target_col}_std{window}'] = historical_features[f'{target_col}_std{window}'].iloc[-1]
-                    future_df.loc[i, f'{target_col}_min{window}'] = historical_features[f'{target_col}_min{window}'].iloc[-1]
-                    future_df.loc[i, f'{target_col}_max{window}'] = historical_features[f'{target_col}_max{window}'].iloc[-1]
-                
-                future_df.loc[i, f'{target_col}_diff1'] = historical_features[f'{target_col}_diff1'].iloc[-1]
-                future_df.loc[i, f'{target_col}_diff7'] = historical_features[f'{target_col}_diff7'].iloc[-1]
-                future_df.loc[i, f'{target_col}_ema7'] = historical_features[f'{target_col}_ema7'].iloc[-1]
-                future_df.loc[i, f'{target_col}_ema30'] = historical_features[f'{target_col}_ema30'].iloc[-1]
-                
-                # Fallback for temp_max and temp_min (for temperature metric)
-                if metric == 'temperature':
+                    climatological_max = np.mean(same_period_max_values)
                     for lag in lookback_days:
-                        if f'temp_max_lag{lag}' in historical_features.columns:
-                            future_df.loc[i, f'temp_max_lag{lag}'] = historical_features[f'temp_max_lag{lag}'].iloc[-1]
-                        if f'temp_min_lag{lag}' in historical_features.columns:
-                            future_df.loc[i, f'temp_min_lag{lag}'] = historical_features[f'temp_min_lag{lag}'].iloc[-1]
+                        future_df.loc[i, f'temp_max_lag{lag}'] = climatological_max
                     
-                    for window in [7, 14, 30]:
-                        if f'temp_max_ma{window}' in historical_features.columns:
-                            future_df.loc[i, f'temp_max_ma{window}'] = historical_features[f'temp_max_ma{window}'].iloc[-1]
-                        if f'temp_min_ma{window}' in historical_features.columns:
-                            future_df.loc[i, f'temp_min_ma{window}'] = historical_features[f'temp_min_ma{window}'].iloc[-1]
-                        if f'temp_max_std{window}' in historical_features.columns:
-                            future_df.loc[i, f'temp_max_std{window}'] = historical_features[f'temp_max_std{window}'].iloc[-1]
-                        if f'temp_min_std{window}' in historical_features.columns:
-                            future_df.loc[i, f'temp_min_std{window}'] = historical_features[f'temp_min_std{window}'].iloc[-1]
+                    # Rolling statistics for temp_max
+                    future_df.loc[i, 'temp_max_ma7'] = climatological_max
+                    future_df.loc[i, 'temp_max_ma14'] = climatological_max
+                    future_df.loc[i, 'temp_max_ma30'] = climatological_max
+                    future_df.loc[i, 'temp_max_std7'] = np.std(same_period_max_values) if len(same_period_max_values) > 1 else 0
+                    future_df.loc[i, 'temp_max_std14'] = np.std(same_period_max_values) if len(same_period_max_values) > 1 else 0
+                    future_df.loc[i, 'temp_max_std30'] = np.std(same_period_max_values) if len(same_period_max_values) > 1 else 0
+                    
+                    climatological_min = np.mean(same_period_min_values)
+                    for lag in lookback_days:
+                        future_df.loc[i, f'temp_min_lag{lag}'] = climatological_min
+                    
+                    # Rolling statistics for temp_min
+                    future_df.loc[i, 'temp_min_ma7'] = climatological_min
+                    future_df.loc[i, 'temp_min_ma14'] = climatological_min
+                    future_df.loc[i, 'temp_min_ma30'] = climatological_min
+                    future_df.loc[i, 'temp_min_std7'] = np.std(same_period_min_values) if len(same_period_min_values) > 1 else 0
+                    future_df.loc[i, 'temp_min_std14'] = np.std(same_period_min_values) if len(same_period_min_values) > 1 else 0
+                    future_df.loc[i, 'temp_min_std30'] = np.std(same_period_min_values) if len(same_period_min_values) > 1 else 0
+            else:
+                # フォールバック禁止 - データがない場合はエラー
+                raise ValueError(
+                    f"No historical data found for date {future_date.strftime('%Y-%m-%d')} (month-day: {month_day}). "
+                    f"Metric: {metric}, same_period_values: {len(same_period_values)} samples. "
+                    f"Need at least 1 historical sample for climatological prediction."
+                )
         
         # Cross-metric features
         if metric == 'temperature' and 'temp_range' in historical_features.columns:

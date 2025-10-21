@@ -12,6 +12,7 @@ from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.adapter.interfaces.io.file_service_interface import FileServiceInterface
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
+from agrr_core.framework.validation.output_validator import OutputValidator, OutputValidationError
 
 
 class WeatherFileGateway(WeatherGateway):
@@ -343,8 +344,15 @@ class WeatherFileGateway(WeatherGateway):
             # Create output structure
             output_data = {
                 'predictions': predictions_data,
-                'total_predictions': len(predictions_data)
+                'model_type': 'ARIMA',
+                'prediction_days': len(predictions_data)
             }
+            
+            # 厳密なIFバリデーション
+            try:
+                OutputValidator.validate_arima_output(output_data)
+            except OutputValidationError as e:
+                raise FileError(f"Output validation failed: {e}")
             
             # Add metadata if requested
             if include_metadata:
@@ -385,6 +393,18 @@ class WeatherFileGateway(WeatherGateway):
                     prediction_dict['confidence_upper'] = forecast.confidence_upper
                 
                 predictions_data.append(prediction_dict)
+            
+            # 厳密なIFバリデーション（ARIMA形式）
+            output_data = {
+                'predictions': predictions_data,
+                'model_type': 'ARIMA',
+                'prediction_days': len(predictions_data)
+            }
+            
+            try:
+                OutputValidator.validate_arima_output(output_data)
+            except OutputValidationError as e:
+                raise FileError(f"Output validation failed: {e}")
             
             # Create DataFrame and write to CSV
             df = pd.DataFrame(predictions_data)

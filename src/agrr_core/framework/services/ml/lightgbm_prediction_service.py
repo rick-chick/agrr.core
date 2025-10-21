@@ -4,6 +4,8 @@ from typing import List, Dict, Any, Optional
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 try:
     import lightgbm as lgb
@@ -93,15 +95,41 @@ class LightGBMPredictionService(PredictionServiceInterface):
         metrics: List[str],
         model_config: Dict[str, Any]
     ) -> Dict[str, List[Forecast]]:
-        """Predict multiple weather metrics using LightGBM."""
-        results = {}
+        """Predict multiple weather metrics using LightGBM in parallel.
         
-        for metric in metrics:
+        Uses ThreadPoolExecutor for true parallelism since LightGBM training
+        is CPU-intensive and releases the GIL for native code execution.
+        """
+        loop = asyncio.get_event_loop()
+        
+        # Create a wrapper for sync execution in thread pool
+        def predict_sync(metric: str):
+            """Synchronous wrapper for thread pool execution."""
+            import asyncio
+            # Create new event loop for this thread
+            new_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(new_loop)
             try:
-                forecasts = await self._predict_single_metric(historical_data, metric, model_config)
-                results[metric] = forecasts
+                return new_loop.run_until_complete(
+                    self._predict_single_metric(historical_data, metric, model_config)
+                )
+            finally:
+                new_loop.close()
+        
+        # Execute predictions in parallel using thread pool
+        with ThreadPoolExecutor(max_workers=len(metrics)) as executor:
+            tasks = [
+                loop.run_in_executor(executor, predict_sync, metric)
+                for metric in metrics
+            ]
+            
+            try:
+                forecast_results = await asyncio.gather(*tasks)
             except Exception as e:
-                raise PredictionError(f"Failed to predict {metric}: {e}")
+                raise PredictionError(f"Failed to predict metrics: {e}")
+        
+        # Map results to dictionary
+        results = {metric: forecasts for metric, forecasts in zip(metrics, forecast_results)}
         
         return results
     

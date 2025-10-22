@@ -1,0 +1,4 @@
+mode,avg_time_seconds
+direct,3.019
+daemon_cold,3.010
+daemon_warm,3.094

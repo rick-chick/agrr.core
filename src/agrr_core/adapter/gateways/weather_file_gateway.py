@@ -3,11 +3,14 @@
 This gateway directly implements WeatherGateway interface for file-based weather data access.
 """
 
+import json
 import pandas as pd
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 from agrr_core.entity import WeatherData, Forecast
+import os
+import time
 from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.adapter.interfaces.io.file_service_interface import FileServiceInterface
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
@@ -99,13 +102,19 @@ class WeatherFileGateway(WeatherGateway):
             from pathlib import Path
             path = Path(file_path)
             extension = path.suffix.lower()
+            prof = os.getenv("AGRR_PROFILE") == "1"
+            t0 = time.perf_counter() if prof else 0.0
             
             if extension == '.json':
-                return await self._read_json_file(file_path)
+                result = await self._read_json_file(file_path)
             elif extension == '.csv':
-                return await self._read_csv_file(file_path)
+                result = await self._read_csv_file(file_path)
             else:
                 raise FileError(f"Unsupported file format: {extension}. Supported formats: .json, .csv")
+            if prof:
+                t1 = time.perf_counter()
+                print(f"[PROFILE] WeatherFileGateway.read file={file_path} fmt={extension} records={len(result)} elapsed={t1-t0:.3f}s", flush=True)
+            return result
                 
         except FileError:
             raise
@@ -116,7 +125,6 @@ class WeatherFileGateway(WeatherGateway):
         """Read weather data from JSON file."""
         try:
             content = await self.file_repository.read(file_path)
-            import json
             data = json.loads(content)
             
             weather_data_list = []

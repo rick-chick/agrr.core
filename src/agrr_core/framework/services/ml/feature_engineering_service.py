@@ -128,6 +128,7 @@ class FeatureEngineeringService:
         Create features for future prediction dates using historical patterns.
         
         Uses same-period data from previous years for lag features.
+        Optimized version with pre-computed climatological statistics.
         
         Args:
             historical_data: Historical weather data
@@ -152,6 +153,12 @@ class FeatureEngineeringService:
         # Generate future dates
         last_date = historical_data[-1].time
         future_dates = [last_date + timedelta(days=i+1) for i in range(prediction_days)]
+        
+        # Pre-compute climatological statistics for all month-day combinations
+        # This eliminates the O(N*M) complexity where N=prediction_days, M=historical_data
+        climatological_stats = FeatureEngineeringService._precompute_climatological_stats(
+            historical_data, metric
+        )
         
         future_rows = []
         
@@ -184,78 +191,39 @@ class FeatureEngineeringService:
         
         future_df = pd.DataFrame(future_rows)
         
-        # For lag features, use same period from previous years (climatological approach)
-        # This is more reliable than autoregressive for long-term predictions
+        # Apply pre-computed climatological statistics
         for i, future_date in enumerate(future_dates):
             month_day = f"{future_date.month:02d}-{future_date.day:02d}"
             
-            # Find same month-day in historical data (from last few years)
-            same_period_values = []
-            same_period_max_values = []
-            same_period_min_values = []
-            
-            for hist_data in historical_data:
-                hist_month_day = f"{hist_data.time.month:02d}-{hist_data.time.day:02d}"
-                if hist_month_day == month_day:
-                    val = None
-                    if metric == 'temperature':
-                        val = hist_data.temperature_2m_mean
-                        # Also collect temp_max and temp_min for cross-metric features
-                        if hist_data.temperature_2m_max is not None:
-                            same_period_max_values.append(hist_data.temperature_2m_max)
-                        if hist_data.temperature_2m_min is not None:
-                            same_period_min_values.append(hist_data.temperature_2m_min)
-                    elif metric == 'temperature_max':
-                        val = hist_data.temperature_2m_max
-                        # Also collect for self-features
-                        if hist_data.temperature_2m_max is not None:
-                            same_period_max_values.append(hist_data.temperature_2m_max)
-                    elif metric == 'temperature_min':
-                        val = hist_data.temperature_2m_min
-                        # Also collect for self-features
-                        if hist_data.temperature_2m_min is not None:
-                            same_period_min_values.append(hist_data.temperature_2m_min)
-                    elif metric == 'precipitation':
-                        val = hist_data.precipitation_sum
-                    elif metric == 'sunshine':
-                        val = hist_data.sunshine_duration
-                    
-                    if val is not None:
-                        same_period_values.append(val)
-            
-            # Use mean of same period from historical data
-            if same_period_values:
-                # Lag features: use historical mean for this day
-                climatological_value = np.mean(same_period_values)
+            if month_day in climatological_stats:
+                stats = climatological_stats[month_day]
+                
+                # Apply climatological values for lag features
+                climatological_value = stats['mean']
                 for lag in lookback_days:
                     future_df.loc[i, f'{target_col}_lag{lag}'] = climatological_value
                 
-                # Rolling statistics: use historical statistics for this period
+                # Rolling statistics using climatological data
                 future_df.loc[i, f'{target_col}_ma7'] = climatological_value
                 future_df.loc[i, f'{target_col}_ma14'] = climatological_value
                 future_df.loc[i, f'{target_col}_ma30'] = climatological_value
-                future_df.loc[i, f'{target_col}_std7'] = np.std(same_period_values) if len(same_period_values) > 1 else 0
-                future_df.loc[i, f'{target_col}_std14'] = np.std(same_period_values) if len(same_period_values) > 1 else 0
-                future_df.loc[i, f'{target_col}_std30'] = np.std(same_period_values) if len(same_period_values) > 1 else 0
-                future_df.loc[i, f'{target_col}_min7'] = np.min(same_period_values)
-                future_df.loc[i, f'{target_col}_min14'] = np.min(same_period_values)
-                future_df.loc[i, f'{target_col}_min30'] = np.min(same_period_values)
-                future_df.loc[i, f'{target_col}_max7'] = np.max(same_period_values)
-                future_df.loc[i, f'{target_col}_max14'] = np.max(same_period_values)
-                future_df.loc[i, f'{target_col}_max30'] = np.max(same_period_values)
+                future_df.loc[i, f'{target_col}_std7'] = stats['std']
+                future_df.loc[i, f'{target_col}_std14'] = stats['std']
+                future_df.loc[i, f'{target_col}_std30'] = stats['std']
+                future_df.loc[i, f'{target_col}_min7'] = stats['min']
+                future_df.loc[i, f'{target_col}_min14'] = stats['min']
+                future_df.loc[i, f'{target_col}_min30'] = stats['min']
+                future_df.loc[i, f'{target_col}_max7'] = stats['max']
+                future_df.loc[i, f'{target_col}_max14'] = stats['max']
+                future_df.loc[i, f'{target_col}_max30'] = stats['max']
                 future_df.loc[i, f'{target_col}_diff1'] = 0  # Unknown
                 future_df.loc[i, f'{target_col}_diff7'] = 0  # Unknown
                 future_df.loc[i, f'{target_col}_ema7'] = climatological_value
                 future_df.loc[i, f'{target_col}_ema30'] = climatological_value
                 
-                # Add temp_max and temp_min lag features (for temperature metric)
-                if metric == 'temperature':
-                    if not same_period_max_values:
-                        raise ValueError(f"No temp_max data for date {future_date.strftime('%Y-%m-%d')}")
-                    if not same_period_min_values:
-                        raise ValueError(f"No temp_min data for date {future_date.strftime('%Y-%m-%d')}")
-                    
-                    climatological_max = np.mean(same_period_max_values)
+                # Add temp_max and temp_min features for temperature metric
+                if metric == 'temperature' and 'temp_max_mean' in stats:
+                    climatological_max = stats['temp_max_mean']
                     for lag in lookback_days:
                         future_df.loc[i, f'temp_max_lag{lag}'] = climatological_max
                     
@@ -263,11 +231,11 @@ class FeatureEngineeringService:
                     future_df.loc[i, 'temp_max_ma7'] = climatological_max
                     future_df.loc[i, 'temp_max_ma14'] = climatological_max
                     future_df.loc[i, 'temp_max_ma30'] = climatological_max
-                    future_df.loc[i, 'temp_max_std7'] = np.std(same_period_max_values) if len(same_period_max_values) > 1 else 0
-                    future_df.loc[i, 'temp_max_std14'] = np.std(same_period_max_values) if len(same_period_max_values) > 1 else 0
-                    future_df.loc[i, 'temp_max_std30'] = np.std(same_period_max_values) if len(same_period_max_values) > 1 else 0
+                    future_df.loc[i, 'temp_max_std7'] = stats['temp_max_std']
+                    future_df.loc[i, 'temp_max_std14'] = stats['temp_max_std']
+                    future_df.loc[i, 'temp_max_std30'] = stats['temp_max_std']
                     
-                    climatological_min = np.mean(same_period_min_values)
+                    climatological_min = stats['temp_min_mean']
                     for lag in lookback_days:
                         future_df.loc[i, f'temp_min_lag{lag}'] = climatological_min
                     
@@ -275,15 +243,14 @@ class FeatureEngineeringService:
                     future_df.loc[i, 'temp_min_ma7'] = climatological_min
                     future_df.loc[i, 'temp_min_ma14'] = climatological_min
                     future_df.loc[i, 'temp_min_ma30'] = climatological_min
-                    future_df.loc[i, 'temp_min_std7'] = np.std(same_period_min_values) if len(same_period_min_values) > 1 else 0
-                    future_df.loc[i, 'temp_min_std14'] = np.std(same_period_min_values) if len(same_period_min_values) > 1 else 0
-                    future_df.loc[i, 'temp_min_std30'] = np.std(same_period_min_values) if len(same_period_min_values) > 1 else 0
+                    future_df.loc[i, 'temp_min_std7'] = stats['temp_min_std']
+                    future_df.loc[i, 'temp_min_std14'] = stats['temp_min_std']
+                    future_df.loc[i, 'temp_min_std30'] = stats['temp_min_std']
             else:
                 # フォールバック禁止 - データがない場合はエラー
                 raise ValueError(
                     f"No historical data found for date {future_date.strftime('%Y-%m-%d')} (month-day: {month_day}). "
-                    f"Metric: {metric}, same_period_values: {len(same_period_values)} samples. "
-                    f"Need at least 1 historical sample for climatological prediction."
+                    f"Metric: {metric}. Need at least 1 historical sample for climatological prediction."
                 )
         
         # Cross-metric features
@@ -392,4 +359,85 @@ class FeatureEngineeringService:
                 ])
         
         return features
+    
+    @staticmethod
+    def _precompute_climatological_stats(
+        historical_data: List[WeatherData],
+        metric: str
+    ) -> Dict[str, Dict[str, float]]:
+        """
+        Pre-compute climatological statistics for all month-day combinations.
+        
+        This optimization reduces complexity from O(N*M) to O(M) where:
+        - N = prediction_days
+        - M = historical_data length
+        
+        Args:
+            historical_data: Historical weather data
+            metric: Metric to compute statistics for
+            
+        Returns:
+            Dictionary mapping month-day to statistics
+        """
+        from collections import defaultdict
+        import statistics
+        
+        # Group data by month-day
+        month_day_groups = defaultdict(list)
+        month_day_max_groups = defaultdict(list)
+        month_day_min_groups = defaultdict(list)
+        
+        for hist_data in historical_data:
+            month_day = f"{hist_data.time.month:02d}-{hist_data.time.day:02d}"
+            
+            # Extract value based on metric
+            val = None
+            if metric == 'temperature':
+                val = hist_data.temperature_2m_mean
+                if hist_data.temperature_2m_max is not None:
+                    month_day_max_groups[month_day].append(hist_data.temperature_2m_max)
+                if hist_data.temperature_2m_min is not None:
+                    month_day_min_groups[month_day].append(hist_data.temperature_2m_min)
+            elif metric == 'temperature_max':
+                val = hist_data.temperature_2m_max
+                if hist_data.temperature_2m_max is not None:
+                    month_day_max_groups[month_day].append(hist_data.temperature_2m_max)
+            elif metric == 'temperature_min':
+                val = hist_data.temperature_2m_min
+                if hist_data.temperature_2m_min is not None:
+                    month_day_min_groups[month_day].append(hist_data.temperature_2m_min)
+            elif metric == 'precipitation':
+                val = hist_data.precipitation_sum
+            elif metric == 'sunshine':
+                val = hist_data.sunshine_duration
+            
+            if val is not None:
+                month_day_groups[month_day].append(val)
+        
+        # Compute statistics for each month-day
+        stats = {}
+        for month_day, values in month_day_groups.items():
+            if not values:
+                continue
+                
+            stats[month_day] = {
+                'mean': statistics.mean(values),
+                'std': statistics.stdev(values) if len(values) > 1 else 0.0,
+                'min': min(values),
+                'max': max(values),
+            }
+            
+            # Add temp_max and temp_min statistics for temperature metric
+            if metric == 'temperature':
+                if month_day in month_day_max_groups and month_day_max_groups[month_day]:
+                    max_values = month_day_max_groups[month_day]
+                    stats[month_day]['temp_max_mean'] = statistics.mean(max_values)
+                    stats[month_day]['temp_max_std'] = statistics.stdev(max_values) if len(max_values) > 1 else 0.0
+                
+                if month_day in month_day_min_groups and month_day_min_groups[month_day]:
+                    min_values = month_day_min_groups[month_day]
+                    stats[month_day]['temp_min_mean'] = statistics.mean(min_values)
+                    stats[month_day]['temp_min_std'] = statistics.stdev(min_values) if len(min_values) > 1 else 0.0
+        
+        return stats
 

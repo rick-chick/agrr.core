@@ -1,0 +1,52 @@
+AGRR Daemon Detailed Performance Measurement
+============================================
+
+Date: Wed Oct 22 13:09:29 JST 2025
+Binary: ./dist/agrr/agrr
+Binary Type: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=f5e4eb9bd95f0a14f41d1ef1a6f8ee703c85a059, stripped
+
+Performance Results:
+-------------------
+Direct Execution:
+  Average: 3.814s
+  Min: 3.185258294s
+  Max: 4.520457504s
+  
+  Raw times: 3.685171836 3.185258294 4.520457504 3.807183372 3.874373719
+
+Daemon Execution (Client Round-Trip):
+  Average: 4.046s
+  Min: 3.595964889s
+  Max: 4.651276035s
+  
+  Raw times: 3.595964889 3.759413795 4.651276035 4.325050176 3.900860644
+
+Overhead Analysis:
+------------------
+Daemon Overhead: .232s (0%)
+
+Explanation:
+------------
+The daemon adds overhead because:
+1. JSON serialization/deserialization of large output
+2. Unix socket communication overhead
+3. Process context switching overhead
+
+For heavy commands like 'adjust' (processing time: ~3.814s),
+the daemon's startup time savings (typically 1-2s) is outweighed by
+the communication overhead.
+
+Recommendation:
+--------------
+- Use direct execution for heavy processing commands (adjust, allocate)
+- Use daemon for quick commands (--help, status, simple queries)
+- Consider reducing output size for daemon mode (use --format compact)
+
+Configuration:
+-------------
+Current Allocation: ./test_data/test_current_allocation.json
+Moves File: ./test_data/test_adjust_moves.json
+Weather File: ./test_data/weather_2023.json
+Fields File: ./test_data/fields_correct.json
+Crops File: ./test_data/crops_correct.json
+Planning Period: 2023-05-01 to 2023-10-31

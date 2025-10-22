@@ -26,13 +26,15 @@ def try_delegate_to_daemon(args: List[str]) -> bool:
             exit_code = send_to_daemon(args)
             sys.exit(exit_code)
         except Exception as e:
-            # デーモンが壊れてる場合はフォールバック
-            import traceback
-            print(f"Warning: Daemon error ({e}), falling back to direct execution", file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
+            # デーモンエラーの場合はエラーで終了
+            print(f"❌ Daemon error: {e}", file=sys.stderr)
+            print("Please restart daemon: agrr daemon restart", file=sys.stderr)
+            sys.exit(1)
     
-    # デーモンがなければ通常実行
-    return False
+    # デーモンがなければエラー
+    print("❌ Daemon is not running", file=sys.stderr)
+    print("Please start daemon: agrr daemon start", file=sys.stderr)
+    sys.exit(1)
 
 
 __all__ = ['try_delegate_to_daemon', 'SOCKET_PATH']

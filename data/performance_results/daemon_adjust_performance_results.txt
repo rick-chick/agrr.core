@@ -1,0 +1,29 @@
+AGRR Daemon Adjust Performance Measurement Results
+=================================================
+
+Date: Wed Oct 22 19:13:51 JST 2025
+Binary: ./dist/agrr/agrr
+Test Data: ./test_data
+
+Performance Results:
+-------------------
+Direct Execution:      3.019s  (baseline)
+Daemon (Cold Start):   3.010s
+Daemon (Warm Run):     3.094s
+
+Speedup: .97x
+
+Files:
+------
+- CSV Results: daemon_adjust_performance_results.csv
+- Detailed Results: daemon_adjust_performance_results.txt
+
+Configuration:
+--------------
+Current Allocation: ./test_data/test_current_allocation.json
+Moves File: ./test_data/test_adjust_moves.json
+Weather File: ./test_data/weather_2023.json
+Fields File: ./test_data/fields_correct.json
+Crops File: ./test_data/crops_correct.json
+Planning Period: 2023-05-01 to 2023-10-31
+

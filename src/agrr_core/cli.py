@@ -32,28 +32,97 @@ agrr - Agricultural Resource & Risk management core CLI
 Usage:
   agrr <command> [options]
 
-Available Commands:
-  weather           Get historical weather data
-                    - openmeteo: Global coverage, 2-3 years historical data (default)
-                    - jma: Japan only, high quality, recent years
-                    - noaa: US + India stations, high-resolution observed data (2000+)
-                      * 66 stations: 17 US + 49 India (major agricultural regions)
-                      * Hourly data → daily statistics
-                      * India: Punjab, UP, Maharashtra, Karnataka, Tamil Nadu, etc.
-                      * Free, no registration required
-                    - noaa-ftp: US only, long-term historical data (1901-present, 2000+ recommended)
-                      * 194 stations across all 50 US states (98.5% validated)
-                      * Automatic year-by-year fetching for multi-year requests
-                    - nasa-power: Global coverage, grid-based data (1984-present)
-                      * Coarse resolution (0.5° grid, ~50km)
-                      * Not recommended for agricultural applications
-  forecast          Get 16-day weather forecast from tomorrow
-  crop              Get crop growth profiles using AI
-  progress          Calculate crop growth progress based on weather data
-  optimize          Optimization tools (period, allocate, adjust)
-  predict           Predict future weather using ML models (ARIMA, LightGBM)
-  daemon            Daemon process management (start/stop/status/restart)
-                    - Enables 4.8x faster startup (2.4s → 0.5s)
+Commands:
+  weather    Get historical weather data (openmeteo/jma/noaa/noaa-ftp/nasa-power)
+  forecast   Get 16-day weather forecast
+  crop       Create crop profile (LLM)
+  progress   Calculate crop growth progress
+  optimize   Optimization tools (period, allocate, adjust)
+  predict    Predict future weather (ARIMA / LightGBM)
+  daemon     Daemon process (start/stop/status/restart)
+
+Data sources (weather):
+  - openmeteo (default, global, 2-3y history)
+  - jma (Japan, high quality, recent years)
+  - noaa (US+India stations, hourly→daily, 2000+)
+  - noaa-ftp (US long-term 1901+, auto year-split)
+  - nasa-power (global grid 1984+, coarse)
+
+Prediction models:
+  - ARIMA: short-term 7-90 days, min 30 days history, outputs temperature only
+  - LightGBM: 90-365 days, min 90 days (recommended 365+ / multi-year),
+      always outputs temperature, temperature_max, temperature_min regardless of --metrics
+      Note: Leap day 02-29 requires at least one historical sample for that month-day
+
+Input format (JSON):
+   {
+     "latitude": 35.6762,
+     "longitude": 139.6503,
+     "elevation": 40.0,
+     "timezone": "Asia/Tokyo",
+    "data": [ { "time": "YYYY-MM-DD", "temperature_2m_max": 25.5,
+                 "temperature_2m_min": 15.2, "temperature_2m_mean": 20.3 } ]
+  }
+
+Output examples:
+  ARIMA:
+    { "predictions": [ { "date": "2024-11-01", "temperature": 18.5,
+        "temperature_confidence_lower": 16.2, "temperature_confidence_upper": 20.8 } ],
+      "model_type": "ARIMA", "prediction_days": 30 }
+
+  LightGBM:
+    { "predictions": [ { "date": "2024-11-01", "temperature": 18.5,
+        "temperature_max": 22.0, "temperature_min": 15.0,
+        "temperature_confidence_lower": 16.2, "temperature_confidence_upper": 20.8,
+        "temperature_max_confidence_lower": 19.0, "temperature_max_confidence_upper": 25.0,
+        "temperature_min_confidence_lower": 12.0, "temperature_min_confidence_upper": 18.0 } ],
+      "model_type": "LightGBM", "prediction_days": 30,
+      "metrics": ["temperature", "temperature_max", "temperature_min"] }
+
+Quick examples:
+  # Historical weather (Open-Meteo)
+  agrr weather --location 35.6762,139.6503 --days 7 --json > weather.json
+
+  # ARIMA (short-term)
+  agrr predict --input weather.json --output predictions.json --days 30
+
+  # LightGBM (mid-long term, 3 metrics auto)
+  agrr predict --input weather.json --output predictions.json --days 365 --model lightgbm
+
+Docker:
+  docker compose exec web /app/lib/core/agrr predict \
+    --input tmp/debug/adjust_weather_complete.json \
+    --output /app/tmp/debug/prediction.json \
+    --days 7 --model lightgbm
+  Note: Use container paths for --input/--output.
+
+Daemon:
+  Purpose: 4.8x faster startup. All commands also work without daemon.
+  Commands: agrr daemon start | status | stop | restart
+  Tip: If output file is not created, try 'agrr daemon restart'.
+
+Notifications & Logging:
+  - Default: notifications OFF (email/slack disabled)
+  - Config file: agrr_config.yaml (logging.level, notifications.*)
+  - Env overrides: AGRR_LOG_LEVEL, AGRR_EMAIL_ENABLED, AGRR_SLACK_ENABLED, ...
+  - Logs: /tmp/agrr.log (main), /tmp/agrr_daemon.log (daemon)
+
+Troubleshooting:
+  1) No output file
+     - Restart daemon: agrr daemon restart
+     - Check path/permissions (Docker uses /app/...)
+  2) LightGBM failure
+     - Ensure ≥90 days (recommended 365+). Leap day 02-29 needs historical sample.
+     - For ~700 days, split or ensure leap-day history.
+  3) --metrics behavior
+     - LightGBM always outputs 3 metrics; --metrics is ignored for LightGBM output set.
+
+For detailed help:
+  agrr <command> --help
+
+===============================================================================
+Detailed reference (kept for completeness)
+===============================================================================
 
 Examples:
   # Get recent weather data (default: OpenMeteo)
@@ -80,27 +149,27 @@ Examples:
 
   # Find optimal planting date
   agrr crop --query "rice Koshihikari" > rice_profile.json
-  agrr optimize period --crop-file rice_profile.json \\
-    --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
+  agrr optimize period --crop-file rice_profile.json \
+    --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \
     --weather-file weather.json --field-file field_01.json
 
   # Find optimal planting date with continuous cultivation consideration
   agrr crop --query "tomato Aiko" > tomato_profile.json
-  agrr optimize period --crop-file tomato_profile.json \\
-    --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
-    --weather-file weather.json --field-file field_01.json \\
+  agrr optimize period --crop-file tomato_profile.json \
+    --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \
+    --weather-file weather.json --field-file field_01.json \
     --interaction-rules-file interaction_rules.json
 
   # Optimize crop allocation across multiple fields
-  agrr optimize allocate --fields-file fields.json --crops-file crops.json \\
-    --planning-start 2024-04-01 --planning-end 2024-10-31 \\
+  agrr optimize allocate --fields-file fields.json --crops-file crops.json \
+    --planning-start 2024-04-01 --planning-end 2024-10-31 \
     --weather-file weather.json --format json > allocation_result.json
 
   # Adjust existing allocation (manual correction)
   # Note: Requires JSON output from 'agrr optimize allocate --format json'
-  agrr optimize adjust --current-allocation allocation_result.json \\
-    --moves moves.json --weather-file weather.json \\
-    --fields-file fields.json --crops-file crops.json \\
+  agrr optimize adjust --current-allocation allocation_result.json \
+    --moves moves.json --weather-file weather.json \
+    --fields-file fields.json --crops-file crops.json \
     --planning-start 2024-04-01 --planning-end 2024-10-31
 
   # Predict future weather with ARIMA model (short-term, 30-90 days)
@@ -120,108 +189,108 @@ For detailed help on each command:
   agrr <command> --help
 
 Input File Formats:
-
+  
 1. Weather Data File (JSON):
-   {
-     "latitude": 35.6762,
-     "longitude": 139.6503,
-     "elevation": 40.0,
-     "timezone": "Asia/Tokyo",
-     "data": [
-       {
-         "time": "2024-05-01",
-         "temperature_2m_max": 25.5,
-         "temperature_2m_min": 15.2,
-         "temperature_2m_mean": 20.3,
-         "precipitation_sum": 0.0,
-         "sunshine_duration": 28800.0,
-         "sunshine_hours": 8.0
-       }
-     ]
-   }
+  {
+    "latitude": 35.6762,
+    "longitude": 139.6503,
+    "elevation": 40.0,
+    "timezone": "Asia/Tokyo",
+    "data": [
+      {
+        "time": "2024-05-01",
+        "temperature_2m_max": 25.5,
+        "temperature_2m_min": 15.2,
+        "temperature_2m_mean": 20.3,
+        "precipitation_sum": 0.0,
+        "sunshine_duration": 28800.0,
+        "sunshine_hours": 8.0
+      }
+    ]
+  }
 
 2. Crop Profile File (JSON):
-   {
-     "crop": {
-       "crop_id": "rice",
-       "name": "Rice",
-       "variety": "Koshihikari",
-       "area_per_unit": 0.25,
-       "revenue_per_area": 10000.0,
-       "max_revenue": 500000.0,
-       "groups": ["Poaceae", "cereals"]
-     },
-     "stage_requirements": [
-       {
-         "stage": {"name": "germination", "order": 1},
-         "temperature": {
-           "base_temperature": 10.0,
-           "optimal_min": 20.0,
-           "optimal_max": 30.0,
-           "low_stress_threshold": 15.0,
-           "high_stress_threshold": 35.0,
-           "frost_threshold": 0.0,
-           "max_temperature": 42.0         // 🆕 Required (v0.2.0+)
-         },
-         "thermal": {"required_gdd": 200.0}
-       }
-     ]
-   }
+  {
+    "crop": {
+      "crop_id": "rice",
+      "name": "Rice",
+      "variety": "Koshihikari",
+      "area_per_unit": 0.25,
+      "revenue_per_area": 10000.0,
+      "max_revenue": 500000.0,
+      "groups": ["Poaceae", "cereals"]
+    },
+    "stage_requirements": [
+      {
+        "stage": {"name": "germination", "order": 1},
+        "temperature": {
+          "base_temperature": 10.0,
+          "optimal_min": 20.0,
+          "optimal_max": 30.0,
+          "low_stress_threshold": 15.0,
+          "high_stress_threshold": 35.0,
+          "frost_threshold": 0.0,
+          "max_temperature": 42.0         // 🆕 Required (v0.2.0+)
+        },
+        "thermal": {"required_gdd": 200.0}
+      }
+    ]
+  }
 
 3. Interaction Rules File (JSON):
-   [
-     {
-       "rule_id": "rule_001",
-       "rule_type": "continuous_cultivation",
-       "source_group": "Solanaceae",
-       "target_group": "Solanaceae",
-       "impact_ratio": 0.7,
-       "is_directional": true,
-       "description": "Continuous cultivation penalty for Solanaceae"
-     },
-     {
-       "rule_id": "rule_002",
-       "rule_type": "soil_compatibility",
-       "source_group": "field_001",
-       "target_group": "Fabaceae",
-       "impact_ratio": 1.2,
-       "is_directional": true,
-       "description": "Field 001 is suitable for legumes"
-     }
-   ]
+  [
+    {
+      "rule_id": "rule_001",
+      "rule_type": "continuous_cultivation",
+      "source_group": "Solanaceae",
+      "target_group": "Solanaceae",
+      "impact_ratio": 0.7,
+      "is_directional": true,
+      "description": "Continuous cultivation penalty for Solanaceae"
+    },
+    {
+      "rule_id": "rule_002",
+      "rule_type": "soil_compatibility",
+      "source_group": "field_001",
+      "target_group": "Fabaceae",
+      "impact_ratio": 1.2,
+      "is_directional": true,
+      "description": "Field 001 is suitable for legumes"
+    }
+  ]
 
 4. Moves File (JSON) - for 'agrr optimize adjust':
-   {
-     "moves": [
-       {
-         "allocation_id": "alloc_001",      // ID from current allocation
-         "action": "move",                  // "move", "remove", or "add"
-         "to_field_id": "field_2",          // Target field ID
-         "to_start_date": "2024-05-15",     // New start date (YYYY-MM-DD)
-         "to_area": 12.0                    // Optional: area in m²
-       },
-       {
-         "allocation_id": "alloc_002",
-         "action": "remove"                 // Remove allocation
-       },
-       {
-         "action": "add",                   // Add new crop allocation (no allocation_id needed)
-         "crop_id": "tomato",               // Crop ID from crops.json
-         "variety": "Momotaro",             // Optional: variety name
-         "to_field_id": "field_1",          // Target field ID
-         "to_start_date": "2024-06-01",     // Start date (YYYY-MM-DD)
-         "to_area": 15.0                    // Required for add: area in m²
-       }
-     ]
-   }
+  {
+    "moves": [
+      {
+        "allocation_id": "alloc_001",      // ID from current allocation
+        "action": "move",                  // "move", "remove", or "add"
+        "to_field_id": "field_2",          // Target field ID
+        "to_start_date": "2024-05-15",     // New start date (YYYY-MM-DD)
+        "to_area": 12.0                    // Optional: area in m²
+      },
+      {
+        "allocation_id": "alloc_002",
+        "action": "remove"                 // Remove allocation
+      },
+      {
+        "action": "add",                   // Add new crop allocation (no allocation_id needed)
+        "crop_id": "tomato",               // Crop ID from crops.json
+        "variety": "Momotaro",             // Optional: variety name
+        "to_field_id": "field_1",          // Target field ID
+        "to_start_date": "2024-06-01",     // Start date (YYYY-MM-DD)
+        "to_area": 15.0                    // Required for add: area in m²
+      }
+    ]
+  }
 
-   Actions:
-     - "move": Move existing allocation to different field/date/area
-       * Requires: allocation_id
-     - "remove": Remove allocation from schedule
-       * Requires: allocation_id
-     - "add": Add new crop allocation
-       * Note: allocation_id is not needed (omit it or leave empty)
+  Actions:
+    - "move": Move existing allocation to different field/date/area
+      * Requires: allocation_id
+    - "remove": Remove allocation from schedule
+      * Requires: allocation_id
+    - "add": Add new crop allocation
+      * Note: allocation_id is not needed (omit it or leave empty)
 
 Notes:
   - You can generate weather data using 'agrr weather' command with --json flag.

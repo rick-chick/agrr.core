@@ -5,9 +5,12 @@ import os
 import sys
 import io
 import signal
+import time
 from typing import Optional
 
 from . import SOCKET_PATH
+from ..framework.logging.agrr_logger import DaemonLogger
+from ..framework.config.config_loader import get_config
 
 
 class AgrrDaemon:
@@ -15,9 +18,16 @@ class AgrrDaemon:
     
     def __init__(self):
         """Initialize daemon (imports all heavy modules at startup)."""
+        # Load configuration
+        self.config = get_config()
+        
+        # Initialize logger
+        daemon_log_file = self.config.get("logging.daemon_log_file", "/tmp/agrr_daemon.log")
+        self.logger = DaemonLogger(daemon_log_file)
+        
         # 重いモジュールを事前インポート（起動時の2秒はここで消費）
         # これによりリクエスト処理時は高速化される
-        print("Starting daemon, loading modules...", file=sys.stderr)
+        self.logger.info("Starting daemon, loading modules...")
         
         # 事前に重いモジュールをすべてインポート
         try:
@@ -41,9 +51,9 @@ class AgrrDaemon:
             from agrr_core.usecase.interactors.growth_period_optimize_interactor import GrowthPeriodOptimizeInteractor
             from agrr_core.adapter.gateways.interaction_rule_file_gateway import InteractionRuleFileGateway
             
-            print("✓ Modules loaded", file=sys.stderr)
+            self.logger.info("Modules loaded successfully")
         except Exception as e:
-            print(f"Warning: Error loading modules: {e}", file=sys.stderr)
+            self.logger.error(f"Error loading modules", error=str(e))
         
     def start(self, pid_file: Optional[str] = None):
         """
@@ -72,13 +82,11 @@ class AgrrDaemon:
                 with open(pid_file, 'w') as f:
                     f.write(str(os.getpid()))
             
-            print(f"✓ Daemon started (PID: {os.getpid()})", file=sys.stderr)
-            print(f"✓ Socket: {SOCKET_PATH}", file=sys.stderr)
-            print("✓ Ready for requests", file=sys.stderr)
+            self.logger.daemon_started(os.getpid(), SOCKET_PATH)
             
             # シグナルハンドラー設定
             def signal_handler(signum, frame):
-                print("\nShutting down daemon...", file=sys.stderr)
+                self.logger.daemon_stopped(os.getpid())
                 sock.close()
                 if os.path.exists(SOCKET_PATH):
                     os.remove(SOCKET_PATH)
@@ -92,10 +100,20 @@ class AgrrDaemon:
             # リクエストループ
             while True:
                 try:
-                    conn, _ = sock.accept()
-                    self._handle_request(conn)
+                    conn, addr = sock.accept()
+                    self.logger.request_received("unknown", str(addr))
+                    start_time = time.time()
+                    
+                    try:
+                        self._handle_request(conn)
+                        duration = time.time() - start_time
+                        self.logger.request_completed("unknown", duration, 0)
+                    except Exception as e:
+                        duration = time.time() - start_time
+                        self.logger.request_failed("unknown", str(e), duration)
+                        
                 except Exception as e:
-                    print(f"Error handling request: {e}", file=sys.stderr)
+                    self.logger.error(f"Error in request loop", error=str(e))
                     
         finally:
             sock.close()
@@ -162,7 +180,7 @@ class AgrrDaemon:
             conn.shutdown(socket.SHUT_WR)
             
         except Exception as e:
-            print(f"Error in _handle_request: {e}", file=sys.stderr)
+            self.logger.error(f"Error in _handle_request", error=str(e))
         finally:
             conn.close()
 

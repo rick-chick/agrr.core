@@ -1,0 +1,51 @@
+# AGRR Configuration File
+# This file contains settings for logging, notifications, and monitoring
+
+# Logging configuration
+logging:
+  enabled: true
+  log_file: "/tmp/agrr.log"
+  daemon_log_file: "/tmp/agrr_daemon.log"
+  max_size: "10MB"
+  backup_count: 5
+  level: "INFO"
+
+# Notification settings
+notifications:
+  # Email notifications
+  email:
+    enabled: false  # Set to true to enable email notifications
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    username: "your-email@gmail.com"
+    password: "your-app-password"  # Use app-specific password
+    from_email: "agrr-system@example.com"
+    to_emails: 
+      - "admin@example.com"
+      - "alerts@example.com"
+  
+  # Slack notifications
+  slack:
+    enabled: false  # Set to true to enable Slack notifications
+    webhook_url: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+
+# Daemon monitoring
+daemon:
+  # Health check settings
+  health_check:
+    enabled: true
+    check_interval: 60  # seconds
+    response_timeout: 5.0  # seconds
+    max_consecutive_failures: 3
+  
+  # Auto recovery settings
+  auto_recovery:
+    enabled: true
+    max_retries: 3
+    retry_interval: 30  # seconds
+    recovery_command: "agrr daemon restart"
+
+# Socket and PID file paths
+paths:
+  socket_path: "/tmp/agrr.sock"
+  pid_file: "/tmp/agrr.pid"

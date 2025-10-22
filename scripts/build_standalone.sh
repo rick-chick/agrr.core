@@ -31,8 +31,8 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --onefile       Build single binary (slower startup ~6s, 125MB)"
-            echo "  --onedir        Build directory bundle (fast startup ~2s, 353MB) [default]"
+            echo "  --onefile       Build single binary (slower startup ~6s, 125MB) [default]"
+            echo "  --onedir        Build directory bundle (fast startup ~2s, 353MB)"
             echo "  --no-package    Skip packaging step for onedir build"
             echo "  --help          Show this help message"
             echo ""
@@ -41,8 +41,8 @@ while [[ $# -gt 0 ]]; do
             echo "  be automatically deployed there. The existing binary will be backed up."
             echo ""
             echo "Examples:"
-            echo "  $0              # Build onedir with packaging (recommended)"
-            echo "  $0 --onefile    # Build single binary"
+            echo "  $0              # Build single binary (default)"
+            echo "  $0 --onedir     # Build directory bundle (recommended for faster startup)"
             echo "  $0 --onedir --no-package  # Build onedir without packaging"
             exit 0
             ;;

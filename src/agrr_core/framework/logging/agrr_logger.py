@@ -95,6 +95,26 @@ class DaemonLogger:
         self.logger = AgrrLogger(log_file)
         self.start_time = datetime.now()
     
+    def info(self, message: str, **kwargs):
+        """Log info message."""
+        self.logger.info(message, **kwargs)
+    
+    def debug(self, message: str, **kwargs):
+        """Log debug message."""
+        self.logger.debug(message, **kwargs)
+    
+    def error(self, message: str, **kwargs):
+        """Log error message."""
+        self.logger.error(message, **kwargs)
+    
+    def warning(self, message: str, **kwargs):
+        """Log warning message."""
+        self.logger.warning(message, **kwargs)
+    
+    def critical(self, message: str, **kwargs):
+        """Log critical message."""
+        self.logger.critical(message, **kwargs)
+    
     def daemon_started(self, pid: int, socket_path: str):
         """Log daemon startup."""
         self.logger.info(f"Daemon started", pid=pid, socket=socket_path)

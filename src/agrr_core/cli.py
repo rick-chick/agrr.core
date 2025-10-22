@@ -389,6 +389,28 @@ def execute_cli_direct(args) -> None:
                 presenter=presenter,
             )
             asyncio.run(controller.run(args[1:]))
+        elif args and args[0] == 'daemon':
+            # Handle daemon commands
+            from agrr_core.daemon.manager import DaemonManager
+            manager = DaemonManager()
+            
+            if len(args) < 2:
+                print("Usage: agrr daemon {start|stop|status|restart}")
+                sys.exit(1)
+            
+            command = args[1]
+            if command == 'start':
+                manager.start()
+            elif command == 'stop':
+                manager.stop()
+            elif command == 'status':
+                manager.status()
+            elif command == 'restart':
+                manager.restart()
+            else:
+                print(f"Error: Unknown daemon command '{command}'")
+                print("Available: start, stop, status, restart")
+                sys.exit(1)
         elif args and args[0] == 'optimize':
             # Unified optimize command with subcommands: period, allocate
             if len(args) < 2 or args[1] in ['--help', '-h', 'help']:

@@ -54,6 +54,8 @@ from agrr_core.entity.value_objects.yield_impact_accumulator import (
 )
 from agrr_core.usecase.interactors.base_optimizer import BaseOptimizer
 from agrr_core.usecase.gateways.weather_interpolator import WeatherInterpolator
+import os
+import time
 
 
 class GrowthPeriodOptimizeInteractor(
@@ -187,11 +189,18 @@ class GrowthPeriodOptimizeInteractor(
         Returns:
             List of candidate results
         """
+        prof = os.getenv("AGRR_PROFILE") == "1"
+        t_all0 = time.perf_counter() if prof else 0.0
+
         # Get crop requirements via gateway
         crop_profile = await self.crop_profile_gateway.get()
         
         # Get weather data via gateway (file path configured at initialization)
+        t_w0 = time.perf_counter() if prof else 0.0
         weather_data = await self.weather_gateway.get()
+        if prof:
+            t_w1 = time.perf_counter()
+            print(f"[PROFILE] GrowthPeriod: weather_get count={len(weather_data)} elapsed={t_w1-t_w0:.3f}s", flush=True)
         
         # Calculate total required GDD
         total_required_gdd = sum(
@@ -229,6 +238,7 @@ class GrowthPeriodOptimizeInteractor(
         gdd_per_candidate = []  # Track accumulated GDD for each candidate
         
         # Find first completion
+        t_init0 = time.perf_counter() if prof else 0.0
         while window_end_idx < len(sorted_dates) and accumulated_gdd < total_required_gdd:
             date = sorted_dates[window_end_idx]
             if date >= current_start.date():
@@ -266,6 +276,11 @@ class GrowthPeriodOptimizeInteractor(
                     yield_factor=yield_factor
                 ))
                 gdd_per_candidate.append(accumulated_gdd)
+                # Early-stop option: for adjust use case, we can stop sliding once a valid candidate is known
+                if request.early_stop_at_first:
+                    # Return only the first valid candidate discovered
+                    # Sort/concat below expects full pass; short-circuit by returning here
+                    return results
             else:
                 # Exceeds deadline
                 results.append(CandidateResultDTO(
@@ -279,6 +294,10 @@ class GrowthPeriodOptimizeInteractor(
                 gdd_per_candidate.append(accumulated_gdd)
         
         # Slide window: move start date forward one day at a time
+        if prof:
+            t_init1 = time.perf_counter()
+            print(f"[PROFILE] GrowthPeriod: initial_scan elapsed={t_init1-t_init0:.3f}s", flush=True)
+        t_slide0 = time.perf_counter() if prof else 0.0
         while current_start < request.evaluation_period_end:
             # Move start date forward
             prev_start = current_start
@@ -325,6 +344,9 @@ class GrowthPeriodOptimizeInteractor(
                         yield_factor=yield_factor
                     ))
                     gdd_per_candidate.append(accumulated_gdd)
+                    # Early-stop option: stop sliding once a valid candidate is found
+                    if request.early_stop_at_first:
+                        break
                 else:
                     # Completion exceeds deadline - stop here
                     break
@@ -332,6 +354,10 @@ class GrowthPeriodOptimizeInteractor(
                 # Cannot complete within available weather data
                 break
         
+        if prof:
+            t_slide1 = time.perf_counter()
+            print(f"[PROFILE] GrowthPeriod: sliding_window elapsed={t_slide1-t_slide0:.3f}s candidates={len(results)}", flush=True)
+
         # Save intermediate results if gateway is available
         if self.optimization_result_gateway:
             intermediate_results = []
@@ -361,7 +387,11 @@ class GrowthPeriodOptimizeInteractor(
         valid_results.sort(key=lambda r: r.total_cost)
         
         # Return sorted valid candidates followed by invalid candidates
-        return valid_results + invalid_results
+        out = valid_results + invalid_results
+        if prof:
+            t_all1 = time.perf_counter()
+            print(f"[PROFILE] GrowthPeriod: total elapsed={t_all1-t_all0:.3f}s out_candidates={len(out)}", flush=True)
+        return out
 
     def _calculate_yield_factor_for_period(
         self,

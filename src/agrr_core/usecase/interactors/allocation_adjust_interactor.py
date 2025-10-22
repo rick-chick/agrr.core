@@ -19,6 +19,7 @@ Constraints:
 
 import uuid
 import time
+import os
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple
 
@@ -102,9 +103,18 @@ class AllocationAdjustInteractor:
             Response DTO containing adjusted result
         """
         start_time = time.time()
+        prof = os.getenv("AGRR_PROFILE") == "1"
+        
+        if prof:
+            print(f"[PROFILE] AllocationAdjust: starting execution", flush=True)
         
         # Load current allocation result
+        t_load0 = time.perf_counter() if prof else 0.0
         current_result = await self.allocation_result_gateway.get()
+        if prof:
+            t_load1 = time.perf_counter()
+            print(f"[PROFILE] AllocationAdjust: load_result elapsed={t_load1-t_load0:.3f}s", flush=True)
+        
         if not current_result:
             return AllocationAdjustResponseDTO(
                 optimized_result=None,
@@ -121,20 +131,28 @@ class AllocationAdjustInteractor:
         # No need to cache in UseCase layer - gateway will cache on first get_all() call
         
         # Load interaction rules if gateway is provided
+        t_rules0 = time.perf_counter() if prof else 0.0
         if self.interaction_rule_gateway:
             try:
                 self.interaction_rules = await self.interaction_rule_gateway.get_rules()
             except Exception as e:
                 # Continue without interaction rules
                 pass
+        if prof:
+            t_rules1 = time.perf_counter()
+            print(f"[PROFILE] AllocationAdjust: load_rules elapsed={t_rules1-t_rules0:.3f}s", flush=True)
         
         # Apply move instructions with GDD calculation
+        t_apply0 = time.perf_counter() if prof else 0.0
         adjusted_result, applied_moves, rejected_moves = await self._apply_moves(
             current_result=current_result,
             move_instructions=move_instructions,
             planning_period_start=request.planning_period_start,
             planning_period_end=request.planning_period_end,
         )
+        if prof:
+            t_apply1 = time.perf_counter()
+            print(f"[PROFILE] AllocationAdjust: apply_moves elapsed={t_apply1-t_apply0:.3f}s", flush=True)
         
         # If no moves were applied successfully, return error
         if not applied_moves:
@@ -188,10 +206,14 @@ class AllocationAdjustInteractor:
         Returns:
             Tuple of (adjusted_result, applied_moves, rejected_moves)
         """
+        prof = os.getenv("AGRR_PROFILE") == "1"
+        t_all0 = time.perf_counter() if prof else 0.0
+        
         applied_moves = []
         rejected_moves = []
         
         # Create mapping of allocation_id to allocation for fast lookup
+        t_map0 = time.perf_counter() if prof else 0.0
         allocation_map: Dict[str, CropAllocation] = {}
         field_schedule_map: Dict[str, FieldSchedule] = {}
         field_map: Dict[str, Field] = {}
@@ -202,12 +224,24 @@ class AllocationAdjustInteractor:
             for allocation in schedule.allocations:
                 allocation_map[allocation.allocation_id] = allocation
         
+        if prof:
+            t_map1 = time.perf_counter()
+            print(f"[PROFILE] AllocationAdjust: create_maps elapsed={t_map1-t_map0:.3f}s", flush=True)
+        
         # Process each move instruction
+        t_moves0 = time.perf_counter() if prof else 0.0
         modified_schedules = {fid: list(schedule.allocations) 
                             for fid, schedule in field_schedule_map.items()}
         new_allocations = []  # Track new allocations for recalculation
         
+        move_count = 0
+        gdd_calc_time = 0.0
+        cache_hits = 0
+        cache_misses = 0
+        
         for move in move_instructions:
+            move_count += 1
+            t_move0 = time.perf_counter() if prof else 0.0
             try:
                 # For ADD action, allocation_id is not required (will be auto-generated)
                 if move.action != MoveAction.ADD:
@@ -223,7 +257,22 @@ class AllocationAdjustInteractor:
                 
                 if move.action == MoveAction.REMOVE:
                     # Remove allocation from its field
-                    field_id = allocation.field.field_id
+                    # Find field_id by searching through field_schedules
+                    field_id = None
+                    for schedule in current_result.field_schedules:
+                        for alloc in schedule.allocations:
+                            if alloc.allocation_id == move.allocation_id:
+                                field_id = schedule.field.field_id
+                                break
+                        if field_id:
+                            break
+                    
+                    if field_id is None:
+                        rejected_moves.append({
+                            "move": move,
+                            "reason": f"Could not find field for allocation {move.allocation_id}",
+                        })
+                        continue
                     modified_schedules[field_id] = [
                         a for a in modified_schedules[field_id]
                         if a.allocation_id != move.allocation_id
@@ -232,7 +281,22 @@ class AllocationAdjustInteractor:
                 
                 elif move.action == MoveAction.MOVE:
                     # Remove from current field
-                    current_field_id = allocation.field.field_id
+                    # Find current field_id by searching through field_schedules
+                    current_field_id = None
+                    for schedule in current_result.field_schedules:
+                        for alloc in schedule.allocations:
+                            if alloc.allocation_id == move.allocation_id:
+                                current_field_id = schedule.field.field_id
+                                break
+                        if current_field_id:
+                            break
+                    
+                    if current_field_id is None:
+                        rejected_moves.append({
+                            "move": move,
+                            "reason": f"Could not find current field for allocation {move.allocation_id}",
+                        })
+                        continue
                     modified_schedules[current_field_id] = [
                         a for a in modified_schedules[current_field_id]
                         if a.allocation_id != move.allocation_id
@@ -254,13 +318,27 @@ class AllocationAdjustInteractor:
                     target_field = field_map[move.to_field_id]
                     
                     # Calculate completion date using GDD calculation
+                    t_gdd0 = time.perf_counter() if prof else 0.0
                     try:
+                        # Create Crop object from allocation data
+                        crop = Crop(
+                            crop_id=allocation.crop.crop_id,
+                            name=allocation.crop.name,
+                            area_per_unit=allocation.crop.area_per_unit,
+                            variety=allocation.crop.variety or 'default',
+                            revenue_per_area=allocation.crop.revenue_per_area,
+                            max_revenue=allocation.crop.max_revenue,
+                            groups=allocation.crop.groups
+                        )
                         completion_date, growth_days = await self._calculate_completion_date(
-                            crop=allocation.crop,
+                            crop=crop,
                             field=target_field,
                             start_date=move.to_start_date,
                             planning_period_end=planning_period_end,
                         )
+                        if prof:
+                            t_gdd1 = time.perf_counter()
+                            gdd_calc_time += t_gdd1 - t_gdd0
                     except ValueError as e:
                         rejected_moves.append({
                             "move": move,
@@ -276,10 +354,20 @@ class AllocationAdjustInteractor:
                     cost = growth_days * target_field.daily_fixed_cost
                     
                     # IMPORTANT: Keep original allocation_id for tracking
+                    # Create Crop object from allocation data
+                    crop = Crop(
+                        crop_id=allocation.crop.crop_id,
+                        name=allocation.crop.name,
+                        area_per_unit=allocation.crop.area_per_unit,
+                        variety=allocation.crop.variety or 'default',
+                        revenue_per_area=allocation.crop.revenue_per_area,
+                        max_revenue=allocation.crop.max_revenue,
+                        groups=allocation.crop.groups
+                    )
                     new_allocation = CropAllocation(
                         allocation_id=allocation.allocation_id,
                         field=target_field,
-                        crop=allocation.crop,
+                        crop=crop,
                         area_used=area_used,
                         start_date=move.to_start_date,
                         completion_date=completion_date,
@@ -346,6 +434,7 @@ class AllocationAdjustInteractor:
                         continue
                     
                     # Calculate completion date using GDD calculation
+                    t_gdd0 = time.perf_counter() if prof else 0.0
                     try:
                         completion_date, growth_days = await self._calculate_completion_date(
                             crop=crop,
@@ -353,6 +442,9 @@ class AllocationAdjustInteractor:
                             start_date=move.to_start_date,
                             planning_period_end=planning_period_end,
                         )
+                        if prof:
+                            t_gdd1 = time.perf_counter()
+                            gdd_calc_time += t_gdd1 - t_gdd0
                     except ValueError as e:
                         rejected_moves.append({
                             "move": move,
@@ -408,8 +500,17 @@ class AllocationAdjustInteractor:
                     "move": move,
                     "reason": str(e),
                 })
+            
+            if prof:
+                t_move1 = time.perf_counter()
+                print(f"[PROFILE] AllocationAdjust: move_{move_count} elapsed={t_move1-t_move0:.3f}s", flush=True)
+        
+        if prof:
+            t_moves1 = time.perf_counter()
+            print(f"[PROFILE] AllocationAdjust: process_moves elapsed={t_moves1-t_moves0:.3f}s moves={move_count} gdd_time={gdd_calc_time:.3f}s", flush=True)
         
         # Recalculate only new allocations with full context after all moves are applied
+        t_recalc0 = time.perf_counter() if prof else 0.0
         if new_allocations:
             # Get all allocations for context (including existing + new)
             all_final_allocations = []
@@ -436,7 +537,12 @@ class AllocationAdjustInteractor:
                     recalc_map.get(alloc.allocation_id, alloc) for alloc in allocs
                 ]
         
+        if prof:
+            t_recalc1 = time.perf_counter()
+            print(f"[PROFILE] AllocationAdjust: recalculate elapsed={t_recalc1-t_recalc0:.3f}s", flush=True)
+        
         # Use updated modified_schedules
+        t_rebuild0 = time.perf_counter() if prof else 0.0
         recalc_by_field = modified_schedules
         
         # Rebuild field schedules with recalculated allocations
@@ -490,6 +596,12 @@ class AllocationAdjustInteractor:
             is_optimal=False,  # No longer optimal after manual adjustment
         )
         
+        if prof:
+            t_rebuild1 = time.perf_counter()
+            t_all1 = time.perf_counter()
+            print(f"[PROFILE] AllocationAdjust: rebuild_schedules elapsed={t_rebuild1-t_rebuild0:.3f}s", flush=True)
+            print(f"[PROFILE] AllocationAdjust: total elapsed={t_all1-t_all0:.3f}s", flush=True)
+        
         return adjusted_result, applied_moves, rejected_moves
     
     async def _calculate_completion_date(
@@ -513,7 +625,11 @@ class AllocationAdjustInteractor:
         Raises:
             ValueError: If crop cannot complete growth by planning_period_end
         """
+        prof = os.getenv("AGRR_PROFILE") == "1"
+        t_all0 = time.perf_counter() if prof else 0.0
+        
         # Get crop profile from gateway (gateway handles caching internally)
+        t_crop0 = time.perf_counter() if prof else 0.0
         all_crops = await self.crop_gateway.get_all()
         crop_profile = None
         for cp in all_crops:
@@ -527,22 +643,33 @@ class AllocationAdjustInteractor:
         # Set crop in internal gateway for GrowthPeriodOptimizeInteractor
         await self.crop_profile_gateway_internal.save(crop_profile)
         
+        if prof:
+            t_crop1 = time.perf_counter()
+            print(f"[PROFILE] AllocationAdjust: get_crop_profile elapsed={t_crop1-t_crop0:.3f}s", flush=True)
+        
         try:
             # Create cache key for GDD candidates
             # Key only on crop, field, and planning period (not start_date)
             # This allows reuse for different start dates within same planning period
+            t_cache0 = time.perf_counter() if prof else 0.0
             cache_key = (
                 f"{crop.crop_id}_{crop.variety or 'default'}_{field.field_id}_"
                 f"{planning_period_end.date()}"
             )
             
             # Check cache first (significant performance improvement for multiple moves)
+            cache_hit = False
             if cache_key in self._gdd_candidate_cache:
                 candidates = self._gdd_candidate_cache[cache_key]
+                cache_hit = True
+                if prof:
+                    t_cache1 = time.perf_counter()
+                    print(f"[PROFILE] AllocationAdjust: cache_hit elapsed={t_cache1-t_cache0:.3f}s", flush=True)
             else:
                 # Use GrowthPeriodOptimizeInteractor to find valid cultivation periods
                 # We use a narrow evaluation window (start_date to planning_period_end)
                 # and check if starting on start_date allows completion
+                t_gdd0 = time.perf_counter() if prof else 0.0
                 request = OptimalGrowthPeriodRequestDTO(
                     crop_id=crop.crop_id,
                     variety=crop.variety,
@@ -557,8 +684,14 @@ class AllocationAdjustInteractor:
                 
                 # Cache the candidates for future moves
                 self._gdd_candidate_cache[cache_key] = candidates
+                
+                if prof:
+                    t_gdd1 = time.perf_counter()
+                    t_cache1 = time.perf_counter()
+                    print(f"[PROFILE] AllocationAdjust: cache_miss elapsed={t_cache1-t_cache0:.3f}s gdd_calc={t_gdd1-t_gdd0:.3f}s", flush=True)
             
             # Find candidate starting on or after the specified date (choose nearest)
+            t_search0 = time.perf_counter() if prof else 0.0
             best_candidate = None
             for candidate in candidates:
                 if candidate.start_date >= start_date:
@@ -572,6 +705,12 @@ class AllocationAdjustInteractor:
                     f"Crop {crop.name} cannot complete growth starting on or after {start_date} "
                     f"by planning period end {planning_period_end}"
                 )
+            
+            if prof:
+                t_search1 = time.perf_counter()
+                t_all1 = time.perf_counter()
+                print(f"[PROFILE] AllocationAdjust: find_candidate elapsed={t_search1-t_search0:.3f}s", flush=True)
+                print(f"[PROFILE] AllocationAdjust: calculate_completion_total elapsed={t_all1-t_all0:.3f}s cache_hit={cache_hit}", flush=True)
             
             return best_candidate.completion_date, best_candidate.growth_days
         

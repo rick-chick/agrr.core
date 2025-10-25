@@ -19,9 +19,12 @@ from agrr_core.adapter.controllers.crop_cli_craft_controller import CropCliCraft
 from agrr_core.adapter.controllers.growth_progress_cli_controller import GrowthProgressCliController
 from agrr_core.adapter.controllers.growth_period_optimize_cli_controller import GrowthPeriodOptimizeCliController
 from agrr_core.adapter.controllers.multi_field_crop_allocation_cli_controller import MultiFieldCropAllocationCliController
+from agrr_core.adapter.controllers.task_schedule_generation_cli_controller import TaskScheduleGenerationCLIController
 from agrr_core.framework.services.clients.llm_client import LLMClient
 from agrr_core.framework.services.io.file_service import FileService
 from agrr_core.adapter.services.weather_linear_interpolator import WeatherLinearInterpolator
+from agrr_core.adapter.gateways.task_schedule_llm_gateway import TaskScheduleLLMGateway
+from agrr_core.usecase.interactors.task_schedule_generation_interactor import TaskScheduleGenerationInteractor
 
 
 def print_help() -> None:
@@ -39,6 +42,7 @@ Commands:
   progress   Calculate crop growth progress
   optimize   Optimization tools (period, allocate, adjust)
   predict    Predict future weather (ARIMA / LightGBM)
+  schedule   Generate task schedule (LLM)
   daemon     Daemon process (start/stop/status/restart)
 
 Data sources (weather):
@@ -349,6 +353,34 @@ def execute_cli_direct(args) -> None:
             presenter = CropProfileCraftPresenter()
             controller = CropCliCraftController(gateway=gateway, presenter=presenter)
             asyncio.run(controller.run(args[1:]))
+        elif args and args[0] == 'schedule':
+            # Task schedule generation command
+            parser = argparse.ArgumentParser(description="Generate task schedule for agricultural tasks")
+            parser.add_argument("--crop-name", "-c", required=True, help="Name of the crop")
+            parser.add_argument("--variety", "-v", required=True, help="Variety name")
+            parser.add_argument("--stage-requirements", "-sr", required=True, help="Path to stage requirements JSON file")
+            parser.add_argument("--agricultural-tasks", "-at", required=True, help="Path to agricultural tasks JSON file")
+            parser.add_argument("--output", "-o", help="Path to output file (optional)")
+            
+            try:
+                parsed_args = parser.parse_args(args[1:])
+            except SystemExit:
+                return
+            
+            # Setup LLM client and gateway
+            llm_client = LLMClient()
+            task_schedule_gateway = TaskScheduleLLMGateway(llm_client)
+            task_schedule_interactor = TaskScheduleGenerationInteractor(task_schedule_gateway)
+            controller = TaskScheduleGenerationCLIController(task_schedule_interactor)
+            
+            # Execute the controller
+            asyncio.run(controller.generate_schedule(
+                crop_name=parsed_args.crop_name,
+                variety=parsed_args.variety,
+                stage_requirements_file=parsed_args.stage_requirements,
+                agricultural_tasks_file=parsed_args.agricultural_tasks,
+                output_file=parsed_args.output
+            ))
         elif args and args[0] == 'progress':
             # Run growth progress calculation CLI
             # Parse args to extract crop-file and weather-file paths

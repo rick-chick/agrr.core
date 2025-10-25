@@ -8,6 +8,11 @@ from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.entity.entities.temperature_profile_entity import TemperatureProfile
+from agrr_core.entity.entities.crop_profile_entity import CropProfile
+from agrr_core.entity.entities.growth_stage_entity import GrowthStage
+from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
+from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
+from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
 from agrr_core.entity.value_objects.violation_type import ViolationType
 from agrr_core.usecase.services.violation_checker_service import ViolationCheckerService
 
@@ -32,8 +37,8 @@ class TestTemperatureStressChecks:
         )
     
     @pytest.fixture
-    def crop_with_temp_profiles(self):
-        """Create crop with temperature profiles."""
+    def crop_profile(self):
+        """Create crop profile with temperature profiles."""
         temp_profile = TemperatureProfile(
             base_temperature=10.0,
             optimal_min=18.0,
@@ -52,28 +57,44 @@ class TestTemperatureStressChecks:
             area_per_unit=1.0
         )
         
-        # Add temperature profiles to crop
-        crop.temperature_profiles = {
-            "vegetative": temp_profile,
-            "flowering": temp_profile,
-            "fruiting": temp_profile
-        }
+        # Create stage requirements
+        stage = GrowthStage(name="vegetative", order=1)
+        sunshine_profile = SunshineProfile(
+            minimum_sunshine_hours=4.0,
+            target_sunshine_hours=8.0
+        )
+        thermal_req = ThermalRequirement(required_gdd=500.0)
         
-        return crop
+        stage_req = StageRequirement(
+            stage=stage,
+            temperature=temp_profile,
+            sunshine=sunshine_profile,
+            thermal=thermal_req
+        )
+        
+        crop_profile = CropProfile(
+            crop=crop,
+            stage_requirements=[stage_req]
+        )
+        
+        return crop_profile
     
     @pytest.fixture
-    def allocation(self, field, crop_with_temp_profiles):
+    def allocation(self, field, crop_profile):
         """Create test allocation."""
         return CropAllocation(
             allocation_id="alloc1",
             field=field,
-            crop=crop_with_temp_profiles,
+            crop=crop_profile.crop,
             start_date=datetime(2023, 6, 1),
             completion_date=datetime(2023, 7, 31),
-            area_used=100.0
+            area_used=100.0,
+            growth_days=60,
+            accumulated_gdd=1200.0,
+            total_cost=30000.0
         )
     
-    def test_no_temperature_stress(self, checker, allocation):
+    def test_no_temperature_stress(self, checker, allocation, crop_profile):
         """Test that normal temperatures don't trigger violations."""
         # Normal temperature weather
         weather_data = [
@@ -87,7 +108,8 @@ class TestTemperatureStressChecks:
         
         violations = checker.check_violations(
             allocation=allocation,
-            weather_data=weather_data
+            weather_data=weather_data,
+            crop_profile=crop_profile
         )
         
         # Filter only temperature stress violations
@@ -103,7 +125,7 @@ class TestTemperatureStressChecks:
         
         assert len(temp_violations) == 0, "No temperature stress violations expected"
     
-    def test_high_temperature_stress(self, checker, allocation):
+    def test_high_temperature_stress(self, checker, allocation, crop_profile):
         """Test detection of high temperature stress."""
         # Hot weather
         weather_data = [
@@ -117,7 +139,8 @@ class TestTemperatureStressChecks:
         
         violations = checker.check_violations(
             allocation=allocation,
-            weather_data=weather_data
+            weather_data=weather_data,
+            crop_profile=crop_profile
         )
         
         # Filter high temp stress violations
@@ -131,7 +154,7 @@ class TestTemperatureStressChecks:
         assert "High temperature stress" in high_temp_violations[0].message
         assert "35.0" in high_temp_violations[0].message
     
-    def test_low_temperature_stress(self, checker, allocation):
+    def test_low_temperature_stress(self, checker, allocation, crop_profile):
         """Test detection of low temperature stress."""
         # Cold weather
         weather_data = [
@@ -145,7 +168,8 @@ class TestTemperatureStressChecks:
         
         violations = checker.check_violations(
             allocation=allocation,
-            weather_data=weather_data
+            weather_data=weather_data,
+            crop_profile=crop_profile
         )
         
         # Filter low temp stress violations
@@ -159,7 +183,7 @@ class TestTemperatureStressChecks:
         assert "Low temperature stress" in low_temp_violations[0].message
         assert "12.0" in low_temp_violations[0].message
     
-    def test_frost_risk(self, checker, allocation):
+    def test_frost_risk(self, checker, allocation, crop_profile):
         """Test detection of frost risk."""
         # Freezing weather
         weather_data = [
@@ -173,7 +197,8 @@ class TestTemperatureStressChecks:
         
         violations = checker.check_violations(
             allocation=allocation,
-            weather_data=weather_data
+            weather_data=weather_data,
+            crop_profile=crop_profile
         )
         
         # Filter frost risk violations
@@ -187,7 +212,7 @@ class TestTemperatureStressChecks:
         assert "Frost risk" in frost_violations[0].message
         assert "-2.0" in frost_violations[0].message
     
-    def test_sterility_risk(self, checker, allocation):
+    def test_sterility_risk(self, checker, allocation, crop_profile):
         """Test detection of sterility risk."""
         # Very hot weather
         weather_data = [
@@ -201,7 +226,8 @@ class TestTemperatureStressChecks:
         
         violations = checker.check_violations(
             allocation=allocation,
-            weather_data=weather_data
+            weather_data=weather_data,
+            crop_profile=crop_profile
         )
         
         # Filter sterility risk violations
@@ -215,7 +241,7 @@ class TestTemperatureStressChecks:
         assert "Sterility risk" in sterility_violations[0].message
         assert "34.0" in sterility_violations[0].message
     
-    def test_multiple_stress_types(self, checker, allocation):
+    def test_multiple_stress_types(self, checker, allocation, crop_profile):
         """Test detection of multiple stress types in different days."""
         weather_data = [
             WeatherData(
@@ -234,7 +260,8 @@ class TestTemperatureStressChecks:
         
         violations = checker.check_violations(
             allocation=allocation,
-            weather_data=weather_data
+            weather_data=weather_data,
+            crop_profile=crop_profile
         )
         
         # Check both stress types are detected
@@ -244,8 +271,8 @@ class TestTemperatureStressChecks:
         assert len(high_temp) >= 1, "High temperature stress should be detected"
         assert len(low_temp) >= 1, "Low temperature stress should be detected"
     
-    def test_no_temp_profiles_no_violations(self, checker, field):
-        """Test that crops without temperature profiles don't trigger violations."""
+    def test_no_crop_profile_no_violations(self, checker, field):
+        """Test that crops without crop_profile don't trigger violations."""
         crop_no_profiles = Crop(
             crop_id="bean",
             name="インゲン",
@@ -260,7 +287,10 @@ class TestTemperatureStressChecks:
             crop=crop_no_profiles,
             start_date=datetime(2023, 6, 1),
             completion_date=datetime(2023, 7, 31),
-            area_used=100.0
+            area_used=100.0,
+            growth_days=60,
+            accumulated_gdd=1200.0,
+            total_cost=30000.0
         )
         
         weather_data = [
@@ -274,7 +304,8 @@ class TestTemperatureStressChecks:
         
         violations = checker.check_violations(
             allocation=allocation,
-            weather_data=weather_data
+            weather_data=weather_data,
+            crop_profile=None  # No crop profile provided
         )
         
         # No temperature stress violations should be found

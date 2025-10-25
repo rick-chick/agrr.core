@@ -14,6 +14,7 @@ from agrr_core.usecase.services.interaction_rule_service import InteractionRuleS
 
 if TYPE_CHECKING:
     from agrr_core.entity.entities.weather_entity import WeatherData
+    from agrr_core.entity.entities.crop_profile_entity import CropProfile
 
 
 class ViolationCheckerService:
@@ -35,7 +36,8 @@ class ViolationCheckerService:
         allocation: CropAllocation,
         previous_allocation: Optional[CropAllocation] = None,
         all_allocations: Optional[List[CropAllocation]] = None,
-        weather_data: Optional[List["WeatherData"]] = None
+        weather_data: Optional[List["WeatherData"]] = None,
+        crop_profile: Optional["CropProfile"] = None
     ) -> List[Violation]:
         """Check for violations in an allocation.
         
@@ -44,6 +46,7 @@ class ViolationCheckerService:
             previous_allocation: Previous allocation in the same field (optional)
             all_allocations: All allocations in the solution (optional, for area check)
             weather_data: Weather data for the allocation period (optional)
+            crop_profile: Crop profile with temperature requirements (optional)
             
         Returns:
             List of Violation objects found for this allocation
@@ -85,11 +88,11 @@ class ViolationCheckerService:
                 violations.append(self._create_area_constraint_violation(allocation))
         
         # Check temperature stress (warning display purpose)
-        # Note: Temperature stress checking requires temperature profiles which are currently
-        # not part of the Crop entity. This check is deferred until the profile integration is complete.
-        # if weather_data and hasattr(allocation, 'crop') and hasattr(allocation.crop, 'temperature_profiles'):
-        #     temp_violations = self._check_temperature_stress(allocation, weather_data)
-        #     violations.extend(temp_violations)
+        if weather_data and crop_profile:
+            temp_violations = self._check_temperature_stress(
+                allocation, weather_data, crop_profile
+            )
+            violations.extend(temp_violations)
         
         return violations
     
@@ -187,7 +190,8 @@ class ViolationCheckerService:
     def _check_temperature_stress(
         self,
         allocation: CropAllocation,
-        weather_data: List["WeatherData"]
+        weather_data: List["WeatherData"],
+        crop_profile: "CropProfile"
     ) -> List[Violation]:
         """Check for temperature stress violations (warning display purpose).
         
@@ -197,23 +201,19 @@ class ViolationCheckerService:
         Args:
             allocation: Crop allocation to check
             weather_data: List of daily weather data
+            crop_profile: Crop profile with temperature requirements
             
         Returns:
             List of Violation objects for temperature stress
         """
         violations: List[Violation] = []
         
-        # Check if crop has temperature profiles
-        if not hasattr(allocation.crop, 'temperature_profiles'):
-            return violations
-        
-        temperature_profiles = allocation.crop.temperature_profiles
-        if not temperature_profiles:
-            return violations
-        
         # Check each day's weather against temperature profiles
         for weather in weather_data:
-            for stage, profile in temperature_profiles.items():
+            for stage_req in crop_profile.stage_requirements:
+                profile = stage_req.temperature
+                stage_name = stage_req.stage.name
+                
                 # High temperature stress
                 if profile.is_high_temp_stress(weather.temperature_2m_max):
                     violations.append(Violation(
@@ -222,7 +222,7 @@ class ViolationCheckerService:
                         message=f"High temperature stress on {weather.time}: {weather.temperature_2m_max:.1f}°C",
                         severity="warning",
                         impact_ratio=1.0 - profile.high_temp_daily_impact,
-                        details=f"Stage: {stage}, Threshold: {profile.high_stress_threshold}°C"
+                        details=f"Stage: {stage_name}, Threshold: {profile.high_stress_threshold}°C"
                     ))
                 
                 # Low temperature stress
@@ -233,7 +233,7 @@ class ViolationCheckerService:
                         message=f"Low temperature stress on {weather.time}: {weather.temperature_2m_mean:.1f}°C",
                         severity="warning",
                         impact_ratio=1.0 - profile.low_temp_daily_impact,
-                        details=f"Stage: {stage}, Threshold: {profile.low_stress_threshold}°C"
+                        details=f"Stage: {stage_name}, Threshold: {profile.low_stress_threshold}°C"
                     ))
                 
                 # Frost risk
@@ -244,7 +244,7 @@ class ViolationCheckerService:
                         message=f"Frost risk on {weather.time}: {weather.temperature_2m_min:.1f}°C",
                         severity="warning",
                         impact_ratio=1.0 - profile.frost_daily_impact,
-                        details=f"Stage: {stage}, Threshold: {profile.frost_threshold}°C"
+                        details=f"Stage: {stage_name}, Threshold: {profile.frost_threshold}°C"
                     ))
                 
                 # Sterility risk
@@ -255,7 +255,7 @@ class ViolationCheckerService:
                         message=f"Sterility risk on {weather.time}: {weather.temperature_2m_max:.1f}°C",
                         severity="warning",
                         impact_ratio=1.0 - profile.sterility_daily_impact,
-                        details=f"Stage: {stage}, Threshold: {profile.sterility_risk_threshold}°C"
+                        details=f"Stage: {stage_name}, Threshold: {profile.sterility_risk_threshold}°C"
                     ))
         
         return violations

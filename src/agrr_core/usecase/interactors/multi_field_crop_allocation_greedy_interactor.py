@@ -62,6 +62,7 @@ from agrr_core.entity.value_objects.optimization_objective import OptimizationMe
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.usecase.services.interaction_rule_service import InteractionRuleService
 from agrr_core.usecase.services.alns_optimizer_service import ALNSOptimizer
+from agrr_core.usecase.services.violation_checker_service import ViolationCheckerService
 
 
 @dataclass
@@ -224,6 +225,11 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         # Create interaction rule service (for continuous cultivation impact)
         self.interaction_rule_service = InteractionRuleService(
             rules=interaction_rules or []
+        )
+        
+        # Create violation checker service
+        self.violation_checker = ViolationCheckerService(
+            interaction_rule_service=self.interaction_rule_service
         )
         
         # Create ALNS optimizer if enabled

@@ -44,6 +44,8 @@ from agrr_core.usecase.gateways.interaction_rule_gateway import InteractionRuleG
 from agrr_core.usecase.interactors.growth_period_optimize_interactor import (
     GrowthPeriodOptimizeInteractor,
 )
+from agrr_core.usecase.services.violation_checker_service import ViolationCheckerService
+from agrr_core.usecase.services.interaction_rule_service import InteractionRuleService
 
 
 class AllocationAdjustInteractor:
@@ -77,6 +79,11 @@ class AllocationAdjustInteractor:
         
         # Interaction rules loaded on demand
         self.interaction_rules: List[InteractionRule] = []
+        
+        # Initialize violation checker with interaction rule service
+        self.violation_checker = ViolationCheckerService(
+            interaction_rule_service=None  # Will be set when rules are loaded
+        )
         
         # GDD candidate cache for performance optimization
         # Key: "{crop_id}_{variety}_{field_id}_{period_end}"
@@ -135,6 +142,11 @@ class AllocationAdjustInteractor:
         if self.interaction_rule_gateway:
             try:
                 self.interaction_rules = await self.interaction_rule_gateway.get_rules()
+                # Initialize violation checker with interaction rule service
+                interaction_rule_service = InteractionRuleService(rules=self.interaction_rules)
+                self.violation_checker = ViolationCheckerService(
+                    interaction_rule_service=interaction_rule_service
+                )
             except Exception as e:
                 # Continue without interaction rules
                 pass
@@ -378,19 +390,26 @@ class AllocationAdjustInteractor:
                         profit=None,  # Will be recalculated with full context
                     )
                     
-                    # Check for overlap with existing allocations in target field
-                    has_overlap = False
-                    overlap_with_id = None
+                    # Check for violations using ViolationChecker
+                    has_violation = False
+                    violation_reasons = []
                     for existing in modified_schedules.get(move.to_field_id, []):
-                        if new_allocation.overlaps_with_fallow(existing):
-                            has_overlap = True
-                            overlap_with_id = existing.allocation_id
-                            break
+                        violations = self.violation_checker.check_violations(
+                            allocation=new_allocation,
+                            previous_allocation=existing,
+                            all_allocations=None
+                        )
+                        if not self.violation_checker.is_feasible(violations):
+                            has_violation = True
+                            for v in violations:
+                                if v.is_error():
+                                    violation_reasons.append(f"Violation: {v.message}")
+                                    break
                     
-                    if has_overlap:
+                    if has_violation:
                         rejected_moves.append({
                             "move": move,
-                            "reason": f"Time overlap with allocation {overlap_with_id} (considering {target_field.fallow_period_days}-day fallow period)",
+                            "reason": "; ".join(violation_reasons) if violation_reasons else "Constraint violation detected",
                         })
                         continue
                     
@@ -474,19 +493,26 @@ class AllocationAdjustInteractor:
                         profit=None,  # Will be recalculated with full context
                     )
                     
-                    # Check for overlap with existing allocations in target field
-                    has_overlap = False
-                    overlap_with_id = None
+                    # Check for violations using ViolationChecker
+                    has_violation = False
+                    violation_reasons = []
                     for existing in modified_schedules.get(move.to_field_id, []):
-                        if new_allocation.overlaps_with_fallow(existing):
-                            has_overlap = True
-                            overlap_with_id = existing.allocation_id
-                            break
+                        violations = self.violation_checker.check_violations(
+                            allocation=new_allocation,
+                            previous_allocation=existing,
+                            all_allocations=None
+                        )
+                        if not self.violation_checker.is_feasible(violations):
+                            has_violation = True
+                            for v in violations:
+                                if v.is_error():
+                                    violation_reasons.append(f"Violation: {v.message}")
+                                    break
                     
-                    if has_overlap:
+                    if has_violation:
                         rejected_moves.append({
                             "move": move,
-                            "reason": f"Time overlap with allocation {overlap_with_id} (considering {target_field.fallow_period_days}-day fallow period)",
+                            "reason": "; ".join(violation_reasons) if violation_reasons else "Constraint violation detected",
                         })
                         continue
                     

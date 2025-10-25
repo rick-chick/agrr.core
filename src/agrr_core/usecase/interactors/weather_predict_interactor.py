@@ -71,8 +71,13 @@ class WeatherPredictInteractor:
                 {'prediction_days': prediction_days}
             )
             
-            # 複数メトリックの予測結果を統合して保存
-            await self._create_multi_metric_predictions(all_predictions, output_destination)
+            # モックモードの場合は、PredictionMockGatewayのcreateメソッドを使用
+            if hasattr(self.prediction_gateway, 'mock_data_file') or type(self.prediction_gateway).__name__ == 'PredictionMockGateway':
+                # モックモード: 複数メトリックの予測結果を統合して保存
+                await self._create_multi_metric_predictions_mock(all_predictions, output_destination)
+            else:
+                # 通常モード: 複数メトリックの予測結果を統合して保存
+                await self._create_multi_metric_predictions(all_predictions, output_destination)
             
             # temperatureの予測結果を返す（後方互換性）
             predictions = all_predictions['temperature']
@@ -139,5 +144,52 @@ class WeatherPredictInteractor:
             OutputValidator.validate_lightgbm_output(output_data)
         except OutputValidationError as e:
             raise PredictionError(f"Output validation failed: {e}")
+        
+        Path(destination).write_text(json.dumps(output_data, indent=2, ensure_ascii=False))
+    
+    async def _create_multi_metric_predictions_mock(
+        self,
+        all_predictions: dict,
+        destination: str
+    ) -> None:
+        """Create multi-metric predictions file for mock mode.
+        
+        Args:
+            all_predictions: Dictionary of predictions for each metric
+            destination: Output file path
+        """
+        import json
+        from pathlib import Path
+        
+        # 複数メトリックの予測を統合したJSONを作成
+        predictions_data = []
+        prediction_count = len(all_predictions['temperature'])
+        
+        for i in range(prediction_count):
+            temp_pred = all_predictions['temperature'][i]
+            temp_max_pred = all_predictions['temperature_max'][i]
+            temp_min_pred = all_predictions['temperature_min'][i]
+            
+            prediction_dict = {
+                'date': temp_pred.date.isoformat(),
+                'temperature': temp_pred.predicted_value,
+                'temperature_max': temp_max_pred.predicted_value,
+                'temperature_min': temp_min_pred.predicted_value,
+                'temperature_confidence_lower': temp_pred.confidence_lower,
+                'temperature_confidence_upper': temp_pred.confidence_upper,
+                'temperature_max_confidence_lower': temp_max_pred.confidence_lower,
+                'temperature_max_confidence_upper': temp_max_pred.confidence_upper,
+                'temperature_min_confidence_lower': temp_min_pred.confidence_lower,
+                'temperature_min_confidence_upper': temp_min_pred.confidence_upper,
+            }
+            predictions_data.append(prediction_dict)
+        
+        # JSONファイルに書き込み
+        output_data = {
+            'predictions': predictions_data,
+            'model_type': 'Mock',
+            'prediction_days': prediction_count,
+            'metrics': ['temperature', 'temperature_max', 'temperature_min']
+        }
         
         Path(destination).write_text(json.dumps(output_data, indent=2, ensure_ascii=False))

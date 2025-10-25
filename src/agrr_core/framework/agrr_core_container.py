@@ -13,11 +13,13 @@ from agrr_core.adapter.gateways.weather_noaa_gateway import WeatherNOAAGateway
 from agrr_core.adapter.gateways.weather_noaa_ftp_gateway import WeatherNOAAFTPGateway
 from agrr_core.adapter.gateways.weather_nasa_power_gateway import WeatherNASAPowerGateway
 from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway
+from agrr_core.adapter.gateways.weather_mock_gateway import WeatherMockGateway
 from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAdapter
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
 from agrr_core.adapter.controllers.weather_cli_predict_controller import WeatherCliPredictController
 from agrr_core.adapter.gateways.prediction_gateway_impl import PredictionGatewayImpl
+from agrr_core.adapter.gateways.prediction_mock_gateway import PredictionMockGateway
 from agrr_core.framework.services.ml.arima_prediction_service import ARIMAPredictionService
 from agrr_core.framework.services.ml.time_series_arima_service import TimeSeriesARIMAService
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
@@ -87,6 +89,8 @@ class AgrrCoreContainer:
                 weather_api_gateway = self.get_weather_noaa_ftp_gateway()
             elif data_source == 'nasa-power':
                 weather_api_gateway = self.get_weather_nasa_power_gateway()
+            elif data_source == 'mock':
+                weather_api_gateway = self.get_weather_mock_gateway()
             else:
                 weather_api_gateway = self.get_weather_api_gateway()
             
@@ -211,6 +215,12 @@ class AgrrCoreContainer:
             self._instances['weather_nasa_power_gateway'] = WeatherNASAPowerGateway(http_client)
         return self._instances['weather_nasa_power_gateway']
     
+    def get_weather_mock_gateway(self) -> WeatherMockGateway:
+        """Get mock weather gateway instance."""
+        if 'weather_mock_gateway' not in self._instances:
+            self._instances['weather_mock_gateway'] = WeatherMockGateway()
+        return self._instances['weather_mock_gateway']
+    
     def get_weather_gateway(self) -> WeatherGateway:
         """Get weather gateway instance."""
         return self.get_weather_gateway_impl()
@@ -227,6 +237,9 @@ class AgrrCoreContainer:
         
         if model_type == 'lightgbm':
             prediction_service = self.get_prediction_lightgbm_service()
+        elif model_type == 'mock':
+            # Use mock prediction gateway for testing
+            return PredictionMockGateway()
         else:  # default to arima
             prediction_service = self.get_prediction_arima_service()
         

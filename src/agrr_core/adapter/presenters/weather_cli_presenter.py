@@ -142,6 +142,71 @@ class WeatherCLIPresenter(WeatherPresenterOutputPort):
         json_output = json.dumps(data, indent=2, ensure_ascii=False)
         self.output_stream.write(json_output + "\n")
     
+    def display_weather_data_to_file(self, weather_data_list: WeatherDataListResponseDTO, output_file: str) -> None:
+        """Display weather data to a file in JSON format."""
+        data = self.format_weather_data_list_dto(weather_data_list)
+        json_output = json.dumps(data, indent=2, ensure_ascii=False)
+        
+        try:
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(json_output + "\n")
+            self.output_stream.write(f"Weather data saved to: {output_file}\n")
+        except Exception as e:
+            self.output_stream.write(f"Error saving to file {output_file}: {str(e)}\n")
+    
+    def display_weather_data_table_to_file(self, weather_data_list: WeatherDataListResponseDTO, output_file: str) -> None:
+        """Display weather data to a file in table format."""
+        if not weather_data_list.data:
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write("No weather data available.\n")
+            return
+        
+        try:
+            with open(output_file, 'w', encoding='utf-8') as f:
+                # Header
+                f.write("="*80 + "\n")
+                f.write("WEATHER FORECAST\n")
+                f.write("="*80 + "\n")
+                
+                # Location information
+                if weather_data_list.location:
+                    loc = weather_data_list.location
+                    f.write(f"\nLocation: {loc.latitude:.4f}°N, {loc.longitude:.4f}°E")
+                    if loc.elevation is not None:
+                        f.write(f" | Elevation: {loc.elevation:.0f}m")
+                    if loc.timezone:
+                        f.write(f" | Timezone: {loc.timezone}")
+                    f.write("\n")
+                
+                f.write("\n")
+                
+                # Table header
+                header = f"{'Date':<12} {'Max Temp':<10} {'Min Temp':<10} {'Avg Temp':<10} {'Precip':<8} {'Sunshine':<10} {'Wind Speed':<12} {'Weather':<8}"
+                f.write(header + "\n")
+                f.write("-" * len(header) + "\n")
+                
+                # Data rows
+                for item in weather_data_list.data:
+                    date_str = self._format_date(item.time)
+                    max_temp = self._format_temperature(item.temperature_2m_max)
+                    min_temp = self._format_temperature(item.temperature_2m_min)
+                    avg_temp = self._format_temperature(item.temperature_2m_mean)
+                    precip = self._format_precipitation(item.precipitation_sum)
+                    sunshine = self._format_sunshine(item.sunshine_hours)
+                    wind_speed = self._format_wind_speed(item.wind_speed_10m)
+                    weather_code = self._format_weather_code(item.weather_code)
+                    
+                    row = f"{date_str:<12} {max_temp:<10} {min_temp:<10} {avg_temp:<10} {precip:<8} {sunshine:<10} {wind_speed:<12} {weather_code:<8}"
+                    f.write(row + "\n")
+                
+                f.write("\n" + "="*80 + "\n")
+                f.write(f"Total records: {weather_data_list.total_count}\n")
+                f.write("="*80 + "\n\n")
+            
+            self.output_stream.write(f"Weather data saved to: {output_file}\n")
+        except Exception as e:
+            self.output_stream.write(f"Error saving to file {output_file}: {str(e)}\n")
+    
     def display_error(self, error_message: str, error_code: str = "WEATHER_ERROR", json_output: bool = False) -> None:
         """Display error message for CLI."""
         if json_output:

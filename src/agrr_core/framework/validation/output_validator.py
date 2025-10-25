@@ -181,5 +181,11 @@ class OutputValidator:
                 raise OutputValidationError(f"ARIMA can only predict 1 metric, got {len(metrics)}: {metrics}")
             if metrics[0] not in ['temperature', 'precipitation', 'sunshine']:
                 raise OutputValidationError(f"ARIMA cannot predict {metrics[0]}, only: temperature, precipitation, sunshine")
+        elif model_type.lower() == 'mock':
+            # Mock model supports all temperature metrics
+            valid_metrics = ['temperature', 'temperature_max', 'temperature_min']
+            for metric in metrics:
+                if metric not in valid_metrics:
+                    raise OutputValidationError(f"Mock model cannot predict {metric}, only: {valid_metrics}")
         else:
             raise OutputValidationError(f"Unknown model type: {model_type}")

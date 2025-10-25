@@ -195,6 +195,11 @@ Output (JSON):
             help='Output in JSON format'
         )
         
+        weather_parser.add_argument(
+            '--output', '-o',
+            help='Output file path (optional)'
+        )
+        
         # Forecast command (16-day forecast from tomorrow)
         forecast_parser = subparsers.add_parser(
             'forecast', 
@@ -234,6 +239,11 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
             '--json',
             action='store_true',
             help='Output in JSON format'
+        )
+        
+        forecast_parser.add_argument(
+            '--output', '-o',
+            help='Output file path (optional)'
         )
         
         return parser
@@ -303,12 +313,13 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
             # Check if we should split by year (for long-term data)
             data_source = getattr(args, 'data_source', 'openmeteo')
             json_output = getattr(args, 'json', False)
+            output_file = getattr(args, 'output', None)
             
             if self._should_split_by_year(start_date, end_date, data_source):
                 # Fetch data year by year (more reliable for long-term data)
                 await self._fetch_by_year_chunks(
                     latitude, longitude, start_date, end_date, 
-                    data_source, json_output
+                    data_source, json_output, output_file
                 )
                 return
             
@@ -323,6 +334,7 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
             
             # Execute interactor
             json_output = getattr(args, 'json', False)
+            output_file = getattr(args, 'output', None)
             
             # Remove debug message - it should not be displayed in CLI output
             # if not json_output:
@@ -383,10 +395,16 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
                     )
                     
                     # Display in appropriate format
-                    if json_output:
-                        self.cli_presenter.display_weather_data_json(weather_list_dto)
+                    if output_file:
+                        if json_output:
+                            self.cli_presenter.display_weather_data_to_file(weather_list_dto, output_file)
+                        else:
+                            self.cli_presenter.display_weather_data_table_to_file(weather_list_dto, output_file)
                     else:
-                        self.cli_presenter.display_weather_data(weather_list_dto)
+                        if json_output:
+                            self.cli_presenter.display_weather_data_json(weather_list_dto)
+                        else:
+                            self.cli_presenter.display_weather_data(weather_list_dto)
                 else:
                     if json_output:
                         # Empty result as JSON
@@ -408,9 +426,33 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
                             total_count=0,
                             location=location_dto
                         )
-                        self.cli_presenter.display_weather_data_json(empty_dto)
+                        if output_file:
+                            self.cli_presenter.display_weather_data_to_file(empty_dto, output_file)
+                        else:
+                            self.cli_presenter.display_weather_data_json(empty_dto)
                     else:
-                        self.cli_presenter.display_success_message("No weather data available for the specified criteria.")
+                        if output_file:
+                            # Empty result to file
+                            from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataListResponseDTO
+                            from agrr_core.usecase.dto.location_response_dto import LocationResponseDTO
+                            
+                            location_dto = None
+                            if location_data:
+                                location_dto = LocationResponseDTO(
+                                    latitude=location_data.get('latitude'),
+                                    longitude=location_data.get('longitude'),
+                                    elevation=location_data.get('elevation'),
+                                    timezone=location_data.get('timezone')
+                                )
+                            
+                            empty_dto = WeatherDataListResponseDTO(
+                                data=[], 
+                                total_count=0,
+                                location=location_dto
+                            )
+                            self.cli_presenter.display_weather_data_table_to_file(empty_dto, output_file)
+                        else:
+                            self.cli_presenter.display_success_message("No weather data available for the specified criteria.")
             else:
                 error_info = result.get('error', {})
                 error_message = error_info.get('message', 'Unknown error occurred')
@@ -449,7 +491,8 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
         start_date: str,
         end_date: str,
         data_source: str,
-        json_output: bool
+        json_output: bool,
+        output_file: str = None
     ) -> None:
         """Fetch weather data year by year and merge.
         
@@ -541,19 +584,8 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
         all_weather_data.sort(key=lambda x: x['time'] if isinstance(x, dict) else x.time)
         
         # Display results
-        if json_output:
-            # JSON output
-            output = {
-                'data': all_weather_data,
-                'total_count': len(all_weather_data),
-                'location': {
-                    'latitude': latitude,
-                    'longitude': longitude
-                }
-            }
-            print(json.dumps(output, indent=2))
-        else:
-            # Table output
+        if output_file:
+            # File output
             from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataListResponseDTO
             from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
             from agrr_core.usecase.dto.location_response_dto import LocationResponseDTO
@@ -583,12 +615,64 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
             )
             
             response_dto = WeatherDataListResponseDTO(
-                weather_data_list=dto_list,
+                data=dto_list,
                 total_count=len(dto_list),
                 location=location_dto
             )
             
-            self.cli_presenter.display_weather_data_list(response_dto)
+            if json_output:
+                self.cli_presenter.display_weather_data_to_file(response_dto, output_file)
+            else:
+                self.cli_presenter.display_weather_data_table_to_file(response_dto, output_file)
+        else:
+            if json_output:
+                # JSON output
+                output = {
+                    'data': all_weather_data,
+                    'total_count': len(all_weather_data),
+                    'location': {
+                        'latitude': latitude,
+                        'longitude': longitude
+                    }
+                }
+                print(json.dumps(output, indent=2))
+            else:
+                # Table output
+                from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataListResponseDTO
+                from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
+                from agrr_core.usecase.dto.location_response_dto import LocationResponseDTO
+                
+                # Convert dict data to DTOs
+                dto_list = []
+                for item in all_weather_data:
+                    if isinstance(item, dict):
+                        dto = WeatherDataResponseDTO(
+                            time=item.get('time', ''),
+                            temperature_2m_max=item.get('temperature_2m_max'),
+                            temperature_2m_min=item.get('temperature_2m_min'),
+                            temperature_2m_mean=item.get('temperature_2m_mean'),
+                            precipitation_sum=item.get('precipitation_sum'),
+                            sunshine_duration=item.get('sunshine_duration'),
+                            sunshine_hours=item.get('sunshine_hours'),
+                            wind_speed_10m=item.get('wind_speed_10m'),
+                            weather_code=item.get('weather_code')
+                        )
+                        dto_list.append(dto)
+                
+                location_dto = LocationResponseDTO(
+                    latitude=latitude,
+                    longitude=longitude,
+                    elevation=None,
+                    timezone=None
+                )
+                
+                response_dto = WeatherDataListResponseDTO(
+                    data=dto_list,
+                    total_count=len(dto_list),
+                    location=location_dto
+                )
+                
+                self.cli_presenter.display_weather_data(response_dto)
     
     async def handle_forecast_command(self, args) -> None:
         """Handle forecast command execution."""
@@ -604,6 +688,7 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
             
             # Execute interactor
             json_output = getattr(args, 'json', False)
+            output_file = getattr(args, 'output', None)
             
             # Execute interactor
             result = await self.forecast_interactor.execute(request)
@@ -657,10 +742,16 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
                     )
                     
                     # Display in appropriate format
-                    if json_output:
-                        self.cli_presenter.display_weather_data_json(weather_list_dto)
+                    if output_file:
+                        if json_output:
+                            self.cli_presenter.display_weather_data_to_file(weather_list_dto, output_file)
+                        else:
+                            self.cli_presenter.display_weather_data_table_to_file(weather_list_dto, output_file)
                     else:
-                        self.cli_presenter.display_weather_data(weather_list_dto)
+                        if json_output:
+                            self.cli_presenter.display_weather_data_json(weather_list_dto)
+                        else:
+                            self.cli_presenter.display_weather_data(weather_list_dto)
                 else:
                     if json_output:
                         # Empty result as JSON
@@ -682,9 +773,33 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
                             total_count=0,
                             location=location_dto
                         )
-                        self.cli_presenter.display_weather_data_json(empty_dto)
+                        if output_file:
+                            self.cli_presenter.display_weather_data_to_file(empty_dto, output_file)
+                        else:
+                            self.cli_presenter.display_weather_data_json(empty_dto)
                     else:
-                        self.cli_presenter.display_success_message("No forecast data available for the specified location.")
+                        if output_file:
+                            # Empty result to file
+                            from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataListResponseDTO
+                            from agrr_core.usecase.dto.location_response_dto import LocationResponseDTO
+                            
+                            location_dto = None
+                            if location_data:
+                                location_dto = LocationResponseDTO(
+                                    latitude=location_data.get('latitude'),
+                                    longitude=location_data.get('longitude'),
+                                    elevation=location_data.get('elevation'),
+                                    timezone=location_data.get('timezone')
+                                )
+                            
+                            empty_dto = WeatherDataListResponseDTO(
+                                data=[], 
+                                total_count=0,
+                                location=location_dto
+                            )
+                            self.cli_presenter.display_weather_data_table_to_file(empty_dto, output_file)
+                        else:
+                            self.cli_presenter.display_success_message("No forecast data available for the specified location.")
             else:
                 error_info = result.get('error', {})
                 error_message = error_info.get('message', 'Unknown error occurred')

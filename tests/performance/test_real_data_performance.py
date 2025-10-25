@@ -55,7 +55,7 @@ async def test_real_data_performance():
     
     # Use the latest debug data
     debug_dir = Path("/home/akishige/projects/agrr/tmp/debug")
-    timestamp = "1760854919"  # Latest
+    timestamp = "1761380624"  # Latest
     
     file_service = FileService()
     

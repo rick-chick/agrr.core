@@ -23,7 +23,7 @@ async def test_gdd_cache_performance():
     
     # Use real debug data
     debug_dir = Path("/home/akishige/projects/agrr/tmp/debug")
-    timestamp = "1760854919"
+    timestamp = "1761380624"
     
     file_service = FileService()
     

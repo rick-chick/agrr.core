@@ -185,9 +185,9 @@ Notes:
         # Model selection argument
         parser.add_argument(
             '--model', '-m',
-            choices=['arima', 'lightgbm', 'ensemble'],
+            choices=['arima', 'lightgbm', 'ensemble', 'mock'],
             default='arima',
-            help='Prediction model to use (default: arima). lightgbm requires 90+ days of data.'
+            help='Prediction model to use (default: arima). lightgbm requires 90+ days of data. mock returns last year\'s data.'
         )
         
         # Confidence level argument
@@ -235,12 +235,21 @@ Notes:
             model_names = {
                 'arima': 'ARIMA (AutoRegressive Integrated Moving Average)',
                 'lightgbm': 'LightGBM (Light Gradient Boosting Machine)',
-                'ensemble': 'Ensemble (Multiple Models)'
+                'ensemble': 'Ensemble (Multiple Models)',
+                'mock': 'Mock (Last Year\'s Same Period Data)'
             }
             model_display = model_names.get(model_type, model_type.upper())
             
             # LightGBMの場合は自動的に全メトリック予測
             if model_type == 'lightgbm':
+                predictions = await self.predict_interactor.execute(
+                    input_source=args.input,
+                    output_destination=args.output,
+                    prediction_days=args.days,
+                    predict_all_temperature_metrics=True
+                )
+            elif model_type == 'mock':
+                # Mock mode: use last year's same period data
                 predictions = await self.predict_interactor.execute(
                     input_source=args.input,
                     output_destination=args.output,

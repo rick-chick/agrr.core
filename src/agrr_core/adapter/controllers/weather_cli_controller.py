@@ -297,6 +297,11 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
             # Parse location
             latitude, longitude = self.parse_location(args.location)
             
+            # Validate days parameter if using --days
+            if not args.start_date and not args.end_date:
+                if args.days < 2:
+                    raise ValueError("Minimum 2 days required for weather data. Use --days 2 or more, or specify --start-date and --end-date")
+            
             # Determine date range
             if args.start_date and args.end_date:
                 start_date = self.parse_date(args.start_date)

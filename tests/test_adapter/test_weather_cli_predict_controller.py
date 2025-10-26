@@ -73,7 +73,8 @@ class TestWeatherCliPredictController:
         self.controller.predict_interactor.execute.assert_called_once_with(
             input_source="input.json",
             output_destination="output.json",
-            prediction_days=7
+            prediction_days=7,
+            predict_all_temperature_metrics=False
         )
         self.mock_cli_presenter.display_success_message.assert_called_once()
     

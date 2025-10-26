@@ -18,7 +18,7 @@ class TestFeatureEngineeringService:
         data = []
         base_date = datetime(2024, 1, 1)
         
-        for i in range(100):  # 100 days of data
+        for i in range(730):  # 730 days of data (2 years for climatological prediction)
             date = base_date + timedelta(days=i)
             weather_data = WeatherData(
                 time=date,

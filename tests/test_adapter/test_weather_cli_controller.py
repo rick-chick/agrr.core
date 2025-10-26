@@ -91,6 +91,7 @@ class TestWeatherCliFetchController:
         args.end_date = None
         args.days = 7
         args.json = False
+        args.output = None
         
         # Mock interactor response
         mock_response = {
@@ -138,6 +139,7 @@ class TestWeatherCliFetchController:
         args.end_date = "2024-01-07"
         args.days = 7
         args.json = False
+        args.output = None
         
         # Mock repository response
         mock_weather_data = []
@@ -169,6 +171,7 @@ class TestWeatherCliFetchController:
         args.end_date = None
         args.days = 7
         args.json = False
+        args.output = None
         
         # Mock repository response
         mock_weather_data = []
@@ -196,6 +199,7 @@ class TestWeatherCliFetchController:
         args.end_date = "2024-01-07"
         args.days = 7
         args.json = False
+        args.output = None
         
         # Mock repository response
         mock_weather_data = []
@@ -223,6 +227,7 @@ class TestWeatherCliFetchController:
         args.end_date = None
         args.days = 7
         args.json = True
+        args.output = None
         
         # Mock interactor response
         mock_response = {
@@ -270,6 +275,7 @@ class TestWeatherCliFetchController:
         args.end_date = None
         args.days = 7
         args.json = True
+        args.output = None
         
         # Mock interactor response with empty data
         mock_response = {
@@ -307,6 +313,7 @@ class TestWeatherCliFetchController:
         args.end_date = None
         args.days = 7
         args.json = False
+        args.output = None
         
         # Mock repository response with location data
         mock_weather_data = []
@@ -339,6 +346,7 @@ class TestWeatherCliFetchController:
         args.end_date = None
         args.days = 7
         args.json = False
+        args.output = None
         
         # Mock repository to raise exception
         self.mock_gateway.get_by_location_and_date_range.side_effect = Exception("API Error")
@@ -361,6 +369,7 @@ class TestWeatherCliFetchController:
         args.end_date = None
         args.days = 7
         args.json = True
+        args.output = None
         
         # Mock repository to raise exception
         self.mock_gateway.get_by_location_and_date_range.side_effect = Exception("API Error")
@@ -385,6 +394,7 @@ class TestWeatherCliFetchController:
         args.end_date = None
         args.days = 7
         args.json = False
+        args.output = None
         
         await self.controller.handle_weather_command(args)
         
@@ -404,6 +414,7 @@ class TestWeatherCliFetchController:
         args.end_date = None
         args.days = 7
         args.json = True
+        args.output = None
         
         await self.controller.handle_weather_command(args)
         
@@ -454,6 +465,7 @@ class TestWeatherCliFetchController:
         args.days = 7
         args.data_source = "nasa-power"
         args.json = True
+        args.output = None
         
         # Mock interactor response with NASA POWER data
         mock_response = {

@@ -248,7 +248,9 @@ class TestWeatherFileGateway:
             ),
             Forecast(
                 date=datetime(2024, 2, 2),
-                predicted_value=21.0
+                predicted_value=21.0,
+                confidence_lower=19.0,
+                confidence_upper=23.0
             )
         ]
         
@@ -275,9 +277,9 @@ class TestWeatherFileGateway:
             result = json.loads(written_content)
             
             assert "predictions" in result
-            assert "total_predictions" in result
+            assert "prediction_days" in result
             assert "metadata" in result
-            assert result["total_predictions"] == 2
+            assert result["prediction_days"] == 2
             assert len(result["predictions"]) == 2
             assert result["predictions"][0]["predicted_value"] == 20.0
             assert result["predictions"][0]["confidence_lower"] == 18.0
@@ -354,8 +356,8 @@ class TestWeatherFileGateway:
             
             # Create mock predictions
             predictions = [
-                Forecast(date=datetime(2024, 2, 1), predicted_value=17.0),
-                Forecast(date=datetime(2024, 2, 2), predicted_value=18.0)
+                Forecast(date=datetime(2024, 2, 1), predicted_value=17.0, confidence_lower=15.0, confidence_upper=19.0),
+                Forecast(date=datetime(2024, 2, 2), predicted_value=18.0, confidence_lower=16.0, confidence_upper=20.0)
             ]
             
             # Mock the file repository write method to capture what would be written
@@ -373,7 +375,7 @@ class TestWeatherFileGateway:
             assert len(written_contents) >= 1
             result = json.loads(written_contents[0])  # First call should be the main data
             
-            assert result["total_predictions"] == 2
+            assert result["prediction_days"] == 2
             assert len(result["predictions"]) == 2
         finally:
             os.unlink(input_file)

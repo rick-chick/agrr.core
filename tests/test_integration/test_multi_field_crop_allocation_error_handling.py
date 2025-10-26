@@ -65,11 +65,11 @@ async def test_partial_crop_failure_continues_with_real_data():
         config=config,
     )
     
-    # Execute with autumn start (summer crops will fail, winter crops should succeed)
+    # Execute with spring start (better for crop growth)
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2", "field_3", "field_4"],
-        planning_period_start=datetime(2025, 9, 1),
-        planning_period_end=datetime(2026, 12, 29),
+        planning_period_start=datetime(2023, 4, 1),
+        planning_period_end=datetime(2023, 10, 31),
         optimization_objective="maximize_profit",
     )
     

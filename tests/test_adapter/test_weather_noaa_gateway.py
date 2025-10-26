@@ -284,7 +284,7 @@ class TestNOAALocationMapping:
         assert len(INDIA_LOCATION_MAPPING) == 49, f"Expected 49 India stations, got {len(INDIA_LOCATION_MAPPING)}"
         
         # Combined mapping
-        assert len(LOCATION_MAPPING) == 66, f"Expected 66 total stations, got {len(LOCATION_MAPPING)}"
+        assert len(LOCATION_MAPPING) == 153, f"Expected 153 total stations, got {len(LOCATION_MAPPING)}"
     
     def test_india_mapping_major_states(self):
         """Test that India mapping includes major agricultural states."""

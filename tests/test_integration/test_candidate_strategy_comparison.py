@@ -38,26 +38,26 @@ TEST_DATASETS = [
         "fields": "test_data/allocation_fields_1760447748.json",
         "weather": "test_data/allocation_weather_1760447748.json",
         "field_ids": ["field_1", "field_2", "field_3"],
-        "planning_start": datetime(2025, 4, 1),
-        "planning_end": datetime(2025, 10, 31),
+        "planning_start": datetime(2023, 4, 1),
+        "planning_end": datetime(2023, 10, 31),
     },
     {
         "name": "Dataset 1760533282 (2 crops, 2 fields)",
         "crops": "test_data/allocation_crops_1760533282.json",
         "fields": "test_data/allocation_fields_1760533282.json",
         "weather": "test_data/allocation_weather_1760533282.json",
-        "field_ids": ["field_16", "field_17"],
-        "planning_start": datetime(2025, 4, 1),
-        "planning_end": datetime(2025, 10, 31),
+        "field_ids": ["field_1", "field_2"],
+        "planning_start": datetime(2023, 4, 1),
+        "planning_end": datetime(2023, 10, 31),
     },
     {
         "name": "Dataset 1760536489 (1 field)",
         "crops": "test_data/allocation_crops_1760536489.json",
         "fields": "test_data/allocation_fields_1760536489.json",
         "weather": "test_data/allocation_weather_1760536489.json",
-        "field_ids": ["field_9"],
-        "planning_start": datetime(2025, 4, 1),
-        "planning_end": datetime(2025, 10, 31),
+        "field_ids": ["field_1"],
+        "planning_start": datetime(2023, 4, 1),
+        "planning_end": datetime(2023, 10, 31),
     },
 ]
 
@@ -106,8 +106,8 @@ def allocation_request():
     """Standard allocation request."""
     return MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2", "field_3"],
-        planning_period_start=datetime(2025, 4, 1),
-        planning_period_end=datetime(2025, 10, 31),
+        planning_period_start=datetime(2023, 4, 1),
+        planning_period_end=datetime(2023, 10, 31),
         optimization_objective="maximize_profit",
     )
 
@@ -563,10 +563,23 @@ async def test_multiple_datasets_greedy_comparison(dataset):
     print(f"{'='*80}\n")
     
     # Period Template should be at least 95% (greedy can have some variance)
-    assert profit_template >= profit_legacy * 0.95, (
-        f"Period Template ({profit_template}) should be >= 95% of Candidate Pool ({profit_legacy}) "
-        f"for dataset: {dataset['name']}"
-    )
+    # Use small epsilon for floating point comparison
+    epsilon = 1e-6
+    if abs(profit_template - profit_legacy) < epsilon:
+        # If results are essentially equal, that's acceptable
+        pass
+    elif profit_legacy >= 0:
+        # For positive profits, Period Template should be >= 95% of Candidate Pool
+        assert profit_template >= profit_legacy * 0.95 - epsilon, (
+            f"Period Template ({profit_template}) should be >= 95% of Candidate Pool ({profit_legacy}) "
+            f"for dataset: {dataset['name']}"
+        )
+    else:
+        # For negative profits (losses), Period Template should be >= 95% of Candidate Pool (less loss)
+        assert profit_template >= profit_legacy * 0.95 - epsilon, (
+            f"Period Template ({profit_template}) should be >= 95% of Candidate Pool ({profit_legacy}) "
+            f"for dataset: {dataset['name']}"
+        )
 
 
 @pytest.mark.asyncio
@@ -598,8 +611,6 @@ async def test_comprehensive_benchmark_all_datasets():
             file_path=dataset["fields"]
         )
         
-        crop_profile_gateway_internal = CropProfileInMemoryGateway()
-        
         request = MultiFieldCropAllocationRequestDTO(
             field_ids=dataset["field_ids"],
             planning_period_start=dataset["planning_start"],
@@ -615,11 +626,12 @@ async def test_comprehensive_benchmark_all_datasets():
                 top_period_candidates=10,
             )
             
+            crop_profile_gateway_internal_legacy = CropProfileInMemoryGateway()
             interactor_legacy = MultiFieldCropAllocationGreedyInteractor(
                 field_gateway=field_gateway,
                 crop_gateway=crop_gateway,
                 weather_gateway=weather_gateway,
-                crop_profile_gateway_internal=crop_profile_gateway_internal,
+                crop_profile_gateway_internal=crop_profile_gateway_internal_legacy,
                 config=config_legacy,
             )
             
@@ -631,11 +643,12 @@ async def test_comprehensive_benchmark_all_datasets():
                 max_templates_per_crop=200,
             )
             
+            crop_profile_gateway_internal_template = CropProfileInMemoryGateway()
             interactor_template = MultiFieldCropAllocationGreedyInteractor(
                 field_gateway=field_gateway,
                 crop_gateway=crop_gateway,
                 weather_gateway=weather_gateway,
-                crop_profile_gateway_internal=crop_profile_gateway_internal,
+                crop_profile_gateway_internal=crop_profile_gateway_internal_template,
                 config=config_template,
             )
             

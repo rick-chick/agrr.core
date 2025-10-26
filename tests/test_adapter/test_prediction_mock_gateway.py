@@ -113,7 +113,7 @@ class TestPredictionMockGateway:
         
         assert data['model_type'] == 'Mock'
         assert data['prediction_days'] == 2
-        assert data['metrics'] == ['temperature']
+        assert data['metrics'] == ['temperature']  # Default metric when no metric info available
         
         # Check predictions
         predictions = data['predictions']
@@ -319,10 +319,11 @@ class TestPredictionMockGateway:
         finally:
             Path(temp_file).unlink()
         
-        # Test with empty historical data
-        with pytest.raises(Exception):
-            await gateway.predict(
-                historical_data=[],
-                metric='temperature',
-                config={'prediction_days': 1}
-            )
+        # Test with empty historical data - should use seasonal averages
+        predictions = await gateway.predict(
+            historical_data=[],
+            metric='temperature',
+            config={'prediction_days': 1}
+        )
+        assert len(predictions) == 1
+        assert predictions[0].predicted_value is not None

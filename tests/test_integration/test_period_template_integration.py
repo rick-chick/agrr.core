@@ -65,8 +65,8 @@ async def test_period_template_strategy_basic():
     # Execute with full planning period
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2"],
-        planning_period_start=datetime(2025, 4, 1),
-        planning_period_end=datetime(2025, 10, 31),
+        planning_period_start=datetime(2023, 4, 1),
+        planning_period_end=datetime(2023, 10, 31),
         optimization_objective="maximize_profit",
     )
     
@@ -119,8 +119,8 @@ async def test_period_template_with_dp_algorithm():
     
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2", "field_3"],
-        planning_period_start=datetime(2025, 4, 1),
-        planning_period_end=datetime(2025, 10, 31),
+        planning_period_start=datetime(2023, 4, 1),
+        planning_period_end=datetime(2023, 10, 31),
         optimization_objective="maximize_profit",
     )
     
@@ -175,8 +175,8 @@ async def test_period_template_with_greedy_algorithm():
     
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2"],
-        planning_period_start=datetime(2025, 4, 1),
-        planning_period_end=datetime(2025, 10, 31),
+        planning_period_start=datetime(2023, 4, 1),
+        planning_period_end=datetime(2023, 10, 31),
         optimization_objective="maximize_profit",
     )
     
@@ -230,8 +230,8 @@ async def test_period_template_with_local_search():
     
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2"],
-        planning_period_start=datetime(2025, 4, 1),
-        planning_period_end=datetime(2025, 10, 31),
+        planning_period_start=datetime(2023, 4, 1),
+        planning_period_end=datetime(2023, 10, 31),
         optimization_objective="maximize_profit",
     )
     
@@ -290,8 +290,8 @@ async def test_period_template_with_alns():
     
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2"],
-        planning_period_start=datetime(2025, 4, 1),
-        planning_period_end=datetime(2025, 10, 31),
+        planning_period_start=datetime(2023, 4, 1),
+        planning_period_end=datetime(2023, 10, 31),
         optimization_objective="maximize_profit",
     )
     
@@ -345,8 +345,8 @@ async def test_period_template_memory_efficiency():
     
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2", "field_3", "field_4"],
-        planning_period_start=datetime(2025, 4, 1),
-        planning_period_end=datetime(2025, 10, 31),
+        planning_period_start=datetime(2023, 4, 1),
+        planning_period_end=datetime(2023, 10, 31),
         optimization_objective="maximize_profit",
     )
     
@@ -401,8 +401,8 @@ async def test_period_template_exploration_space():
     
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2"],
-        planning_period_start=datetime(2025, 4, 1),
-        planning_period_end=datetime(2025, 10, 31),
+        planning_period_start=datetime(2023, 4, 1),
+        planning_period_end=datetime(2023, 10, 31),
         optimization_objective="maximize_profit",
     )
     

@@ -87,6 +87,7 @@ class PredictionMockGateway(PredictionGateway):
         try:
             # Convert predictions to JSON format
             predictions_data = []
+            metrics = set()
             for forecast in predictions:
                 prediction_dict = {
                     'date': forecast.date.isoformat(),
@@ -95,13 +96,20 @@ class PredictionMockGateway(PredictionGateway):
                     'confidence_upper': forecast.confidence_upper
                 }
                 predictions_data.append(prediction_dict)
+                # Extract metric from forecast if available
+                if hasattr(forecast, 'metric') and forecast.metric:
+                    metrics.add(forecast.metric)
+            
+            # If no metrics found in forecasts, use default
+            if not metrics:
+                metrics = {'temperature'}
             
             # Create output data structure
             output_data = {
                 'predictions': predictions_data,
                 'model_type': 'Mock',
                 'prediction_days': len(predictions),
-                'metrics': ['temperature', 'temperature_max', 'temperature_min']  # Mock supports all metrics
+                'metrics': sorted(list(metrics))
             }
             
             # Write to file

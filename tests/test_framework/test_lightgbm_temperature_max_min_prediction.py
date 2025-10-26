@@ -23,8 +23,8 @@ class TestLightGBMTemperatureMaxMinPrediction:
         data = []
         base_date = datetime(2023, 1, 1)
         
-        # Create 120 days of data (minimum 90 required for LightGBM)
-        for i in range(120):
+        # Create 730 days of data (2 years for climatological prediction)
+        for i in range(730):
             date = base_date + timedelta(days=i)
             
             # Seasonal pattern with noise
@@ -174,8 +174,8 @@ class TestLightGBMTemperatureMaxMinPrediction:
         metric = 'temperature_max'
         
         # Split data into train and test
-        train_data = sample_weather_data[:100]
-        test_data = sample_weather_data[100:107]  # 7 days for testing
+        train_data = sample_weather_data[:365]
+        test_data = sample_weather_data[365:372]  # 7 days for testing
         
         # Generate predictions
         model_config = {
@@ -216,8 +216,8 @@ class TestLightGBMTemperatureMaxMinPrediction:
         metric = 'temperature_min'
         
         # Split data into train and test
-        train_data = sample_weather_data[:100]
-        test_data = sample_weather_data[100:107]  # 7 days for testing
+        train_data = sample_weather_data[:365]
+        test_data = sample_weather_data[365:372]  # 7 days for testing
         
         # Generate predictions
         model_config = {

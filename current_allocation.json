@@ -1,0 +1,87 @@
+{
+  "optimization_result": {
+    "optimization_id": "c28fd1ed-eb99-4b7d-8caa-4e922e90ea8f",
+    "algorithm_used": "DP + Local Search",
+    "is_optimal": false,
+    "optimization_time": 0.3193955421447754,
+    "total_cost": 696000.0,
+    "total_revenue": 2000000.0,
+    "total_profit": 1304000.0,
+    "crop_areas": {
+      "tomato": 200.0,
+      "rice": 250.0
+    },
+    "field_schedules": [
+      {
+        "field_id": "field_01",
+        "field_name": "北圃場",
+        "total_area_used": 200.0,
+        "total_cost": 360000.0,
+        "total_revenue": 800000.0,
+        "total_profit": 440000.0,
+        "utilization_rate": 20.0,
+        "allocation_count": 1,
+        "allocations": [
+          {
+            "allocation_id": "5c1072a1-8c72-40d5-a383-93b479618d68",
+            "crop_id": "tomato",
+            "crop_name": "Tomato",
+            "variety": "Momotaro",
+            "area_used": 200.0,
+            "start_date": "2024-07-14T00:00:00",
+            "completion_date": "2024-09-23T00:00:00",
+            "growth_days": 72,
+            "accumulated_gdd": 0.0,
+            "total_cost": 360000.0,
+            "expected_revenue": 800000.0,
+            "profit": 440000.0
+          }
+        ]
+      },
+      {
+        "field_id": "field_02",
+        "field_name": "南圃場",
+        "total_area_used": 250.0,
+        "total_cost": 336000.0,
+        "total_revenue": 1200000.0,
+        "total_profit": 864000.0,
+        "utilization_rate": 31.25,
+        "allocation_count": 1,
+        "allocations": [
+          {
+            "allocation_id": "2df900b9-c7c2-4048-a35a-1c5b7c56d281",
+            "crop_id": "rice",
+            "crop_name": "Rice",
+            "variety": "Koshihikari",
+            "area_used": 250.0,
+            "start_date": "2024-07-01T00:00:00",
+            "completion_date": "2024-09-22T00:00:00",
+            "growth_days": 84,
+            "accumulated_gdd": 0.0,
+            "total_cost": 336000.0,
+            "expected_revenue": 1200000.0,
+            "profit": 864000.0
+          }
+        ]
+      }
+    ]
+  },
+  "summary": {
+    "optimization_id": "c28fd1ed-eb99-4b7d-8caa-4e922e90ea8f",
+    "algorithm_used": "DP + Local Search",
+    "is_optimal": false,
+    "computation_time_seconds": 0.3193955421447754,
+    "total_fields": 2,
+    "total_allocations": 2,
+    "total_cost": 696000.0,
+    "total_revenue": 2000000.0,
+    "total_profit": 1304000.0,
+    "profit_rate_percent": 187.35632183908046,
+    "average_field_utilization_percent": 25.625,
+    "crop_diversity": 2,
+    "crop_areas": {
+      "tomato": 200.0,
+      "rice": 250.0
+    }
+  }
+}

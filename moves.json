@@ -1,0 +1,11 @@
+{
+  "moves": [
+    {
+      "allocation_id": "5c1072a1-8c72-40d5-a383-93b479618d68",
+      "action": "move",
+      "to_field_id": "field_01",
+      "to_start_date": "2024-06-01",
+      "to_area": 150.0
+    }
+  ]
+}

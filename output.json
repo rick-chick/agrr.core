@@ -1,0 +1,23 @@
+{
+  "predictions": [
+    {
+      "date": "2024-05-01T00:00:00",
+      "temperature": 15.0,
+      "temperature_max": 20.0,
+      "temperature_min": 10.0,
+      "temperature_confidence_lower": null,
+      "temperature_confidence_upper": null,
+      "temperature_max_confidence_lower": null,
+      "temperature_max_confidence_upper": null,
+      "temperature_min_confidence_lower": null,
+      "temperature_min_confidence_upper": null
+    }
+  ],
+  "model_type": "Mock",
+  "prediction_days": 1,
+  "metrics": [
+    "temperature",
+    "temperature_max",
+    "temperature_min"
+  ]
+}

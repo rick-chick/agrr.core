@@ -291,6 +291,27 @@ pip install agrr-core
 agrr-weather weather --location 35.6762,139.6503 --days 7
 ```
 
+## 利用可能なコマンド
+
+### optimize コマンド
+- `period` - 最適な栽培期間の計算
+- `allocate` - 複数圃場での作物配分最適化
+- `adjust` - 既存配分の調整
+- `candidates` - 候補リストの提示
+
+### 使用例
+```bash
+# 候補リスト提示
+agrr optimize candidates \
+  --allocation current_allocation.json \
+  --fields-file fields.json \
+  --crops-file crops.json \
+  --target-crop tomato \
+  --planning-start 2024-04-01 --planning-end 2024-10-31 \
+  --weather-file weather.json \
+  --output candidates.txt
+```
+
 ## 拡張
 
 ### 新しいコマンドの追加

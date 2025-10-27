@@ -37,6 +37,7 @@
    - [api/README.md](api/README.md) - CLI API
    - [api/adapter/](api/adapter/) - Adapter層API
    - [api/framework/](api/framework/) - Framework層API
+   - [api/candidate_suggestion_api_reference.md](api/candidate_suggestion_api_reference.md) - 候補リスト提示機能API
 
 ### 🚀 アルゴリズム研究者向け
 
@@ -108,6 +109,16 @@
 |------------|------|
 | [api/README.md](api/README.md) | CLI API概要 |
 | [api/adapter/cli_presenter.md](api/adapter/cli_presenter.md) | Presenter API |
+| [api/candidate_suggestion_api_reference.md](api/candidate_suggestion_api_reference.md) | 候補リスト提示機能API |
+
+### 🌱 候補リスト提示機能
+
+| ドキュメント | 説明 | 対象者 |
+|------------|------|--------|
+| [CANDIDATE_SUGGESTION_FEATURE.md](CANDIDATE_SUGGESTION_FEATURE.md) | 要件定義書 | 開発者 |
+| [CANDIDATE_SUGGESTION_TEST_DESIGN.md](CANDIDATE_SUGGESTION_TEST_DESIGN.md) | テスト設計書 | 開発者 |
+| [CANDIDATE_SUGGESTION_USER_GUIDE.md](CANDIDATE_SUGGESTION_USER_GUIDE.md) | ユーザーガイド | ユーザー |
+| [api/candidate_suggestion_api_reference.md](api/candidate_suggestion_api_reference.md) | APIリファレンス | 開発者 |
 
 ---
 

@@ -456,6 +456,7 @@ Available Subcommands:
   period      Find optimal cultivation period to minimize costs
   allocate    Optimize crop allocation across multiple fields
   adjust      Adjust existing allocation based on move instructions
+  candidates  Generate candidate suggestions for crop allocation
 
 Examples:
   # Find optimal planting date
@@ -474,10 +475,17 @@ Examples:
     --fields-file fields.json --crops-file crops.json \\
     --planning-start 2024-04-01 --planning-end 2024-10-31
 
+  # Generate candidate suggestions
+  agrr optimize candidates --allocation current_allocation.json \\
+    --fields-file fields.json --crops-file crops.json \\
+    --target-crop tomato --planning-start 2024-04-01 --planning-end 2024-10-31 \\
+    --weather-file weather.json --output candidates.txt
+
 For detailed help on each subcommand:
   agrr optimize period --help
   agrr optimize allocate --help
   agrr optimize adjust --help
+  agrr optimize candidates --help
 """)
                 sys.exit(0)
             
@@ -856,9 +864,107 @@ For detailed help on each subcommand:
                 
                 asyncio.run(controller.run(args[2:]))  # Skip 'optimize' and 'adjust'
             
+            elif subcommand == 'candidates':
+                # Run candidate suggestion CLI
+                # Setup file-based repositories
+                file_repository = FileService()
+                
+                # Parse args to extract allocation path
+                allocation_path = ""
+                if '--allocation' in args:
+                    try:
+                        alloc_index = args.index('--allocation')
+                        if alloc_index + 1 < len(args):
+                            allocation_path = args[alloc_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+                
+                # Setup gateways
+                from agrr_core.adapter.gateways.allocation_result_file_gateway import AllocationResultFileGateway
+                allocation_result_gateway = AllocationResultFileGateway(
+                    file_repository=file_repository,
+                    file_path=allocation_path
+                )
+                
+                # Parse args to extract fields-file path
+                fields_file_path = ""
+                if '--fields-file' in args:
+                    try:
+                        ff_index = args.index('--fields-file')
+                        if ff_index + 1 < len(args):
+                            fields_file_path = args[ff_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+                
+                field_gateway = FieldFileGateway(
+                    file_repository=file_repository,
+                    file_path=fields_file_path
+                )
+                
+                # Parse args to extract crops-file path
+                crops_file_path = ""
+                if '--crops-file' in args:
+                    try:
+                        cf_index = args.index('--crops-file')
+                        if cf_index + 1 < len(args):
+                            crops_file_path = args[cf_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+                
+                crop_gateway = CropProfileFileGateway(
+                    file_repository=file_repository,
+                    file_path=crops_file_path
+                )
+                
+                # Parse args to extract weather-file path
+                weather_file_path = ""
+                if '--weather-file' in args:
+                    try:
+                        wf_index = args.index('--weather-file')
+                        if wf_index + 1 < len(args):
+                            weather_file_path = args[wf_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+                
+                weather_gateway = WeatherFileGateway(
+                    file_repository=file_repository,
+                    file_path=weather_file_path
+                )
+                
+                # Parse args to extract interaction-rules path
+                interaction_rule_gateway = None
+                if '--interaction-rules-file' in args:
+                    try:
+                        ir_index = args.index('--interaction-rules-file')
+                        if ir_index + 1 < len(args):
+                            interaction_rules_path = args[ir_index + 1]
+                            interaction_rule_gateway = InteractionRuleFileGateway(
+                                file_repository=file_repository,
+                                file_path=interaction_rules_path
+                            )
+                    except (ValueError, IndexError):
+                        pass
+                
+                # Setup presenter
+                from agrr_core.adapter.presenters.candidate_suggestion_cli_presenter import CandidateSuggestionCliPresenter
+                presenter = CandidateSuggestionCliPresenter()
+                
+                # Setup controller
+                from agrr_core.adapter.controllers.candidate_suggestion_cli_controller import CandidateSuggestionCliController
+                controller = CandidateSuggestionCliController(
+                    allocation_result_gateway=allocation_result_gateway,
+                    field_gateway=field_gateway,
+                    crop_gateway=crop_gateway,
+                    weather_gateway=weather_gateway,
+                    presenter=presenter,
+                    interaction_rule_gateway=interaction_rule_gateway
+                )
+                
+                asyncio.run(controller.handle_candidates_command(controller.create_argument_parser().parse_args(args[2:])))
+            
             else:
                 print(f"Error: Unknown optimize subcommand '{subcommand}'")
-                print("Available: period, allocate, adjust")
+                print("Available: period, allocate, adjust, candidates")
                 print("Run 'agrr optimize --help' for more information")
                 sys.exit(1)
         else:

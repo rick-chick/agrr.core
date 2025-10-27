@@ -39,6 +39,7 @@ agrr crop --query "トマト"
 agrr crop --query "rice Koshihikari" > rice_profile.json
 agrr progress --crop-file rice_profile.json --start-date 2024-05-01 --weather-file weather_data.json
 agrr optimize period --crop-file rice_profile.json --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 --weather-file weather_data.json --field-file field_01.json
+agrr optimize candidates --allocation current_allocation.json --fields-file fields.json --crops-file crops.json --target-crop tomato --planning-start 2024-04-01 --planning-end 2024-10-31 --weather-file weather.json --output candidates.txt
 ```
 
 ### Distribution

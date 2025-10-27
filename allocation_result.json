@@ -1,0 +1,153 @@
+{
+  "optimization_result": {
+    "optimization_id": "e3bfd2f0-356e-41c7-8c37-089b15c68097",
+    "algorithm_used": "DP + Local Search",
+    "is_optimal": false,
+    "optimization_time": 0.05619192123413086,
+    "total_cost": 1285000.0,
+    "total_revenue": 9291000.0,
+    "total_profit": 8006000.0,
+    "crop_areas": {
+      "lettuce": 6000.0
+    },
+    "field_schedules": [
+      {
+        "field_id": "field_01",
+        "field_name": "北圃場",
+        "total_area_used": 2000.0,
+        "total_cost": 435000.0,
+        "total_revenue": 3105000.0,
+        "total_profit": 2670000.0,
+        "utilization_rate": 200.0,
+        "allocation_count": 2,
+        "allocations": [
+          {
+            "allocation_id": "5eb34ef8-441e-4514-937e-8db2c1becebe",
+            "crop_id": "lettuce",
+            "crop_name": "lettuce",
+            "variety": null,
+            "area_used": 1000.0,
+            "start_date": "2024-05-10T00:00:00",
+            "completion_date": "2024-06-13T00:00:00",
+            "growth_days": 35,
+            "accumulated_gdd": 0.0,
+            "total_cost": 175000.0,
+            "expected_revenue": 1575000.0,
+            "profit": 1400000.0
+          },
+          {
+            "allocation_id": "b3f6c0c3-6952-4cc6-a6e9-9285cad51e4b",
+            "crop_id": "lettuce",
+            "crop_name": "lettuce",
+            "variety": null,
+            "area_used": 1000.0,
+            "start_date": "2024-07-11T00:00:00",
+            "completion_date": "2024-08-31T00:00:00",
+            "growth_days": 52,
+            "accumulated_gdd": 0.0,
+            "total_cost": 260000.0,
+            "expected_revenue": 1530000.0,
+            "profit": 1270000.0
+          }
+        ]
+      },
+      {
+        "field_id": "field_02",
+        "field_name": "南圃場",
+        "total_area_used": 1600.0,
+        "total_cost": 328000.0,
+        "total_revenue": 2460000.0,
+        "total_profit": 2132000.0,
+        "utilization_rate": 200.0,
+        "allocation_count": 2,
+        "allocations": [
+          {
+            "allocation_id": "e166b244-fef3-4e00-aedc-f7e193553c1b",
+            "crop_id": "lettuce",
+            "crop_name": "lettuce",
+            "variety": null,
+            "area_used": 800.0,
+            "start_date": "2024-05-02T00:00:00",
+            "completion_date": "2024-06-06T00:00:00",
+            "growth_days": 36,
+            "accumulated_gdd": 0.0,
+            "total_cost": 144000.0,
+            "expected_revenue": 1260000.0,
+            "profit": 1116000.0
+          },
+          {
+            "allocation_id": "bfd007f3-1fbf-42a6-a113-b0398d19acb2",
+            "crop_id": "lettuce",
+            "crop_name": "lettuce",
+            "variety": null,
+            "area_used": 800.0,
+            "start_date": "2024-06-20T00:00:00",
+            "completion_date": "2024-08-04T00:00:00",
+            "growth_days": 46,
+            "accumulated_gdd": 0.0,
+            "total_cost": 184000.0,
+            "expected_revenue": 1200000.0,
+            "profit": 1016000.0
+          }
+        ]
+      },
+      {
+        "field_id": "field_03",
+        "field_name": "東圃場",
+        "total_area_used": 2400.0,
+        "total_cost": 522000.0,
+        "total_revenue": 3726000.0,
+        "total_profit": 3204000.0,
+        "utilization_rate": 200.0,
+        "allocation_count": 2,
+        "allocations": [
+          {
+            "allocation_id": "09ba7c90-850f-43c8-a914-727f7450c9f8",
+            "crop_id": "lettuce",
+            "crop_name": "lettuce",
+            "variety": null,
+            "area_used": 1200.0,
+            "start_date": "2024-05-10T00:00:00",
+            "completion_date": "2024-06-13T00:00:00",
+            "growth_days": 35,
+            "accumulated_gdd": 0.0,
+            "total_cost": 210000.0,
+            "expected_revenue": 1890000.0,
+            "profit": 1680000.0
+          },
+          {
+            "allocation_id": "7e5463f3-b937-40f5-8873-6c17dffb2c2b",
+            "crop_id": "lettuce",
+            "crop_name": "lettuce",
+            "variety": null,
+            "area_used": 1200.0,
+            "start_date": "2024-07-11T00:00:00",
+            "completion_date": "2024-08-31T00:00:00",
+            "growth_days": 52,
+            "accumulated_gdd": 0.0,
+            "total_cost": 312000.0,
+            "expected_revenue": 1836000.0,
+            "profit": 1524000.0
+          }
+        ]
+      }
+    ]
+  },
+  "summary": {
+    "optimization_id": "e3bfd2f0-356e-41c7-8c37-089b15c68097",
+    "algorithm_used": "DP + Local Search",
+    "is_optimal": false,
+    "computation_time_seconds": 0.05619192123413086,
+    "total_fields": 3,
+    "total_allocations": 6,
+    "total_cost": 1285000.0,
+    "total_revenue": 9291000.0,
+    "total_profit": 8006000.0,
+    "profit_rate_percent": 623.035019455253,
+    "average_field_utilization_percent": 200.0,
+    "crop_diversity": 1,
+    "crop_areas": {
+      "lettuce": 6000.0
+    }
+  }
+}

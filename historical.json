@@ -1,0 +1,341 @@
+{
+  "data": [
+    {
+      "time": "2025-09-27T00:00:00",
+      "temperature_2m_max": 27.3,
+      "temperature_2m_min": 21.2,
+      "temperature_2m_mean": 23.7,
+      "precipitation_sum": 15.7,
+      "sunshine_duration": 28800.0,
+      "sunshine_hours": 8.0,
+      "wind_speed_10m": 9.0,
+      "weather_code": 63
+    },
+    {
+      "time": "2025-09-28T00:00:00",
+      "temperature_2m_max": 27.9,
+      "temperature_2m_min": 20.7,
+      "temperature_2m_mean": 24.2,
+      "precipitation_sum": 0.9,
+      "sunshine_duration": 36673.77,
+      "sunshine_hours": 10.187158333333333,
+      "wind_speed_10m": 17.1,
+      "weather_code": 51
+    },
+    {
+      "time": "2025-09-29T00:00:00",
+      "temperature_2m_max": 31.8,
+      "temperature_2m_min": 23.6,
+      "temperature_2m_mean": 27.1,
+      "precipitation_sum": 0.4,
+      "sunshine_duration": 36039.76,
+      "sunshine_hours": 10.011044444444446,
+      "wind_speed_10m": 16.8,
+      "weather_code": 51
+    },
+    {
+      "time": "2025-09-30T00:00:00",
+      "temperature_2m_max": 27.9,
+      "temperature_2m_min": 20.2,
+      "temperature_2m_mean": 23.6,
+      "precipitation_sum": 7.4,
+      "sunshine_duration": 28800.0,
+      "sunshine_hours": 8.0,
+      "wind_speed_10m": 12.0,
+      "weather_code": 61
+    },
+    {
+      "time": "2025-10-01T00:00:00",
+      "temperature_2m_max": 21.8,
+      "temperature_2m_min": 18.4,
+      "temperature_2m_mean": 20.3,
+      "precipitation_sum": 26.7,
+      "sunshine_duration": 9776.01,
+      "sunshine_hours": 2.7155583333333335,
+      "wind_speed_10m": 9.7,
+      "weather_code": 63
+    },
+    {
+      "time": "2025-10-02T00:00:00",
+      "temperature_2m_max": 26.2,
+      "temperature_2m_min": 16.4,
+      "temperature_2m_mean": 21.4,
+      "precipitation_sum": 0.0,
+      "sunshine_duration": 36760.45,
+      "sunshine_hours": 10.211236111111111,
+      "wind_speed_10m": 6.3,
+      "weather_code": 3
+    },
+    {
+      "time": "2025-10-03T00:00:00",
+      "temperature_2m_max": 24.5,
+      "temperature_2m_min": 18.2,
+      "temperature_2m_mean": 21.4,
+      "precipitation_sum": 0.0,
+      "sunshine_duration": 15532.03,
+      "sunshine_hours": 4.314452777777778,
+      "wind_speed_10m": 7.8,
+      "weather_code": 3
+    },
+    {
+      "time": "2025-10-04T00:00:00",
+      "temperature_2m_max": 24.1,
+      "temperature_2m_min": 19.6,
+      "temperature_2m_mean": 21.5,
+      "precipitation_sum": 2.7,
+      "sunshine_duration": 6540.52,
+      "sunshine_hours": 1.8168111111111112,
+      "wind_speed_10m": 7.2,
+      "weather_code": 55
+    },
+    {
+      "time": "2025-10-05T00:00:00",
+      "temperature_2m_max": 27.6,
+      "temperature_2m_min": 19.3,
+      "temperature_2m_mean": 23.4,
+      "precipitation_sum": 0.3,
+      "sunshine_duration": 39049.09,
+      "sunshine_hours": 10.846969444444444,
+      "wind_speed_10m": 8.9,
+      "weather_code": 51
+    },
+    {
+      "time": "2025-10-06T00:00:00",
+      "temperature_2m_max": 28.8,
+      "temperature_2m_min": 20.7,
+      "temperature_2m_mean": 23.7,
+      "precipitation_sum": 0.4,
+      "sunshine_duration": 34529.7,
+      "sunshine_hours": 9.591583333333332,
+      "wind_speed_10m": 17.1,
+      "weather_code": 51
+    },
+    {
+      "time": "2025-10-07T00:00:00",
+      "temperature_2m_max": 24.0,
+      "temperature_2m_min": 19.1,
+      "temperature_2m_mean": 21.3,
+      "precipitation_sum": 0.0,
+      "sunshine_duration": 13715.64,
+      "sunshine_hours": 3.8099,
+      "wind_speed_10m": 13.1,
+      "weather_code": 3
+    },
+    {
+      "time": "2025-10-08T00:00:00",
+      "temperature_2m_max": 28.0,
+      "temperature_2m_min": 18.5,
+      "temperature_2m_mean": 23.1,
+      "precipitation_sum": 0.0,
+      "sunshine_duration": 34131.42,
+      "sunshine_hours": 9.48095,
+      "wind_speed_10m": 9.4,
+      "weather_code": 3
+    },
+    {
+      "time": "2025-10-09T00:00:00",
+      "temperature_2m_max": 23.6,
+      "temperature_2m_min": 17.4,
+      "temperature_2m_mean": 21.2,
+      "precipitation_sum": 0.0,
+      "sunshine_duration": 11727.04,
+      "sunshine_hours": 3.2575111111111115,
+      "wind_speed_10m": 23.1,
+      "weather_code": 3
+    },
+    {
+      "time": "2025-10-10T00:00:00",
+      "temperature_2m_max": 23.8,
+      "temperature_2m_min": 16.0,
+      "temperature_2m_mean": 19.8,
+      "precipitation_sum": 0.0,
+      "sunshine_duration": 34964.14,
+      "sunshine_hours": 9.712261111111111,
+      "wind_speed_10m": 9.0,
+      "weather_code": 3
+    },
+    {
+      "time": "2025-10-11T00:00:00",
+      "temperature_2m_max": 18.9,
+      "temperature_2m_min": 15.9,
+      "temperature_2m_mean": 17.4,
+      "precipitation_sum": 4.1,
+      "sunshine_duration": 0.0,
+      "sunshine_hours": 0.0,
+      "wind_speed_10m": 10.9,
+      "weather_code": 53
+    },
+    {
+      "time": "2025-10-12T00:00:00",
+      "temperature_2m_max": 24.3,
+      "temperature_2m_min": 15.3,
+      "temperature_2m_mean": 19.3,
+      "precipitation_sum": 0.0,
+      "sunshine_duration": 29797.3,
+      "sunshine_hours": 8.277027777777777,
+      "wind_speed_10m": 7.4,
+      "weather_code": 3
+    },
+    {
+      "time": "2025-10-13T00:00:00",
+      "temperature_2m_max": 25.7,
+      "temperature_2m_min": 18.8,
+      "temperature_2m_mean": 21.3,
+      "precipitation_sum": 0.1,
+      "sunshine_duration": 24882.93,
+      "sunshine_hours": 6.911925,
+      "wind_speed_10m": 18.4,
+      "weather_code": 51
+    },
+    {
+      "time": "2025-10-14T00:00:00",
+      "temperature_2m_max": 20.6,
+      "temperature_2m_min": 16.6,
+      "temperature_2m_mean": 18.3,
+      "precipitation_sum": 0.4,
+      "sunshine_duration": 439.73,
+      "sunshine_hours": 0.12214722222222223,
+      "wind_speed_10m": 10.4,
+      "weather_code": 51
+    },
+    {
+      "time": "2025-10-15T00:00:00",
+      "temperature_2m_max": 19.8,
+      "temperature_2m_min": 15.0,
+      "temperature_2m_mean": 17.3,
+      "precipitation_sum": 4.3,
+      "sunshine_duration": 8050.19,
+      "sunshine_hours": 2.2361638888888886,
+      "wind_speed_10m": 12.7,
+      "weather_code": 61
+    },
+    {
+      "time": "2025-10-16T00:00:00",
+      "temperature_2m_max": 22.7,
+      "temperature_2m_min": 16.2,
+      "temperature_2m_mean": 18.5,
+      "precipitation_sum": 12.8,
+      "sunshine_duration": 20163.19,
+      "sunshine_hours": 5.600886111111111,
+      "wind_speed_10m": 13.3,
+      "weather_code": 63
+    },
+    {
+      "time": "2025-10-17T00:00:00",
+      "temperature_2m_max": 23.2,
+      "temperature_2m_min": 16.4,
+      "temperature_2m_mean": 19.4,
+      "precipitation_sum": 5.3,
+      "sunshine_duration": 37427.6,
+      "sunshine_hours": 10.396555555555555,
+      "wind_speed_10m": 11.2,
+      "weather_code": 63
+    },
+    {
+      "time": "2025-10-18T00:00:00",
+      "temperature_2m_max": 24.6,
+      "temperature_2m_min": 14.4,
+      "temperature_2m_mean": 19.9,
+      "precipitation_sum": 0.0,
+      "sunshine_duration": 35073.23,
+      "sunshine_hours": 9.74256388888889,
+      "wind_speed_10m": 16.2,
+      "weather_code": 3
+    },
+    {
+      "time": "2025-10-19T00:00:00",
+      "temperature_2m_max": 24.3,
+      "temperature_2m_min": 15.8,
+      "temperature_2m_mean": 19.9,
+      "precipitation_sum": 3.0,
+      "sunshine_duration": 12121.18,
+      "sunshine_hours": 3.3669944444444444,
+      "wind_speed_10m": 12.7,
+      "weather_code": 55
+    },
+    {
+      "time": "2025-10-20T00:00:00",
+      "temperature_2m_max": 20.5,
+      "temperature_2m_min": 14.9,
+      "temperature_2m_mean": 17.3,
+      "precipitation_sum": 5.0,
+      "sunshine_duration": 8025.2,
+      "sunshine_hours": 2.229222222222222,
+      "wind_speed_10m": 9.4,
+      "weather_code": 55
+    },
+    {
+      "time": "2025-10-21T00:00:00",
+      "temperature_2m_max": 16.2,
+      "temperature_2m_min": 13.6,
+      "temperature_2m_mean": 14.6,
+      "precipitation_sum": 3.0,
+      "sunshine_duration": 0.0,
+      "sunshine_hours": 0.0,
+      "wind_speed_10m": 9.0,
+      "weather_code": 53
+    },
+    {
+      "time": "2025-10-22T00:00:00",
+      "temperature_2m_max": 14.0,
+      "temperature_2m_min": 11.2,
+      "temperature_2m_mean": 12.2,
+      "precipitation_sum": 14.7,
+      "sunshine_duration": 0.0,
+      "sunshine_hours": 0.0,
+      "wind_speed_10m": 10.5,
+      "weather_code": 61
+    },
+    {
+      "time": "2025-10-23T00:00:00",
+      "temperature_2m_max": 17.5,
+      "temperature_2m_min": 11.1,
+      "temperature_2m_mean": 13.4,
+      "precipitation_sum": 0.2,
+      "sunshine_duration": 22689.1,
+      "sunshine_hours": 6.302527777777778,
+      "wind_speed_10m": 11.5,
+      "weather_code": 51
+    },
+    {
+      "time": "2025-10-24T00:00:00",
+      "temperature_2m_max": 16.3,
+      "temperature_2m_min": 10.5,
+      "temperature_2m_mean": 12.9,
+      "precipitation_sum": 2.8,
+      "sunshine_duration": 15523.47,
+      "sunshine_hours": 4.312075,
+      "wind_speed_10m": 10.4,
+      "weather_code": 55
+    },
+    {
+      "time": "2025-10-25T00:00:00",
+      "temperature_2m_max": 13.3,
+      "temperature_2m_min": 11.9,
+      "temperature_2m_mean": 12.6,
+      "precipitation_sum": 4.3,
+      "sunshine_duration": 0.0,
+      "sunshine_hours": 0.0,
+      "wind_speed_10m": 11.4,
+      "weather_code": 55
+    },
+    {
+      "time": "2025-10-26T00:00:00",
+      "temperature_2m_max": 17.9,
+      "temperature_2m_min": 12.8,
+      "temperature_2m_mean": 15.3,
+      "precipitation_sum": 22.0,
+      "sunshine_duration": 806.43,
+      "sunshine_hours": 0.2240083333333333,
+      "wind_speed_10m": 11.3,
+      "weather_code": 63
+    }
+  ],
+  "total_count": 30,
+  "location": {
+    "latitude": 35.676624,
+    "longitude": 139.69112,
+    "elevation": 37.0,
+    "timezone": "Asia/Tokyo"
+  }
+}

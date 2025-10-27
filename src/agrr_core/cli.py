@@ -93,6 +93,11 @@ Quick examples:
   # LightGBM (mid-long term, 3 metrics auto)
   agrr predict --input weather.json --output predictions.json --days 365 --model lightgbm
 
+  # Generate candidate suggestions
+  agrr optimize candidates --allocation allocation.json --fields-file fields.json \
+    --crops-file crops.json --target-crop tomato --weather-file weather.json \
+    --planning-start 2024-04-01 --planning-end 2024-10-31 --output candidates.txt
+
 Docker:
   docker compose exec web /app/lib/core/agrr predict \
     --input tmp/debug/adjust_weather_complete.json \
@@ -175,6 +180,12 @@ Examples:
     --moves moves.json --weather-file weather.json \
     --fields-file fields.json --crops-file crops.json \
     --planning-start 2024-04-01 --planning-end 2024-10-31
+
+  # Generate candidate suggestions for crop allocation optimization
+  agrr optimize candidates --allocation allocation_result.json \
+    --fields-file fields.json --crops-file crops.json \
+    --target-crop tomato --planning-start 2024-04-01 --planning-end 2024-10-31 \
+    --weather-file weather.json --output candidates.txt
 
   # Predict future weather with ARIMA model (short-term, 30-90 days)
   agrr weather --location 35.6762,139.6503 --days 90 --json > historical.json

@@ -1,19 +1,24 @@
-{
-  "fields": [
-    {
-      "field_id": "field_01",
-      "name": "北圃場",
-      "area": 1000.0,
-      "daily_fixed_cost": 5000.0,
-      "location": "北区画",
-      "fallow_period_days": 28
-    },
-    {
-      "field_id": "field_02",
-      "name": "南圃場",
-      "area": 800.0,
-      "daily_fixed_cost": 4000.0,
-      "fallow_period_days": 14
+[
+  {
+    "field_id": "field_1",
+    "name": "Field 1",
+    "area": 100.0,
+    "daily_fixed_cost": 1000.0,
+    "soil_type": "loam",
+    "location": {
+      "latitude": 35.6762,
+      "longitude": 139.6503
     }
-  ]
-}
+  },
+  {
+    "field_id": "field_2", 
+    "name": "Field 2",
+    "area": 150.0,
+    "daily_fixed_cost": 1500.0,
+    "soil_type": "clay",
+    "location": {
+      "latitude": 35.6762,
+      "longitude": 139.6503
+    }
+  }
+]

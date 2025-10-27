@@ -1,0 +1,85 @@
+{
+  "optimization_result": {
+    "optimization_id": "test_001",
+    "algorithm_used": "dp",
+    "is_optimal": true,
+    "optimization_time": 0.1,
+    "total_cost": 1000000,
+    "total_revenue": 5000000,
+    "total_profit": 4000000,
+    "crop_areas": {
+      "lettuce": 2000.0
+    },
+    "field_schedules": [
+      {
+        "field_id": "field_01",
+        "field_name": "北圃場",
+        "total_area_used": 1000.0,
+        "total_cost": 500000,
+        "total_revenue": 2500000,
+        "total_profit": 2000000,
+        "utilization_rate": 100.0,
+        "allocation_count": 1,
+        "allocations": [
+          {
+            "allocation_id": "alloc_001",
+            "crop_id": "lettuce",
+            "crop_name": "lettuce",
+            "variety": null,
+            "area_used": 1000.0,
+            "start_date": "2024-05-01",
+            "completion_date": "2024-06-30",
+            "growth_days": 60,
+            "accumulated_gdd": 525.0,
+            "total_cost": 500000,
+            "expected_revenue": 2500000,
+            "profit": 2000000
+          }
+        ]
+      },
+      {
+        "field_id": "field_02",
+        "field_name": "南圃場",
+        "total_area_used": 800.0,
+        "total_cost": 400000,
+        "total_revenue": 2000000,
+        "total_profit": 1600000,
+        "utilization_rate": 100.0,
+        "allocation_count": 1,
+        "allocations": [
+          {
+            "allocation_id": "alloc_002",
+            "crop_id": "lettuce",
+            "crop_name": "lettuce",
+            "variety": null,
+            "area_used": 800.0,
+            "start_date": "2024-06-01",
+            "completion_date": "2024-07-31",
+            "growth_days": 60,
+            "accumulated_gdd": 525.0,
+            "total_cost": 400000,
+            "expected_revenue": 2000000,
+            "profit": 1600000
+          }
+        ]
+      }
+    ]
+  },
+  "summary": {
+    "optimization_id": "test_001",
+    "algorithm_used": "dp",
+    "is_optimal": true,
+    "computation_time_seconds": 0.1,
+    "total_fields": 2,
+    "total_allocations": 2,
+    "total_cost": 1000000,
+    "total_revenue": 5000000,
+    "total_profit": 4000000,
+    "profit_rate_percent": 400.0,
+    "average_field_utilization_percent": 100.0,
+    "crop_diversity": 1,
+    "crop_areas": {
+      "lettuce": 2000.0
+    }
+  }
+}

@@ -64,7 +64,8 @@ class CandidateSuggestionInteractor:
             interaction_rule_gateway=interaction_rule_gateway
         )
         
-        self._violation_checker = ViolationCheckerService()
+        # ViolationCheckerServiceは後でinteraction rulesと共に初期化
+        self._violation_checker = None
         
         # パフォーマンス最適化のためのキャッシュ
         self._gdd_candidates_cache: Dict[str, List[Any]] = {}
@@ -94,6 +95,24 @@ class CandidateSuggestionInteractor:
             fields = await self._field_gateway.get_all()
             crops = await self._crop_gateway.get_all()
             weather_data = await self._weather_gateway.get()
+            
+            # 3. Interaction rulesを読み込んでviolation checkerを初期化
+            if self._interaction_rule_gateway:
+                try:
+                    from agrr_core.usecase.services.interaction_rule_service import InteractionRuleService
+                    interaction_rules = await self._interaction_rule_gateway.get_rules()
+                    interaction_rule_service = InteractionRuleService(rules=interaction_rules)
+                    self._violation_checker = ViolationCheckerService(
+                        interaction_rule_service=interaction_rule_service
+                    )
+                except Exception as e:
+                    # Interaction rulesの読み込みに失敗した場合は警告のみ
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f"Failed to load interaction rules: {e}")
+                    self._violation_checker = ViolationCheckerService()
+            else:
+                self._violation_checker = ViolationCheckerService()
             
             if not fields:
                 return CandidateSuggestionResponseDTO(
@@ -268,7 +287,9 @@ class CandidateSuggestionInteractor:
                         move_instruction=None
                     )
                     
-                    candidates.append(candidate)
+                    # Interaction rulesの違反チェック
+                    if self._is_candidate_feasible(candidate, existing_allocations, field, target_crop):
+                        candidates.append(candidate)
         
         return candidates
     
@@ -393,7 +414,7 @@ class CandidateSuggestionInteractor:
         planning_end: datetime
     ) -> List[tuple]:
         """
-        圃場の利用可能な期間を計算
+        圃場の利用可能な期間を計算（fallow periodを考慮）
         
         Args:
             field: 圃場
@@ -404,11 +425,17 @@ class CandidateSuggestionInteractor:
         Returns:
             List[tuple]: 利用可能な期間のリスト (start_date, end_date)
         """
-        # 既存の配分の期間を取得
+        from datetime import timedelta
+        
+        # 既存の配分の期間を取得（fallow periodを含む）
         occupied_periods = []
         for allocation in existing_allocations:
             if allocation.field.field_id == field.field_id:
-                occupied_periods.append((allocation.start_date, allocation.completion_date))
+                # fallow periodを考慮して終了日を計算
+                effective_end_date = allocation.completion_date + timedelta(
+                    days=field.fallow_period_days
+                )
+                occupied_periods.append((allocation.start_date, effective_end_date))
         
         # 利用可能な期間を計算
         available_periods = []
@@ -427,6 +454,68 @@ class CandidateSuggestionInteractor:
             available_periods.append((current_start, planning_end))
         
         return available_periods
+    
+    def _is_candidate_feasible(
+        self,
+        candidate: CandidateSuggestion,
+        existing_allocations: List[CropAllocation],
+        field: Field,
+        target_crop: Crop
+    ) -> bool:
+        """
+        候補がinteraction rulesに違反していないかをチェック
+        
+        Args:
+            candidate: チェック対象の候補
+            existing_allocations: 既存の配分
+            field: 圃場
+            target_crop: 対象作物
+            
+        Returns:
+            bool: 候補が実行可能かどうか
+        """
+        # Violation checkerが初期化されていない場合はスキップ
+        if self._violation_checker is None:
+            return True
+        
+        # 同じ圃場の既存配分を取得
+        field_allocations = [
+            alloc for alloc in existing_allocations 
+            if alloc.field.field_id == field.field_id
+        ]
+        
+        # 候補をCropAllocationに変換（簡易版）
+        from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
+        from datetime import timedelta
+        
+        # 簡易的なCropAllocationを作成（violation checker用）
+        candidate_allocation = CropAllocation(
+            allocation_id="temp_candidate",
+            field=field,
+            crop=target_crop,
+            area_used=candidate.area,
+            start_date=candidate.start_date,
+            completion_date=candidate.start_date + timedelta(days=90),  # 仮の期間
+            growth_days=90,
+            accumulated_gdd=0.0,
+            total_cost=0.0,
+            expected_revenue=0.0,
+            profit=0.0
+        )
+        
+        # 各既存配分との違反チェック
+        for existing_allocation in field_allocations:
+            violations = self._violation_checker.check_violations(
+                allocation=candidate_allocation,
+                previous_allocation=existing_allocation,
+                all_allocations=existing_allocations
+            )
+            
+            # エラーレベルの違反がある場合は候補を除外
+            if not self._violation_checker.is_feasible(violations):
+                return False
+        
+        return True
     
     async def _get_gdd_candidates(
         self,

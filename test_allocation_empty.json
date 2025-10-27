@@ -1,0 +1,13 @@
+{
+  "optimization_result": {
+    "optimization_id": "opt_empty",
+    "algorithm_used": "Test",
+    "is_optimal": true,
+    "optimization_time": 0.0,
+    "total_cost": 0.0,
+    "total_revenue": 0.0,
+    "total_profit": 0.0,
+    "crop_areas": {},
+    "field_schedules": []
+  }
+}

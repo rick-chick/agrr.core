@@ -66,4 +66,16 @@ class MoveInstruction:
                 raise ValueError(f"to_area must be positive for ADD action, got {self.to_area}")
             if self.crop_id is None:
                 raise ValueError(f"crop_id is required for ADD action")
+    
+    def to_dict(self) -> dict:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "allocation_id": self.allocation_id,
+            "action": self.action.value,
+            "to_field_id": self.to_field_id,
+            "to_start_date": self.to_start_date.isoformat() if self.to_start_date else None,
+            "to_area": self.to_area,
+            "crop_id": self.crop_id,
+            "variety": self.variety
+        }
 

@@ -82,7 +82,7 @@ class CandidateSuggestionInteractor:
         """
         try:
             # 1. 既存の最適化結果を取得
-            allocation_result = await self._allocation_result_gateway.get("current")
+            allocation_result = await self._allocation_result_gateway.get()
             if not allocation_result:
                 return CandidateSuggestionResponseDTO(
                     candidates=[],
@@ -93,7 +93,7 @@ class CandidateSuggestionInteractor:
             # 2. 必要なデータを取得
             fields = await self._field_gateway.get_all()
             crops = await self._crop_gateway.get_all()
-            weather_data = await self._weather_gateway.get_all()
+            weather_data = await self._weather_gateway.get()
             
             if not fields:
                 return CandidateSuggestionResponseDTO(
@@ -117,7 +117,7 @@ class CandidateSuggestionInteractor:
                 )
             
             # 3. 対象作物の存在確認
-            target_crop = next((c for c in crops if c.crop_id == request.target_crop_id), None)
+            target_crop = next((c.crop for c in crops if c.crop.crop_id == request.target_crop_id), None)
             if not target_crop:
                 return CandidateSuggestionResponseDTO(
                     candidates=[],
@@ -146,10 +146,11 @@ class CandidateSuggestionInteractor:
             )
             
         except Exception as e:
+            import traceback
             return CandidateSuggestionResponseDTO(
                 candidates=[],
                 success=False,
-                message=f"Error generating candidates: {str(e)}"
+                message=f"Error generating candidates: {str(e)}\n{traceback.format_exc()}"
             )
     
     async def _generate_candidates(
@@ -301,13 +302,13 @@ class CandidateSuggestionInteractor:
         
         for allocation in existing_allocations:
             # 現在の圃場以外の圃場を対象とする
-            other_fields = [f for f in fields if f.field_id != allocation.field_id]
+            other_fields = [f for f in fields if f.field_id != allocation.field.field_id]
             
             for target_field in other_fields:
                 # 移動可能な期間を計算
                 available_periods = self._calculate_available_periods(
                     field=target_field,
-                    existing_allocations=[a for a in existing_allocations if a.field_id == target_field.field_id],
+                    existing_allocations=[a for a in existing_allocations if a.field.field_id == target_field.field_id],
                     planning_start=planning_start,
                     planning_end=planning_end
                 )
@@ -406,7 +407,7 @@ class CandidateSuggestionInteractor:
         # 既存の配分の期間を取得
         occupied_periods = []
         for allocation in existing_allocations:
-            if allocation.field_id == field.field_id:
+            if allocation.field.field_id == field.field_id:
                 occupied_periods.append((allocation.start_date, allocation.completion_date))
         
         # 利用可能な期間を計算
@@ -454,14 +455,14 @@ class CandidateSuggestionInteractor:
             return self._gdd_candidates_cache[cache_key]
         
         # GrowthPeriodOptimizeInteractorを使用してGDD候補を生成
-        from agrr_core.usecase.dto.growth_period_optimize_request_dto import GrowthPeriodOptimizeRequestDTO
+        from agrr_core.usecase.dto.growth_period_optimize_request_dto import OptimalGrowthPeriodRequestDTO
         
-        request = GrowthPeriodOptimizeRequestDTO(
-            field=field,
-            crop=crop,
+        request = OptimalGrowthPeriodRequestDTO(
+            crop_id=crop.crop_id,
+            variety="default",
             evaluation_period_start=start_date,
             evaluation_period_end=end_date,
-            weather_data=weather_data
+            field=field
         )
         
         try:

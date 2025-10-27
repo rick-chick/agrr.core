@@ -1,0 +1,4 @@
+候補リスト提示結果
+==================================================
+
+エラー: Error generating candidates: cannot import name 'GrowthPeriodOptimizeRequestDTO' from 'agrr_core.usecase.dto.growth_period_optimize_request_dto' (/home/akishige/projects/agrr.core/src/agrr_core/usecase/dto/growth_period_optimize_request_dto.py)

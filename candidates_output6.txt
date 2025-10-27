@@ -1,0 +1,4 @@
+候補リスト提示結果
+==================================================
+
+エラー: Error generating candidates: __init__() got an unexpected keyword argument 'crop'

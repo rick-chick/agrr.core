@@ -43,6 +43,7 @@ Commands:
   optimize   Optimization tools (period, allocate, adjust)
   predict    Predict future weather (ARIMA / LightGBM)
   schedule   Generate task schedule (LLM)
+  fertilize  Fertilizer information search (LLM)
   daemon     Daemon process (start/stop/status/restart)
 
 Data sources (weather):
@@ -97,6 +98,10 @@ Quick examples:
   agrr optimize candidates --allocation allocation.json --fields-file fields.json \
     --crops-file crops.json --target-crop tomato --weather-file weather.json \
     --planning-start 2024-04-01 --planning-end 2024-10-31 --output candidates.txt
+
+  # List popular fertilizers in Japanese
+  agrr fertilize list --language ja
+  agrr fertilize list --language ja --area 100
 
 Docker:
   docker compose exec web /app/lib/core/agrr predict \
@@ -392,6 +397,197 @@ def execute_cli_direct(args) -> None:
                 agricultural_tasks_file=parsed_args.agricultural_tasks,
                 output_file=parsed_args.output
             ))
+        elif args and args[0] == 'fertilize':
+            # Fertilizer information search command
+            from agrr_core.adapter.gateways.fertilizer_llm_gateway import FertilizerLLMGateway
+            from agrr_core.adapter.controllers.fertilizer_list_cli_controller import FertilizerListCliController
+            from agrr_core.adapter.controllers.fertilizer_detail_cli_controller import FertilizerDetailCliController
+            from agrr_core.usecase.interactors.fertilizer_list_interactor import FertilizerListInteractor
+            from agrr_core.usecase.interactors.fertilizer_detail_interactor import FertilizerDetailInteractor
+            
+            # Setup LLM client and gateway
+            llm_client = LLMClient()
+            gateway = FertilizerLLMGateway(llm_client=llm_client)
+            
+            # Parse subcommand
+            if len(args) < 2 or args[1] in ['--help', '-h', 'help']:
+                print("""
+agrr fertilize - Fertilizer information search (LLM)
+
+Usage:
+  agrr fertilize <subcommand> [options]
+
+Available Subcommands:
+  list      Search for popular fertilizers by language
+  get       Get detailed fertilizer information by name
+
+Examples:
+  # List popular fertilizers in Japanese
+  agrr fertilize list --language ja
+
+  # List fertilizers suitable for specific cultivation area
+  agrr fertilize list --language ja --area 100
+
+  # List popular fertilizers in English (limit: 10)
+  agrr fertilize list --language en --limit 10
+
+  # Get detailed fertilizer information (JSON)
+  agrr fertilize get --name "尿素" --json
+
+  # Get detailed fertilizer information (text)
+  agrr fertilize get --name "urea"
+
+For detailed help on each subcommand:
+  agrr fertilize list --help
+  agrr fertilize get --help
+""")
+                sys.exit(0)
+            
+            subcommand = args[1]
+            
+            async def run_fertilize_command():
+                if subcommand == 'list':
+                    # Check for help first
+                    if '--help' in args or '-h' in args:
+                        print("""
+agrr fertilize list - Search for popular fertilizers by language
+
+Usage:
+  agrr fertilize list --language <lang> [options]
+
+Required:
+  --language, -l    Language code (e.g., "ja", "en")
+
+Options:
+  --limit           Number of results (default: 5)
+  --area, -a        Cultivation area in square meters (optional)
+  --json, -j        Output in JSON format
+  --help, -h        Show this help message
+
+Examples:
+  # List popular fertilizers in Japanese
+  agrr fertilize list --language ja
+
+  # List fertilizers suitable for specific cultivation area
+  agrr fertilize list --language ja --area 100
+
+  # List popular fertilizers in English (limit: 10)
+  agrr fertilize list --language en --limit 10
+
+  # Output in JSON format
+  agrr fertilize list --language ja --json
+""")
+                        sys.exit(0)
+                    
+                    # Parse arguments for list command
+                    language = ""
+                    limit = 5
+                    area_m2 = None
+                    json_output = False
+                    
+                    if '--language' in args or '-l' in args:
+                        try:
+                            lang_index = args.index('--language') if '--language' in args else args.index('-l')
+                            if lang_index + 1 < len(args):
+                                language = args[lang_index + 1]
+                        except (ValueError, IndexError):
+                            pass
+                    
+                    if not language:
+                        print("Error: --language is required for fertilize list command")
+                        sys.exit(1)
+                    
+                    # Check for limit
+                    if '--limit' in args:
+                        try:
+                            limit_index = args.index('--limit')
+                            if limit_index + 1 < len(args):
+                                limit = int(args[limit_index + 1])
+                        except (ValueError, IndexError):
+                            pass
+                    
+                    # Parse area_m2 if provided
+                    if '--area' in args or '-a' in args:
+                        try:
+                            area_index = args.index('--area') if '--area' in args else args.index('-a')
+                            if area_index + 1 < len(args):
+                                area_m2 = float(args[area_index + 1])
+                        except (ValueError, IndexError):
+                            pass
+                    
+                    # Check for JSON output
+                    json_output = '--json' in args or '-j' in args
+                    
+                    # Setup interactor and controller
+                    interactor = FertilizerListInteractor(gateway=gateway)
+                    controller = FertilizerListCliController(interactor=interactor)
+                    
+                    # Execute
+                    output = await controller.execute(language=language, limit=limit, area_m2=area_m2, json_output=json_output)
+                    print(output)
+                
+                elif subcommand == 'get':
+                    # Check for help first
+                    if '--help' in args or '-h' in args:
+                        print("""
+agrr fertilize get - Get detailed fertilizer information by name
+
+Usage:
+  agrr fertilize get --name <fertilizer_name> [options]
+
+Required:
+  --name, -n        Name of the fertilizer to search for
+
+Options:
+  --json, -j        Output in JSON format
+  --help, -h        Show this help message
+
+Examples:
+  # Get detailed fertilizer information (text)
+  agrr fertilize get --name "尿素"
+
+  # Get detailed fertilizer information (JSON)
+  agrr fertilize get --name "urea" --json
+
+  # Get information about specific product
+  agrr fertilize get --name "マグァンプK"
+""")
+                        sys.exit(0)
+                    
+                    # Parse arguments for get command
+                    fertilizer_name = ""
+                    json_output = False
+                    
+                    if '--name' in args or '-n' in args:
+                        try:
+                            name_index = args.index('--name') if '--name' in args else args.index('-n')
+                            if name_index + 1 < len(args):
+                                fertilizer_name = args[name_index + 1]
+                        except (ValueError, IndexError):
+                            pass
+                    
+                    if not fertilizer_name:
+                        print("Error: --name is required for fertilize get command")
+                        sys.exit(1)
+                    
+                    # Check for JSON output
+                    json_output = '--json' in args or '-j' in args
+                    
+                    # Setup interactor and controller
+                    interactor = FertilizerDetailInteractor(gateway=gateway)
+                    controller = FertilizerDetailCliController(interactor=interactor)
+                    
+                    # Execute
+                    output = await controller.execute(fertilizer_name=fertilizer_name, json_output=json_output)
+                    print(output)
+                
+                else:
+                    print(f"Error: Unknown fertilize subcommand '{subcommand}'")
+                    print("Available: list, get")
+                    sys.exit(1)
+            
+            asyncio.run(run_fertilize_command())
+        
         elif args and args[0] == 'progress':
             # Run growth progress calculation CLI
             # Parse args to extract crop-file and weather-file paths

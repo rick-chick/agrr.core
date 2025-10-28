@@ -64,22 +64,64 @@ class LLMClient(LLMClientInterface):
 
             system_prompt = instruction or ""
 
-            # Use chat.completions API with JSON response format
-            messages = []
-            if system_prompt:
-                messages.append({"role": "system", "content": system_prompt})
-            # Add JSON requirement for response_format
-            user_message = f"{query}\n\nPlease respond in JSON format."
-            messages.append({"role": "user", "content": user_message})
+            # Check if websearch is enabled
+            websearch_enabled = os.getenv("OPENAI_WEBSEARCH_ENABLED", "false").lower() == "true"
             
-            response = await client.chat.completions.create(
-                model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-                messages=messages,
-                temperature=0,
-                response_format={"type": "json_object"}
-            )
+            # Use Responses API if websearch is enabled, otherwise use chat.completions
+            if websearch_enabled:
+                # Use Responses API with web_search_preview tool
+                response = await client.responses.create(
+                    model=os.getenv("OPENAI_MODEL", "gpt-4o"),
+                    tools=[{"type": "web_search_preview"}],
+                    input=f"{system_prompt}\n\n{query}\n\nPlease respond in JSON format."
+                )
+                
+                # Extract content from responses API
+                content = response.output_text if hasattr(response, 'output_text') else str(response)
+                
+                # Extract JSON from markdown code block if present
+                if content.startswith('```json'):
+                    # Remove markdown code block markers
+                    lines = content.split('\n')
+                    json_lines = []
+                    in_json = False
+                    for line in lines:
+                        if line.strip() == '```json':
+                            in_json = True
+                            continue
+                        elif line.strip() == '```':
+                            break
+                        elif in_json:
+                            json_lines.append(line)
+                    content = '\n'.join(json_lines)
+                
+                # Parse as JSON
+                try:
+                    data = json.loads(content)
+                except json.JSONDecodeError as e:
+                    print(f"[DEBUG] JSON parse error: {e}")
+                    print(f"[DEBUG] Content: {content}")
+                    raise RuntimeError(f"Failed to parse JSON response from OpenAI Responses API: {str(e)}")
+                
+                return {"provider": "openai_responses", "data": data, "schema": schema}
+            else:
+                # Use chat.completions API with JSON response format
+                messages = []
+                if system_prompt:
+                    messages.append({"role": "system", "content": system_prompt})
+                
+                user_message = f"{query}\n\nPlease respond in JSON format."
+                messages.append({"role": "user", "content": user_message})
+                
+                response = await client.chat.completions.create(
+                    model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+                    messages=messages,
+                    temperature=0,
+                    response_format={"type": "json_object"}
+                )
+                
+                content = response.choices[0].message.content if response.choices else None
             
-            content = response.choices[0].message.content if response.choices else None
             if not content:
                 raise RuntimeError("No response content from OpenAI API")
             

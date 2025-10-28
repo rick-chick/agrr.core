@@ -430,6 +430,7 @@ Usage:
 Available Subcommands:
   list      Search for popular fertilizers by language
   get       Get detailed fertilizer information by name
+  recommend Recommend fertilizer plan (N,P,K in g/m2)
 
 Examples:
   # List popular fertilizers in Japanese
@@ -447,9 +448,14 @@ Examples:
   # Get detailed fertilizer information (text)
   agrr fertilize get --name "urea"
 
+  # Recommend fertilizer plan for crop
+  agrr crop --query "tomato" > tomato_profile.json
+  agrr fertilize recommend --crop-file tomato_profile.json --json
+
 For detailed help on each subcommand:
   agrr fertilize list --help
   agrr fertilize get --help
+  agrr fertilize recommend --help
 """)
                 sys.exit(0)
             
@@ -591,9 +597,39 @@ Examples:
                     output = await controller.execute(fertilizer_name=fertilizer_name, json_output=json_output)
                     print(output)
                 
+                elif subcommand == 'recommend':
+                    # fertilizer recommend --crop-file <path> [--json] [--output <file>]
+                    # Internal: --mock-fertilizer uses in-memory gateway for testing
+                    from agrr_core.adapter.gateways.fertilizer_recommend_inmemory_gateway import FertilizerRecommendInMemoryGateway
+                    from agrr_core.adapter.gateways.fertilizer_llm_recommend_gateway import FertilizerLLMRecommendGateway
+                    from agrr_core.adapter.controllers.fertilizer_cli_recommend_controller import FertilizerCliRecommendController
+                    from agrr_core.usecase.interactors.fertilizer_llm_recommend_interactor import FertilizerLLMRecommendInteractor
+
+                    # Check for internal mock flag (not documented) - remove from args before parsing
+                    use_mock = '--mock-fertilizer' in args
+                    filtered_args = args
+                    if use_mock:
+                        filtered_args = [arg for arg in args if arg != '--mock-fertilizer']
+                    
+                    # Parse arguments
+                    temp_controller = FertilizerCliRecommendController(None)  # Temporary for parser
+                    parser = temp_controller.create_argument_parser()
+                    parsed = parser.parse_args(filtered_args[2:])
+                    
+                    # Wire gateway based on mock flag
+                    if use_mock:
+                        rec_gateway = FertilizerRecommendInMemoryGateway()
+                    else:
+                        rec_gateway = FertilizerLLMRecommendGateway(LLMClient())
+                    interactor = FertilizerLLMRecommendInteractor(rec_gateway)
+                    controller = FertilizerCliRecommendController(interactor)
+
+                    output = await controller.handle(parsed)
+                    if output:
+                        print(output)
                 else:
                     print(f"Error: Unknown fertilize subcommand '{subcommand}'")
-                    print("Available: list, get")
+                    print("Available: list, get, recommend")
                     sys.exit(1)
             
             asyncio.run(run_fertilize_command())

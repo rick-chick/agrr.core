@@ -120,6 +120,18 @@
 | [CANDIDATE_SUGGESTION_USER_GUIDE.md](CANDIDATE_SUGGESTION_USER_GUIDE.md) | ユーザーガイド | ユーザー |
 | [api/candidate_suggestion_api_reference.md](api/candidate_suggestion_api_reference.md) | APIリファレンス | 開発者 |
 
+### 🌾 肥料推奨機能
+
+| ドキュメント | 説明 | 対象者 |
+|------------|------|--------|
+| [FERTILIZER_RECOMMENDATION_README.md](FERTILIZER_RECOMMENDATION_README.md) | 機能概要・クイックスタート | 全員 ⭐ |
+| [FERTILIZER_RECOMMENDATION_USER_GUIDE.md](FERTILIZER_RECOMMENDATION_USER_GUIDE.md) | ユーザーガイド・使用例 | ユーザー ⭐ |
+| [architecture/FERTILIZER_RECOMMENDATION_DESIGN.md](architecture/FERTILIZER_RECOMMENDATION_DESIGN.md) | 設計書・アーキテクチャ | 開発者 |
+| [api/fertilizer_recommendation_api_reference.md](api/fertilizer_recommendation_api_reference.md) | API・CLI仕様 | 開発者 |
+| [guides/FERTILIZER_RECOMMENDATION_LLM_STRATEGY.md](guides/FERTILIZER_RECOMMENDATION_LLM_STRATEGY.md) | LLM戦略・プロンプト設計 | 開発者 |
+| [guides/FERTILIZER_RECOMMENDATION_TESTING_STRATEGY.md](guides/FERTILIZER_RECOMMENDATION_TESTING_STRATEGY.md) | テスト戦略 | 開発者 |
+| [technical/CROP_PROFILE_FILE_SCHEMA.md](technical/CROP_PROFILE_FILE_SCHEMA.md) | 入力ファイルスキーマ | 開発者 |
+
 ---
 
 ## 🗺️ 学習パス
@@ -133,10 +145,15 @@
 2. api/README.md を読む (15分)
    └─ CLI コマンド詳細
    
-3. サンプル実行 (30分)
+3. 肥料推奨機能体験 (20分)
+   └─ FERTILIZER_RECOMMENDATION_README.md を読む
+   └─ FERTILIZER_RECOMMENDATION_USER_GUIDE.md で詳細確認
+   └─ agrr crop → agrr fertilize recommend の流れ
+   
+4. サンプル実行 (30分)
    └─ test_data/ のデータで実験
    
-4. ベンチマーク確認 (30分)
+5. ベンチマーク確認 (30分)
    └─ 各アルゴリズムの性能比較
 ```
 
@@ -149,8 +166,12 @@ Day 1: アーキテクチャ理解
   3. コードベース探索 (3時間)
 
 Day 2: ドメイン理解
-  1. Entity層のコード読解 (3時間)
-  2. UseCase層のコード読解 (3時間)
+  1. Entity層のコード読解 (2時間)
+  2. UseCase層のコード読解 (2時間)
+  3. 肥料推奨機能の実装例学習 (2時間)
+     └─ FERTILIZER_RECOMMENDATION_DESIGN.md
+     └─ fertilizer_recommendation_entity.py
+     └─ fertilizer_llm_recommend_interactor.py
 
 Day 3: 実装理解
   1. テストコード読解 (2時間)
@@ -226,7 +247,16 @@ docs/
 ├── 📊 API編
 │   └── api/
 │       ├── README.md
+│       ├── fertilizer_recommendation_api_reference.md
 │       └── adapter/
+│
+├── 🌾 肥料推奨機能編
+│   ├── FERTILIZER_RECOMMENDATION_README.md              ⭐ 機能概要
+│   ├── FERTILIZER_RECOMMENDATION_USER_GUIDE.md          ⭐ ユーザーガイド
+│   ├── architecture/FERTILIZER_RECOMMENDATION_DESIGN.md ⭐ 設計書
+│   ├── guides/FERTILIZER_RECOMMENDATION_LLM_STRATEGY.md
+│   ├── guides/FERTILIZER_RECOMMENDATION_TESTING_STRATEGY.md
+│   └── technical/CROP_PROFILE_FILE_SCHEMA.md
 │
 ├── 📊 調査レポート編
 │   └── reports/
@@ -249,6 +279,7 @@ docs/
 - ✅ DP最適化実装完了
 - ✅ ALNS統合完了
 - ✅ アルゴリズム選択機能実装
+- ✅ 肥料推奨機能実装完了
 - ✅ 包括的ベンチマーク実施
 - ✅ ドキュメント体系化
 

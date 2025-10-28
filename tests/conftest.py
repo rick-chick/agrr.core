@@ -1,3 +1,43 @@
+import pytest
+
+from agrr_core.entity.entities.crop_entity import Crop
+from agrr_core.entity.entities.fertilizer_recommendation_entity import Nutrients, FertilizerApplication, FertilizerPlan
+from agrr_core.usecase.gateways.fertilizer_recommend_gateway import FertilizerRecommendGateway
+
+
+class _FakeFertilizerRecommendGateway(FertilizerRecommendGateway):
+    def __init__(self, plan: FertilizerPlan):
+        self._plan = plan
+
+    async def recommend(self, crop_profile):
+        return self._plan
+
+
+@pytest.fixture
+def crop_profile_sample():
+    return {"crop": {"crop_id": "tomato", "name": "Tomato"}}
+
+
+@pytest.fixture
+def fake_gateway_valid(crop_profile_sample):
+    crop = Crop(crop_id=crop_profile_sample["crop"]["crop_id"], name=crop_profile_sample["crop"]["name"], area_per_unit=1.0)
+    totals = Nutrients(N=18.0, P=5.2, K=12.4)
+    applications = [
+        FertilizerApplication(application_type="basal", count=1, schedule_hint="pre-plant", nutrients=Nutrients(N=6.0, P=2.0, K=3.0)),
+        FertilizerApplication(application_type="topdress", count=2, schedule_hint="fruiting", nutrients=Nutrients(N=12.0, P=3.2, K=9.4), per_application=Nutrients(N=6.0, P=1.6, K=4.7)),
+    ]
+    plan = FertilizerPlan(crop=crop, totals=totals, applications=applications, sources=["ref1"], confidence=0.8)
+    return _FakeFertilizerRecommendGateway(plan)
+
+
+@pytest.fixture
+def fake_gateway_bad_totals(crop_profile_sample):
+    crop = Crop(crop_id=crop_profile_sample["crop"]["crop_id"], name=crop_profile_sample["crop"]["name"], area_per_unit=1.0)
+    totals = Nutrients(N=10.0, P=1.0, K=1.0)
+    applications = [FertilizerApplication(application_type="basal", count=1, schedule_hint=None, nutrients=Nutrients(N=9.0, P=1.0, K=1.0))]
+    plan = FertilizerPlan(crop=crop, totals=totals, applications=applications, sources=[], confidence=0.5)
+    return _FakeFertilizerRecommendGateway(plan)
+
 """Pytest configuration and shared fixtures.
 
 Fixtures are organized by Clean Architecture layers:

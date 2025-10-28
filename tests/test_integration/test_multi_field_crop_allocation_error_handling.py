@@ -38,7 +38,7 @@ async def test_partial_crop_failure_continues_with_real_data():
     
     weather_gateway = WeatherFileGateway(
         file_repository=file_repo,
-        file_path="test_data/allocation_weather_1760447748.json"
+        file_path="test_data/weather_2023_full.json"
     )
     
     
@@ -69,7 +69,7 @@ async def test_partial_crop_failure_continues_with_real_data():
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2", "field_3", "field_4"],
         planning_period_start=datetime(2023, 4, 1),
-        planning_period_end=datetime(2023, 10, 31),
+        planning_period_end=datetime(2023, 12, 31),  # Use available weather data period
         optimization_objective="maximize_profit",
     )
     
@@ -108,7 +108,7 @@ async def test_all_crops_fail_raises_error_with_real_data():
     
     weather_gateway = WeatherFileGateway(
         file_repository=file_repo,
-        file_path="test_data/allocation_weather_1760447748.json"
+        file_path="test_data/weather_2023_full.json"
     )
     
     

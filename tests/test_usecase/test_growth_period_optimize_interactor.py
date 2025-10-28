@@ -195,7 +195,7 @@ class TestGrowthPeriodOptimizeInteractor:
         )
 
         # Should raise exception when no candidate completes
-        with pytest.raises(ValueError, match="No candidate reached 100% growth"):
+        with pytest.raises(ValueError, match="No candidate can complete growth within the planning period"):
             await self.interactor.execute(request)
 
     @pytest.mark.asyncio
@@ -413,7 +413,7 @@ class TestGrowthPeriodOptimizeInteractor:
         )
 
         # Should raise error with helpful message about deadline
-        with pytest.raises(ValueError, match="No candidate can complete by the deadline"):
+        with pytest.raises(ValueError, match="No candidate can complete growth within the planning period"):
             await self.interactor.execute(request)
 
     @pytest.mark.asyncio

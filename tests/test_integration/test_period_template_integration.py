@@ -36,7 +36,7 @@ async def test_period_template_strategy_basic():
     
     weather_gateway = WeatherFileGateway(
         file_repository=file_repo,
-        file_path="test_data/allocation_weather_1760447748.json"
+        file_path="test_data/weather_2023_full.json"
     )
     
     field_gateway = FieldFileGateway(
@@ -66,7 +66,7 @@ async def test_period_template_strategy_basic():
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2"],
         planning_period_start=datetime(2023, 4, 1),
-        planning_period_end=datetime(2023, 10, 31),
+        planning_period_end=datetime(2023, 12, 31),  # Use available weather data period
         optimization_objective="maximize_profit",
     )
     
@@ -93,7 +93,7 @@ async def test_period_template_with_dp_algorithm():
     
     weather_gateway = WeatherFileGateway(
         file_repository=file_repo,
-        file_path="test_data/allocation_weather_1760447748.json"
+        file_path="test_data/weather_2023_full.json"
     )
     
     field_gateway = FieldFileGateway(
@@ -120,7 +120,7 @@ async def test_period_template_with_dp_algorithm():
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2", "field_3"],
         planning_period_start=datetime(2023, 4, 1),
-        planning_period_end=datetime(2023, 10, 31),
+        planning_period_end=datetime(2023, 12, 31),  # Use available weather data period
         optimization_objective="maximize_profit",
     )
     
@@ -150,7 +150,7 @@ async def test_period_template_with_greedy_algorithm():
     
     weather_gateway = WeatherFileGateway(
         file_repository=file_repo,
-        file_path="test_data/allocation_weather_1760447748.json"
+        file_path="test_data/weather_2023_full.json"
     )
     
     field_gateway = FieldFileGateway(
@@ -176,7 +176,7 @@ async def test_period_template_with_greedy_algorithm():
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2"],
         planning_period_start=datetime(2023, 4, 1),
-        planning_period_end=datetime(2023, 10, 31),
+        planning_period_end=datetime(2023, 12, 31),  # Use available weather data period
         optimization_objective="maximize_profit",
     )
     
@@ -204,7 +204,7 @@ async def test_period_template_with_local_search():
     
     weather_gateway = WeatherFileGateway(
         file_repository=file_repo,
-        file_path="test_data/allocation_weather_1760447748.json"
+        file_path="test_data/weather_2023_full.json"
     )
     
     field_gateway = FieldFileGateway(
@@ -231,7 +231,7 @@ async def test_period_template_with_local_search():
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2"],
         planning_period_start=datetime(2023, 4, 1),
-        planning_period_end=datetime(2023, 10, 31),
+        planning_period_end=datetime(2023, 12, 31),  # Use available weather data period
         optimization_objective="maximize_profit",
     )
     
@@ -263,7 +263,7 @@ async def test_period_template_with_alns():
     
     weather_gateway = WeatherFileGateway(
         file_repository=file_repo,
-        file_path="test_data/allocation_weather_1760447748.json"
+        file_path="test_data/weather_2023_full.json"
     )
     
     field_gateway = FieldFileGateway(
@@ -291,7 +291,7 @@ async def test_period_template_with_alns():
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2"],
         planning_period_start=datetime(2023, 4, 1),
-        planning_period_end=datetime(2023, 10, 31),
+        planning_period_end=datetime(2023, 12, 31),  # Use available weather data period
         optimization_objective="maximize_profit",
     )
     
@@ -319,7 +319,7 @@ async def test_period_template_memory_efficiency():
     
     weather_gateway = WeatherFileGateway(
         file_repository=file_repo,
-        file_path="test_data/allocation_weather_1760447748.json"
+        file_path="test_data/weather_2023_full.json"
     )
     
     # Use all 4 fields (could scale to 100 fields with same template memory)
@@ -346,7 +346,7 @@ async def test_period_template_memory_efficiency():
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2", "field_3", "field_4"],
         planning_period_start=datetime(2023, 4, 1),
-        planning_period_end=datetime(2023, 10, 31),
+        planning_period_end=datetime(2023, 12, 31),  # Use available weather data period
         optimization_objective="maximize_profit",
     )
     
@@ -376,7 +376,7 @@ async def test_period_template_exploration_space():
     
     weather_gateway = WeatherFileGateway(
         file_repository=file_repo,
-        file_path="test_data/allocation_weather_1760447748.json"
+        file_path="test_data/weather_2023_full.json"
     )
     
     field_gateway = FieldFileGateway(
@@ -402,7 +402,7 @@ async def test_period_template_exploration_space():
     request = MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2"],
         planning_period_start=datetime(2023, 4, 1),
-        planning_period_end=datetime(2023, 10, 31),
+        planning_period_end=datetime(2023, 12, 31),  # Use available weather data period
         optimization_objective="maximize_profit",
     )
     

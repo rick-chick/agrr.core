@@ -204,7 +204,7 @@ class TestAllocationAdjustRequestDTO:
             current_optimization_id="opt_001",
             move_instructions=moves,
             planning_period_start=datetime(2023, 4, 1),
-            planning_period_end=datetime(2023, 10, 31),
+            planning_period_end=datetime(2023, 12, 31),
         )
         
         assert request.current_optimization_id == "opt_001"
@@ -217,7 +217,7 @@ class TestAllocationAdjustRequestDTO:
                 current_optimization_id="opt_001",
                 move_instructions=[],
                 planning_period_start=datetime(2023, 4, 1),
-                planning_period_end=datetime(2023, 10, 31),
+                planning_period_end=datetime(2023, 12, 31),
             )
     
     def test_invalid_date_range(self):
@@ -311,7 +311,7 @@ class TestEndToEndWorkflow:
             current_optimization_id="",
             move_instructions=moves,
             planning_period_start=datetime(2023, 4, 1),
-            planning_period_end=datetime(2023, 10, 31),
+            planning_period_end=datetime(2023, 12, 31),
         )
         
         # Execute
@@ -393,7 +393,7 @@ class TestEndToEndWorkflow:
             current_optimization_id="",
             move_instructions=moves,
             planning_period_start=datetime(2023, 4, 1),
-            planning_period_end=datetime(2023, 10, 31),
+            planning_period_end=datetime(2023, 12, 31),
         )
         
         # Execute
@@ -494,7 +494,7 @@ class TestConstraints:
             current_optimization_id="",
             move_instructions=moves,
             planning_period_start=datetime(2023, 4, 1),
-            planning_period_end=datetime(2023, 10, 31),
+            planning_period_end=datetime(2023, 12, 31),
         )
         
         # Execute
@@ -629,7 +629,7 @@ class TestInteractionRules:
             current_optimization_id="",
             move_instructions=moves,
             planning_period_start=datetime(2023, 4, 1),
-            planning_period_end=datetime(2023, 10, 31),
+            planning_period_end=datetime(2023, 12, 31),
         )
         
         # Execute
@@ -702,7 +702,7 @@ class TestAlgorithmComparison:
             current_optimization_id="",
             move_instructions=moves,
             planning_period_start=datetime(2023, 4, 1),
-            planning_period_end=datetime(2023, 10, 31),
+            planning_period_end=datetime(2023, 12, 31),
         )
         
         # Execute
@@ -807,7 +807,7 @@ class TestE2EScenarios:
             current_optimization_id="",
             move_instructions=moves,
             planning_period_start=datetime(2023, 4, 1),
-            planning_period_end=datetime(2023, 10, 31),
+            planning_period_end=datetime(2023, 12, 31),
         )
         
         # Execute
@@ -917,7 +917,7 @@ class TestE2EScenarios:
                 current_optimization_id="",
                 move_instructions=moves,
                 planning_period_start=datetime(2023, 4, 1),
-                planning_period_end=datetime(2023, 10, 31),
+                planning_period_end=datetime(2023, 12, 31),
             )
             
             # Execute
@@ -983,7 +983,7 @@ class TestE2EScenarios:
             current_optimization_id="",
             move_instructions=await move_1.get_all(),
             planning_period_start=datetime(2023, 4, 1),
-            planning_period_end=datetime(2023, 10, 31),
+            planning_period_end=datetime(2023, 12, 31),
         )
         
         response_1 = await interactor_1.execute(request_1)
@@ -1081,7 +1081,7 @@ class TestAddNewCropAllocation:
             current_optimization_id="",
             move_instructions=moves,
             planning_period_start=datetime(2023, 2, 1),  # Fixed: match the move start date
-            planning_period_end=datetime(2023, 10, 31),
+            planning_period_end=datetime(2023, 12, 31),
         )
         
         # Execute
@@ -1143,7 +1143,7 @@ class TestAddNewCropAllocation:
         # Get first allocation
         first_schedule = data["optimization_result"]["field_schedules"][0]
         first_alloc = first_schedule["allocations"][0]
-        overlap_field_id = first_schedule["field"]["field_id"]  # field_id is in field object
+        overlap_field_id = first_schedule["field_id"]  # field_id is directly in schedule object
         # Use same start date to create overlap (will fail GDD or fallow period check)
         overlap_date = first_alloc["start_date"]
         
@@ -1210,7 +1210,7 @@ class TestAddNewCropAllocation:
             current_optimization_id="",
             move_instructions=moves,
             planning_period_start=datetime(2023, 4, 1),
-            planning_period_end=datetime(2023, 10, 31),
+            planning_period_end=datetime(2023, 12, 31),
         )
         
         # Execute
@@ -1293,7 +1293,7 @@ class TestAddNewCropAllocation:
             current_optimization_id="",
             move_instructions=moves,
             planning_period_start=datetime(2023, 4, 1),
-            planning_period_end=datetime(2023, 10, 31),
+            planning_period_end=datetime(2023, 12, 31),
         )
         
         # Execute

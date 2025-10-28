@@ -129,20 +129,31 @@ class GrowthPeriodOptimizeInteractor(
             valid_candidates = self._filter_shortest_candidates_per_completion_date(valid_candidates)
         
         if not valid_candidates:
+            # Calculate total required GDD for better error message
+            total_required_gdd = sum(
+                sr.thermal.required_gdd 
+                for sr in crop_profile.stage_requirements
+            )
+            
             # Check if any candidate completed but exceeded deadline
             completed_candidates = [c for c in candidates if c.completion_date is not None]
             if completed_candidates:
                 earliest_completion = min(c.completion_date for c in completed_candidates)
-                raise ValueError(
-                    f"No candidate can complete by the deadline ({request.evaluation_period_end.date()}). "
-                    f"Earliest possible completion is {earliest_completion.date()}. "
-                    f"Consider extending the deadline or choosing an earlier start date range."
-                )
-            else:
-                raise ValueError(
-                    "No candidate reached 100% growth completion. "
-                    "Consider extending weather data or choosing different start dates."
-                )
+                # Only show earliest completion if it's within a reasonable range (not due to bug)
+                if earliest_completion <= request.evaluation_period_end + timedelta(days=365):
+                    raise ValueError(
+                        f"No candidate can complete by the deadline ({request.evaluation_period_end.date()}). "
+                        f"Earliest possible completion is {earliest_completion.date()}. "
+                        f"Consider extending the deadline or choosing an earlier start date range."
+                    )
+            
+            # Default error message
+            raise ValueError(
+                f"No candidate can complete growth within the planning period. "
+                f"Total required GDD: {total_required_gdd:.1f}. "
+                f"Planning period: {request.evaluation_period_start.date()} to {request.evaluation_period_end.date()}. "
+                f"Consider extending the deadline, reducing GDD requirements, or choosing different start dates."
+            )
         
         # Use BaseOptimizer's select_best (unified objective function)
         optimal_candidate = self.select_best(valid_candidates)
@@ -282,16 +293,9 @@ class GrowthPeriodOptimizeInteractor(
                     # Sort/concat below expects full pass; short-circuit by returning here
                     return results
             else:
-                # Exceeds deadline
-                results.append(CandidateResultDTO(
-                    start_date=current_start,
-                    completion_date=completion_date,
-                    growth_days=None,
-                    field=None,
-                    crop=None,
-                    is_optimal=False
-                ))
-                gdd_per_candidate.append(accumulated_gdd)
+                # Exceeds deadline - don't add this candidate to results
+                # This prevents the error message from showing incorrect completion dates
+                pass
         
         # Slide window: move start date forward one day at a time
         if prof:

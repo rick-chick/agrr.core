@@ -36,28 +36,28 @@ TEST_DATASETS = [
         "name": "Standard (6 crops, 3 fields)",
         "crops": "test_data/allocation_crops_1760447748.json",
         "fields": "test_data/allocation_fields_1760447748.json",
-        "weather": "test_data/allocation_weather_1760447748.json",
+        "weather": "test_data/weather_2023_full.json",
         "field_ids": ["field_1", "field_2", "field_3"],
         "planning_start": datetime(2023, 4, 1),
-        "planning_end": datetime(2023, 10, 31),
+        "planning_end": datetime(2023, 12, 31),
     },
     {
         "name": "Dataset 1760533282 (2 crops, 2 fields)",
         "crops": "test_data/allocation_crops_1760533282.json",
         "fields": "test_data/allocation_fields_1760533282.json",
-        "weather": "test_data/allocation_weather_1760533282.json",
-        "field_ids": ["field_1", "field_2"],
+        "weather": "test_data/weather_2023_full.json",
+        "field_ids": ["field_16", "field_17"],
         "planning_start": datetime(2023, 4, 1),
-        "planning_end": datetime(2023, 10, 31),
+        "planning_end": datetime(2023, 12, 31),
     },
     {
         "name": "Dataset 1760536489 (1 field)",
         "crops": "test_data/allocation_crops_1760536489.json",
         "fields": "test_data/allocation_fields_1760536489.json",
-        "weather": "test_data/allocation_weather_1760536489.json",
-        "field_ids": ["field_1"],
+        "weather": "test_data/weather_2023_full.json",
+        "field_ids": ["field_9"],
         "planning_start": datetime(2023, 4, 1),
-        "planning_end": datetime(2023, 10, 31),
+        "planning_end": datetime(2023, 12, 31),
     },
 ]
 
@@ -82,7 +82,7 @@ def weather_gateway(test_data_file_service):
     """Weather gateway with test data."""
     return WeatherFileGateway(
         file_repository=test_data_file_service,
-        file_path="test_data/allocation_weather_1760447748.json"
+        file_path="test_data/weather_2023_full.json"
     )
 
 
@@ -107,7 +107,7 @@ def allocation_request():
     return MultiFieldCropAllocationRequestDTO(
         field_ids=["field_1", "field_2", "field_3"],
         planning_period_start=datetime(2023, 4, 1),
-        planning_period_end=datetime(2023, 10, 31),
+        planning_period_end=datetime(2023, 12, 31),
         optimization_objective="maximize_profit",
     )
 

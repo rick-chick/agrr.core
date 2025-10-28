@@ -368,7 +368,17 @@ def execute_cli_direct(args) -> None:
             gateway = CropProfileLLMGateway(llm_client=llm_client)
             presenter = CropProfileCraftPresenter()
             controller = CropCliCraftController(gateway=gateway, presenter=presenter)
-            asyncio.run(controller.run(args[1:]))
+            
+            # Use proper event loop management to avoid httpx cleanup issues
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_closed():
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                loop.run_until_complete(controller.run(args[1:]))
+            except RuntimeError:
+                # Fallback to asyncio.run if event loop management fails
+                asyncio.run(controller.run(args[1:]))
         elif args and args[0] == 'schedule':
             # Task schedule generation command
             parser = argparse.ArgumentParser(description="Generate task schedule for agricultural tasks")

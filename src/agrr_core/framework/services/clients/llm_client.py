@@ -6,6 +6,7 @@ Provides generic struct() method for structured data extraction from LLM.
 
 import os
 import json
+import asyncio
 from typing import Dict, Any, Optional
 
 from agrr_core.adapter.interfaces.clients.llm_client_interface import LLMClientInterface
@@ -36,12 +37,11 @@ class LLMClient(LLMClientInterface):
             raise ValueError("OPENAI_API_KEY environment variable is required. Please set it in your .env file or environment.")
         
         # Use OpenAI API
-        try:
-            if not OPENAI_AVAILABLE:
-                raise RuntimeError("OpenAI library is not installed. Please install it with: pip install openai")
-            
-            client = AsyncOpenAI(api_key=api_key)
-
+        if not OPENAI_AVAILABLE:
+            raise RuntimeError("OpenAI library is not installed. Please install it with: pip install openai")
+        
+        # Use AsyncOpenAI as context manager for proper resource management
+        async with AsyncOpenAI(api_key=api_key) as client:
             # Convert provider-agnostic structure to JSON Schema (shallow conversion)
             def to_json_schema(node: Any) -> Dict[str, Any]:  # type: ignore[name-defined]
                 if isinstance(node, dict):
@@ -130,7 +130,6 @@ class LLMClient(LLMClientInterface):
                 return {"provider": "openai", "data": data, "schema": schema}
             except json.JSONDecodeError as e:
                 raise RuntimeError(f"Failed to parse JSON response from OpenAI: {str(e)}")
-        except Exception as e:
-            # If OpenAI setup fails, raise the error
-            raise RuntimeError(f"Failed to initialize OpenAI client: {str(e)}")
-
+            
+            # Ensure all pending tasks are completed before context manager exits
+            await asyncio.sleep(0)  # Allow other tasks to complete

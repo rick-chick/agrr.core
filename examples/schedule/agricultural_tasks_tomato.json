@@ -1,0 +1,83 @@
+[
+  {
+    "task_id": "soil_preparation",
+    "name": "土壌準備",
+    "description": "畑の土壌を耕し、肥料を混ぜ込む作業",
+    "time_per_sqm": 0.1,
+    "weather_dependency": "low",
+    "required_tools": ["トラクター", "耕運機"],
+    "skill_level": "beginner"
+  },
+  {
+    "task_id": "seeding",
+    "name": "播種",
+    "description": "種子を土壌に播く作業",
+    "time_per_sqm": 0.05,
+    "weather_dependency": "low",
+    "required_tools": ["播種機", "手播き"],
+    "skill_level": "beginner"
+  },
+  {
+    "task_id": "transplanting",
+    "name": "定植",
+    "description": "苗を畑に植え付ける作業",
+    "time_per_sqm": 0.2,
+    "weather_dependency": "medium",
+    "required_tools": ["移植ごて", "マルチ"],
+    "skill_level": "intermediate"
+  },
+  {
+    "task_id": "watering",
+    "name": "灌水",
+    "description": "作物に水を与える作業",
+    "time_per_sqm": 0.03,
+    "weather_dependency": "low",
+    "required_tools": ["ホース", "スプリンクラー"],
+    "skill_level": "beginner"
+  },
+  {
+    "task_id": "fertilizing",
+    "name": "施肥",
+    "description": "作物に肥料を与える作業",
+    "time_per_sqm": 0.08,
+    "weather_dependency": "medium",
+    "required_tools": ["肥料散布機", "手散布"],
+    "skill_level": "intermediate"
+  },
+  {
+    "task_id": "pest_control",
+    "name": "病害虫防除",
+    "description": "農薬を使用して病害虫を防除する作業",
+    "time_per_sqm": 0.06,
+    "weather_dependency": "high",
+    "required_tools": ["噴霧器", "防護服"],
+    "skill_level": "advanced"
+  },
+  {
+    "task_id": "weeding",
+    "name": "除草",
+    "description": "雑草を取り除く作業",
+    "time_per_sqm": 0.15,
+    "weather_dependency": "low",
+    "required_tools": ["除草機", "手作業"],
+    "skill_level": "beginner"
+  },
+  {
+    "task_id": "harvesting",
+    "name": "収穫",
+    "description": "成熟した作物を収穫する作業",
+    "time_per_sqm": 0.25,
+    "weather_dependency": "medium",
+    "required_tools": ["収穫かご", "ハサミ"],
+    "skill_level": "intermediate"
+  },
+  {
+    "task_id": "post_harvest",
+    "name": "収穫後処理",
+    "description": "収穫した作物の選別・梱包作業",
+    "time_per_sqm": 0.12,
+    "weather_dependency": "low",
+    "required_tools": ["選別台", "梱包材"],
+    "skill_level": "intermediate"
+  }
+]

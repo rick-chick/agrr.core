@@ -381,12 +381,92 @@ def execute_cli_direct(args) -> None:
                 asyncio.run(controller.run(args[1:]))
         elif args and args[0] == 'schedule':
             # Task schedule generation command
-            parser = argparse.ArgumentParser(description="Generate task schedule for agricultural tasks")
-            parser.add_argument("--crop-name", "-c", required=True, help="Name of the crop")
-            parser.add_argument("--variety", "-v", required=True, help="Variety name")
+            parser = argparse.ArgumentParser(
+                description="Generate task schedule for agricultural tasks using AI",
+                formatter_class=argparse.RawDescriptionHelpFormatter,
+                epilog="""
+Examples:
+  # Generate task schedule for tomato cultivation
+  agrr schedule --crop-name "トマト" --variety "アイコ" \\
+    --stage-requirements examples/schedule/stage_requirements_tomato.json \\
+    --agricultural-tasks examples/schedule/agricultural_tasks_tomato.json \\
+    --output tomato_schedule.json
+
+  # Generate schedule without saving to file (display on console)
+  agrr schedule --crop-name "トマト" --variety "アイコ" \\
+    --stage-requirements stage_requirements.json \\
+    --agricultural-tasks agricultural_tasks.json
+
+Input File Formats:
+
+1. Stage Requirements File (JSON):
+   [
+     {
+       "stage": {"name": "育苗期", "order": 1},
+       "temperature": {
+         "base_temperature": 10.0,
+         "optimal_min": 18.0,
+         "optimal_max": 30.0,
+         "low_stress_threshold": 10.0,
+         "high_stress_threshold": 32.0,
+         "frost_threshold": 0.0,
+         "max_temperature": 35.0
+       },
+       "thermal": {"required_gdd": 200.0},
+       "sunshine": {
+         "minimum_sunshine_hours": 6.0,
+         "target_sunshine_hours": 8.0
+       }
+     }
+   ]
+
+2. Agricultural Tasks File (JSON):
+   [
+     {
+       "task_id": "soil_preparation",
+       "name": "土壌準備",
+       "description": "畑の土壌を耕し、肥料を混ぜ込む作業",
+       "time_per_sqm": 0.1,
+       "weather_dependency": "low",
+       "required_tools": ["トラクター", "耕運機"],
+       "skill_level": "beginner"
+     }
+   ]
+
+Output Format (JSON):
+   {
+     "task_schedules": [
+       {
+         "task_id": "soil_preparation",
+         "stage_order": 1,
+         "gdd_trigger": 0.0,
+         "gdd_tolerance": 0.0,
+         "priority": 1,
+         "precipitation_max": 5.0,
+         "wind_speed_max": 10.0,
+         "temperature_min": 5.0,
+         "temperature_max": 35.0,
+         "description": "土壌準備作業のスケジュール"
+       }
+     ],
+     "total_duration_days": 45.2,
+     "weather_dependencies": ["precipitation", "wind_speed", "temperature"]
+   }
+
+Sample Files:
+  - examples/schedule/stage_requirements_tomato.json
+  - examples/schedule/agricultural_tasks_tomato.json
+
+Note: This command uses AI (LLM) to generate task schedules based on crop
+      requirements and available agricultural tasks. The output provides
+      GDD-based scheduling with weather condition constraints.
+                """
+            )
+            parser.add_argument("--crop-name", "-c", required=True, help="Name of the crop (e.g., 'トマト', 'rice')")
+            parser.add_argument("--variety", "-v", required=True, help="Variety name (e.g., 'アイコ', 'Koshihikari')")
             parser.add_argument("--stage-requirements", "-sr", required=True, help="Path to stage requirements JSON file")
             parser.add_argument("--agricultural-tasks", "-at", required=True, help="Path to agricultural tasks JSON file")
-            parser.add_argument("--output", "-o", help="Path to output file (optional)")
+            parser.add_argument("--output", "-o", help="Path to output file (optional, displays on console if not specified)")
             
             try:
                 parsed_args = parser.parse_args(args[1:])

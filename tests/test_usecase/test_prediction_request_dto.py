@@ -4,7 +4,6 @@ import pytest
 
 from agrr_core.usecase.dto.prediction_request_dto import PredictionRequestDTO
 
-
 class TestPredictionRequestDTO:
     """Test PredictionRequestDTO."""
     

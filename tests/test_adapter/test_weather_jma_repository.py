@@ -2,12 +2,11 @@
 
 import pytest
 from datetime import datetime
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock, Mock
 
 from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway, LOCATION_MAPPING
 from agrr_core.adapter.interfaces.io.html_table_service_interface import HtmlTableServiceInterface
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
-
 
 class TestWeatherJMAGateway:
     """Test WeatherJMAGateway."""
@@ -15,7 +14,7 @@ class TestWeatherJMAGateway:
     @pytest.fixture
     def mock_html_table_fetcher(self):
         """Create mock HTML table fetcher."""
-        fetcher = AsyncMock(spec=HtmlTableServiceInterface)
+        fetcher = Mock(spec=HtmlTableServiceInterface)
         return fetcher
     
     @pytest.fixture
@@ -73,9 +72,8 @@ class TestWeatherJMAGateway:
         assert "block_no=47662" in url
         assert "year=2024" in url
         assert "month=1" in url
-    
-    @pytest.mark.asyncio
-    async def test_get_by_location_and_date_range_success(
+
+    def test_get_by_location_and_date_range_success(
         self,
         repository,
         mock_html_table_fetcher
@@ -84,9 +82,8 @@ class TestWeatherJMAGateway:
         # This test would require complex HTML table mock data
         # Integration tests cover actual HTML table fetching
         pytest.skip("Test requires complex HTML table mock data - covered by integration tests")
-    
-    @pytest.mark.asyncio
-    async def test_location_mapping_coverage(self, repository):
+
+    def test_location_mapping_coverage(self, repository):
         """Test that all 47 prefectures have location mappings."""
         # 47都道府県すべて
         expected_prefectures = [

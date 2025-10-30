@@ -9,7 +9,6 @@ from agrr_core.usecase.dto.candidate_suggestion_request_dto import CandidateSugg
 from agrr_core.usecase.dto.candidate_suggestion_response_dto import CandidateSuggestionResponseDTO
 from agrr_core.entity.entities.candidate_suggestion_entity import CandidateSuggestion, CandidateType
 
-
 class TestCandidateSuggestionRequestDTO:
     """CandidateSuggestionRequestDTO のテスト"""
     
@@ -42,7 +41,6 @@ class TestCandidateSuggestionRequestDTO:
                 planning_period_start=datetime(2024, 10, 31),  # 終了日より後
                 planning_period_end=datetime(2024, 4, 1)
             )
-
 
 class TestCandidateSuggestionResponseDTO:
     """CandidateSuggestionResponseDTO のテスト"""

@@ -12,7 +12,6 @@ from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.usecase.gateways.weather_interpolator import WeatherInterpolator
 from agrr_core.framework.services.utils.interpolation_service import InterpolationService
 
-
 class WeatherLinearInterpolator(WeatherInterpolator):
     """Linear interpolation implementation for weather data.
     

@@ -10,7 +10,6 @@ from agrr_core.usecase.services.neighbor_operations.field_move_operation import 
     FieldMoveOperation,
 )
 
-
 class FieldReplaceOperation(NeighborOperation):
     """F3. Field Replace: Replace field with another while keeping crop.
     

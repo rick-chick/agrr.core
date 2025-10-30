@@ -10,7 +10,6 @@ from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.adapter.interfaces.io.file_service_interface import FileServiceInterface
 from agrr_core.usecase.gateways.field_gateway import FieldGateway
 
-
 class FieldFileGateway(FieldGateway):
     """Gateway for reading field data from files.
     
@@ -55,7 +54,7 @@ class FieldFileGateway(FieldGateway):
         self.file_path = file_path
         self._fields_cache: Optional[Dict[str, Field]] = None
     
-    async def get(self, field_id: str) -> Optional[Field]:
+    def get(self, field_id: str) -> Optional[Field]:
         """Get field by ID.
         
         Implementation of FieldGateway interface.
@@ -68,11 +67,11 @@ class FieldFileGateway(FieldGateway):
         """
         # Load fields into cache if not already loaded
         if self._fields_cache is None:
-            await self._load_fields_cache()
+            self._load_fields_cache()
         
         return self._fields_cache.get(field_id) if self._fields_cache else None
     
-    async def get_all(self) -> List[Field]:
+    def get_all(self) -> List[Field]:
         """Get all fields from configured source.
         
         Implementation of FieldGateway interface.
@@ -82,20 +81,20 @@ class FieldFileGateway(FieldGateway):
         """
         # Load fields into cache if not already loaded
         if self._fields_cache is None:
-            await self._load_fields_cache()
+            self._load_fields_cache()
         
         return list(self._fields_cache.values()) if self._fields_cache else []
     
-    async def _load_fields_cache(self) -> None:
+    def _load_fields_cache(self) -> None:
         """Load all fields from file into cache."""
         if not self.file_path:
             self._fields_cache = {}
             return
         
-        fields = await self.read_fields_from_file(self.file_path)
+        fields = self.read_fields_from_file(self.file_path)
         self._fields_cache = {field.field_id: field for field in fields}
     
-    async def read_fields_from_file(self, file_path: str) -> List[Field]:
+    def read_fields_from_file(self, file_path: str) -> List[Field]:
         """Read field data from JSON file.
         
         Args:
@@ -112,7 +111,7 @@ class FieldFileGateway(FieldGateway):
                 raise FileError(f"File not found: {file_path}")
             
             # Read and parse JSON
-            content = await self.file_repository.read(file_path)
+            content = self.file_repository.read(file_path)
             import json
             data = json.loads(content)
             
@@ -146,7 +145,7 @@ class FieldFileGateway(FieldGateway):
         except Exception as e:
             raise FileError(f"Failed to read field data from file {file_path}: {e}")
     
-    async def get_field_by_id(self, file_path: str, field_id: str) -> Optional[Field]:
+    def get_field_by_id(self, file_path: str, field_id: str) -> Optional[Field]:
         """Get a specific field by ID from file.
         
         Args:
@@ -159,7 +158,7 @@ class FieldFileGateway(FieldGateway):
         Raises:
             FileError: If file not found or invalid format
         """
-        fields = await self.read_fields_from_file(file_path)
+        fields = self.read_fields_from_file(file_path)
         
         for field in fields:
             if field.field_id == field_id:

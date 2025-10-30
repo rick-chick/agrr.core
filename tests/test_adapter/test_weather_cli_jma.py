@@ -1,13 +1,12 @@
 """Tests for CLI with JMA data source."""
 
 import pytest
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, Mock, patch
 import pandas as pd
 
 from agrr_core.framework.agrr_core_container import WeatherCliContainer, AgrrCoreContainer
 from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway as WeatherJMAGateway
 from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway as WeatherAPIGateway
-
 
 class TestWeatherCLIWithJMA:
     """Test CLI with JMA data source option."""
@@ -79,12 +78,10 @@ class TestWeatherCLIWithJMA:
         # Gateways should be different instances
         assert gateway1 is not gateway2
 
-
 class TestCLIArgumentParsing:
     """Test CLI argument parsing for data-source option."""
-    
-    @pytest.mark.asyncio
-    async def test_cli_weather_with_data_source_jma(self):
+
+    def test_cli_weather_with_data_source_jma(self):
         """Test that --data-source jma is accepted."""
         from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
         from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
@@ -125,9 +122,8 @@ class TestCLIArgumentParsing:
         assert args.data_source == 'jma'
         assert args.location == '35.6895,139.6917'
         assert args.days == 7
-    
-    @pytest.mark.asyncio
-    async def test_cli_weather_data_source_default(self):
+
+    def test_cli_weather_data_source_default(self):
         """Test that data-source defaults to openmeteo."""
         from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
         from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter

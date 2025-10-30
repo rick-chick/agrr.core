@@ -1,28 +1,26 @@
 """Tests for WeatherGatewayAdapter."""
 
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 from datetime import datetime
 
 from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAdapter
 from agrr_core.entity import WeatherData, Location
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 
-
 class TestWeatherGatewayAdapter:
     """Test WeatherGatewayAdapter."""
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.mock_file_gateway = AsyncMock()
-        self.mock_api_gateway = AsyncMock()
+        self.mock_file_gateway = Mock()
+        self.mock_api_gateway = Mock()
         self.gateway = WeatherGatewayAdapter(
             self.mock_file_gateway,
             self.mock_api_gateway
         )
-    
-    @pytest.mark.asyncio
-    async def test_get_by_location_and_date_range(self):
+
+    def test_get_by_location_and_date_range(self):
         """Test get_by_location_and_date_range delegates to API repository."""
         # Mock response
         location = Location(
@@ -50,7 +48,7 @@ class TestWeatherGatewayAdapter:
         self.mock_api_gateway.get_by_location_and_date_range.return_value = expected_dto
         
         # Test
-        result = await self.gateway.get_by_location_and_date_range(
+        result = self.gateway.get_by_location_and_date_range(
             35.7, 139.7, "2023-01-01", "2023-01-02"
         )
         
@@ -59,9 +57,8 @@ class TestWeatherGatewayAdapter:
         self.mock_api_gateway.get_by_location_and_date_range.assert_called_once_with(
             35.7, 139.7, "2023-01-01", "2023-01-02"
         )
-    
-    @pytest.mark.asyncio
-    async def test_get_forecast(self):
+
+    def test_get_forecast(self):
         """Test get_forecast delegates to API repository."""
         # Mock response
         location = Location(
@@ -90,7 +87,7 @@ class TestWeatherGatewayAdapter:
         self.mock_api_gateway.get_forecast.return_value = expected_dto
         
         # Test
-        result = await self.gateway.get_forecast(35.7, 139.7)
+        result = self.gateway.get_forecast(35.7, 139.7)
         
         # Assertions
         assert result == expected_dto

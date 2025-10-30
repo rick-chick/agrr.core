@@ -5,7 +5,6 @@ import pytest
 from agrr_core.entity import DateRange
 from agrr_core.entity.exceptions.invalid_date_range_error import InvalidDateRangeError
 
-
 class TestDateRange:
     """Test DateRange entity."""
     

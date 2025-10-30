@@ -17,7 +17,6 @@ from datetime import datetime
 
 from agrr_core.entity.entities.growth_stage_entity import GrowthStage
 
-
 @dataclass(frozen=True)
 class GrowthProgress:
     """Represents growth progress at a specific date.

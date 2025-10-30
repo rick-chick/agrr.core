@@ -10,7 +10,6 @@ from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 
-
 class WeatherGatewayAdapter(WeatherGateway):
     """Adapter for managing multiple weather gateway implementations.
     
@@ -34,7 +33,7 @@ class WeatherGatewayAdapter(WeatherGateway):
         self.file_gateway = file_gateway
         self.api_gateway = api_gateway
 
-    async def get(self) -> List[WeatherData]:
+    def get(self) -> List[WeatherData]:
         """Get weather data from configured source.
         
         Returns:
@@ -45,13 +44,13 @@ class WeatherGatewayAdapter(WeatherGateway):
         """
         if self.file_gateway is None:
             raise ValueError("File gateway not initialized")
-        return await self.file_gateway.get()
+        return self.file_gateway.get()
 
-    async def create(self, weather_data: List[WeatherData], destination: str) -> None:
+    def create(self, weather_data: List[WeatherData], destination: str) -> None:
         """Create weather data at destination."""
         raise NotImplementedError("Weather data creation not implemented in WeatherGatewayAdapter")
 
-    async def get_by_location_and_date_range(
+    def get_by_location_and_date_range(
         self,
         latitude: float,
         longitude: float,
@@ -61,11 +60,11 @@ class WeatherGatewayAdapter(WeatherGateway):
         """Get weather data by location and date range."""
         if self.api_gateway is None:
             raise ValueError("API gateway not initialized")
-        return await self.api_gateway.get_by_location_and_date_range(
+        return self.api_gateway.get_by_location_and_date_range(
             latitude, longitude, start_date, end_date
         )
     
-    async def get_forecast(
+    def get_forecast(
         self,
         latitude: float,
         longitude: float
@@ -73,5 +72,5 @@ class WeatherGatewayAdapter(WeatherGateway):
         """Get 16-day weather forecast starting from tomorrow."""
         if self.api_gateway is None:
             raise ValueError("API gateway not initialized")
-        return await self.api_gateway.get_forecast(latitude, longitude)
+        return self.api_gateway.get_forecast(latitude, longitude)
 

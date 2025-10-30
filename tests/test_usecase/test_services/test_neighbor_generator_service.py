@@ -11,7 +11,6 @@ from agrr_core.usecase.services.neighbor_generator_service import (
     NeighborGeneratorService,
 )
 
-
 @pytest.mark.unit
 def test_neighbor_generator_service_creates_default_operations():
     """Test that service creates default operations."""
@@ -24,7 +23,6 @@ def test_neighbor_generator_service_creates_default_operations():
     assert "field_swap" in operation_names
     assert "field_move" in operation_names
     assert "crop_insert" in operation_names
-
 
 @pytest.mark.unit
 def test_neighbor_generator_service_generates_neighbors():
@@ -61,7 +59,6 @@ def test_neighbor_generator_service_generates_neighbors():
     # Verify some neighbors are generated
     # At minimum, field_remove should generate 1 neighbor (empty solution)
     assert len(neighbors) >= 1
-
 
 @pytest.mark.unit
 def test_neighbor_generator_service_with_sampling():
@@ -105,7 +102,6 @@ def test_neighbor_generator_service_with_sampling():
     
     # Verify neighbors are limited by sampling
     assert len(neighbors) <= config.max_neighbors_per_iteration
-
 
 @pytest.mark.unit
 def test_neighbor_generator_service_respects_operation_weights():

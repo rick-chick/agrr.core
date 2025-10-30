@@ -1,6 +1,5 @@
 """File error exception."""
 
-
 class FileError(Exception):
     """Exception raised for file-related errors."""
     

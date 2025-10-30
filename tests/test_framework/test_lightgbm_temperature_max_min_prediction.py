@@ -12,7 +12,6 @@ from agrr_core.framework.services.ml.lightgbm_prediction_service import (
 from agrr_core.framework.services.ml.feature_engineering_service import FeatureEngineeringService
 from agrr_core.entity import WeatherData, Forecast
 
-
 @pytest.mark.skipif(not LIGHTGBM_AVAILABLE, reason="LightGBM not installed")
 class TestLightGBMTemperatureMaxMinPrediction:
     """Test cases for LightGBM temperature_max and temperature_min prediction."""
@@ -66,9 +65,8 @@ class TestLightGBMTemperatureMaxMinPrediction:
             'early_stopping_rounds': 10,
         }
         return LightGBMPredictionService(model_params=model_params)
-    
-    @pytest.mark.asyncio
-    async def test_predict_temperature_max(self, lightgbm_service, sample_weather_data):
+
+    def test_predict_temperature_max(self, lightgbm_service, sample_weather_data):
         """Test temperature_max prediction with LightGBM."""
         metric = 'temperature_max'
         prediction_days = 7
@@ -79,7 +77,7 @@ class TestLightGBMTemperatureMaxMinPrediction:
         }
         
         # Execute prediction
-        forecasts = await lightgbm_service.predict(
+        forecasts = lightgbm_service.predict(
             historical_data=sample_weather_data,
             metric=metric,
             prediction_days=prediction_days,
@@ -98,9 +96,8 @@ class TestLightGBMTemperatureMaxMinPrediction:
         assert all(f.confidence_lower is not None for f in forecasts)
         assert all(f.confidence_upper is not None for f in forecasts)
         assert all(f.confidence_lower < f.predicted_value < f.confidence_upper for f in forecasts)
-    
-    @pytest.mark.asyncio
-    async def test_predict_temperature_min(self, lightgbm_service, sample_weather_data):
+
+    def test_predict_temperature_min(self, lightgbm_service, sample_weather_data):
         """Test temperature_min prediction with LightGBM."""
         metric = 'temperature_min'
         prediction_days = 7
@@ -111,7 +108,7 @@ class TestLightGBMTemperatureMaxMinPrediction:
         }
         
         # Execute prediction
-        forecasts = await lightgbm_service.predict(
+        forecasts = lightgbm_service.predict(
             historical_data=sample_weather_data,
             metric=metric,
             prediction_days=prediction_days,
@@ -130,9 +127,8 @@ class TestLightGBMTemperatureMaxMinPrediction:
         assert all(f.confidence_lower is not None for f in forecasts)
         assert all(f.confidence_upper is not None for f in forecasts)
         assert all(f.confidence_lower < f.predicted_value < f.confidence_upper for f in forecasts)
-    
-    @pytest.mark.asyncio
-    async def test_predict_multiple_metrics_with_max_min(self, lightgbm_service, sample_weather_data):
+
+    def test_predict_multiple_metrics_with_max_min(self, lightgbm_service, sample_weather_data):
         """Test predicting temperature, temperature_max, temperature_min together."""
         metrics = ['temperature', 'temperature_max', 'temperature_min']
         prediction_days = 7
@@ -142,7 +138,7 @@ class TestLightGBMTemperatureMaxMinPrediction:
         }
         
         # Execute multi-metric prediction
-        results = await lightgbm_service.predict_multiple_metrics(
+        results = lightgbm_service.predict_multiple_metrics(
             historical_data=sample_weather_data,
             metrics=metrics,
             model_config=model_config
@@ -167,9 +163,8 @@ class TestLightGBMTemperatureMaxMinPrediction:
             
             assert temp_min < temp_mean < temp_max, \
                 f"Day {i}: temp_min ({temp_min}) < temp_mean ({temp_mean}) < temp_max ({temp_max}) should hold"
-    
-    @pytest.mark.asyncio
-    async def test_evaluate_temperature_max_accuracy(self, lightgbm_service, sample_weather_data):
+
+    def test_evaluate_temperature_max_accuracy(self, lightgbm_service, sample_weather_data):
         """Test evaluating temperature_max prediction accuracy."""
         metric = 'temperature_max'
         
@@ -184,7 +179,7 @@ class TestLightGBMTemperatureMaxMinPrediction:
         }
         
         # Use train data to predict
-        forecasts = await lightgbm_service.predict(
+        forecasts = lightgbm_service.predict(
             historical_data=train_data,
             metric=metric,
             prediction_days=7,
@@ -192,7 +187,7 @@ class TestLightGBMTemperatureMaxMinPrediction:
         )
         
         # Evaluate accuracy
-        accuracy_metrics = await lightgbm_service.evaluate_model_accuracy(
+        accuracy_metrics = lightgbm_service.evaluate_model_accuracy(
             test_data=test_data,
             predictions=forecasts,
             metric=metric
@@ -209,9 +204,8 @@ class TestLightGBMTemperatureMaxMinPrediction:
         assert 0 <= accuracy_metrics['mae'] < 20, "MAE should be reasonable for temperature"
         assert 0 <= accuracy_metrics['rmse'] < 20, "RMSE should be reasonable for temperature"
         assert accuracy_metrics['mse'] >= 0, "MSE should be non-negative"
-    
-    @pytest.mark.asyncio
-    async def test_evaluate_temperature_min_accuracy(self, lightgbm_service, sample_weather_data):
+
+    def test_evaluate_temperature_min_accuracy(self, lightgbm_service, sample_weather_data):
         """Test evaluating temperature_min prediction accuracy."""
         metric = 'temperature_min'
         
@@ -225,7 +219,7 @@ class TestLightGBMTemperatureMaxMinPrediction:
             'lookback_days': [1, 7, 14],
         }
         
-        forecasts = await lightgbm_service.predict(
+        forecasts = lightgbm_service.predict(
             historical_data=train_data,
             metric=metric,
             prediction_days=7,
@@ -233,7 +227,7 @@ class TestLightGBMTemperatureMaxMinPrediction:
         )
         
         # Evaluate accuracy
-        accuracy_metrics = await lightgbm_service.evaluate_model_accuracy(
+        accuracy_metrics = lightgbm_service.evaluate_model_accuracy(
             test_data=test_data,
             predictions=forecasts,
             metric=metric
@@ -263,9 +257,8 @@ class TestLightGBMTemperatureMaxMinPrediction:
         target_col = service._get_target_column('temperature_min')
         
         assert target_col == 'temp_min'
-    
-    @pytest.mark.asyncio
-    async def test_temperature_max_features_are_used(self, lightgbm_service, sample_weather_data):
+
+    def test_temperature_max_features_are_used(self, lightgbm_service, sample_weather_data):
         """Test that temp_max lag features are properly utilized in prediction."""
         metric = 'temperature_max'
         prediction_days = 7
@@ -275,7 +268,7 @@ class TestLightGBMTemperatureMaxMinPrediction:
         }
         
         # Execute prediction
-        forecasts = await lightgbm_service.predict(
+        forecasts = lightgbm_service.predict(
             historical_data=sample_weather_data,
             metric=metric,
             prediction_days=prediction_days,
@@ -289,9 +282,8 @@ class TestLightGBMTemperatureMaxMinPrediction:
         # Check that temp_max lag features are present
         temp_max_features = [f for f in feature_importance.keys() if 'temp_max' in f]
         assert len(temp_max_features) > 0, "temp_max features should be used in the model"
-    
-    @pytest.mark.asyncio
-    async def test_temperature_min_features_are_used(self, lightgbm_service, sample_weather_data):
+
+    def test_temperature_min_features_are_used(self, lightgbm_service, sample_weather_data):
         """Test that temp_min lag features are properly utilized in prediction."""
         metric = 'temperature_min'
         prediction_days = 7
@@ -301,7 +293,7 @@ class TestLightGBMTemperatureMaxMinPrediction:
         }
         
         # Execute prediction
-        forecasts = await lightgbm_service.predict(
+        forecasts = lightgbm_service.predict(
             historical_data=sample_weather_data,
             metric=metric,
             prediction_days=prediction_days,
@@ -315,9 +307,8 @@ class TestLightGBMTemperatureMaxMinPrediction:
         # Check that temp_min lag features are present
         temp_min_features = [f for f in feature_importance.keys() if 'temp_min' in f]
         assert len(temp_min_features) > 0, "temp_min features should be used in the model"
-    
-    @pytest.mark.asyncio
-    async def test_insufficient_data_for_lightgbm(self, lightgbm_service):
+
+    def test_insufficient_data_for_lightgbm(self, lightgbm_service):
         """Test that LightGBM raises error with insufficient data."""
         # Create only 50 days of data (less than minimum 90)
         insufficient_data = []
@@ -339,7 +330,7 @@ class TestLightGBMTemperatureMaxMinPrediction:
         
         # Should raise PredictionError
         with pytest.raises(Exception) as exc_info:
-            await lightgbm_service.predict(
+            lightgbm_service.predict(
                 historical_data=insufficient_data,
                 metric='temperature_max',
                 prediction_days=7,

@@ -16,7 +16,6 @@ from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.entity.value_objects.rule_type import RuleType
 
-
 class TestCalculateInteractionImpact:
     """Test OptimizationMetrics.calculate_interaction_impact() static method."""
     
@@ -187,7 +186,6 @@ class TestCalculateInteractionImpact:
         
         assert impact == 1.0  # グループなし = 影響なし
 
-
 class TestCalculateCropCumulativeRevenue:
     """Test OptimizationMetrics.calculate_crop_cumulative_revenue() static method."""
     
@@ -349,7 +347,6 @@ class TestCalculateCropCumulativeRevenue:
         
         assert cumulative == 25000000.0  # alloc1のみカウント
 
-
 class TestCalculateSoilRecoveryFactor:
     """Test OptimizationMetrics.calculate_soil_recovery_factor() static method."""
     
@@ -499,7 +496,6 @@ class TestCalculateSoilRecoveryFactor:
         # 5日の休閑期間 → 0-14日カテゴリ → 1.00
         assert factor == 1.00
 
-
 class TestCreateForAllocation:
     """Test OptimizationMetrics.create_for_allocation() factory method."""
     
@@ -623,7 +619,6 @@ class TestCreateForAllocation:
         # 収益は残りの容量（2M）に制限される
         # 500 * 50000 * 1.1 (soil) = 27.5M だが、残り容量2Mに制限
         assert metrics.revenue == pytest.approx(2000000.0, rel=0.001)
-
 
 class TestIntegrationOfAllFactors:
     """Test that all factors (interaction, soil, yield, market) work together."""

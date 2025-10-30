@@ -1,7 +1,7 @@
 """CLI controller for crafting crop profiles (adapter layer)."""
 
 import argparse
-import asyncio
+
 import json
 from typing import Optional
 
@@ -15,7 +15,6 @@ from agrr_core.usecase.interactors.crop_profile_craft_interactor import (
 from agrr_core.usecase.dto.crop_profile_craft_request_dto import (
     CropProfileCraftRequestDTO,
 )
-
 
 class CropCliCraftController:
     """CLI controller orchestrating the crop profile craft use case."""
@@ -132,18 +131,17 @@ Note: This command uses AI (LLM) to generate crop growth profiles.
 
         return parser
 
-    async def handle_craft_command(self, args) -> None:
+    def handle_craft_command(self, args) -> None:
         request = CropProfileCraftRequestDTO(crop_query=args.query)
-        result = await self.interactor.execute(request)
+        result = self.interactor.execute(request)
 
         # Always print JSON; the presenter already wraps success/error
         print(json.dumps(result, ensure_ascii=False))
 
-    async def run(self, args: Optional[list] = None) -> None:
+    def run(self, args: Optional[list] = None) -> None:
         parser = self.create_argument_parser()
         parsed_args = parser.parse_args(args)
 
         # No subcommands - directly handle the craft command
-        await self.handle_craft_command(parsed_args)
-
+        self.handle_craft_command(parsed_args)
 

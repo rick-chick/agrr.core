@@ -4,6 +4,8 @@ import argparse
 import asyncio
 import sys
 from typing import Optional
+from agrr_core import __version__
+from agrr_core.framework.logging.agrr_logger import get_logger
 
 from agrr_core.framework.agrr_core_container import WeatherCliContainer
 from agrr_core.adapter.gateways.crop_profile_file_gateway import CropProfileFileGateway
@@ -34,6 +36,9 @@ agrr - Agricultural Resource & Risk management core CLI
 
 Usage:
   agrr <command> [options]
+
+Global Options:
+  --version, -v  Show version and exit (current: {version})
 
 Commands:
   weather    Get historical weather data (openmeteo/jma/noaa/noaa-ftp/nasa-power)
@@ -323,7 +328,9 @@ Notes:
   - Crop profile JSON requires 'max_temperature' - see 'agrr crop --help' for format.
 
 """
-    print(help_text)
+    # Avoid str.format on JSON braces; replace only the version token safely
+    # Help is intentional stdout
+    print(help_text.replace("{version}", __version__))
 
 
 def main() -> None:
@@ -339,6 +346,13 @@ def execute_cli_direct(args) -> None:
         # Show help if no arguments or --help/-h is specified
         if not args or args[0] in ['--help', '-h', 'help']:
             print_help()
+            sys.exit(0)
+
+        # Global version flag and subcommand
+        logger = get_logger()
+        if args[0] in ['--version', '-v', 'version']:
+            # Version is intentional stdout
+            print(f"agrr core version {__version__}")
             sys.exit(0)
         
         # Extract data-source from arguments if present
@@ -360,8 +374,8 @@ def execute_cli_direct(args) -> None:
         
         # Check subcommands
         if args[0] == 'predict':
-            # Run ARIMA prediction CLI (skip 'predict' command itself)
-            asyncio.run(container.run_prediction_cli(args[1:]))
+            # Run prediction CLI (skip 'predict' command itself) - now synchronous
+            container.run_prediction_cli(args[1:])
         elif args and args[0] == 'crop':
             # Run crop profile craft CLI (direct wiring per project rules)
             llm_client = LLMClient()
@@ -501,6 +515,7 @@ Note: This command uses AI (LLM) to generate task schedules based on crop
             
             # Parse subcommand
             if len(args) < 2 or args[1] in ['--help', '-h', 'help']:
+                # Help to stdout
                 print("""
 agrr fertilize - Fertilizer information search (LLM)
 
@@ -541,11 +556,10 @@ For detailed help on each subcommand:
             
             subcommand = args[1]
             
-            async def run_fertilize_command():
-                if subcommand == 'list':
-                    # Check for help first
-                    if '--help' in args or '-h' in args:
-                        print("""
+            if subcommand == 'list':
+                # Check for help first
+                if '--help' in args or '-h' in args:
+                    print("""
 agrr fertilize list - Search for popular fertilizers by language
 
 Usage:
@@ -573,59 +587,54 @@ Examples:
   # Output in JSON format
   agrr fertilize list --language ja --json
 """)
-                        sys.exit(0)
-                    
-                    # Parse arguments for list command
-                    language = ""
-                    limit = 5
-                    area_m2 = None
-                    json_output = False
-                    
-                    if '--language' in args or '-l' in args:
-                        try:
-                            lang_index = args.index('--language') if '--language' in args else args.index('-l')
-                            if lang_index + 1 < len(args):
-                                language = args[lang_index + 1]
-                        except (ValueError, IndexError):
-                            pass
-                    
-                    if not language:
-                        print("Error: --language is required for fertilize list command")
-                        sys.exit(1)
-                    
-                    # Check for limit
-                    if '--limit' in args:
-                        try:
-                            limit_index = args.index('--limit')
-                            if limit_index + 1 < len(args):
-                                limit = int(args[limit_index + 1])
-                        except (ValueError, IndexError):
-                            pass
-                    
-                    # Parse area_m2 if provided
-                    if '--area' in args or '-a' in args:
-                        try:
-                            area_index = args.index('--area') if '--area' in args else args.index('-a')
-                            if area_index + 1 < len(args):
-                                area_m2 = float(args[area_index + 1])
-                        except (ValueError, IndexError):
-                            pass
-                    
-                    # Check for JSON output
-                    json_output = '--json' in args or '-j' in args
-                    
-                    # Setup interactor and controller
-                    interactor = FertilizerListInteractor(gateway=gateway)
-                    controller = FertilizerListCliController(interactor=interactor)
-                    
-                    # Execute
-                    output = await controller.execute(language=language, limit=limit, area_m2=area_m2, json_output=json_output)
-                    print(output)
+                    sys.exit(0)
                 
-                elif subcommand == 'get':
-                    # Check for help first
-                    if '--help' in args or '-h' in args:
-                        print("""
+                # Parse arguments for list command
+                language = ""
+                limit = 5
+                area_m2 = None
+                json_output = False
+                
+                if '--language' in args or '-l' in args:
+                    try:
+                        lang_index = args.index('--language') if '--language' in args else args.index('-l')
+                        if lang_index + 1 < len(args):
+                            language = args[lang_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+                
+                if not language:
+                    logger.error("Error: --language is required for fertilize list command")
+                    sys.exit(1)
+                
+                if '--limit' in args:
+                    try:
+                        limit_index = args.index('--limit')
+                        if limit_index + 1 < len(args):
+                            limit = int(args[limit_index + 1])
+                    except (ValueError, IndexError):
+                        pass
+                
+                if '--area' in args or '-a' in args:
+                    try:
+                        area_index = args.index('--area') if '--area' in args else args.index('-a')
+                        if area_index + 1 < len(args):
+                            area_m2 = float(args[area_index + 1])
+                    except (ValueError, IndexError):
+                        pass
+                
+                json_output = '--json' in args or '-j' in args
+                
+                interactor = FertilizerListInteractor(gateway=gateway)
+                controller = FertilizerListCliController(interactor=interactor)
+                output = controller.execute(language=language, limit=limit, area_m2=area_m2, json_output=json_output)
+                # Output JSON/text to stdout
+                print(output)
+            
+            elif subcommand == 'get':
+                # Check for help first
+                if '--help' in args or '-h' in args:
+                    print("""
 agrr fertilize get - Get detailed fertilizer information by name
 
 Usage:
@@ -648,71 +657,34 @@ Examples:
   # Get information about specific product
   agrr fertilize get --name "マグァンプK"
 """)
-                        sys.exit(0)
-                    
-                    # Parse arguments for get command
-                    fertilizer_name = ""
-                    json_output = False
-                    
-                    if '--name' in args or '-n' in args:
-                        try:
-                            name_index = args.index('--name') if '--name' in args else args.index('-n')
-                            if name_index + 1 < len(args):
-                                fertilizer_name = args[name_index + 1]
-                        except (ValueError, IndexError):
-                            pass
-                    
-                    if not fertilizer_name:
-                        print("Error: --name is required for fertilize get command")
-                        sys.exit(1)
-                    
-                    # Check for JSON output
-                    json_output = '--json' in args or '-j' in args
-                    
-                    # Setup interactor and controller
-                    interactor = FertilizerDetailInteractor(gateway=gateway)
-                    controller = FertilizerDetailCliController(interactor=interactor)
-                    
-                    # Execute
-                    output = await controller.execute(fertilizer_name=fertilizer_name, json_output=json_output)
-                    print(output)
+                    sys.exit(0)
                 
-                elif subcommand == 'recommend':
-                    # fertilizer recommend --crop-file <path> [--json] [--output <file>]
-                    # Internal: --mock-fertilizer uses in-memory gateway for testing
-                    from agrr_core.adapter.gateways.fertilizer_recommend_inmemory_gateway import FertilizerRecommendInMemoryGateway
-                    from agrr_core.adapter.gateways.fertilizer_llm_recommend_gateway import FertilizerLLMRecommendGateway
-                    from agrr_core.adapter.controllers.fertilizer_cli_recommend_controller import FertilizerCliRecommendController
-                    from agrr_core.usecase.interactors.fertilizer_llm_recommend_interactor import FertilizerLLMRecommendInteractor
-
-                    # Check for internal mock flag (not documented) - remove from args before parsing
-                    use_mock = '--mock-fertilizer' in args
-                    filtered_args = args
-                    if use_mock:
-                        filtered_args = [arg for arg in args if arg != '--mock-fertilizer']
-                    
-                    # Parse arguments
-                    temp_controller = FertilizerCliRecommendController(None)  # Temporary for parser
-                    parser = temp_controller.create_argument_parser()
-                    parsed = parser.parse_args(filtered_args[2:])
-                    
-                    # Wire gateway based on mock flag
-                    if use_mock:
-                        rec_gateway = FertilizerRecommendInMemoryGateway()
-                    else:
-                        rec_gateway = FertilizerLLMRecommendGateway(LLMClient())
-                    interactor = FertilizerLLMRecommendInteractor(rec_gateway)
-                    controller = FertilizerCliRecommendController(interactor)
-
-                    output = await controller.handle(parsed)
-                    if output:
-                        print(output)
-                else:
-                    print(f"Error: Unknown fertilize subcommand '{subcommand}'")
-                    print("Available: list, get, recommend")
+                # Parse arguments for get command
+                fertilizer_name = ""
+                json_output = False
+                
+                if '--name' in args or '-n' in args:
+                    try:
+                        name_index = args.index('--name') if '--name' in args else args.index('-n')
+                        if name_index + 1 < len(args):
+                            fertilizer_name = args[name_index + 1]
+                    except (ValueError, IndexError):
+                        pass
+                
+                if not fertilizer_name:
+                    logger.error("Error: --name is required for fertilize get command")
                     sys.exit(1)
-            
-            asyncio.run(run_fertilize_command())
+                
+                json_output = '--json' in args or '-j' in args
+                
+                interactor = FertilizerDetailInteractor(gateway=gateway)
+                controller = FertilizerDetailCliController(interactor=interactor)
+                output = controller.execute(fertilizer_name=fertilizer_name, json_output=json_output)
+                print(output)
+            else:
+                logger.error(f"Error: Unknown fertilize subcommand '{subcommand}'")
+                logger.info("Available: list, get, recommend")
+                sys.exit(1)
         
         elif args and args[0] == 'progress':
             # Run growth progress calculation CLI
@@ -760,7 +732,7 @@ Examples:
             manager = DaemonManager()
             
             if len(args) < 2:
-                print("Usage: agrr daemon {start|stop|status|restart}")
+                logger.error("Usage: agrr daemon {start|stop|status|restart}")
                 sys.exit(1)
             
             command = args[1]
@@ -773,8 +745,8 @@ Examples:
             elif command == 'restart':
                 manager.restart()
             else:
-                print(f"Error: Unknown daemon command '{command}'")
-                print("Available: start, stop, status, restart")
+                logger.error(f"Error: Unknown daemon command '{command}'")
+                logger.info("Available: start, stop, status, restart")
                 sys.exit(1)
         elif args and args[0] == 'optimize':
             # Unified optimize command with subcommands: period, allocate
@@ -873,10 +845,10 @@ For detailed help on each subcommand:
                             if fields:
                                 field = fields[0]  # Use first field (single field format)
                     except (ValueError, IndexError) as e:
-                        print(f"Error loading field configuration: {e}")
+                        logger.error(f"Error loading field configuration: {e}")
             
             
-                # Parse args to extract interaction-rules path
+                # Parse args to extract interaction-rules path (optional)
                 # InteractionRuleFileGateway already imported at top
                 interaction_rules_path = ""
                 if '--interaction-rules-file' in args or '-irf' in args:
@@ -887,11 +859,13 @@ For detailed help on each subcommand:
                     except (ValueError, IndexError):
                         pass
             
-                # Setup interaction rule gateway
-                interaction_rule_gateway = InteractionRuleFileGateway(
-                    file_repository=file_repository,
-                    file_path=interaction_rules_path
-                )
+                # Setup interaction rule gateway only when a valid path is provided
+                interaction_rule_gateway = None
+                if interaction_rules_path:
+                    interaction_rule_gateway = InteractionRuleFileGateway(
+                        file_repository=file_repository,
+                        file_path=interaction_rules_path
+                    )
             
                 # Setup weather interpolator
                 weather_interpolator = WeatherLinearInterpolator()
@@ -908,7 +882,7 @@ For detailed help on each subcommand:
                     interaction_rule_gateway=interaction_rule_gateway,
                     weather_interpolator=weather_interpolator,
                 )
-                asyncio.run(controller.run(args[2:]))  # Skip 'optimize' and 'period'
+                controller.run(args[2:])  # Skip 'optimize' and 'period'
             
             elif subcommand == 'allocate':
                 # Run multi-field crop allocation optimization CLI
@@ -938,7 +912,7 @@ For detailed help on each subcommand:
                         presenter=presenter,
                         crop_profile_gateway_internal=crop_profile_gateway_internal,
                     )
-                    asyncio.run(controller.run(args[2:]))  # Skip 'optimize' and 'allocate'
+                    controller.run(args[2:])  # Skip 'optimize' and 'allocate'
                     return
             
                 # Setup file-based repositories
@@ -955,7 +929,7 @@ For detailed help on each subcommand:
                         pass
             
                 if not weather_file_path:
-                    print("Error: --weather-file is required for allocate command")
+                    logger.error("Error: --weather-file is required for allocate command")
                     sys.exit(1)
             
                 # Setup weather gateway
@@ -975,7 +949,7 @@ For detailed help on each subcommand:
                         pass
             
                 if not fields_file_path:
-                    print("Error: --fields-file is required for allocate command")
+                    logger.error("Error: --fields-file is required for allocate command")
                     sys.exit(1)
             
                 # Setup field gateway
@@ -995,7 +969,7 @@ For detailed help on each subcommand:
                         pass
             
                 if not crops_file_path:
-                    print("Error: --crops-file is required for allocate command")
+                    logger.error("Error: --crops-file is required for allocate command")
                     sys.exit(1)
             
                 # Setup crop gateway
@@ -1012,10 +986,12 @@ For detailed help on each subcommand:
                         pass
             
                 # InteractionRuleFileGateway already imported at top
-                interaction_rule_gateway = InteractionRuleFileGateway(
-                    file_repository=file_repository,
-                    file_path=interaction_rules_path
-                )
+                interaction_rule_gateway = None
+                if interaction_rules_path:
+                    interaction_rule_gateway = InteractionRuleFileGateway(
+                        file_repository=file_repository,
+                        file_path=interaction_rules_path
+                    )
             
                 # Setup internal crop profile gateway for growth period optimizer
                 inmemory_crop_profile_repo = CropProfileInMemoryGateway()
@@ -1033,7 +1009,7 @@ For detailed help on each subcommand:
                     crop_profile_gateway_internal=crop_profile_gateway_internal,
                     interaction_rule_gateway=interaction_rule_gateway,
                 )
-                asyncio.run(controller.run(args[2:]))  # Skip 'optimize' and 'allocate'
+                controller.run(args[2:])  # Skip 'optimize' and 'allocate'
             
             elif subcommand == 'adjust':
                 # Run allocation adjustment CLI
@@ -1081,7 +1057,7 @@ For detailed help on each subcommand:
                         pass
                 
                 if not current_allocation_path:
-                    print("Error: --current-allocation is required for adjust command")
+                    logger.error("Error: --current-allocation is required for adjust command")
                     sys.exit(1)
                 
                 # Parse moves file path
@@ -1095,7 +1071,7 @@ For detailed help on each subcommand:
                         pass
                 
                 if not moves_path:
-                    print("Error: --moves is required for adjust command")
+                    logger.error("Error: --moves is required for adjust command")
                     sys.exit(1)
                 
                 # Parse weather file path
@@ -1109,7 +1085,7 @@ For detailed help on each subcommand:
                         pass
                 
                 if not weather_file_path:
-                    print("Error: --weather-file is required for adjust command")
+                    logger.error("Error: --weather-file is required for adjust command")
                     sys.exit(1)
                 
                 # Setup gateways
@@ -1296,22 +1272,27 @@ For detailed help on each subcommand:
                 asyncio.run(controller.handle_candidates_command(controller.create_argument_parser().parse_args(args[2:])))
             
             else:
-                print(f"Error: Unknown optimize subcommand '{subcommand}'")
-                print("Available: period, allocate, adjust, candidates")
-                print("Run 'agrr optimize --help' for more information")
+                logger.error(f"Error: Unknown optimize subcommand '{subcommand}'")
+                logger.info("Available: period, allocate, adjust, candidates")
+                logger.info("Run 'agrr optimize --help' for more information")
                 sys.exit(1)
         else:
-            # Run standard weather CLI
-            asyncio.run(container.run_cli(args))
+            # Run standard weather CLI - now synchronous
+            container.run_cli(args)
         
     except KeyboardInterrupt:
-        print("\n\nOperation cancelled by user.")
+        logger = get_logger()
+        logger.warning("Operation cancelled by user.")
         sys.exit(1)
     except Exception as e:
-        try:
-            print(f"\n❌ Unexpected error: {e}")
-        except UnicodeEncodeError:
-            print(f"\n[ERROR] Unexpected error: {e}")
+        logger = get_logger()
+        import os, traceback
+        if os.getenv("AGRRCORE_DEBUG", "false").lower() == "true":
+            logger.error(f"[DEBUG] Exception type: {type(e).__name__}")
+            logger.error(f"[DEBUG] Exception repr: {repr(e)}")
+            logger.error("[DEBUG] Traceback:")
+            logger.error(traceback.format_exc())
+        logger.error(f"Unexpected error: {e}")
         sys.exit(1)
 
 

@@ -1,7 +1,7 @@
 """Tests for model evaluation interactor."""
 
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 from datetime import datetime, timedelta
 
 from agrr_core.entity import WeatherData, Forecast, Location
@@ -12,7 +12,6 @@ from agrr_core.usecase.gateways.prediction_model_gateway import PredictionModelG
 from agrr_core.usecase.dto.prediction_config_dto import PredictionConfigDTO
 from agrr_core.usecase.dto.model_evaluation_request_dto import ModelEvaluationRequestDTO
 from agrr_core.entity.exceptions.prediction_error import PredictionError
-
 
 @pytest.fixture
 def sample_test_data():
@@ -34,7 +33,6 @@ def sample_test_data():
     
     return data
 
-
 @pytest.fixture
 def sample_training_data():
     """Sample training data for evaluation."""
@@ -55,20 +53,18 @@ def sample_training_data():
     
     return data
 
-
 @pytest.fixture
 def mock_gateways():
     """Mock gateways for testing."""
-    weather_data_gateway = AsyncMock(spec=WeatherDataGateway)
-    model_config_gateway = AsyncMock(spec=ModelConfigGateway)
-    prediction_model_gateway = AsyncMock(spec=PredictionModelGateway)
+    weather_data_gateway = Mock(spec=WeatherDataGateway)
+    model_config_gateway = Mock(spec=ModelConfigGateway)
+    prediction_model_gateway = Mock(spec=PredictionModelGateway)
     
     return {
         'weather_data_gateway': weather_data_gateway,
         'model_config_gateway': model_config_gateway,
         'prediction_model_gateway': prediction_model_gateway
     }
-
 
 @pytest.fixture
 def interactor(mock_gateways):
@@ -78,7 +74,6 @@ def interactor(mock_gateways):
         model_config_gateway=mock_gateways['model_config_gateway'],
         prediction_model_gateway=mock_gateways['prediction_model_gateway']
     )
-
 
 @pytest.fixture
 def sample_request():
@@ -101,9 +96,7 @@ def sample_request():
         validation_split=0.2
     )
 
-
-@pytest.mark.asyncio
-async def test_execute_success(interactor, sample_request, sample_test_data, sample_training_data, mock_gateways):
+def test_execute_success(interactor, sample_request, sample_test_data, sample_training_data, mock_gateways):
     """Test successful model evaluation execution."""
     # Setup mocks
     mock_gateways['weather_data_gateway'].get_weather_data_by_location_and_date_range.side_effect = [
@@ -134,7 +127,7 @@ async def test_execute_success(interactor, sample_request, sample_test_data, sam
     mock_gateways['model_config_gateway'].save_model_evaluation.return_value = None
     
     # Execute
-    result = await interactor.execute(sample_request)
+    result = interactor.execute(sample_request)
     
     # Assertions
     assert result is not None
@@ -153,19 +146,15 @@ async def test_execute_success(interactor, sample_request, sample_test_data, sam
     mock_gateways['prediction_model_gateway'].evaluate_model_accuracy.assert_called_once()
     mock_gateways['model_config_gateway'].save_model_evaluation.assert_called_once()
 
-
-@pytest.mark.asyncio
-async def test_execute_gateway_error(interactor, sample_request, mock_gateways):
+def test_execute_gateway_error(interactor, sample_request, mock_gateways):
     """Test execution with gateway error."""
     # Setup gateway to raise exception
     mock_gateways['weather_data_gateway'].get_weather_data_by_location_and_date_range.side_effect = Exception("Gateway error")
     
     with pytest.raises(PredictionError, match="Model evaluation failed"):
-        await interactor.execute(sample_request)
+        interactor.execute(sample_request)
 
-
-@pytest.mark.asyncio
-async def test_execute_prediction_error(interactor, sample_request, sample_test_data, sample_training_data, mock_gateways):
+def test_execute_prediction_error(interactor, sample_request, sample_test_data, sample_training_data, mock_gateways):
     """Test execution with prediction service error."""
     # Setup mocks
     mock_gateways['weather_data_gateway'].get_weather_data_by_location_and_date_range.side_effect = [
@@ -177,4 +166,4 @@ async def test_execute_prediction_error(interactor, sample_request, sample_test_
     mock_gateways['prediction_model_gateway'].predict_multiple_metrics.side_effect = Exception("Prediction error")
     
     with pytest.raises(PredictionError, match="Model evaluation failed"):
-        await interactor.execute(sample_request)
+        interactor.execute(sample_request)

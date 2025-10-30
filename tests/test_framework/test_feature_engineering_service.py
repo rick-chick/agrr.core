@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from agrr_core.framework.services.ml.feature_engineering_service import FeatureEngineeringService
 from agrr_core.entity import WeatherData
 
-
 class TestFeatureEngineeringService:
     """Test cases for FeatureEngineeringService."""
     

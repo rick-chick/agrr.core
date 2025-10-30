@@ -6,7 +6,7 @@
 
 import pytest
 from datetime import datetime
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 
 from agrr_core.usecase.interactors.growth_period_optimize_interactor import (
     GrowthPeriodOptimizeInteractor,
@@ -15,7 +15,6 @@ from agrr_core.usecase.dto.growth_period_optimize_request_dto import (
     OptimalGrowthPeriodRequestDTO,
 )
 from agrr_core.entity.entities.field_entity import Field
-
 
 class TestFieldDTOToInteractorResponse:
     """DTO → Interactor → ResponseDTO のデータフローテスト"""
@@ -45,8 +44,8 @@ class TestFieldDTOToInteractorResponse:
         )
 
         # Mock gateways
-        mock_crop_gateway = AsyncMock()
-        mock_weather_gateway = AsyncMock()
+        mock_crop_gateway = Mock()
+        mock_weather_gateway = Mock()
 
         interactor = GrowthPeriodOptimizeInteractor(
             crop_profile_gateway=mock_crop_gateway,

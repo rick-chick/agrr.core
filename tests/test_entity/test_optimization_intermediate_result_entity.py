@@ -8,7 +8,6 @@ from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
 
-
 class TestOptimizationIntermediateResult:
     """Test cases for OptimizationIntermediateResult entity."""
 

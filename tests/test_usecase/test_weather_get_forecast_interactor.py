@@ -1,7 +1,7 @@
 """Tests for WeatherGetForecastInteractor."""
 
 import pytest
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock, Mock
 from datetime import datetime
 
 from agrr_core.usecase.interactors.weather_get_forecast_interactor import WeatherGetForecastInteractor
@@ -9,21 +9,19 @@ from agrr_core.usecase.dto.weather_forecast_request_dto import WeatherForecastRe
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 from agrr_core.entity import WeatherData, Location
 
-
 class TestWeatherGetForecastInteractor:
     """Test WeatherGetForecastInteractor."""
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.mock_weather_gateway = AsyncMock()
+        self.mock_weather_gateway = Mock()
         self.mock_weather_presenter_output_port = Mock()
         self.interactor = WeatherGetForecastInteractor(
             self.mock_weather_gateway, 
             self.mock_weather_presenter_output_port
         )
-    
-    @pytest.mark.asyncio
-    async def test_execute_success(self):
+
+    def test_execute_success(self):
         """Test successful 16-day forecast retrieval."""
         # Setup mock data - 16 days of forecast
         mock_weather_data = [
@@ -66,7 +64,7 @@ class TestWeatherGetForecastInteractor:
             longitude=139.7
         )
         
-        result = await self.interactor.execute(request)
+        result = self.interactor.execute(request)
         
         # Assertions
         assert result["success"] is True
@@ -78,9 +76,8 @@ class TestWeatherGetForecastInteractor:
         
         # Verify mock was called correctly
         self.mock_weather_gateway.get_forecast.assert_called_once_with(35.7, 139.7)
-    
-    @pytest.mark.asyncio
-    async def test_execute_invalid_location(self):
+
+    def test_execute_invalid_location(self):
         """Test execution with invalid location."""
         request = WeatherForecastRequestDTO(
             latitude=91.0,  # Invalid latitude
@@ -93,7 +90,7 @@ class TestWeatherGetForecastInteractor:
             "error": {"message": "Invalid location coordinates"}
         }
         
-        result = await self.interactor.execute(request)
+        result = self.interactor.execute(request)
         
         # Assertions
         assert result["success"] is False
@@ -102,9 +99,8 @@ class TestWeatherGetForecastInteractor:
         # Verify gateway was not called
         self.mock_weather_gateway.get_forecast.assert_not_called()
         self.mock_weather_presenter_output_port.format_error.assert_called_once()
-    
-    @pytest.mark.asyncio
-    async def test_execute_api_error(self):
+
+    def test_execute_api_error(self):
         """Test execution with API error."""
         from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
         
@@ -121,7 +117,7 @@ class TestWeatherGetForecastInteractor:
             longitude=139.7
         )
         
-        result = await self.interactor.execute(request)
+        result = self.interactor.execute(request)
         
         # Assertions
         assert result["success"] is False

@@ -9,12 +9,10 @@ from pathlib import Path
 from agrr_core.framework.agrr_core_container import AgrrCoreContainer
 from agrr_core.adapter.controllers.weather_cli_predict_controller import WeatherCliPredictController
 
-
 class TestWeatherMockIntegration:
     """Integration tests for weather mock mode."""
-    
-    @pytest.mark.asyncio
-    async def test_mock_weather_data_generation(self):
+
+    def test_mock_weather_data_generation(self):
         """Test generating mock weather data through container."""
         # Create container with mock configuration
         config = {
@@ -26,7 +24,7 @@ class TestWeatherMockIntegration:
         weather_gateway = container.get_weather_mock_gateway()
         
         # Test getting weather data
-        result = await weather_gateway.get_by_location_and_date_range(
+        result = weather_gateway.get_by_location_and_date_range(
             latitude=35.6762,
             longitude=139.6503,
             start_date="2024-01-01",
@@ -45,9 +43,8 @@ class TestWeatherMockIntegration:
             assert data.temperature_2m_mean is not None
             assert data.temperature_2m_max >= data.temperature_2m_mean
             assert data.temperature_2m_min <= data.temperature_2m_mean
-    
-    @pytest.mark.asyncio
-    async def test_mock_prediction_generation(self):
+
+    def test_mock_prediction_generation(self):
         """Test generating mock predictions through container."""
         # Create container
         container = AgrrCoreContainer()
@@ -90,8 +87,8 @@ class TestWeatherMockIntegration:
         
         try:
             # Test single metric prediction
-            predictions = await prediction_gateway.predict(
-                historical_data=await prediction_gateway.read_historical_data(input_file),
+            predictions = prediction_gateway.predict(
+                historical_data=prediction_gateway.read_historical_data(input_file),
                 metric='temperature',
                 config={'prediction_days': 3}
             )
@@ -103,8 +100,8 @@ class TestWeatherMockIntegration:
             assert all(pred.confidence_upper is not None for pred in predictions)
             
             # Test multi-metric prediction
-            multi_predictions = await prediction_gateway.predict_multiple_metrics(
-                historical_data=await prediction_gateway.read_historical_data(input_file),
+            multi_predictions = prediction_gateway.predict_multiple_metrics(
+                historical_data=prediction_gateway.read_historical_data(input_file),
                 metrics=['temperature', 'temperature_max', 'temperature_min'],
                 config={'prediction_days': 3}
             )
@@ -121,9 +118,8 @@ class TestWeatherMockIntegration:
         
         finally:
             Path(input_file).unlink()
-    
-    @pytest.mark.asyncio
-    async def test_mock_cli_controller(self):
+
+    def test_mock_cli_controller(self):
         """Test mock mode through CLI controller."""
         # Create container with mock configuration
         config = {
@@ -181,7 +177,7 @@ class TestWeatherMockIntegration:
             ]
             
             # Run controller
-            await controller.handle_predict_command(
+            controller.handle_predict_command(
                 controller.create_argument_parser().parse_args(args)
             )
             
@@ -207,15 +203,14 @@ class TestWeatherMockIntegration:
         finally:
             Path(input_file).unlink()
             Path(output_file).unlink()
-    
-    @pytest.mark.asyncio
-    async def test_mock_vs_real_data_consistency(self):
+
+    def test_mock_vs_real_data_consistency(self):
         """Test that mock data is consistent with real data patterns."""
         container = AgrrCoreContainer({'weather_data_source': 'mock'})
         weather_gateway = container.get_weather_mock_gateway()
         
         # Get mock data for a week
-        result = await weather_gateway.get_by_location_and_date_range(
+        result = weather_gateway.get_by_location_and_date_range(
             latitude=35.6762,
             longitude=139.6503,
             start_date="2024-06-01",
@@ -244,9 +239,8 @@ class TestWeatherMockIntegration:
             
             # Weather code should be valid
             assert 0 <= data.weather_code <= 3
-    
-    @pytest.mark.asyncio
-    async def test_mock_prediction_accuracy_simulation(self):
+
+    def test_mock_prediction_accuracy_simulation(self):
         """Test that mock predictions simulate realistic accuracy patterns."""
         container = AgrrCoreContainer()
         prediction_gateway = container.get_prediction_gateway(model_type='mock')
@@ -275,8 +269,8 @@ class TestWeatherMockIntegration:
         
         try:
             # Generate predictions
-            predictions = await prediction_gateway.predict(
-                historical_data=await prediction_gateway.read_historical_data(input_file),
+            predictions = prediction_gateway.predict(
+                historical_data=prediction_gateway.read_historical_data(input_file),
                 metric='temperature',
                 config={'prediction_days': 5}
             )

@@ -7,7 +7,6 @@ This entity models the basic information needed for task scheduling.
 from dataclasses import dataclass
 from typing import Optional
 
-
 @dataclass(frozen=True)
 class AgriculturalTask:
     """Represents an agricultural task with execution conditions.

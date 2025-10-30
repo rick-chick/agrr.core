@@ -17,7 +17,6 @@ from agrr_core.entity.entities.weather_location_entity import Location
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 
-
 class WeatherMockGateway(WeatherGateway):
     """Mock gateway that returns last year's same period weather data.
     
@@ -41,7 +40,7 @@ class WeatherMockGateway(WeatherGateway):
         self.logger = logging.getLogger(__name__)
         self._mock_data_cache = None
     
-    async def get(self) -> List[WeatherData]:
+    def get(self) -> List[WeatherData]:
         """Get mock weather data from configured source.
         
         Returns:
@@ -50,14 +49,14 @@ class WeatherMockGateway(WeatherGateway):
         end_date = datetime.now().date()
         start_date = end_date - timedelta(days=30)
         
-        return await self.get_by_location_and_date_range(
+        return self.get_by_location_and_date_range(
             latitude=35.6762,  # Tokyo coordinates
             longitude=139.6503,
             start_date=start_date.strftime("%Y-%m-%d"),
             end_date=end_date.strftime("%Y-%m-%d")
         )
     
-    async def create(self, weather_data: List[WeatherData], destination: str) -> None:
+    def create(self, weather_data: List[WeatherData], destination: str) -> None:
         """Create mock weather data at destination.
         
         Args:
@@ -93,7 +92,7 @@ class WeatherMockGateway(WeatherGateway):
         
         self.logger.info(f"Mock weather data saved to {destination}")
     
-    async def get_by_location_and_date_range(
+    def get_by_location_and_date_range(
         self,
         latitude: float,
         longitude: float,
@@ -150,7 +149,7 @@ class WeatherMockGateway(WeatherGateway):
             self.logger.error(f"Failed to generate mock weather data: {e}")
             raise
     
-    async def get_forecast(
+    def get_forecast(
         self,
         latitude: float,
         longitude: float
@@ -170,7 +169,7 @@ class WeatherMockGateway(WeatherGateway):
         tomorrow = datetime.now().date() + timedelta(days=1)
         forecast_end = tomorrow + timedelta(days=15)
         
-        return await self.get_by_location_and_date_range(
+        return self.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=tomorrow.strftime("%Y-%m-%d"),

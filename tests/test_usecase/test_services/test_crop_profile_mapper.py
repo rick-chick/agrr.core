@@ -11,7 +11,6 @@ from agrr_core.entity.entities.stage_requirement_entity import StageRequirement
 from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.usecase.services.crop_profile_mapper import CropProfileMapper
 
-
 @pytest.mark.unit
 class TestAggregateToPayload:
     """Tests for aggregate_to_payload method."""
@@ -154,7 +153,6 @@ class TestAggregateToPayload:
         
         assert payload["max_revenue"] == 800000.0
 
-
 @pytest.mark.unit
 class TestStageRequirementToDict:
     """Tests for stage_requirement_to_dict method."""
@@ -231,7 +229,6 @@ class TestStageRequirementToDict:
         assert "target_sunshine_hours" in result["sunshine"]
         assert "required_gdd" in result["thermal"]
 
-
 @pytest.mark.unit
 class TestPrivateMethods:
     """Tests for private helper methods."""
@@ -303,7 +300,6 @@ class TestPrivateMethods:
         
         assert result["required_gdd"] == 800.0
         assert "harvest_start_gdd" not in result  # Should not include None values
-
 
 @pytest.mark.unit
 class TestGroupsFieldHandling:

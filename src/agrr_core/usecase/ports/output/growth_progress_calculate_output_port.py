@@ -9,7 +9,6 @@ from agrr_core.usecase.dto.growth_progress_calculate_response_dto import (
     GrowthProgressCalculateResponseDTO,
 )
 
-
 class GrowthProgressCalculateOutputPort(ABC):
     """Output port for growth progress calculation results."""
 

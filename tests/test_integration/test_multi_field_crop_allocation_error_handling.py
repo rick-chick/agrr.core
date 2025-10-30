@@ -19,9 +19,7 @@ from agrr_core.usecase.dto.multi_field_crop_allocation_request_dto import (
 )
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 
-
-@pytest.mark.asyncio
-async def test_partial_crop_failure_continues_with_real_data():
+def test_partial_crop_failure_continues_with_real_data():
     """Test that allocation continues when some crops cannot complete growth.
     
     Using test_data with autumn start:
@@ -74,7 +72,7 @@ async def test_partial_crop_failure_continues_with_real_data():
     )
     
     # Should not raise exception (partial success)
-    result = await interactor.execute(request)
+    result = interactor.execute(request)
     
     # Verify result exists
     assert result is not None
@@ -90,9 +88,7 @@ async def test_partial_crop_failure_continues_with_real_data():
     # Verify profit is positive
     assert result.optimization_result.total_profit > 0
 
-
-@pytest.mark.asyncio
-async def test_all_crops_fail_raises_error_with_real_data():
+def test_all_crops_fail_raises_error_with_real_data():
     """Test that appropriate error is raised when all crops fail.
     
     Using test_data with very late start (near end of weather data):
@@ -145,7 +141,7 @@ async def test_all_crops_fail_raises_error_with_real_data():
     
     # Should raise ValueError with helpful message
     with pytest.raises(ValueError) as exc_info:
-        await interactor.execute(request)
+        interactor.execute(request)
     
     error_message = str(exc_info.value)
     assert "No valid allocation candidates" in error_message

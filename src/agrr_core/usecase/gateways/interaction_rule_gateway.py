@@ -9,7 +9,6 @@ from typing import List
 
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 
-
 class InteractionRuleGateway(ABC):
     """Gateway for loading interaction rules.
     
@@ -20,7 +19,7 @@ class InteractionRuleGateway(ABC):
     """
     
     @abstractmethod
-    async def get_rules(self) -> List[InteractionRule]:
+    def get_rules(self) -> List[InteractionRule]:
         """Load interaction rules from configured source.
         
         Returns:

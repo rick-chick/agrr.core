@@ -10,7 +10,6 @@ from agrr_core.usecase.services.neighbor_operations.field_swap_operation import 
     FieldSwapOperation,
 )
 
-
 class TestAreaEquivalentSwapOperation:
     """Test area-equivalent swap operation."""
 

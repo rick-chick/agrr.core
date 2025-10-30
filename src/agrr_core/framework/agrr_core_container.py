@@ -1,6 +1,5 @@
 """Unified dependency injection container for agrr.core application."""
 
-import asyncio
 from typing import Dict, Any, Optional
 
 from agrr_core.framework.services.io.file_service import FileService
@@ -31,7 +30,6 @@ from agrr_core.usecase.ports.output.advanced_prediction_output_port import Advan
 from agrr_core.usecase.ports.output.prediction_presenter_output_port import PredictionPresenterOutputPort
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.adapter.interfaces.ml.time_series_service_interface import TimeSeriesServiceInterface
-
 
 class AgrrCoreContainer:
     """Unified dependency injection container for agrr.core application."""
@@ -338,12 +336,12 @@ class AgrrCoreContainer:
     # Utility Methods
     
     # Application Entry Points
-    async def run_cli(self, args: list = None) -> None:
+    def run_cli(self, args: list = None) -> None:
         """Run CLI application with dependency injection."""
         controller = self.get_cli_controller()
-        await controller.run(args)
+        controller.run(args)
     
-    async def run_prediction_cli(self, args: list = None) -> None:
+    def run_prediction_cli(self, args: list = None) -> None:
         """
         Run file-based prediction CLI application with dependency injection.
         
@@ -377,9 +375,8 @@ class AgrrCoreContainer:
             cli_presenter=cli_presenter
         )
         
-        await controller.run(args)
+        controller.run(args)
     
-
 
 # Backward Compatibility Classes
 class WeatherCliContainer(AgrrCoreContainer):
@@ -391,7 +388,6 @@ class WeatherCliContainer(AgrrCoreContainer):
     def get_weather_repository(self) -> WeatherGateway:
         """Get weather repository instance with CLI defaults."""
         return self.get_weather_gateway_impl()
-
 
 class PredictionContainer(AgrrCoreContainer):
     """Prediction container for backward compatibility."""

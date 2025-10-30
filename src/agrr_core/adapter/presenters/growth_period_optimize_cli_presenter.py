@@ -14,7 +14,6 @@ from agrr_core.usecase.ports.output.growth_period_optimize_output_port import (
     GrowthPeriodOptimizeOutputPort,
 )
 
-
 class GrowthPeriodOptimizeCliPresenter(GrowthPeriodOptimizeOutputPort):
     """Presenter for CLI output of optimal growth period calculations."""
 

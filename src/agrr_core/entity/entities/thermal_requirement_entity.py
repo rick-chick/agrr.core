@@ -13,7 +13,6 @@ Units & semantics
 from dataclasses import dataclass
 from typing import Optional
 
-
 @dataclass(frozen=True)
 class ThermalRequirement:
     """Required growing degree days for a stage to complete.
@@ -80,5 +79,4 @@ class ThermalRequirement:
         if self.harvest_start_gdd is None:
             return self.is_met(cumulative_gdd)
         return cumulative_gdd >= self.harvest_start_gdd
-
 

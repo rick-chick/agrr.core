@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from agrr_core.entity.entities.weather_entity import WeatherData
     from agrr_core.entity.entities.crop_profile_entity import CropProfile
 
-
 class ViolationCheckerService:
     """Service for checking violations in crop allocations."""
     

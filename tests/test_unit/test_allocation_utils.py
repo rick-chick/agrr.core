@@ -9,7 +9,6 @@ from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.crop_entity import Crop
 
-
 class TestTimeOverlaps:
     """Test time overlap detection."""
     
@@ -56,7 +55,6 @@ class TestTimeOverlaps:
         end2 = datetime(2025, 3, 1)
         
         assert AllocationUtils.time_overlaps(start1, end1, start2, end2) is True
-
 
 class TestAllocationOverlaps:
     """Test allocation overlap detection."""
@@ -146,7 +144,6 @@ class TestAllocationOverlaps:
         )
         
         assert AllocationUtils.allocation_overlaps(alloc1, alloc2) is False
-
 
 class TestIsFeasibleToAdd:
     """Test feasibility check."""
@@ -284,7 +281,6 @@ class TestIsFeasibleToAdd:
         # Different fields, so always feasible
         assert AllocationUtils.is_feasible_to_add([alloc1], new_alloc) is True
 
-
 class TestCalculateFieldUsage:
     """Test field usage calculation."""
     
@@ -366,7 +362,6 @@ class TestCalculateFieldUsage:
         assert usage['field1']['used_area'] == 500.0
         assert usage['field1']['allocation_count'] == 2
 
-
 class TestCalculateTotalProfit:
     """Test profit calculation."""
     
@@ -423,7 +418,6 @@ class TestCalculateTotalProfit:
         total_profit = AllocationUtils.calculate_total_profit([alloc1, alloc2])
         
         assert total_profit == 12500.0
-
 
 class TestRemoveAllocations:
     """Test allocation removal."""

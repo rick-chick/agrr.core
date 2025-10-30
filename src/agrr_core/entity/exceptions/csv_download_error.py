@@ -1,6 +1,5 @@
 """CSV download error exception."""
 
-
 class CsvDownloadError(Exception):
     """Exception raised when CSV download or parsing fails."""
     

@@ -12,7 +12,6 @@ from agrr_core.entity.entities.candidate_suggestion_entity import (
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.crop_entity import Crop
 
-
 class TestCandidateSuggestion:
     """CandidateSuggestion エンティティのテスト"""
     
@@ -119,7 +118,6 @@ class TestCandidateSuggestion:
         assert result["area"] == 500.0
         assert result["expected_profit"] == 150000.0
         assert result["start_date"] == "2024-06-01T00:00:00"
-
 
 class TestCandidateType:
     """CandidateType エンティティのテスト"""

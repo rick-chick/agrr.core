@@ -6,16 +6,14 @@ from datetime import datetime
 from agrr_core.adapter.gateways.forecast_inmemory_gateway import ForecastInMemoryGateway
 from agrr_core.entity import Forecast
 
-
 class TestForecastInMemoryGateway:
     """Test ForecastInMemoryGateway."""
     
     def setup_method(self):
         """Set up test fixtures."""
         self.repository = ForecastInMemoryGateway()
-    
-    @pytest.mark.asyncio
-    async def test_save_and_get_forecast(self):
+
+    def test_save_and_get_forecast(self):
         """Test saving and retrieving forecast data."""
         # Create test forecast data
         forecasts = [
@@ -40,10 +38,10 @@ class TestForecastInMemoryGateway:
         ]
         
         # Save forecast data
-        await self.repository.save_forecast(forecasts)
+        self.repository.save_forecast(forecasts)
         
         # Retrieve forecast data within date range
-        result = await self.repository.get_forecast_by_date_range(
+        result = self.repository.get_forecast_by_date_range(
             "2024-01-01", "2024-01-10"
         )
         
@@ -56,18 +54,16 @@ class TestForecastInMemoryGateway:
         
         assert result[1].date == datetime(2024, 1, 2)
         assert result[1].predicted_value == 21.0
-    
-    @pytest.mark.asyncio
-    async def test_empty_repository(self):
+
+    def test_empty_repository(self):
         """Test retrieving from empty repository."""
-        result = await self.repository.get_forecast_by_date_range(
+        result = self.repository.get_forecast_by_date_range(
             "2024-01-01", "2024-01-01"
         )
         
         assert len(result) == 0
-    
-    @pytest.mark.asyncio
-    async def test_clear_repository(self):
+
+    def test_clear_repository(self):
         """Test clearing repository."""
         # Add some forecast data
         forecasts = [
@@ -78,20 +74,19 @@ class TestForecastInMemoryGateway:
                 confidence_upper=23.0
             )
         ]
-        await self.repository.save_forecast(forecasts)
+        self.repository.save_forecast(forecasts)
         
         # Clear repository
         self.repository.clear()
         
         # Verify it's empty
-        result = await self.repository.get_forecast_by_date_range(
+        result = self.repository.get_forecast_by_date_range(
             "2024-01-01", "2024-01-01"
         )
         
         assert len(result) == 0
-    
-    @pytest.mark.asyncio
-    async def test_date_range_filtering(self):
+
+    def test_date_range_filtering(self):
         """Test date range filtering."""
         # Create forecast data spanning multiple months
         forecasts = []
@@ -105,10 +100,10 @@ class TestForecastInMemoryGateway:
                 )
             )
         
-        await self.repository.save_forecast(forecasts)
+        self.repository.save_forecast(forecasts)
         
         # Test specific date range
-        result = await self.repository.get_forecast_by_date_range(
+        result = self.repository.get_forecast_by_date_range(
             "2024-01-10", "2024-01-20"
         )
         
@@ -116,9 +111,8 @@ class TestForecastInMemoryGateway:
         assert len(result) == 11
         assert result[0].date == datetime(2024, 1, 10)
         assert result[-1].date == datetime(2024, 1, 20)
-    
-    @pytest.mark.asyncio
-    async def test_forecast_without_confidence(self):
+
+    def test_forecast_without_confidence(self):
         """Test saving forecasts without confidence intervals."""
         forecasts = [
             Forecast(
@@ -131,9 +125,9 @@ class TestForecastInMemoryGateway:
             ),
         ]
         
-        await self.repository.save_forecast(forecasts)
+        self.repository.save_forecast(forecasts)
         
-        result = await self.repository.get_forecast_by_date_range(
+        result = self.repository.get_forecast_by_date_range(
             "2024-01-01", "2024-01-02"
         )
         
@@ -145,9 +139,8 @@ class TestForecastInMemoryGateway:
         assert result[1].predicted_value == 21.0
         assert result[1].confidence_lower is None
         assert result[1].confidence_upper is None
-    
-    @pytest.mark.asyncio
-    async def test_multiple_save_operations(self):
+
+    def test_multiple_save_operations(self):
         """Test multiple save operations."""
         # First batch
         forecasts1 = [
@@ -170,11 +163,11 @@ class TestForecastInMemoryGateway:
         ]
         
         # Save both batches
-        await self.repository.save_forecast(forecasts1)
-        await self.repository.save_forecast(forecasts2)
+        self.repository.save_forecast(forecasts1)
+        self.repository.save_forecast(forecasts2)
         
         # Retrieve all forecasts
-        result = await self.repository.get_forecast_by_date_range(
+        result = self.repository.get_forecast_by_date_range(
             "2024-01-01", "2024-01-03"
         )
         

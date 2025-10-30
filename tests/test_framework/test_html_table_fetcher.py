@@ -5,7 +5,6 @@ import pytest
 from agrr_core.framework.services.io.html_table_service import HtmlTableService
 from agrr_core.adapter.interfaces.structures.html_table_structures import HtmlTable
 
-
 class TestHtmlTableFetcher:
     """Test HtmlTableService."""
     
@@ -13,14 +12,13 @@ class TestHtmlTableFetcher:
     def fetcher(self):
         """Create fetcher instance."""
         return HtmlTableService()
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
-    async def test_fetch_jma_table_real(self, fetcher):
+    def test_fetch_jma_table_real(self, fetcher):
         """実際の気象庁データ取得テスト（E2E）"""
         url = 'https://www.data.jma.go.jp/obd/stats/etrn/view/daily_s1.php?prec_no=62&block_no=47772&year=2024&month=1&day=&view='
         
-        tables = await fetcher.get(url)
+        tables = fetcher.get(url)
         
         # 複数のテーブルが取得できる
         assert len(tables) >= 1
@@ -54,14 +52,13 @@ class TestHtmlTableFetcher:
         print(f"Day: {first_row.cells[0]}")
         print(f"Cells 1-10: {first_row.cells[1:11]}")
         print(f"Total cells: {len(first_row.cells)}")
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
-    async def test_fetch_multiple_tables(self, fetcher):
+    def test_fetch_multiple_tables(self, fetcher):
         """複数テーブルの取得確認"""
         url = 'https://www.data.jma.go.jp/obd/stats/etrn/view/daily_s1.php?prec_no=62&block_no=47772&year=2024&month=1&day=&view='
         
-        tables = await fetcher.get(url)
+        tables = fetcher.get(url)
         
         # 7つのテーブルが取得できるはず
         assert len(tables) >= 5

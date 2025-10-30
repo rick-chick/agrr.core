@@ -9,7 +9,6 @@ from typing import List
 
 from agrr_core.entity.entities.task_schedule_entity import TaskSchedule
 
-
 @dataclass(frozen=True)
 class TaskScheduleResult:
     """Represents the result of task schedule generation.

@@ -12,12 +12,11 @@ from agrr_core.usecase.dto.growth_progress_calculate_response_dto import (
     GrowthProgressCalculateResponseDTO,
 )
 
-
 class GrowthProgressCalculateInputPort(ABC):
     """Input port for growth progress calculation use case."""
 
     @abstractmethod
-    async def execute(
+    def execute(
         self, request: GrowthProgressCalculateRequestDTO
     ) -> GrowthProgressCalculateResponseDTO:
         """Execute the growth progress calculation use case.

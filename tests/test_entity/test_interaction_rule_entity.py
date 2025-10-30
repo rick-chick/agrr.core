@@ -5,7 +5,6 @@ import pytest
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.entity.value_objects.rule_type import RuleType
 
-
 class TestInteractionRuleCreation:
     """Test InteractionRule entity creation."""
     
@@ -75,7 +74,6 @@ class TestInteractionRuleCreation:
         assert rule.target_group == "Brassicaceae"
         assert rule.impact_ratio == 0.8
 
-
 class TestInteractionRuleValidation:
     """Test InteractionRule validation."""
     
@@ -139,7 +137,6 @@ class TestInteractionRuleValidation:
         )
         
         assert rule.impact_ratio == 0.0
-
 
 class TestInteractionRuleMatches:
     """Test InteractionRule.matches() method."""
@@ -218,7 +215,6 @@ class TestInteractionRuleMatches:
         assert rule.matches("field_001", "Solanaceae")
         assert not rule.matches("field_002", "Solanaceae")
 
-
 class TestInteractionRuleGetImpact:
     """Test InteractionRule.get_impact() method."""
     
@@ -287,7 +283,6 @@ class TestInteractionRuleGetImpact:
         # Different field
         impact_no_match = rule.get_impact("field_002", "Solanaceae")
         assert impact_no_match == 1.0
-
 
 class TestInteractionRuleImmutability:
     """Test that InteractionRule is immutable (frozen)."""

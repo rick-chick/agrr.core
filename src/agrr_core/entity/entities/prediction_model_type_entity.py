@@ -2,7 +2,6 @@
 
 from enum import Enum
 
-
 class ModelType(Enum):
     """Supported prediction model types."""
     PROPHET = "prophet"

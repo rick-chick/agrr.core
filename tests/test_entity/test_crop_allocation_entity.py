@@ -7,7 +7,6 @@ from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.crop_entity import Crop
 
-
 class TestCropAllocationEntity:
     """Test CropAllocation entity."""
 

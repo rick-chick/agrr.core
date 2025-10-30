@@ -9,7 +9,6 @@ from typing import Optional
 
 from agrr_core.entity.value_objects.rule_type import RuleType
 
-
 @dataclass(frozen=True)
 class InteractionRule:
     """Interaction rule between groups.

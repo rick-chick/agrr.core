@@ -18,7 +18,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-
 @dataclass
 class GrowthProgressCalculateRequestDTO:
     """Request DTO for growth progress calculation use case."""

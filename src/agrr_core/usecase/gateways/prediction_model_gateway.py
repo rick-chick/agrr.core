@@ -5,12 +5,11 @@ from typing import List, Dict, Any
 
 from agrr_core.entity import WeatherData, Forecast
 
-
 class PredictionModelGateway(ABC):
     """Gateway interface for prediction model operations."""
     
     @abstractmethod
-    async def predict_multiple_metrics(
+    def predict_multiple_metrics(
         self, 
         historical_data: List[WeatherData], 
         metrics: List[str],
@@ -20,7 +19,7 @@ class PredictionModelGateway(ABC):
         pass
     
     @abstractmethod
-    async def evaluate_model_accuracy(
+    def evaluate_model_accuracy(
         self,
         test_data: List[WeatherData],
         predictions: List[Forecast],
@@ -30,7 +29,7 @@ class PredictionModelGateway(ABC):
         pass
     
     @abstractmethod
-    async def train_model(
+    def train_model(
         self,
         training_data: List[WeatherData],
         model_config: Dict[str, Any],
@@ -40,12 +39,12 @@ class PredictionModelGateway(ABC):
         pass
     
     @abstractmethod
-    async def get_model_info(self, model_type: str) -> Dict[str, Any]:
+    def get_model_info(self, model_type: str) -> Dict[str, Any]:
         """Get information about specific model."""
         pass
     
     @abstractmethod
-    async def predict_with_confidence_intervals(
+    def predict_with_confidence_intervals(
         self,
         historical_data: List[WeatherData],
         prediction_days: int,
@@ -56,7 +55,7 @@ class PredictionModelGateway(ABC):
         pass
     
     @abstractmethod
-    async def batch_predict(
+    def batch_predict(
         self,
         historical_data_list: List[List[WeatherData]],
         model_config: Dict[str, Any],

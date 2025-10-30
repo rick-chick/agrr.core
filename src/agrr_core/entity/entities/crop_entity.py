@@ -20,7 +20,6 @@ Fields
 from dataclasses import dataclass
 from typing import Optional, List
 
-
 @dataclass(frozen=True)
 class Crop:
     """Represents a crop with optional variety and revenue information."""
@@ -32,5 +31,4 @@ class Crop:
     revenue_per_area: Optional[float] = None
     max_revenue: Optional[float] = None
     groups: Optional[List[str]] = None
-
 

@@ -26,7 +26,6 @@ from agrr_core.usecase.services.neighbor_operations.area_adjust_operation import
 from agrr_core.usecase.services.neighbor_operations.field_move_operation import FieldMoveOperation
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 
-
 @pytest.fixture
 def field_a():
     """Field A with 28-day fallow period."""
@@ -39,7 +38,6 @@ def field_a():
         fallow_period_days=28
     )
 
-
 @pytest.fixture
 def field_b():
     """Field B with 28-day fallow period."""
@@ -51,7 +49,6 @@ def field_b():
         location="Test",
         fallow_period_days=28
     )
-
 
 @pytest.fixture
 def crop_tomato():
@@ -66,7 +63,6 @@ def crop_tomato():
         groups=["Solanaceae"]
     )
 
-
 @pytest.fixture
 def crop_lettuce():
     """Lettuce crop."""
@@ -80,7 +76,6 @@ def crop_lettuce():
         groups=["Asteraceae"]
     )
 
-
 @pytest.fixture
 def crop_carrot():
     """Carrot crop."""
@@ -93,7 +88,6 @@ def crop_carrot():
         max_revenue=None,
         groups=["Apiaceae"]
     )
-
 
 class MockCandidate:
     """Mock allocation candidate for testing."""
@@ -128,7 +122,6 @@ class MockCandidate:
             return self.profit / self.cost
         return 0.0
 
-
 def create_allocation(field, crop, start_date, completion_date, area_used=500.0):
     """Helper to create a CropAllocation for testing."""
     growth_days = (completion_date - start_date).days
@@ -149,7 +142,6 @@ def create_allocation(field, crop, start_date, completion_date, area_used=500.0)
         expected_revenue=revenue,
         profit=profit,
     )
-
 
 class TestFieldSwapOperation:
     """Test FieldSwapOperation neighbor generation."""
@@ -186,7 +178,6 @@ class TestFieldSwapOperation:
         assert neighbor[1].field.field_id == field_a.field_id
         assert neighbor[1].crop.crop_id == crop_lettuce.crop_id
 
-
 class TestCropChangeOperation:
     """Test CropChangeOperation neighbor generation."""
     
@@ -222,7 +213,6 @@ class TestCropChangeOperation:
             assert len(neighbor) == 1
             assert neighbor[0].field.field_id == field_a.field_id
             assert neighbor[0].crop.crop_id != crop_tomato.crop_id
-
 
 class TestPeriodReplaceOperation:
     """Test PeriodReplaceOperation neighbor generation."""
@@ -262,7 +252,6 @@ class TestPeriodReplaceOperation:
             assert neighbor[0].crop.crop_id == crop_tomato.crop_id
             assert neighbor[0].start_date != alloc.start_date
 
-
 class TestAreaAdjustOperation:
     """Test AreaAdjustOperation neighbor generation."""
     
@@ -289,7 +278,6 @@ class TestAreaAdjustOperation:
         areas = [neighbor[0].area_used for neighbor in neighbors]
         expected_areas = [500.0 * 0.8, 500.0 * 1.2]
         assert sorted(areas) == sorted(expected_areas)
-
 
 class TestFieldMoveOperation:
     """Test FieldMoveOperation neighbor generation."""
@@ -325,7 +313,6 @@ class TestFieldMoveOperation:
         assert len(neighbor) == 1
         assert neighbor[0].field.field_id == field_b.field_id
         assert neighbor[0].crop.crop_id == crop_tomato.crop_id
-
 
 class TestNeighborOperationsConsistency:
     """Integration test to verify neighbor operations produce consistent results."""

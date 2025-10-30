@@ -36,6 +36,5 @@ def try_delegate_to_daemon(args: List[str]) -> bool:
     print("Please start daemon: agrr daemon start", file=sys.stderr)
     sys.exit(1)
 
-
 __all__ = ['try_delegate_to_daemon', 'SOCKET_PATH']
 

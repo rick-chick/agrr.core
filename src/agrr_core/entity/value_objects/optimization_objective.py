@@ -36,7 +36,6 @@ if TYPE_CHECKING:
     from agrr_core.entity.entities.crop_entity import Crop
     from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 
-
 @dataclass(frozen=True)
 class OptimizationMetrics:
     """Immutable optimization metrics containing raw calculation parameters.
@@ -527,7 +526,6 @@ class OptimizationMetrics:
         else:
             return 1.0   # No recovery bonus
 
-
 class OptimizationObjective:
     """Single objective: Always maximize profit.
     
@@ -609,7 +607,6 @@ class OptimizationObjective:
     def __repr__(self) -> str:
         """String representation for debugging."""
         return "OptimizationObjective(maximize_profit)"
-
 
 # Singleton instance for convenience
 DEFAULT_OBJECTIVE = OptimizationObjective()

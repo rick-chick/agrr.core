@@ -6,7 +6,7 @@ is correctly applied in the optimization process.
 
 import pytest
 from datetime import datetime
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 
 from agrr_core.usecase.interactors.multi_field_crop_allocation_greedy_interactor import (
     AllocationCandidate,
@@ -19,15 +19,13 @@ from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.entity.value_objects.rule_type import RuleType
 from agrr_core.usecase.services.interaction_rule_service import InteractionRuleService
 
-
 @pytest.fixture
 def mock_crop_profile_gateway_internal():
     """Mock CropProfileGateway for internal use."""
-    gateway = AsyncMock()
+    gateway = Mock()
     gateway.save.return_value = None
     gateway.delete.return_value = None
     return gateway
-
 
 class TestAllocationCandidateWithInteractionImpact:
     """Test AllocationCandidate with interaction impact."""

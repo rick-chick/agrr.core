@@ -5,7 +5,6 @@ from datetime import datetime
 
 from ..exceptions.invalid_date_range_error import InvalidDateRangeError
 
-
 @dataclass
 class DateRange:
     """Date range entity for weather data requests."""

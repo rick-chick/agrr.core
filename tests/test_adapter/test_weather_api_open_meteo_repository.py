@@ -10,15 +10,14 @@ from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 
-
 class TestWeatherAPIGateway:
     """Test WeatherAPIGateway."""
     
     def setup_method(self):
         """Set up test fixtures."""
         # Create mock HTTP service
-        from unittest.mock import AsyncMock
-        self.mock_http_service = AsyncMock()
+        from unittest.mock import Mock
+        self.mock_http_service = Mock()
         self.mock_http_service.get.return_value = {
             'latitude': 35.6762,
             'longitude': 139.6503,
@@ -42,9 +41,8 @@ class TestWeatherAPIGateway:
     def test_init(self):
         """Test repository initialization."""
         assert self.repository.http_service == self.mock_http_service
-    
-    @pytest.mark.asyncio
-    async def test_get_weather_data_success(self):
+
+    def test_get_weather_data_success(self):
         """Test successful weather data retrieval."""
         # Mock HTTP service response
         mock_response = {
@@ -66,7 +64,7 @@ class TestWeatherAPIGateway:
         self.mock_http_service.get.return_value = mock_response
         
         # Test
-        result = await self.repository.get_by_location_and_date_range(
+        result = self.repository.get_by_location_and_date_range(
             35.7, 139.7, "2023-01-01", "2023-01-02"
         )
         
@@ -105,9 +103,8 @@ class TestWeatherAPIGateway:
         call_args = self.mock_http_service.get.call_args
         assert call_args[0][1]["latitude"] == 35.7
         assert call_args[0][1]["longitude"] == 139.7
-    
-    @pytest.mark.asyncio
-    async def test_get_weather_data_with_none_values(self):
+
+    def test_get_weather_data_with_none_values(self):
         """Test weather data retrieval with None values."""
         # Mock API response with None values
         mock_response = {
@@ -127,7 +124,7 @@ class TestWeatherAPIGateway:
         self.mock_http_service.get.return_value = mock_response
         
         # Test
-        result = await self.repository.get_by_location_and_date_range(
+        result = self.repository.get_by_location_and_date_range(
             35.7, 139.7, "2023-01-01", "2023-01-01"
         )
         
@@ -143,33 +140,30 @@ class TestWeatherAPIGateway:
         assert weather_data_list[0].wind_speed_10m is None
         assert weather_data_list[0].weather_code is None
         # Location information is available in result.location
-    
-    @pytest.mark.asyncio
-    async def test_get_weather_data_api_error(self):
+
+    def test_get_weather_data_api_error(self):
         """Test API error handling."""
         # Mock API error
         from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
         self.mock_http_service.get.side_effect = WeatherAPIError("API Error")
         
         with pytest.raises(WeatherAPIError, match="API Error"):
-            await self.repository.get_by_location_and_date_range(
+            self.repository.get_by_location_and_date_range(
                 35.7, 139.7, "2023-01-01", "2023-01-01"
             )
-    
-    @pytest.mark.asyncio
-    async def test_get_weather_data_invalid_response(self):
+
+    def test_get_weather_data_invalid_response(self):
         """Test invalid API response handling."""
         # Mock invalid response
         mock_response = {"invalid": "response"}
         self.mock_http_service.get.return_value = mock_response
         
         with pytest.raises(WeatherDataNotFoundError, match="No daily weather data found"):
-            await self.repository.get_by_location_and_date_range(
+            self.repository.get_by_location_and_date_range(
                 35.7, 139.7, "2023-01-01", "2023-01-01"
             )
-    
-    @pytest.mark.asyncio
-    async def test_get_weather_data_malformed_response(self):
+
+    def test_get_weather_data_malformed_response(self):
         """Test malformed API response handling."""
         # Mock malformed response
         mock_response = {
@@ -181,7 +175,7 @@ class TestWeatherAPIGateway:
         self.mock_http_service.get.return_value = mock_response
         
         with pytest.raises(WeatherAPIError, match="Invalid API response format"):
-            await self.repository.get_by_location_and_date_range(
+            self.repository.get_by_location_and_date_range(
                 35.7, 139.7, "2023-01-01", "2023-01-01"
             )
     
@@ -197,9 +191,8 @@ class TestWeatherAPIGateway:
         
         # Test with empty data
         assert self.repository._safe_get([], 0) is None
-    
-    @pytest.mark.asyncio
-    async def test_get_forecast_success(self):
+
+    def test_get_forecast_success(self):
         """Test successful 16-day forecast retrieval."""
         # Mock forecast response (tomorrow to 16 days ahead)
         from datetime import date, timedelta
@@ -226,7 +219,7 @@ class TestWeatherAPIGateway:
         self.mock_http_service.get.return_value = mock_response
         
         # Test
-        result = await self.repository.get_forecast(35.7, 139.7)
+        result = self.repository.get_forecast(35.7, 139.7)
         
         # Assertions
         assert len(result.weather_data_list) == 16
@@ -246,12 +239,11 @@ class TestWeatherAPIGateway:
         assert call_args["latitude"] == 35.7
         assert call_args["longitude"] == 139.7
         assert call_args["forecast_days"] == 16
-    
-    @pytest.mark.asyncio
-    async def test_get_forecast_api_error(self):
+
+    def test_get_forecast_api_error(self):
         """Test forecast API error handling."""
         from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
         self.mock_http_service.get.side_effect = WeatherAPIError("Forecast API Error")
         
         with pytest.raises(WeatherAPIError, match="Forecast API Error"):
-            await self.repository.get_forecast(35.7, 139.7)
+            self.repository.get_forecast(35.7, 139.7)

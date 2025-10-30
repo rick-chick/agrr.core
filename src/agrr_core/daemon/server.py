@@ -12,7 +12,6 @@ from . import SOCKET_PATH
 from ..framework.logging.agrr_logger import DaemonLogger
 from ..framework.config.config_loader import get_config
 
-
 class AgrrDaemon:
     """Daemon server for fast CLI execution."""
     
@@ -158,7 +157,16 @@ class AgrrDaemon:
             except SystemExit as e:
                 exit_code = e.code if e.code is not None else 0
             except Exception as e:
+                # エラーの詳細を記録（原因特定のため）
+                import traceback
+                error_details = traceback.format_exc()
                 print(f"Error: {e}", file=sys.stderr)
+                # FileNotFoundError/OSErrorの場合は必ず詳細なトレースバックを出力（原因特定のため）
+                if isinstance(e, (FileNotFoundError, OSError)) or isinstance(e, OSError):
+                    print(f"Traceback:\n{error_details}", file=sys.stderr)
+                # FileNotFoundErrorの場合はファイル名も出力
+                if isinstance(e, FileNotFoundError):
+                    print(f"Missing file: {getattr(e, 'filename', 'unknown')}", file=sys.stderr)
                 exit_code = 1
             finally:
                 # 出力を復元
@@ -184,13 +192,11 @@ class AgrrDaemon:
         finally:
             conn.close()
 
-
 def main():
     """Entry point for daemon server."""
     pid_file = '/tmp/agrr.pid'
     daemon = AgrrDaemon()
     daemon.start(pid_file=pid_file)
-
 
 if __name__ == '__main__':
     main()

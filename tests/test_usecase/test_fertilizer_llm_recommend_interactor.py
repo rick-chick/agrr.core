@@ -1,4 +1,4 @@
-import asyncio
+
 import pytest
 
 from agrr_core.usecase.interactors.fertilizer_llm_recommend_interactor import (
@@ -7,13 +7,11 @@ from agrr_core.usecase.interactors.fertilizer_llm_recommend_interactor import (
 )
 from tests.conftest import fake_gateway_valid, fake_gateway_bad_totals, crop_profile_sample
 
-
-@pytest.mark.asyncio
-async def test_recommend_happy_path(fake_gateway_valid, crop_profile_sample):
+def test_recommend_happy_path(fake_gateway_valid, crop_profile_sample):
     gateway = fake_gateway_valid
     interactor = FertilizerLLMRecommendInteractor(gateway)
     req = FertilizerRecommendRequestDTO(crop_profile=crop_profile_sample)
-    plan = await interactor.execute(req)
+    plan = interactor.execute(req)
 
     assert plan.totals.N == pytest.approx(18.0)
     assert plan.totals.P == pytest.approx(5.2)
@@ -27,13 +25,10 @@ async def test_recommend_happy_path(fake_gateway_valid, crop_profile_sample):
     assert sumP == pytest.approx(plan.totals.P)
     assert sumK == pytest.approx(plan.totals.K)
 
-
-@pytest.mark.asyncio
-async def test_recommend_validation_sum_mismatch(fake_gateway_bad_totals, crop_profile_sample):
+def test_recommend_validation_sum_mismatch(fake_gateway_bad_totals, crop_profile_sample):
     gateway = fake_gateway_bad_totals
     interactor = FertilizerLLMRecommendInteractor(gateway)
     req = FertilizerRecommendRequestDTO(crop_profile=crop_profile_sample)
     with pytest.raises(ValueError):
-        await interactor.execute(req)
-
+        interactor.execute(req)
 

@@ -57,7 +57,6 @@ from agrr_core.usecase.gateways.weather_interpolator import WeatherInterpolator
 import os
 import time
 
-
 class GrowthPeriodOptimizeInteractor(
     BaseOptimizer[CandidateResultDTO],
     GrowthPeriodOptimizeInputPort
@@ -85,7 +84,7 @@ class GrowthPeriodOptimizeInteractor(
             weather_gateway=weather_gateway,
         )
 
-    async def execute(
+    def execute(
         self, request: OptimalGrowthPeriodRequestDTO
     ) -> OptimalGrowthPeriodResponseDTO:
         """Calculate optimal growth period using efficient sliding window algorithm.
@@ -103,7 +102,7 @@ class GrowthPeriodOptimizeInteractor(
         interaction_rules = []
         if self.interaction_rule_gateway:
             try:
-                interaction_rules = await self.interaction_rule_gateway.get_rules()
+                interaction_rules = self.interaction_rule_gateway.get_rules()
             except (ValueError, Exception):
                 # Gateway not configured with file path or file not found - no rules to apply
                 pass
@@ -112,12 +111,12 @@ class GrowthPeriodOptimizeInteractor(
         daily_fixed_cost = request.field.daily_fixed_cost
         
         # Get crop profile for revenue information
-        crop_profile = await self._get_crop_profile(
+        crop_profile = self._get_crop_profile(
             request.crop_id, request.variety
         )
         
         # Use efficient sliding window algorithm
-        candidates = await self._evaluate_candidates_efficient(request, daily_fixed_cost, crop_profile.crop)
+        candidates = self._evaluate_candidates_efficient(request, daily_fixed_cost, crop_profile.crop)
         
         # Find optimal candidate (maximum profit, excluding failures and deadline violations)
         valid_candidates = [c for c in candidates if c.total_cost is not None]
@@ -181,7 +180,7 @@ class GrowthPeriodOptimizeInteractor(
             candidates=valid_candidates,  # Use filtered candidates (no redundant completion dates)
         )
 
-    async def _evaluate_candidates_efficient(
+    def _evaluate_candidates_efficient(
         self, request: OptimalGrowthPeriodRequestDTO, daily_fixed_cost: float, crop: Crop
     ) -> List[CandidateResultDTO]:
         """Evaluate candidates using efficient sliding window algorithm.
@@ -204,11 +203,11 @@ class GrowthPeriodOptimizeInteractor(
         t_all0 = time.perf_counter() if prof else 0.0
 
         # Get crop requirements via gateway
-        crop_profile = await self.crop_profile_gateway.get()
+        crop_profile = self.crop_profile_gateway.get()
         
         # Get weather data via gateway (file path configured at initialization)
         t_w0 = time.perf_counter() if prof else 0.0
-        weather_data = await self.weather_gateway.get()
+        weather_data = self.weather_gateway.get()
         if prof:
             t_w1 = time.perf_counter()
             print(f"[PROFILE] GrowthPeriod: weather_get count={len(weather_data)} elapsed={t_w1-t_w0:.3f}s", flush=True)
@@ -379,7 +378,7 @@ class GrowthPeriodOptimizeInteractor(
             
             # Generate optimization ID from request parameters
             optimization_id = f"{request.crop_id}_{request.variety or 'default'}_{request.evaluation_period_start.date()}_{request.evaluation_period_end.date()}"
-            await self.optimization_result_gateway.save(optimization_id, intermediate_results)
+            self.optimization_result_gateway.save(optimization_id, intermediate_results)
         
         # Sort candidates by cost (ascending: lower cost is better)
         # Valid candidates (with cost) come first, sorted by cost
@@ -438,7 +437,7 @@ class GrowthPeriodOptimizeInteractor(
         
         return accumulator.get_yield_factor()
     
-    async def _evaluate_candidates(
+    def _evaluate_candidates(
         self, request: OptimalGrowthPeriodRequestDTO, candidate_start_dates: List[datetime]
     ) -> List[CandidateResultDTO]:
         """Evaluate all candidate start dates.
@@ -453,7 +452,7 @@ class GrowthPeriodOptimizeInteractor(
         candidates = []
         
         for start_date in candidate_start_dates:
-            candidate_result = await self._evaluate_single_candidate(
+            candidate_result = self._evaluate_single_candidate(
                 start_date=start_date,
                 crop_id=request.crop_id,
                 variety=request.variety,
@@ -465,7 +464,7 @@ class GrowthPeriodOptimizeInteractor(
         
         return candidates
 
-    async def _evaluate_single_candidate(
+    def _evaluate_single_candidate(
         self,
         start_date: datetime,
         crop_id: str,
@@ -498,7 +497,7 @@ class GrowthPeriodOptimizeInteractor(
         )
         
         # Calculate growth progress
-        progress_response = await self.growth_progress_interactor.execute(progress_request)
+        progress_response = self.growth_progress_interactor.execute(progress_request)
         
         # Find completion date (first date with 100% growth)
         completion_date = None
@@ -562,9 +561,9 @@ class GrowthPeriodOptimizeInteractor(
         
         return filtered
 
-    async def _get_crop_profile(
+    def _get_crop_profile(
         self, crop_id: str, variety: Optional[str]
     ) -> CropProfile:
         """Get crop profile from gateway."""
-        return await self.crop_profile_gateway.get()
+        return self.crop_profile_gateway.get()
 

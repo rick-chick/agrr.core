@@ -5,12 +5,11 @@ from typing import List, Tuple
 
 from agrr_core.entity import WeatherData, Location
 
-
 class WeatherDataGateway(ABC):
     """Gateway interface for weather data operations."""
     
     @abstractmethod
-    async def get_weather_data_by_location_and_date_range(
+    def get_weather_data_by_location_and_date_range(
         self, 
         latitude: float, 
         longitude: float, 

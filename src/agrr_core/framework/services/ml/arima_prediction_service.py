@@ -10,7 +10,6 @@ from agrr_core.framework.services.utils.interpolation_service import Interpolati
 from agrr_core.adapter.interfaces.ml.prediction_service_interface import PredictionServiceInterface
 from agrr_core.adapter.interfaces.ml.time_series_service_interface import TimeSeriesServiceInterface
 
-
 class ARIMAPredictionService(PredictionServiceInterface):
     """ARIMA-based prediction service (Framework layer implementation)."""
     
@@ -23,7 +22,7 @@ class ARIMAPredictionService(PredictionServiceInterface):
         """
         self.time_series_service = time_series_service
     
-    async def predict(
+    def predict(
         self,
         historical_data: List[WeatherData],
         metric: str,
@@ -32,16 +31,16 @@ class ARIMAPredictionService(PredictionServiceInterface):
     ) -> List[Forecast]:
         """Predict future values using ARIMA model (implements PredictionModelInterface)."""
         config = {**model_config, 'prediction_days': prediction_days}
-        return await self._predict_single_metric(historical_data, metric, config)
+        return self._predict_single_metric(historical_data, metric, config)
     
-    async def evaluate(
+    def evaluate(
         self,
         test_data: List[WeatherData],
         predictions: List[Forecast],
         metric: str
     ) -> Dict[str, float]:
         """Evaluate model accuracy (implements PredictionModelInterface)."""
-        return await self.evaluate_model_accuracy(test_data, predictions, metric)
+        return self.evaluate_model_accuracy(test_data, predictions, metric)
     
     def get_model_info(self) -> Dict[str, Any]:
         """Get ARIMA model information (implements PredictionModelInterface)."""
@@ -59,7 +58,7 @@ class ARIMAPredictionService(PredictionServiceInterface):
         """Get minimum required data days (implements PredictionModelInterface)."""
         return 30
     
-    async def predict_multiple_metrics(
+    def predict_multiple_metrics(
         self, 
         historical_data: List[WeatherData], 
         metrics: List[str],
@@ -70,14 +69,14 @@ class ARIMAPredictionService(PredictionServiceInterface):
         
         for metric in metrics:
             try:
-                forecasts = await self._predict_single_metric(historical_data, metric, model_config)
+                forecasts = self._predict_single_metric(historical_data, metric, model_config)
                 results[metric] = forecasts
             except Exception as e:
                 raise PredictionError(f"Failed to predict {metric}: {e}")
         
         return results
     
-    async def _predict_single_metric(
+    def _predict_single_metric(
         self, 
         historical_data: List[WeatherData], 
         metric: str,
@@ -256,7 +255,7 @@ class ARIMAPredictionService(PredictionServiceInterface):
         return adjusted_forecasts
     
     
-    async def evaluate_model_accuracy(
+    def evaluate_model_accuracy(
         self,
         test_data: List[WeatherData],
         predictions: List[Forecast],
@@ -293,7 +292,7 @@ class ARIMAPredictionService(PredictionServiceInterface):
             'mape': mape
         }
     
-    async def train_model(
+    def train_model(
         self,
         training_data: List[WeatherData],
         model_config: Dict[str, Any],
@@ -307,7 +306,7 @@ class ARIMAPredictionService(PredictionServiceInterface):
             'status': 'trained'
         }
     
-    async def get_model_info(self, model_type: str) -> Dict[str, Any]:
+    def get_model_info(self, model_type: str) -> Dict[str, Any]:
         """Get ARIMA model information."""
         return {
             'model_type': 'arima',
@@ -318,7 +317,7 @@ class ARIMAPredictionService(PredictionServiceInterface):
             'recommended_seasonal_order': (1, 1, 1, 12)
         }
     
-    async def predict_with_confidence_intervals(
+    def predict_with_confidence_intervals(
         self,
         historical_data: List[WeatherData],
         prediction_days: int,
@@ -328,12 +327,12 @@ class ARIMAPredictionService(PredictionServiceInterface):
         """Predict with confidence intervals using ARIMA."""
         # ARIMA supports confidence intervals natively
         # This is already implemented in _predict_single_metric
-        return await self._predict_single_metric(historical_data, 'temperature', {
+        return self._predict_single_metric(historical_data, 'temperature', {
             **model_config,
             'prediction_days': prediction_days
         })
     
-    async def batch_predict(
+    def batch_predict(
         self,
         historical_data_list: List[List[WeatherData]],
         model_config: Dict[str, Any],
@@ -344,7 +343,7 @@ class ARIMAPredictionService(PredictionServiceInterface):
         
         for historical_data in historical_data_list:
             try:
-                result = await self.predict_multiple_metrics(historical_data, metrics, model_config)
+                result = self.predict_multiple_metrics(historical_data, metrics, model_config)
                 results.append(result)
             except Exception as e:
                 # Add error result

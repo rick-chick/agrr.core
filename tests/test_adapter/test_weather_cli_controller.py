@@ -1,7 +1,7 @@
 """Tests for CLI weather controller."""
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import Mock, MagicMock
 from datetime import datetime, timedelta
 
 from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
@@ -9,13 +9,12 @@ from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresent
 from agrr_core.adapter.gateways.weather_gateway_adapter import WeatherGatewayAdapter as WeatherGatewayImpl
 from agrr_core.entity import WeatherData, Location
 
-
 class TestWeatherCliFetchController:
     """Test cases for WeatherCliFetchController."""
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.mock_gateway = AsyncMock(spec=WeatherGatewayImpl)
+        self.mock_gateway = Mock(spec=WeatherGatewayImpl)
         self.mock_presenter = MagicMock(spec=WeatherCLIPresenter)
         self.controller = WeatherCliFetchController(
             weather_gateway=self.mock_gateway,
@@ -80,9 +79,8 @@ class TestWeatherCliFetchController:
         assert parser is not None
         # The prog name may vary depending on how the test is run
         assert hasattr(parser, 'prog')
-    
-    @pytest.mark.asyncio
-    async def test_handle_weather_command_success(self):
+
+    def test_handle_weather_command_success(self):
         """Test handling weather command successfully."""
         # Mock arguments
         args = MagicMock()
@@ -119,18 +117,17 @@ class TestWeatherCliFetchController:
         }
         
         # Mock interactor execute method
-        self.controller.weather_interactor.execute = AsyncMock(return_value=mock_response)
+        self.controller.weather_interactor.execute = Mock(return_value=mock_response)
         
-        await self.controller.handle_weather_command(args)
+        self.controller.handle_weather_command(args)
         
         # Verify interactor was called
         self.controller.weather_interactor.execute.assert_called_once()
         
         # Verify presenter methods were called
         self.mock_presenter.display_weather_data.assert_called()
-    
-    @pytest.mark.asyncio
-    async def test_handle_weather_command_with_date_range(self):
+
+    def test_handle_weather_command_with_date_range(self):
         """Test handling weather command with specific date range."""
         # Mock arguments
         args = MagicMock()
@@ -152,7 +149,7 @@ class TestWeatherCliFetchController:
             mock_weather_data
         ]
         
-        await self.controller.handle_weather_command(args)
+        self.controller.handle_weather_command(args)
         
         # Verify repository was called with correct dates
         call_args = self.mock_gateway.get_by_location_and_date_range.call_args[0]
@@ -160,9 +157,8 @@ class TestWeatherCliFetchController:
         assert call_args[1] == 139.6503
         assert call_args[2] == "2024-01-01"
         assert call_args[3] == "2024-01-07"
-    
-    @pytest.mark.asyncio
-    async def test_handle_weather_command_with_start_date_only(self):
+
+    def test_handle_weather_command_with_start_date_only(self):
         """Test handling weather command with start date only."""
         # Mock arguments
         args = MagicMock()
@@ -184,13 +180,12 @@ class TestWeatherCliFetchController:
             mock_weather_data
         ]
         
-        await self.controller.handle_weather_command(args)
+        self.controller.handle_weather_command(args)
         
         # Verify repository was called
         self.mock_gateway.get_by_location_and_date_range.assert_called_once()
-    
-    @pytest.mark.asyncio
-    async def test_handle_weather_command_with_end_date_only(self):
+
+    def test_handle_weather_command_with_end_date_only(self):
         """Test handling weather command with end date only."""
         # Mock arguments
         args = MagicMock()
@@ -212,13 +207,12 @@ class TestWeatherCliFetchController:
             mock_weather_data
         ]
         
-        await self.controller.handle_weather_command(args)
+        self.controller.handle_weather_command(args)
         
         # Verify repository was called
         self.mock_gateway.get_by_location_and_date_range.assert_called_once()
-    
-    @pytest.mark.asyncio
-    async def test_handle_weather_command_success_json_output(self):
+
+    def test_handle_weather_command_success_json_output(self):
         """Test handling weather command with JSON output."""
         # Mock arguments
         args = MagicMock()
@@ -255,18 +249,17 @@ class TestWeatherCliFetchController:
         }
         
         # Mock interactor execute method
-        self.controller.weather_interactor.execute = AsyncMock(return_value=mock_response)
+        self.controller.weather_interactor.execute = Mock(return_value=mock_response)
         
-        await self.controller.handle_weather_command(args)
+        self.controller.handle_weather_command(args)
         
         # Verify interactor was called
         self.controller.weather_interactor.execute.assert_called_once()
         
         # Verify JSON presenter was called
         self.mock_presenter.display_weather_data_json.assert_called()
-    
-    @pytest.mark.asyncio
-    async def test_handle_weather_command_empty_data_json_output(self):
+
+    def test_handle_weather_command_empty_data_json_output(self):
         """Test handling weather command with empty data and JSON output."""
         # Mock arguments
         args = MagicMock()
@@ -293,18 +286,17 @@ class TestWeatherCliFetchController:
         }
         
         # Mock interactor execute method
-        self.controller.weather_interactor.execute = AsyncMock(return_value=mock_response)
+        self.controller.weather_interactor.execute = Mock(return_value=mock_response)
         
-        await self.controller.handle_weather_command(args)
+        self.controller.handle_weather_command(args)
         
         # Verify interactor was called
         self.controller.weather_interactor.execute.assert_called_once()
         
         # Verify JSON presenter was called for empty data
         self.mock_presenter.display_weather_data_json.assert_called()
-    
-    @pytest.mark.asyncio
-    async def test_handle_weather_command_includes_location_in_dto(self):
+
+    def test_handle_weather_command_includes_location_in_dto(self):
         """Test that location information is included in DTO."""
         # Mock arguments
         args = MagicMock()
@@ -328,16 +320,15 @@ class TestWeatherCliFetchController:
             mock_weather_data
         ]
         
-        await self.controller.handle_weather_command(args)
+        self.controller.handle_weather_command(args)
         
         # Verify repository was called
         self.mock_gateway.get_by_location_and_date_range.assert_called_once()
         
         # For empty data with json=False, the success message should be displayed
         # Note: display_success_message is currently commented out in the controller
-    
-    @pytest.mark.asyncio
-    async def test_handle_weather_command_error(self):
+
+    def test_handle_weather_command_error(self):
         """Test handling weather command with error."""
         # Mock arguments
         args = MagicMock()
@@ -351,16 +342,15 @@ class TestWeatherCliFetchController:
         # Mock repository to raise exception
         self.mock_gateway.get_by_location_and_date_range.side_effect = Exception("API Error")
         
-        await self.controller.handle_weather_command(args)
+        self.controller.handle_weather_command(args)
         
         # Verify repository was called
         self.mock_gateway.get_by_location_and_date_range.assert_called_once()
         
         # Verify error presenter was called
         self.mock_presenter.display_error.assert_called()
-    
-    @pytest.mark.asyncio
-    async def test_handle_weather_command_error_json_output(self):
+
+    def test_handle_weather_command_error_json_output(self):
         """Test handling weather command error with JSON output."""
         # Mock arguments
         args = MagicMock()
@@ -374,7 +364,7 @@ class TestWeatherCliFetchController:
         # Mock repository to raise exception
         self.mock_gateway.get_by_location_and_date_range.side_effect = Exception("API Error")
         
-        await self.controller.handle_weather_command(args)
+        self.controller.handle_weather_command(args)
         
         # Verify repository was called
         self.mock_gateway.get_by_location_and_date_range.assert_called_once()
@@ -383,9 +373,8 @@ class TestWeatherCliFetchController:
         self.mock_presenter.display_error.assert_called()
         call_args = self.mock_presenter.display_error.call_args
         assert call_args[1]['json_output'] is True
-    
-    @pytest.mark.asyncio
-    async def test_handle_weather_command_validation_error(self):
+
+    def test_handle_weather_command_validation_error(self):
         """Test handling weather command with validation error."""
         # Mock arguments with invalid location
         args = MagicMock()
@@ -396,16 +385,15 @@ class TestWeatherCliFetchController:
         args.json = False
         args.output = None
         
-        await self.controller.handle_weather_command(args)
+        self.controller.handle_weather_command(args)
         
         # Verify repository was NOT called due to validation error
         self.mock_gateway.get_by_location_and_date_range.assert_not_called()
         
         # Verify error presenter was called
         self.mock_presenter.display_error.assert_called()
-    
-    @pytest.mark.asyncio
-    async def test_handle_weather_command_validation_error_json_output(self):
+
+    def test_handle_weather_command_validation_error_json_output(self):
         """Test handling weather command validation error with JSON output."""
         # Mock arguments with invalid location
         args = MagicMock()
@@ -416,7 +404,7 @@ class TestWeatherCliFetchController:
         args.json = True
         args.output = None
         
-        await self.controller.handle_weather_command(args)
+        self.controller.handle_weather_command(args)
         
         # Verify repository was NOT called due to validation error
         self.mock_gateway.get_by_location_and_date_range.assert_not_called()
@@ -425,15 +413,13 @@ class TestWeatherCliFetchController:
         self.mock_presenter.display_error.assert_called()
         call_args = self.mock_presenter.display_error.call_args
         assert call_args[1]['json_output'] is True
-    
-    @pytest.mark.asyncio
-    async def test_run_no_command(self):
+
+    def test_run_no_command(self):
         """Test running CLI with no command."""
-        result = await self.controller.run([])
+        result = self.controller.run([])
         # Should complete without error (help is displayed)
-    
-    @pytest.mark.asyncio
-    async def test_run_weather_command(self):
+
+    def test_run_weather_command(self):
         """Test running CLI with weather command."""
         # Mock arguments
         args = ["weather", "--location", "35.6762,139.6503", "--days", "7"]
@@ -449,13 +435,12 @@ class TestWeatherCliFetchController:
             mock_weather_data
         ]
         
-        await self.controller.run(args)
+        self.controller.run(args)
         
         # Verify repository was called
         self.mock_gateway.get_by_location_and_date_range.assert_called_once()
-    
-    @pytest.mark.asyncio
-    async def test_handle_weather_command_nasa_power_json_output(self):
+
+    def test_handle_weather_command_nasa_power_json_output(self):
         """Test handling weather command with NASA POWER data source and JSON output."""
         # Mock arguments for NASA POWER
         args = MagicMock()
@@ -506,9 +491,9 @@ class TestWeatherCliFetchController:
         }
         
         # Mock interactor execute method
-        self.controller.weather_interactor.execute = AsyncMock(return_value=mock_response)
+        self.controller.weather_interactor.execute = Mock(return_value=mock_response)
         
-        await self.controller.handle_weather_command(args)
+        self.controller.handle_weather_command(args)
         
         # Verify interactor was called
         self.controller.weather_interactor.execute.assert_called_once()

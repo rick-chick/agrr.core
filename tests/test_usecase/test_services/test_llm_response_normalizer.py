@@ -4,7 +4,6 @@ import pytest
 
 from agrr_core.usecase.services.llm_response_normalizer import LLMResponseNormalizer
 
-
 @pytest.mark.unit
 class TestNormalizeStageNameclass:
     """Tests for normalize_stage_name method."""
@@ -49,7 +48,6 @@ class TestNormalizeStageNameclass:
         # stage_name should have highest priority
         assert LLMResponseNormalizer.normalize_stage_name(data) == "Priority Name"
 
-
 @pytest.mark.unit
 class TestNormalizeStageDescription:
     """Tests for normalize_stage_description method."""
@@ -73,7 +71,6 @@ class TestNormalizeStageDescription:
         """Test fallback to empty string when no field is found."""
         data = {}
         assert LLMResponseNormalizer.normalize_stage_description(data) == ""
-
 
 @pytest.mark.unit
 class TestNormalizeGrowthStagesField:
@@ -105,7 +102,6 @@ class TestNormalizeGrowthStagesField:
         data = {}
         result = LLMResponseNormalizer.normalize_growth_stages_field(data)
         assert result == []
-
 
 @pytest.mark.unit
 class TestNormalizeTemperatureField:
@@ -195,7 +191,6 @@ class TestNormalizeTemperatureField:
         with pytest.raises(KeyError, match="max_temperature"):
             LLMResponseNormalizer.normalize_temperature_field(data)
 
-
 @pytest.mark.unit
 class TestNormalizeSunshineField:
     """Tests for normalize_sunshine_field method."""
@@ -230,7 +225,6 @@ class TestNormalizeSunshineField:
         result = LLMResponseNormalizer.normalize_sunshine_field(data)
         assert result["minimum_sunshine_hours"] == 3.0
         assert result["target_sunshine_hours"] == 6.0
-
 
 @pytest.mark.unit
 class TestNormalizeThermalField:

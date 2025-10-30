@@ -8,12 +8,11 @@ from typing import Optional, List
 
 from agrr_core.entity.entities.field_entity import Field
 
-
 class FieldGateway(ABC):
     """Gateway interface for field operations."""
 
     @abstractmethod
-    async def get(self, field_id: str) -> Optional[Field]:
+    def get(self, field_id: str) -> Optional[Field]:
         """Get field by ID.
         
         Args:
@@ -25,7 +24,7 @@ class FieldGateway(ABC):
         pass
     
     @abstractmethod
-    async def get_all(self) -> List[Field]:
+    def get_all(self) -> List[Field]:
         """Get all fields from configured source.
         
         Returns:

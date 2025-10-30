@@ -4,7 +4,7 @@ import pytest
 import json
 import tempfile
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import Mock, MagicMock, patch
 from io import StringIO
 from pathlib import Path
 
@@ -33,17 +33,15 @@ from agrr_core.usecase.dto.multi_field_crop_allocation_response_dto import (
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 from argparse import Namespace
 
-
-@pytest.mark.asyncio
 class TestMultiFieldCropAllocationCliController:
     """Test cases for CLI controller for multi-field crop allocation."""
 
-    async def test_optimize_command_basic(self, optimization_config_legacy):
+    def test_optimize_command_basic(self, optimization_config_legacy):
         """Test that basic optimization command works correctly."""
         # Setup mocks
-        mock_field_gateway = AsyncMock()
-        mock_crop_gateway = AsyncMock()
-        mock_weather_gateway = AsyncMock()
+        mock_field_gateway = Mock()
+        mock_crop_gateway = Mock()
+        mock_weather_gateway = Mock()
         mock_presenter = MagicMock()
         mock_presenter.output_format = "table"
 
@@ -63,7 +61,7 @@ class TestMultiFieldCropAllocationCliController:
             location="Location 2"
         )
         
-        async def field_get_side_effect(field_id):
+        def field_get_side_effect(field_id):
             return {
                 "field_01": field1,
                 "field_02": field2,
@@ -106,10 +104,10 @@ class TestMultiFieldCropAllocationCliController:
         
         # Setup internal state for save/get operations (used by growth_period_optimizer)
         saved_profile = None
-        async def save_profile(profile):
+        def save_profile(profile):
             nonlocal saved_profile
             saved_profile = profile
-        async def get_profile():
+        def get_profile():
             return saved_profile if saved_profile else crop_req1
         
         mock_crop_gateway.save.side_effect = save_profile
@@ -173,17 +171,17 @@ class TestMultiFieldCropAllocationCliController:
             ]
 
             with patch("sys.stdout", new=StringIO()):
-                await controller.run(args)
+                controller.run(args)
 
         # Verify that presenter was called
         mock_presenter.present.assert_called_once()
 
-    async def test_optimize_command_with_target_area(self, optimization_config_legacy):
+    def test_optimize_command_with_target_area(self, optimization_config_legacy):
         """Test optimization with target area specification."""
         # Setup mocks
-        mock_field_gateway = AsyncMock()
-        mock_crop_gateway = AsyncMock()
-        mock_weather_gateway = AsyncMock()
+        mock_field_gateway = Mock()
+        mock_crop_gateway = Mock()
+        mock_weather_gateway = Mock()
         mock_presenter = MagicMock()
         mock_presenter.output_format = "table"
 
@@ -223,10 +221,10 @@ class TestMultiFieldCropAllocationCliController:
         
         # Setup internal state for save/get operations (used by growth_period_optimizer)
         saved_profile = None
-        async def save_profile(profile):
+        def save_profile(profile):
             nonlocal saved_profile
             saved_profile = profile
-        async def get_profile():
+        def get_profile():
             return saved_profile if saved_profile else crop_req1
         
         mock_crop_gateway.save.side_effect = save_profile
@@ -286,17 +284,17 @@ class TestMultiFieldCropAllocationCliController:
             ]
 
             with patch("sys.stdout", new=StringIO()):
-                await controller.run(args)
+                controller.run(args)
 
         # Verify presenter was called
         mock_presenter.present.assert_called_once()
 
-    async def test_optimize_command_with_json_output(self, optimization_config_legacy):
+    def test_optimize_command_with_json_output(self, optimization_config_legacy):
         """Test optimization with JSON output format."""
         # Setup mocks
-        mock_field_gateway = AsyncMock()
-        mock_crop_gateway = AsyncMock()
-        mock_weather_gateway = AsyncMock()
+        mock_field_gateway = Mock()
+        mock_crop_gateway = Mock()
+        mock_weather_gateway = Mock()
         mock_presenter = MagicMock()
         mock_presenter.output_format = "table"
 
@@ -336,10 +334,10 @@ class TestMultiFieldCropAllocationCliController:
         
         # Setup internal state for save/get operations (used by growth_period_optimizer)
         saved_profile = None
-        async def save_profile(profile):
+        def save_profile(profile):
             nonlocal saved_profile
             saved_profile = profile
-        async def get_profile():
+        def get_profile():
             return saved_profile if saved_profile else crop_req1
         
         mock_crop_gateway.save.side_effect = save_profile
@@ -398,19 +396,19 @@ class TestMultiFieldCropAllocationCliController:
             ]
 
             with patch("sys.stdout", new=StringIO()):
-                await controller.run(args)
+                controller.run(args)
 
         # Verify presenter format was updated to json
         assert mock_presenter.output_format == "json"
         mock_presenter.present.assert_called_once()
 
-    async def test_optimize_command_with_interaction_rules(self, optimization_config_legacy):
+    def test_optimize_command_with_interaction_rules(self, optimization_config_legacy):
         """Test optimization with interaction rules."""
         # Setup mocks
-        mock_field_gateway = AsyncMock()
-        mock_crop_gateway = AsyncMock()
-        mock_weather_gateway = AsyncMock()
-        mock_interaction_rule_gateway = AsyncMock()
+        mock_field_gateway = Mock()
+        mock_crop_gateway = Mock()
+        mock_weather_gateway = Mock()
+        mock_interaction_rule_gateway = Mock()
         mock_presenter = MagicMock()
         mock_presenter.output_format = "table"
 
@@ -450,10 +448,10 @@ class TestMultiFieldCropAllocationCliController:
         
         # Setup internal state for save/get operations (used by growth_period_optimizer)
         saved_profile = None
-        async def save_profile(profile):
+        def save_profile(profile):
             nonlocal saved_profile
             saved_profile = profile
-        async def get_profile():
+        def get_profile():
             return saved_profile if saved_profile else crop_req1
         
         mock_crop_gateway.save.side_effect = save_profile
@@ -515,18 +513,18 @@ class TestMultiFieldCropAllocationCliController:
             ]
 
             with patch("sys.stdout", new=StringIO()):
-                await controller.run(args)
+                controller.run(args)
 
         # Verify interaction rules gateway was used
         mock_interaction_rule_gateway.get_rules.assert_called_once()
         mock_presenter.present.assert_called_once()
 
-    async def test_optimize_command_with_parallel_enabled(self, optimization_config_legacy):
+    def test_optimize_command_with_parallel_enabled(self, optimization_config_legacy):
         """Test optimization with parallel candidate generation enabled."""
         # Setup mocks
-        mock_field_gateway = AsyncMock()
-        mock_crop_gateway = AsyncMock()
-        mock_weather_gateway = AsyncMock()
+        mock_field_gateway = Mock()
+        mock_crop_gateway = Mock()
+        mock_weather_gateway = Mock()
         mock_presenter = MagicMock()
         mock_presenter.output_format = "table"
 
@@ -566,10 +564,10 @@ class TestMultiFieldCropAllocationCliController:
         
         # Setup internal state for save/get operations (used by growth_period_optimizer)
         saved_profile = None
-        async def save_profile(profile):
+        def save_profile(profile):
             nonlocal saved_profile
             saved_profile = profile
-        async def get_profile():
+        def get_profile():
             return saved_profile if saved_profile else crop_req1
         
         mock_crop_gateway.save.side_effect = save_profile
@@ -628,17 +626,17 @@ class TestMultiFieldCropAllocationCliController:
             ]
 
             with patch("sys.stdout", new=StringIO()):
-                await controller.run(args)
+                controller.run(args)
 
         # Verify presenter was called
         mock_presenter.present.assert_called_once()
 
-    async def test_optimize_command_with_local_search_disabled(self, optimization_config_legacy):
+    def test_optimize_command_with_local_search_disabled(self, optimization_config_legacy):
         """Test optimization with local search disabled."""
         # Setup mocks
-        mock_field_gateway = AsyncMock()
-        mock_crop_gateway = AsyncMock()
-        mock_weather_gateway = AsyncMock()
+        mock_field_gateway = Mock()
+        mock_crop_gateway = Mock()
+        mock_weather_gateway = Mock()
         mock_presenter = MagicMock()
         mock_presenter.output_format = "table"
 
@@ -678,10 +676,10 @@ class TestMultiFieldCropAllocationCliController:
         
         # Setup internal state for save/get operations (used by growth_period_optimizer)
         saved_profile = None
-        async def save_profile(profile):
+        def save_profile(profile):
             nonlocal saved_profile
             saved_profile = profile
-        async def get_profile():
+        def get_profile():
             return saved_profile if saved_profile else crop_req1
         
         mock_crop_gateway.save.side_effect = save_profile
@@ -740,17 +738,17 @@ class TestMultiFieldCropAllocationCliController:
             ]
 
             with patch("sys.stdout", new=StringIO()):
-                await controller.run(args)
+                controller.run(args)
 
         # Verify presenter was called
         mock_presenter.present.assert_called_once()
 
-    async def test_flag_transfer_with_default_filtering_enabled(self, optimization_config_legacy):
+    def test_flag_transfer_with_default_filtering_enabled(self, optimization_config_legacy):
         """Test that filter_redundant_candidates=True is passed by default."""
         # Setup mocks
-        mock_field_gateway = AsyncMock()
-        mock_crop_gateway = AsyncMock()
-        mock_weather_gateway = AsyncMock()
+        mock_field_gateway = Mock()
+        mock_crop_gateway = Mock()
+        mock_weather_gateway = Mock()
         mock_presenter = MagicMock()
         mock_presenter.output_format = "table"
 
@@ -784,7 +782,7 @@ class TestMultiFieldCropAllocationCliController:
         # Mock the interactor's execute method to capture the request
         captured_request = None
 
-        async def capture_execute(request, **kwargs):
+        def capture_execute(request, **kwargs):
             nonlocal captured_request
             captured_request = request
             # Return mock response
@@ -793,22 +791,22 @@ class TestMultiFieldCropAllocationCliController:
                 field_schedules=[],
             )
 
-        controller.interactor.execute = AsyncMock(side_effect=capture_execute)
+        controller.interactor.execute = Mock(side_effect=capture_execute)
 
         # Execute the command
-        await controller.handle_optimize_command(args)
+        controller.handle_optimize_command(args)
 
         # Verify that the request was created with filter_redundant_candidates=True
         assert captured_request is not None, "Request was not passed to interactor"
         assert captured_request.filter_redundant_candidates is True, \
             "Expected filter_redundant_candidates=True by default"
 
-    async def test_flag_transfer_with_filtering_disabled(self, optimization_config_legacy):
+    def test_flag_transfer_with_filtering_disabled(self, optimization_config_legacy):
         """Test that filter_redundant_candidates=False is passed when --no-filter-redundant is specified."""
         # Setup mocks
-        mock_field_gateway = AsyncMock()
-        mock_crop_gateway = AsyncMock()
-        mock_weather_gateway = AsyncMock()
+        mock_field_gateway = Mock()
+        mock_crop_gateway = Mock()
+        mock_weather_gateway = Mock()
         mock_presenter = MagicMock()
         mock_presenter.output_format = "table"
 
@@ -842,7 +840,7 @@ class TestMultiFieldCropAllocationCliController:
         # Mock the interactor's execute method to capture the request
         captured_request = None
 
-        async def capture_execute(request, **kwargs):
+        def capture_execute(request, **kwargs):
             nonlocal captured_request
             captured_request = request
             # Return mock response
@@ -851,10 +849,10 @@ class TestMultiFieldCropAllocationCliController:
                 field_schedules=[],
             )
 
-        controller.interactor.execute = AsyncMock(side_effect=capture_execute)
+        controller.interactor.execute = Mock(side_effect=capture_execute)
 
         # Execute the command
-        await controller.handle_optimize_command(args)
+        controller.handle_optimize_command(args)
 
         # Verify that the request was created with filter_redundant_candidates=False
         assert captured_request is not None, "Request was not passed to interactor"

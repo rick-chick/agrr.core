@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import List, Tuple
 from agrr_core.entity.entities.weather_entity import WeatherData
 
-
 class WeatherValidator:
     """Validator for weather data operations."""
     

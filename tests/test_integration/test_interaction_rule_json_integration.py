@@ -13,7 +13,6 @@ import pytest
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.entity.value_objects.rule_type import RuleType
 
-
 def serialize_rule(rule: InteractionRule) -> dict:
     """Helper function to serialize InteractionRule to dict."""
     return {
@@ -26,7 +25,6 @@ def serialize_rule(rule: InteractionRule) -> dict:
         "description": rule.description
     }
 
-
 def deserialize_rule(rule_dict: dict) -> InteractionRule:
     """Helper function to deserialize InteractionRule from dict."""
     return InteractionRule(
@@ -38,7 +36,6 @@ def deserialize_rule(rule_dict: dict) -> InteractionRule:
         is_directional=rule_dict["is_directional"],
         description=rule_dict.get("description")
     )
-
 
 class TestInteractionRuleJSONSerialization:
     """Test JSON serialization and deserialization of InteractionRule."""
@@ -108,7 +105,6 @@ class TestInteractionRuleJSONSerialization:
         assert deserialized.target_group == original.target_group
         assert deserialized.impact_ratio == original.impact_ratio
         assert deserialized.is_directional == original.is_directional
-
 
 class TestInteractionRuleFileOperations:
     """Test file I/O operations for InteractionRule."""
@@ -199,7 +195,6 @@ class TestInteractionRuleFileOperations:
         finally:
             temp_file.unlink()
 
-
 class TestInteractionRuleMatchingWithJSON:
     """Test InteractionRule matching with JSON-loaded rules."""
     
@@ -269,7 +264,6 @@ class TestInteractionRuleMatchingWithJSON:
             
         finally:
             temp_file.unlink()
-
 
 class TestRealWorldInteractionRuleScenarios:
     """Test real-world scenarios with interaction rules."""

@@ -6,7 +6,6 @@ from typing import List, Optional
 from .weather_data_response_dto import WeatherDataResponseDTO
 from .location_response_dto import LocationResponseDTO
 
-
 @dataclass
 class WeatherDataListResponseDTO:
     """DTO for weather data list response."""

@@ -14,7 +14,6 @@ from agrr_core.entity.entities.multi_field_optimization_result_entity import (
     MultiFieldOptimizationResult,
 )
 
-
 class OptimizationResultBuilder:
     """Build optimization results from allocations.
     

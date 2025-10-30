@@ -16,12 +16,11 @@ from agrr_core.entity.entities.optimization_schedule_entity import (
     OptimizationSchedule,
 )
 
-
 class OptimizationResultGateway(ABC):
     """Gateway interface for optimization result storage operations."""
 
     @abstractmethod
-    async def save(
+    def save(
         self, 
         optimization_id: str,
         results: List[OptimizationIntermediateResult],
@@ -37,7 +36,7 @@ class OptimizationResultGateway(ABC):
         pass
 
     @abstractmethod
-    async def get(
+    def get(
         self, 
         optimization_id: str
     ) -> Optional[OptimizationSchedule]:
@@ -56,7 +55,7 @@ class OptimizationResultGateway(ABC):
         pass
 
     @abstractmethod
-    async def get_all(self) -> List[OptimizationSchedule]:
+    def get_all(self) -> List[OptimizationSchedule]:
         """Retrieve all stored optimization results.
         
         Returns:
@@ -65,7 +64,7 @@ class OptimizationResultGateway(ABC):
         pass
 
     @abstractmethod
-    async def delete(self, optimization_id: str) -> bool:
+    def delete(self, optimization_id: str) -> bool:
         """Delete optimization intermediate results by ID.
         
         Args:
@@ -77,12 +76,12 @@ class OptimizationResultGateway(ABC):
         pass
 
     @abstractmethod
-    async def clear(self) -> None:
+    def clear(self) -> None:
         """Clear all stored optimization results (both intermediate results and schedules)."""
         pass
 
     @abstractmethod
-    async def clear_schedules(self) -> None:
+    def clear_schedules(self) -> None:
         """Clear only scheduled results (where total_cost is not None).
         
         Preserves intermediate optimization results without total_cost.

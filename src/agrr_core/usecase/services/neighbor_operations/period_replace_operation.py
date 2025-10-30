@@ -8,7 +8,6 @@ from agrr_core.usecase.services.neighbor_operations.base_neighbor_operation impo
     NeighborOperation,
 )
 
-
 class PeriodReplaceOperation(NeighborOperation):
     """P4. Period Replace: Replace period with candidate from DP results.
     

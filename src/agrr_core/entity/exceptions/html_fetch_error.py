@@ -1,6 +1,5 @@
 """HTML fetch error exception."""
 
-
 class HtmlFetchError(Exception):
     """Exception raised when HTML fetch or parsing fails."""
     

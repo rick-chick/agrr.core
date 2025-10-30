@@ -6,7 +6,7 @@ combination of non-overlapping optimization results.
 
 import pytest
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 
 from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
@@ -19,23 +19,20 @@ from agrr_core.usecase.dto.optimization_intermediate_result_schedule_request_dto
     OptimizationIntermediateResultScheduleRequestDTO,
 )
 
-
 class TestOptimizationIntermediateResultScheduleInteractor:
     """Test suite for optimization intermediate result scheduling."""
 
-    @pytest.mark.asyncio
-    async def test_empty_input(self):
+    def test_empty_input(self):
         """Test with empty list of results."""
         interactor = OptimizationIntermediateResultScheduleInteractor()
         request = OptimizationIntermediateResultScheduleRequestDTO(results=[])
         
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         assert response.total_cost == 0.0
         assert response.selected_results == []
 
-    @pytest.mark.asyncio
-    async def test_single_result(self):
+    def test_single_result(self):
         """Test with single valid result."""
         field = Field(field_id="field_1", name="Test Field", area=1000.0, daily_fixed_cost=100.0)
         
@@ -52,14 +49,13 @@ class TestOptimizationIntermediateResultScheduleInteractor:
         interactor = OptimizationIntermediateResultScheduleInteractor()
         request = OptimizationIntermediateResultScheduleRequestDTO(results=[result])
         
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         assert response.total_cost == 1000.0
         assert len(response.selected_results) == 1
         assert response.selected_results[0].start_date == datetime(2025, 1, 1)
 
-    @pytest.mark.asyncio
-    async def test_non_overlapping_results_select_all(self):
+    def test_non_overlapping_results_select_all(self):
         """Test with multiple non-overlapping results - should select all."""
         field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
         field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=80.0)
@@ -98,13 +94,12 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             results=[result1, result2, result3]
         )
         
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         assert response.total_cost == 2700.0  # 1000 + 800 + 900
         assert len(response.selected_results) == 3
 
-    @pytest.mark.asyncio
-    async def test_overlapping_results_select_cheaper(self):
+    def test_overlapping_results_select_cheaper(self):
         """Test with overlapping results - should select cheaper one."""
         field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=133.33)
         field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=75.0)
@@ -135,14 +130,13 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             results=[result1, result2]
         )
         
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         assert response.total_cost == 1200.0  # Select cheaper result2
         assert len(response.selected_results) == 1
         assert response.selected_results[0].start_date == datetime(2025, 1, 5)
 
-    @pytest.mark.asyncio
-    async def test_complex_scheduling(self):
+    def test_complex_scheduling(self):
         """Test complex case with multiple overlapping periods."""
         field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
         field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=72.73)
@@ -195,7 +189,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             results=[result1, result2, result3, result4]
         )
         
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Possible combinations:
         # - result1 (1000) + result3 (600) + result4 (700) = 2300 (3 periods, result2 overlaps with 1 and 3)
@@ -209,8 +203,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
         assert response.selected_results[1].start_date == datetime(2025, 1, 11)
         assert response.selected_results[2].start_date == datetime(2025, 1, 21)
 
-    @pytest.mark.asyncio
-    async def test_filter_incomplete_results(self):
+    def test_filter_incomplete_results(self):
         """Test that incomplete results (None completion_date or cost) are filtered."""
         field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
         
@@ -250,15 +243,14 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             results=[result1, result2, result3]
         )
         
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Only result1 should be selected
         assert response.total_cost == 1000.0
         assert len(response.selected_results) == 1
         assert response.selected_results[0].start_date == datetime(2025, 1, 1)
 
-    @pytest.mark.asyncio
-    async def test_same_start_date_boundary(self):
+    def test_same_start_date_boundary(self):
         """Test boundary case where completion_date equals next start_date."""
         field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
         field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=80.0)
@@ -289,14 +281,13 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             results=[result1, result2]
         )
         
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Should select both (boundary case: end <= start means non-overlapping)
         assert response.total_cost == 1800.0
         assert len(response.selected_results) == 2
 
-    @pytest.mark.asyncio
-    async def test_unordered_input(self):
+    def test_unordered_input(self):
         """Test that algorithm works with unordered input."""
         field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=70.0)
         field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=100.0)
@@ -336,20 +327,19 @@ class TestOptimizationIntermediateResultScheduleInteractor:
             results=[result1, result2, result3]
         )
         
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Should still find optimal: all three non-overlapping
         assert response.total_cost == 2300.0
         assert len(response.selected_results) == 3
 
-    @pytest.mark.asyncio
-    async def test_save_schedule_with_gateway(self):
+    def test_save_schedule_with_gateway(self):
         """Test that schedule is saved when gateway is provided."""
         field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
         field2 = Field(field_id="field_2", name="Field 2", area=1000.0, daily_fixed_cost=80.0)
         
         # Create mock gateway
-        mock_gateway = AsyncMock()
+        mock_gateway = Mock()
         
         # Create interactor with gateway
         interactor = OptimizationIntermediateResultScheduleInteractor(
@@ -381,7 +371,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
         )
         
         # Execute with schedule_id
-        response = await interactor.execute(request, schedule_id="test_schedule_001")
+        response = interactor.execute(request, schedule_id="test_schedule_001")
         
         # Verify gateway.save was called
         mock_gateway.save.assert_called_once()
@@ -396,13 +386,12 @@ class TestOptimizationIntermediateResultScheduleInteractor:
         assert response.total_cost == 1800.0
         assert len(response.selected_results) == 2
 
-    @pytest.mark.asyncio
-    async def test_no_save_without_schedule_id(self):
+    def test_no_save_without_schedule_id(self):
         """Test that schedule is not saved when schedule_id is not provided."""
         field1 = Field(field_id="field_1", name="Field 1", area=1000.0, daily_fixed_cost=100.0)
         
         # Create mock gateway
-        mock_gateway = AsyncMock()
+        mock_gateway = Mock()
         
         # Create interactor with gateway
         interactor = OptimizationIntermediateResultScheduleInteractor(
@@ -423,7 +412,7 @@ class TestOptimizationIntermediateResultScheduleInteractor:
         request = OptimizationIntermediateResultScheduleRequestDTO(results=[result1])
         
         # Execute without schedule_id
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Verify gateway.save_schedule was NOT called
         mock_gateway.save_schedule.assert_not_called()

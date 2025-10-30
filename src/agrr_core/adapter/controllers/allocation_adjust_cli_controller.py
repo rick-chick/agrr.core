@@ -1,9 +1,10 @@
 """CLI controller for allocation adjustment (adapter layer)."""
 
 import argparse
-import asyncio
+
 from datetime import datetime
 from typing import Optional
+from agrr_core.framework.logging.agrr_logger import get_logger
 
 from agrr_core.usecase.gateways.allocation_result_gateway import AllocationResultGateway
 from agrr_core.usecase.gateways.move_instruction_gateway import MoveInstructionGateway
@@ -16,7 +17,6 @@ from agrr_core.usecase.dto.allocation_adjust_request_dto import AllocationAdjust
 from agrr_core.adapter.presenters.allocation_adjust_cli_presenter import (
     AllocationAdjustCliPresenter,
 )
-
 
 class AllocationAdjustCliController:
     """CLI controller for allocation adjustment."""
@@ -51,6 +51,7 @@ class AllocationAdjustCliController:
         self.weather_gateway = weather_gateway
         self.crop_profile_gateway_internal = crop_profile_gateway_internal
         self.presenter = presenter
+        self.logger = get_logger()
         self.interaction_rule_gateway = interaction_rule_gateway
         
         # Instantiate interactor
@@ -346,24 +347,24 @@ Error: "Time overlap with allocation ... (considering X-day fallow period)"
                 f'Invalid date format: "{date_str}". Use YYYY-MM-DD (e.g., "2024-04-01")'
             )
     
-    async def handle_adjust_command(self, args) -> None:
+    def handle_adjust_command(self, args) -> None:
         """Handle the adjust command."""
         # Parse planning period dates
         try:
             planning_start = self._parse_date(args.planning_start)
             planning_end = self._parse_date(args.planning_end)
         except ValueError as e:
-            print(f"Error: {str(e)}")
+            self.logger.error(f"Error: {str(e)}")
             return
         
         # Load move instructions
         try:
-            move_instructions = await self.move_instruction_gateway.get_all()
+            move_instructions = self.move_instruction_gateway.get_all()
             if not move_instructions:
-                print("Error: No move instructions found.")
+                self.logger.error("Error: No move instructions found.")
                 return
         except Exception as e:
-            print(f"Error loading move instructions: {str(e)}")
+            self.logger.error(f"Error loading move instructions: {str(e)}")
             return
         
         # Update presenter format
@@ -379,18 +380,18 @@ Error: "Time overlap with allocation ... (considering X-day fallow period)"
         
         # Execute use case
         try:
-            response = await self.interactor.execute(request)
+            response = self.interactor.execute(request)
             
             self.presenter.present(response)
             
         except Exception as e:
-            print(f"Error adjusting allocation: {str(e)}")
             import traceback
-            traceback.print_exc()
+            self.logger.error(f"Error adjusting allocation: {str(e)}")
+            self.logger.error(traceback.format_exc())
     
-    async def run(self, args: Optional[list] = None) -> None:
+    def run(self, args: Optional[list] = None) -> None:
         """Run the controller with CLI arguments."""
         parser = self.create_argument_parser()
         parsed_args = parser.parse_args(args)
-        await self.handle_adjust_command(parsed_args)
+        self.handle_adjust_command(parsed_args)
 

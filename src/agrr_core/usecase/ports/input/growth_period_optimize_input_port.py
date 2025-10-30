@@ -12,12 +12,11 @@ from agrr_core.usecase.dto.growth_period_optimize_response_dto import (
     OptimalGrowthPeriodResponseDTO,
 )
 
-
 class GrowthPeriodOptimizeInputPort(ABC):
     """Input port for optimal growth period calculation use case."""
 
     @abstractmethod
-    async def execute(
+    def execute(
         self, request: OptimalGrowthPeriodRequestDTO
     ) -> OptimalGrowthPeriodResponseDTO:
         """Execute the optimal growth period calculation use case.

@@ -20,7 +20,6 @@ from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherData
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 
-
 # NOAA ISD 観測地点マッピング（自動選定194地点）
 # アメリカ全50州、農業重要度と気候多様性を考慮
 # Generated from NOAA isd-history.txt (2024-10-17)
@@ -330,7 +329,6 @@ LOCATION_MAPPING: Dict[Tuple[float, float], Tuple[str, str, str, float, float]] 
     (41.32, -105.67): ("725645", "24022", "LARAMIE REGIONAL AIRPORT, WY", 41.3170, -105.6730),
 }
 
-
 class WeatherNOAAFTPGateway(WeatherGateway):
     """Gateway for fetching long-term historical weather data from NOAA ISD via FTP.
     
@@ -346,7 +344,7 @@ class WeatherNOAAFTPGateway(WeatherGateway):
         """Initialize NOAA FTP weather gateway."""
         self.logger = logging.getLogger(__name__)
     
-    async def get(self) -> List[WeatherData]:
+    def get(self) -> List[WeatherData]:
         """Get weather data from configured source.
         
         Raises:
@@ -357,7 +355,7 @@ class WeatherNOAAFTPGateway(WeatherGateway):
             "Use get_by_location_and_date_range() instead."
         )
     
-    async def create(self, weather_data: List[WeatherData], destination: str) -> None:
+    def create(self, weather_data: List[WeatherData], destination: str) -> None:
         """Create weather data at destination.
         
         Raises:
@@ -367,7 +365,7 @@ class WeatherNOAAFTPGateway(WeatherGateway):
             "Weather data creation not supported for NOAA source"
         )
     
-    async def get_forecast(
+    def get_forecast(
         self,
         latitude: float,
         longitude: float
@@ -411,7 +409,7 @@ class WeatherNOAAFTPGateway(WeatherGateway):
         
         return nearest
     
-    async def get_by_location_and_date_range(
+    def get_by_location_and_date_range(
         self,
         latitude: float,
         longitude: float,

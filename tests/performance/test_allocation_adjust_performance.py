@@ -18,7 +18,6 @@ from agrr_core.adapter.gateways.crop_profile_inmemory_gateway import CropProfile
 from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway
 from agrr_core.framework.services.io.file_service import FileService
 
-
 class TimedCropProfileFileGateway(CropProfileFileGateway):
     """Instrumented gateway to measure performance."""
     
@@ -30,13 +29,11 @@ class TimedCropProfileFileGateway(CropProfileFileGateway):
     async def get_all(self):
         self.get_all_count += 1
         start = time.time()
-        result = await super().get_all()
+        result = super().get_all()
         self.get_all_time += time.time() - start
         return result
 
-
-@pytest.mark.asyncio
-async def test_allocation_adjust_performance_with_test_data():
+def test_allocation_adjust_performance_with_test_data():
     """Test performance using existing test data."""
     test_data_dir = Path(__file__).parent.parent.parent / "test_data"
     file_service = FileService()
@@ -95,7 +92,7 @@ async def test_allocation_adjust_performance_with_test_data():
         # Measure execution time
         start_time = time.time()
         try:
-            response = await interactor.execute(request)
+            response = interactor.execute(request)
             end_time = time.time()
             
             execution_time = end_time - start_time
@@ -129,9 +126,7 @@ async def test_allocation_adjust_performance_with_test_data():
             # Don't fail the test completely, just report
             print(f"   Continuing with next test case...")
 
-
-@pytest.mark.asyncio
-async def test_allocation_adjust_bottleneck_analysis():
+def test_allocation_adjust_bottleneck_analysis():
     """Detailed bottleneck analysis to identify slow operations."""
     test_data_dir = Path(__file__).parent.parent.parent / "test_data"
     file_service = FileService()
@@ -179,7 +174,7 @@ async def test_allocation_adjust_bottleneck_analysis():
     # Execute and measure
     start_time = time.time()
     try:
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         end_time = time.time()
         
         execution_time = end_time - start_time

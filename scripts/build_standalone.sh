@@ -114,7 +114,7 @@ rm -rf build dist
 
 if [ "$BUILD_FORMAT" = "onefile" ]; then
     echo "Step 3: Building with PyInstaller (--onefile format)..."
-    $PYTHON_CMD -m PyInstaller \
+    PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$SRC_ABS" $PYTHON_CMD -m PyInstaller \
         --onefile \
         --name agrr \
         --console \
@@ -128,6 +128,7 @@ if [ "$BUILD_FORMAT" = "onefile" ]; then
         --collect-all scipy \
         --collect-all lightgbm \
         --collect-all sklearn \
+        --collect-data certifi \
         --add-data "prompts:prompts" \
         --paths src \
         --hidden-import agrr_core.daemon \
@@ -151,6 +152,13 @@ if [ "$BUILD_FORMAT" = "onefile" ]; then
         --hidden-import lightgbm \
         --hidden-import sklearn \
         --hidden-import openai \
+        --hidden-import jiter \
+        --hidden-import jiter.jiter \
+        --collect-all openai \
+        --collect-all jiter \
+        --collect-binaries jiter \
+        --copy-metadata openai \
+        --copy-metadata jiter \
         --hidden-import dotenv \
         --exclude-module matplotlib \
         --exclude-module pytest \
@@ -174,7 +182,7 @@ if [ "$BUILD_FORMAT" = "onefile" ]; then
     fi
 else
     echo "Step 3: Building with PyInstaller (--onedir format for fast startup)..."
-    $PYTHON_CMD -m PyInstaller \
+    PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$SRC_ABS" $PYTHON_CMD -m PyInstaller \
         --onedir \
         --name agrr \
         --console \
@@ -188,6 +196,7 @@ else
         --collect-all scipy \
         --collect-all lightgbm \
         --collect-all sklearn \
+        --collect-data certifi \
         --add-data "prompts:prompts" \
         --paths src \
         --hidden-import agrr_core.daemon \
@@ -211,6 +220,13 @@ else
         --hidden-import lightgbm \
         --hidden-import sklearn \
         --hidden-import openai \
+        --hidden-import jiter \
+        --hidden-import jiter.jiter \
+        --collect-all openai \
+        --collect-all jiter \
+        --collect-binaries jiter \
+        --copy-metadata openai \
+        --copy-metadata jiter \
         --hidden-import dotenv \
         --exclude-module matplotlib \
         --exclude-module pytest \

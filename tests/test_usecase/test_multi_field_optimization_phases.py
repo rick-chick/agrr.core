@@ -2,7 +2,7 @@
 
 import pytest
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import Mock, MagicMock
 
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.crop_entity import Crop
@@ -13,15 +13,13 @@ from agrr_core.usecase.interactors.multi_field_crop_allocation_greedy_interactor
     AllocationCandidate,
 )
 
-
 @pytest.fixture
 def mock_crop_profile_gateway_internal():
     """Mock CropProfileGateway for internal use."""
-    gateway = AsyncMock()
+    gateway = Mock()
     gateway.save.return_value = None
     gateway.delete.return_value = None
     return gateway
-
 
 class TestPhase1Filtering:
     """Test Phase 1: Candidate filtering."""
@@ -108,7 +106,6 @@ class TestPhase1Filtering:
         growth_days_list = [c.growth_days for c in filtered]
         assert min(growth_days_list) == 105  # i=9: 150 - 9*5 = 105 (highest profit_rate)
 
-
 class TestPhase1Sampling:
     """Test Phase 1: Neighbor sampling."""
     
@@ -153,17 +150,15 @@ class TestPhase1Sampling:
         # Should be limited to max_neighbors_per_iteration
         assert len(neighbors) <= config.max_neighbors_per_iteration
 
-
 class TestPhase2ParallelGeneration:
     """Test Phase 2: Parallel candidate generation."""
-    
-    @pytest.mark.asyncio
-    async def test_parallel_generation_structure(self, mock_crop_profile_gateway_internal):
+
+    def test_parallel_generation_structure(self, mock_crop_profile_gateway_internal):
         """Test that parallel generation has correct structure."""
         # Create mock gateways
-        field_gateway = AsyncMock()
-        crop_req_gateway = AsyncMock()
-        weather_gateway = AsyncMock()
+        field_gateway = Mock()
+        crop_req_gateway = Mock()
+        weather_gateway = Mock()
         
         config = OptimizationConfig(
             enable_parallel_candidate_generation=True
@@ -178,7 +173,6 @@ class TestPhase2ParallelGeneration:
         # Check that method exists
         assert hasattr(interactor, '_generate_candidates_parallel')
         assert hasattr(interactor, '_generate_candidates_for_field_crop')
-
 
 class TestPhase3AdaptiveStopping:
     """Test Phase 3: Adaptive early stopping."""
@@ -202,7 +196,6 @@ class TestPhase3AdaptiveStopping:
         improvement_threshold = current_profit * config.improvement_threshold_ratio
         
         assert improvement_threshold == pytest.approx(1000.0)  # 0.1%
-
 
 class TestConfigProfiles:
     """Test different configuration profiles."""
@@ -236,7 +229,6 @@ class TestConfigProfiles:
         
         # Thoroughness: fast < balanced < quality
         assert len(fast.area_levels) < len(balanced.area_levels) < len(quality.area_levels)
-
 
 class TestIntegration:
     """Test that all phases work together."""

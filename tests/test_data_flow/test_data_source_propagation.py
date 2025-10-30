@@ -5,14 +5,13 @@ through all layers to the actual Repository instance.
 """
 
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import Mock, patch, MagicMock
 import pandas as pd
 
 from agrr_core.framework.agrr_core_container import WeatherCliContainer, AgrrCoreContainer
 from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway as WeatherJMAGateway
 from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway as WeatherAPIGateway
 from agrr_core.adapter.interfaces.structures.html_table_structures import HtmlTable, TableRow
-
 
 class TestDataSourcePropagation:
     """Test data_source propagation through component layers."""
@@ -212,12 +211,10 @@ class TestDataSourcePropagation:
         assert gateway_jma is not gateway_openmeteo
         assert gateway_jma.api_gateway is not gateway_openmeteo.api_gateway
 
-
 class TestDataSourcePropagationWithMocks:
     """Test data_source propagation with mocked external services."""
-    
-    @pytest.mark.asyncio
-    async def test_jma_repository_actually_called(self):
+
+    def test_jma_repository_actually_called(self):
         """
         Test that JMA repository is actually called when data_source='jma'.
         
@@ -248,12 +245,12 @@ class TestDataSourcePropagationWithMocks:
         html_table_fetcher = container.get_html_table_fetcher()
         
         # Mock the get method
-        with patch.object(html_table_fetcher, 'get', new_callable=AsyncMock) as mock_download:
+        with patch.object(html_table_fetcher, 'get', new_callable=Mock) as mock_download:
             mock_download.return_value = mock_html_table
             
             # Get gateway and call it
             gateway = container.get_weather_gateway_impl()
-            result = await gateway.get_by_location_and_date_range(
+            result = gateway.get_by_location_and_date_range(
                 latitude=35.6895,
                 longitude=139.6917,
                 start_date='2024-10-05',
@@ -267,9 +264,8 @@ class TestDataSourcePropagationWithMocks:
             # Verify result structure
             assert result.weather_data_list is not None
             assert len(result.weather_data_list) == 1
-    
-    @pytest.mark.asyncio
-    async def test_openmeteo_repository_actually_called(self):
+
+    def test_openmeteo_repository_actually_called(self):
         """
         Test that OpenMeteo repository is actually called when data_source='openmeteo'.
         """
@@ -301,12 +297,12 @@ class TestDataSourcePropagationWithMocks:
         http_client = container.get_http_service_impl()
         
         # Mock the get method
-        with patch.object(http_client, 'get', new_callable=AsyncMock) as mock_get:
+        with patch.object(http_client, 'get', new_callable=Mock) as mock_get:
             mock_get.return_value = mock_api_response
             
             # Get gateway and call it
             gateway = container.get_weather_gateway_impl()
-            result = await gateway.get_by_location_and_date_range(
+            result = gateway.get_by_location_and_date_range(
                 latitude=35.6895,
                 longitude=139.6917,
                 start_date='2024-10-05',
@@ -320,7 +316,6 @@ class TestDataSourcePropagationWithMocks:
             # Verify result structure
             assert result.weather_data_list is not None
             assert len(result.weather_data_list) == 1
-
 
 class TestDataSourceValidation:
     """Test data_source validation and error handling."""
@@ -362,7 +357,6 @@ class TestDataSourceValidation:
         
         # Should use OpenMeteo by default
         assert isinstance(gateway.api_gateway, WeatherAPIGateway)
-
 
 class TestDataSourceIsolation:
     """Test that data_source configuration is properly isolated."""
@@ -412,7 +406,6 @@ class TestDataSourceIsolation:
         # Should still be JMA (cached)
         assert gateway1 is gateway2
         assert isinstance(gateway2.api_gateway, WeatherJMAGateway)
-
 
 class TestDataSourcePropagationTrace:
     """Test complete data_source propagation trace with detailed verification."""
@@ -484,7 +477,6 @@ class TestDataSourcePropagationTrace:
         
         print("\n✅ All propagation steps verified:")
         print("   Config → Container → HttpClient → OpenMeteoRepository → Gateway")
-
 
 class TestDataSourceConfigVariations:
     """Test various config variations and edge cases."""

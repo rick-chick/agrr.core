@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Optional
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
-import asyncio
+
 from concurrent.futures import ThreadPoolExecutor
 import os
 import time
@@ -19,7 +19,6 @@ from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.prediction_error import PredictionError
 from agrr_core.adapter.interfaces.ml.prediction_service_interface import PredictionServiceInterface
 from agrr_core.framework.services.ml.feature_engineering_service import FeatureEngineeringService
-
 
 class LightGBMPredictionService(PredictionServiceInterface):
     """LightGBM-based prediction service (Framework layer implementation)."""
@@ -55,7 +54,7 @@ class LightGBMPredictionService(PredictionServiceInterface):
         self.model = None
         self.feature_names = None
     
-    async def predict(
+    def predict(
         self,
         historical_data: List[WeatherData],
         metric: str,
@@ -64,16 +63,16 @@ class LightGBMPredictionService(PredictionServiceInterface):
     ) -> List[Forecast]:
         """Predict future values using LightGBM (implements PredictionModelInterface)."""
         config = {**model_config, 'prediction_days': prediction_days}
-        return await self._predict_single_metric(historical_data, metric, config)
+        return self._predict_single_metric(historical_data, metric, config)
     
-    async def evaluate(
+    def evaluate(
         self,
         test_data: List[WeatherData],
         predictions: List[Forecast],
         metric: str
     ) -> Dict[str, float]:
         """Evaluate model accuracy (implements PredictionModelInterface)."""
-        return await self.evaluate_model_accuracy(test_data, predictions, metric)
+        return self.evaluate_model_accuracy(test_data, predictions, metric)
     
     def get_model_info(self) -> Dict[str, Any]:
         """Get LightGBM model information (implements PredictionModelInterface)."""
@@ -91,7 +90,7 @@ class LightGBMPredictionService(PredictionServiceInterface):
         """Get minimum required data days (implements PredictionModelInterface)."""
         return 90
     
-    async def predict_multiple_metrics(
+    def predict_multiple_metrics(
         self, 
         historical_data: List[WeatherData], 
         metrics: List[str],
@@ -122,7 +121,7 @@ class LightGBMPredictionService(PredictionServiceInterface):
             print(f"[PROFILE] LightGBM: shared_features elapsed={t_shared_end-t_shared_start:.3f}s", flush=True)
         
         # Vectorized multi-task prediction
-        results = await self._predict_multiple_metrics_vectorized(
+        results = self._predict_multiple_metrics_vectorized(
             historical_data, metrics, model_config, shared_features
         )
         
@@ -132,7 +131,7 @@ class LightGBMPredictionService(PredictionServiceInterface):
         
         return results
     
-    async def _predict_multiple_metrics_vectorized(
+    def _predict_multiple_metrics_vectorized(
         self,
         historical_data: List[WeatherData],
         metrics: List[str],
@@ -481,7 +480,7 @@ class LightGBMPredictionService(PredictionServiceInterface):
             'feature_names': self.feature_engineering.get_feature_names('temperature', lookback_days)
         }
     
-    async def _predict_single_metric_optimized(
+    def _predict_single_metric_optimized(
         self,
         historical_data: List[WeatherData],
         metric: str,
@@ -762,7 +761,7 @@ class LightGBMPredictionService(PredictionServiceInterface):
         
         return future_df
     
-    async def _predict_single_metric(
+    def _predict_single_metric(
         self, 
         historical_data: List[WeatherData], 
         metric: str,
@@ -871,7 +870,7 @@ class LightGBMPredictionService(PredictionServiceInterface):
         
         return forecasts
     
-    async def evaluate_model_accuracy(
+    def evaluate_model_accuracy(
         self,
         test_data: List[WeatherData],
         predictions: List[Forecast],
@@ -931,7 +930,7 @@ class LightGBMPredictionService(PredictionServiceInterface):
             'r2': r2
         }
     
-    async def train_model(
+    def train_model(
         self,
         training_data: List[WeatherData],
         model_config: Dict[str, Any],
@@ -947,7 +946,7 @@ class LightGBMPredictionService(PredictionServiceInterface):
             'status': 'trained'
         }
     
-    async def get_model_info(self, model_type: str) -> Dict[str, Any]:
+    def get_model_info(self, model_type: str) -> Dict[str, Any]:
         """Get LightGBM model information."""
         return {
             'model_type': 'lightgbm',
@@ -967,7 +966,7 @@ class LightGBMPredictionService(PredictionServiceInterface):
             ]
         }
     
-    async def predict_with_confidence_intervals(
+    def predict_with_confidence_intervals(
         self,
         historical_data: List[WeatherData],
         prediction_days: int,
@@ -975,13 +974,13 @@ class LightGBMPredictionService(PredictionServiceInterface):
         model_config: Dict[str, Any]
     ) -> List[Forecast]:
         """Predict with confidence intervals using LightGBM."""
-        return await self._predict_single_metric(historical_data, 'temperature', {
+        return self._predict_single_metric(historical_data, 'temperature', {
             **model_config,
             'prediction_days': prediction_days,
             'calculate_confidence_intervals': True,
         })
     
-    async def batch_predict(
+    def batch_predict(
         self,
         historical_data_list: List[List[WeatherData]],
         model_config: Dict[str, Any],
@@ -992,7 +991,7 @@ class LightGBMPredictionService(PredictionServiceInterface):
         
         for historical_data in historical_data_list:
             try:
-                result = await self.predict_multiple_metrics(historical_data, metrics, model_config)
+                result = self.predict_multiple_metrics(historical_data, metrics, model_config)
                 results.append(result)
             except Exception as e:
                 # Add error result

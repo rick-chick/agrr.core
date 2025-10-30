@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import List
 from agrr_core.entity.entities.candidate_suggestion_entity import CandidateSuggestion
 
-
 @dataclass
 class CandidateSuggestionResponseDTO:
     """

@@ -8,7 +8,6 @@ from typing import Dict, Any, List
 from agrr_core.usecase.interactors.task_schedule_generation_interactor import TaskScheduleGenerationInteractor
 from agrr_core.usecase.dto.task_schedule_generation_request_dto import TaskScheduleGenerationRequestDTO
 
-
 class TaskScheduleGenerationCLIController:
     """CLI controller for task schedule generation.
     
@@ -23,7 +22,7 @@ class TaskScheduleGenerationCLIController:
         """
         self.interactor = interactor
     
-    async def generate_schedule(
+    def generate_schedule(
         self,
         crop_name: str,
         variety: str,
@@ -56,7 +55,7 @@ class TaskScheduleGenerationCLIController:
             )
             
             # Generate task schedule
-            result = await self.interactor.execute(request)
+            result = self.interactor.execute(request)
             
             # Format and output result
             output_data = self._format_result(result)

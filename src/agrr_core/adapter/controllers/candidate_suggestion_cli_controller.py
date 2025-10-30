@@ -7,6 +7,7 @@
 import argparse
 from datetime import datetime
 from typing import Optional
+from agrr_core.framework.logging.agrr_logger import get_logger
 from agrr_core.adapter.controllers.allocation_adjust_cli_controller import AllocationAdjustCliController
 from agrr_core.usecase.interactors.candidate_suggestion_interactor import CandidateSuggestionInteractor
 from agrr_core.usecase.dto.candidate_suggestion_request_dto import CandidateSuggestionRequestDTO
@@ -16,7 +17,6 @@ from agrr_core.usecase.gateways.crop_gateway import CropGateway
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.interaction_rule_gateway import InteractionRuleGateway
 from agrr_core.adapter.presenters.candidate_suggestion_cli_presenter import CandidateSuggestionCliPresenter
-
 
 class CandidateSuggestionCliController:
     """
@@ -51,6 +51,7 @@ class CandidateSuggestionCliController:
         self._weather_gateway = weather_gateway
         self._interaction_rule_gateway = interaction_rule_gateway
         self._presenter = presenter
+        self._logger = get_logger()
         
         # Interactorをインスタンス化
         self._interactor = CandidateSuggestionInteractor(
@@ -163,7 +164,7 @@ Examples:
         
         return parser
     
-    async def handle_candidates_command(self, args: argparse.Namespace) -> None:
+    def handle_candidates_command(self, args: argparse.Namespace) -> None:
         """
         候補生成コマンドを処理
         
@@ -183,16 +184,16 @@ Examples:
             )
             
             # Interactorを実行
-            response = await self._interactor.execute(request)
+            response = self._interactor.execute(request)
             
             # Presenterで出力
             self._presenter.output_format = args.format
-            await self._presenter.present(response, args.output)
+            self._presenter.present(response, args.output)
             
         except ValueError as e:
-            print(f"Error: Invalid date format: \"{e}\". Use YYYY-MM-DD (e.g., \"2024-04-01\")")
+            self._logger.error(f"Error: Invalid date format: \"{e}\". Use YYYY-MM-DD (e.g., \"2024-04-01\")")
         except Exception as e:
-            print(f"Error: {str(e)}")
+            self._logger.error(f"Error: {str(e)}")
     
     def _parse_date(self, date_str: str) -> datetime:
         """

@@ -1,10 +1,9 @@
 """Tests for CLI container."""
 
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, patch, Mock
 
 from agrr_core.framework.agrr_core_container import AgrrCoreContainer, WeatherCliContainer
-
 
 class TestWeatherCliContainer:
     """Test cases for weather CLI container."""
@@ -61,16 +60,15 @@ class TestWeatherCliContainer:
         # Test singleton behavior
         controller2 = self.container.get_cli_controller()
         assert controller is controller2
-    
-    @pytest.mark.asyncio
-    async def test_run_cli(self):
+
+    def test_run_cli(self):
         """Test running CLI application."""
         # Mock the controller's run method
         mock_controller = MagicMock()
-        mock_controller.run = AsyncMock()
+        mock_controller.run = Mock()
         
         with patch.object(self.container, 'get_cli_controller', return_value=mock_controller):
-            await self.container.run_cli(['weather', '--location', '35.6762,139.6503'])
+            self.container.run_cli(['weather', '--location', '35.6762,139.6503'])
             
             mock_controller.run.assert_called_once_with(['weather', '--location', '35.6762,139.6503'])
     

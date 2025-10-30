@@ -9,7 +9,6 @@ from agrr_core.entity.value_objects.yield_impact_accumulator import (
     YieldImpactAccumulator,
 )
 
-
 class TestYieldImpactAccumulatorBasics:
     """Test basic functionality of YieldImpactAccumulator."""
     
@@ -30,7 +29,6 @@ class TestYieldImpactAccumulatorBasics:
         
         assert accumulator.get_yield_factor() == 1.0
         assert accumulator.get_yield_loss_percentage() == 0.0
-
 
 class TestStressAccumulation:
     """Test stress accumulation scenarios."""
@@ -127,7 +125,6 @@ class TestStressAccumulation:
         expected_factor = (0.95 ** 3) * 0.80
         assert accumulator.get_yield_factor() == pytest.approx(expected_factor, rel=1e-4)
 
-
 class TestUtilityMethods:
     """Test utility methods."""
     
@@ -159,7 +156,6 @@ class TestUtilityMethods:
         assert "yield_factor" in repr_str
         assert "yield_loss" in repr_str
 
-
 class TestEdgeCases:
     """Test edge cases and boundary conditions."""
     
@@ -184,7 +180,6 @@ class TestEdgeCases:
         
         # Should remain unchanged
         assert accumulator.get_yield_factor() == 1.0
-
 
 class TestIntegrationScenarios:
     """Test realistic integration scenarios."""

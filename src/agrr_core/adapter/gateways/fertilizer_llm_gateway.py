@@ -13,16 +13,13 @@ from agrr_core.entity.entities.fertilizer_entity import (
 from agrr_core.usecase.gateways.fertilizer_gateway import FertilizerGateway
 from agrr_core.adapter.interfaces.clients.llm_client_interface import LLMClientInterface
 
-
 # Debug mode - set to True for debugging
 DEBUG_MODE = os.getenv("AGRRCORE_DEBUG", "false").lower() == "true"
-
 
 def debug_print(message: str) -> None:
     """Print debug message if debug mode is enabled."""
     if DEBUG_MODE:
         print(f"[DEBUG] {message}")
-
 
 def calculate_required_amount_per_area(area_m2: float) -> str:
     """Calculate required fertilizer amount per square meter based on cultivation area.
@@ -55,7 +52,6 @@ def calculate_required_amount_per_area(area_m2: float) -> str:
     
     return f"Cultivation area: {area_m2}m² ({scale}). Estimated base fertilizer needed: {base_amount:.1f}kg. Recommended: {recommended}."
 
-
 def load_prompt_template(filename: str) -> str:
     """Load prompt template from prompts directory.
     
@@ -65,15 +61,24 @@ def load_prompt_template(filename: str) -> str:
     Returns:
         Prompt template content
     """
-    prompts_dir = Path(__file__).parent.parent.parent / "prompts"
-    prompt_file = prompts_dir / filename
+    import sys
+    
+    # Check if running as PyInstaller bundle
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        # Running as PyInstaller bundle
+        base_path = Path(sys._MEIPASS)  # type: ignore
+        prompt_file = base_path / "prompts" / filename
+    else:
+        # Running in normal Python environment
+        current_file = Path(__file__)
+        project_root = current_file.parent.parent.parent.parent.parent
+        prompt_file = project_root / "prompts" / filename
     
     if not prompt_file.exists():
         raise FileNotFoundError(f"Prompt template not found: {prompt_file}")
     
     with open(prompt_file, "r", encoding="utf-8") as f:
         return f.read()
-
 
 class FertilizerLLMGateway(FertilizerGateway):
     """LLM-based gateway for fertilizer information retrieval.
@@ -89,7 +94,7 @@ class FertilizerLLMGateway(FertilizerGateway):
         """
         self.llm_client = llm_client
     
-    async def search_list(self, request: FertilizerListRequest) -> FertilizerListResult:
+    def search_list(self, request: FertilizerListRequest) -> FertilizerListResult:
         """Search for popular fertilizers in a given language.
         
         Args:
@@ -124,14 +129,14 @@ class FertilizerLLMGateway(FertilizerGateway):
         if request.area_m2:
             debug_print(f"Area: {request.area_m2}m²")
         
-        result = await self.llm_client.struct(query, structure, instruction)
+        result = self.llm_client.struct(query, structure, instruction)
         debug_print(f"Search result: {result.get('data', {})}")
         
         fertilizers = result.get("data", {}).get("fertilizer_products", [])
         
         return FertilizerListResult(fertilizers=fertilizers)
     
-    async def search_detail(self, request: FertilizerDetailRequest) -> FertilizerDetail:
+    def search_detail(self, request: FertilizerDetailRequest) -> FertilizerDetail:
         """Search for detailed information about a specific fertilizer.
         
         Args:
@@ -168,7 +173,7 @@ class FertilizerLLMGateway(FertilizerGateway):
         
         debug_print(f"Searching for fertilizer detail: {request.fertilizer_name}")
         
-        result = await self.llm_client.struct(query, structure, instruction)
+        result = self.llm_client.struct(query, structure, instruction)
         debug_print(f"Detail result: {result.get('data', {})}")
         
         data = result.get("data", {})

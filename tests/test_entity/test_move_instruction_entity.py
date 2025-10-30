@@ -5,7 +5,6 @@ from datetime import datetime
 
 from agrr_core.entity.entities.move_instruction_entity import MoveInstruction, MoveAction
 
-
 class TestMoveInstruction:
     """Test cases for MoveInstruction entity."""
     

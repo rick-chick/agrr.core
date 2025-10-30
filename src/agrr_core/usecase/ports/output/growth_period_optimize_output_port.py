@@ -9,7 +9,6 @@ from agrr_core.usecase.dto.growth_period_optimize_response_dto import (
     OptimalGrowthPeriodResponseDTO,
 )
 
-
 class GrowthPeriodOptimizeOutputPort(ABC):
     """Output port for optimal growth period calculation use case."""
 

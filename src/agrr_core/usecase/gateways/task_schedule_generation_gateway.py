@@ -8,7 +8,6 @@ from typing import List, Dict, Any
 
 from agrr_core.entity.entities.task_schedule_result_entity import TaskScheduleResult
 
-
 class TaskScheduleGenerationGateway(ABC):
     """Abstract gateway for task schedule generation.
     
@@ -17,7 +16,7 @@ class TaskScheduleGenerationGateway(ABC):
     """
     
     @abstractmethod
-    async def generate_task_schedule(
+    def generate_task_schedule(
         self,
         crop_name: str,
         variety: str,
@@ -38,7 +37,7 @@ class TaskScheduleGenerationGateway(ABC):
         raise NotImplementedError
     
     @abstractmethod
-    async def validate_task_schedule(self, task_schedule: TaskScheduleResult) -> bool:
+    def validate_task_schedule(self, task_schedule: TaskScheduleResult) -> bool:
         """Validate generated task schedule.
         
         Args:

@@ -5,7 +5,6 @@ from datetime import datetime
 
 from agrr_core.entity import WeatherData
 
-
 class TestWeatherData:
     """Test WeatherData entity."""
     

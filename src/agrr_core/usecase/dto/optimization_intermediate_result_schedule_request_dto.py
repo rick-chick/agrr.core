@@ -28,7 +28,6 @@ from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
 
-
 @dataclass
 class OptimizationIntermediateResultScheduleRequestDTO:
     """Request DTO for optimization intermediate result scheduling use case."""

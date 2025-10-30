@@ -16,7 +16,6 @@ from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.entity.entities.prediction_forecast_entity import Forecast
 from agrr_core.usecase.gateways.prediction_gateway import PredictionGateway
 
-
 class PredictionMockGateway(PredictionGateway):
     """Mock prediction gateway that returns last year's same period data as predictions.
     
@@ -40,7 +39,7 @@ class PredictionMockGateway(PredictionGateway):
         self.logger = logging.getLogger(__name__)
         self._mock_data_cache = None
     
-    async def read_historical_data(self, source: str) -> List[WeatherData]:
+    def read_historical_data(self, source: str) -> List[WeatherData]:
         """Read historical weather data from source file.
         
         Args:
@@ -77,7 +76,7 @@ class PredictionMockGateway(PredictionGateway):
             self.logger.error(f"Failed to read historical data from {source}: {e}")
             raise
     
-    async def create(self, predictions: List[Forecast], destination: str) -> None:
+    def create(self, predictions: List[Forecast], destination: str) -> None:
         """Create predictions at destination.
         
         Args:
@@ -123,7 +122,7 @@ class PredictionMockGateway(PredictionGateway):
             self.logger.error(f"Failed to save predictions to {destination}: {e}")
             raise
     
-    async def predict(
+    def predict(
         self,
         historical_data: List[WeatherData],
         metric: str,
@@ -160,7 +159,7 @@ class PredictionMockGateway(PredictionGateway):
             self.logger.error(f"Failed to generate mock predictions: {e}")
             raise
     
-    async def predict_multiple_metrics(
+    def predict_multiple_metrics(
         self,
         historical_data: List[WeatherData],
         metrics: List[str],

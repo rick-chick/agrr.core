@@ -5,7 +5,6 @@ Defines the types of violations that can occur in crop allocations.
 
 from enum import Enum
 
-
 class ViolationType(str, Enum):
     """Types of violations in crop allocations.
     

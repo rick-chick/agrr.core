@@ -8,7 +8,6 @@ prepare the response payload (e.g., dict/DTO) before passing to `format_success`
 from abc import ABC, abstractmethod
 from typing import Dict, Any
 
-
 class CropProfileCraftOutputPort(ABC):
     """Interface for formatting crop requirement crafting responses."""
 
@@ -21,5 +20,4 @@ class CropProfileCraftOutputPort(ABC):
     def format_success(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Format success response wrapper."""
         pass
-
 

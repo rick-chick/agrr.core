@@ -5,7 +5,6 @@ from typing import Any, Dict
 
 from agrr_core.entity.entities.fertilizer_recommendation_entity import FertilizerPlan
 
-
 class FertilizerRecommendCliPresenter:
     @staticmethod
     def to_dict(plan: FertilizerPlan) -> Dict[str, Any]:
@@ -33,5 +32,4 @@ class FertilizerRecommendCliPresenter:
     @classmethod
     def to_json(cls, plan: FertilizerPlan) -> str:
         return json.dumps(cls.to_dict(plan), ensure_ascii=False)
-
 

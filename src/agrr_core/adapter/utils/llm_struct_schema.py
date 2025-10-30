@@ -2,7 +2,6 @@
 
 from typing import Dict, Any
 
-
 def build_stage_requirement_structure() -> Dict[str, Any]:
     """Return provider-agnostic structure for stage requirement aggregate.
 
@@ -46,7 +45,6 @@ def build_stage_requirement_structure() -> Dict[str, Any]:
         ]
     }
 
-
 def build_stage_requirement_descriptions() -> Dict[str, Any]:
     """Return human-readable descriptions aligned with the structure.
 
@@ -78,5 +76,4 @@ def build_stage_requirement_descriptions() -> Dict[str, Any]:
             }
         ]
     }
-
 

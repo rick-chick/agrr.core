@@ -3,7 +3,6 @@
 import pytest
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 
-
 class TestOptimizationConfig:
     """Test OptimizationConfig."""
     

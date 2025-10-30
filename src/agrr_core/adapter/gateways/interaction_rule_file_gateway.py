@@ -12,7 +12,6 @@ from agrr_core.adapter.interfaces.io.file_service_interface import FileServiceIn
 from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.usecase.gateways.interaction_rule_gateway import InteractionRuleGateway
 
-
 class InteractionRuleFileGateway(InteractionRuleGateway):
     """File-based implementation of InteractionRuleGateway.
     
@@ -31,7 +30,7 @@ class InteractionRuleFileGateway(InteractionRuleGateway):
         self.file_repository = file_repository
         self.file_path = file_path
     
-    async def get_rules(self) -> List[InteractionRule]:
+    def get_rules(self) -> List[InteractionRule]:
         """Get interaction rules from configured file.
         
         Returns:
@@ -42,7 +41,7 @@ class InteractionRuleFileGateway(InteractionRuleGateway):
         """
         try:
             # Read file using repository
-            content = await self.file_repository.read(self.file_path)
+            content = self.file_repository.read(self.file_path)
             
             # Parse JSON
             data = json.loads(content)

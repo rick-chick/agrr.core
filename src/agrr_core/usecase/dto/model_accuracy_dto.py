@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 
-
 @dataclass
 class ModelAccuracyDTO:
     """DTO for model accuracy metrics."""

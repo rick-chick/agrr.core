@@ -10,12 +10,11 @@ from agrr_core.usecase.dto.fertilizer_dto import (
     FertilizerDetailResponseDTO,
 )
 
-
 class FertilizerListInputPort(ABC):
     """Input port for fertilizer list use case."""
     
     @abstractmethod
-    async def execute(self, request: FertilizerListRequestDTO) -> FertilizerListResponseDTO:
+    def execute(self, request: FertilizerListRequestDTO) -> FertilizerListResponseDTO:
         """Execute fertilizer list search.
         
         Args:
@@ -26,12 +25,11 @@ class FertilizerListInputPort(ABC):
         """
         pass
 
-
 class FertilizerDetailInputPort(ABC):
     """Input port for fertilizer detail use case."""
     
     @abstractmethod
-    async def execute(self, request: FertilizerDetailRequestDTO) -> FertilizerDetailResponseDTO:
+    def execute(self, request: FertilizerDetailRequestDTO) -> FertilizerDetailResponseDTO:
         """Execute fertilizer detail search.
         
         Args:

@@ -8,7 +8,6 @@ from agrr_core.usecase.services.neighbor_operations.base_neighbor_operation impo
     NeighborOperation,
 )
 
-
 class FieldSwapOperation(NeighborOperation):
     """F2. Field Swap: Swap two allocations between different fields.
     

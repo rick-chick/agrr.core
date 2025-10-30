@@ -13,7 +13,6 @@ from agrr_core.entity.value_objects.optimization_objective import (
     DEFAULT_OBJECTIVE,
 )
 
-
 @dataclass
 class MockCandidate:
     """Mock candidate for testing."""
@@ -31,11 +30,9 @@ class MockCandidate:
             revenue_per_area=self.revenue_per_area,
         )
 
-
 class MockOptimizer(BaseOptimizer[MockCandidate]):
     """Mock optimizer for testing."""
     pass
-
 
 class TestBaseOptimizer:
     """Test BaseOptimizer base class."""
@@ -137,7 +134,6 @@ class TestBaseOptimizer:
         assert sorted_candidates[0].get_metrics().cost == 120  # profit=60
         assert sorted_candidates[1].get_metrics().cost == 100  # profit=100
         assert sorted_candidates[2].get_metrics().cost == 80   # profit=140
-
 
 class TestBaseOptimizerConsistency:
     """Test that BaseOptimizer ensures consistency."""

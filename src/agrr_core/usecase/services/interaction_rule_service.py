@@ -10,7 +10,6 @@ from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.entity.entities.crop_entity import Crop
 from agrr_core.entity.value_objects.rule_type import RuleType
 
-
 class InteractionRuleService:
     """Service for applying interaction rules."""
     

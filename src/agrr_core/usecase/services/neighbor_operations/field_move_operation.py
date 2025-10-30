@@ -8,7 +8,6 @@ from agrr_core.usecase.services.neighbor_operations.base_neighbor_operation impo
     NeighborOperation,
 )
 
-
 class FieldMoveOperation(NeighborOperation):
     """F1. Field Move: Move allocation to a different field.
     

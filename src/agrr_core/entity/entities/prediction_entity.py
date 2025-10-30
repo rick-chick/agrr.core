@@ -6,7 +6,6 @@ from typing import Dict, Any, List
 from .prediction_model_type_entity import ModelType
 from .prediction_metric_type_entity import MetricType
 
-
 @dataclass
 class PredictionModel:
     """Prediction model entity."""

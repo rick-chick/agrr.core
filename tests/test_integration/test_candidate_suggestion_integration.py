@@ -4,7 +4,7 @@
 このモジュールは候補リスト提示機能の統合テストを実装します。
 """
 import pytest
-import asyncio
+
 import json
 import tempfile
 import os
@@ -17,7 +17,6 @@ from agrr_core.adapter.gateways.field_file_gateway import FieldFileGateway
 from agrr_core.adapter.gateways.crop_profile_file_gateway import CropProfileFileGateway
 from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway
 from agrr_core.framework.services.io.file_service import FileService
-
 
 class TestCandidateSuggestionIntegration:
     """候補リスト提示機能の統合テスト"""
@@ -93,9 +92,8 @@ class TestCandidateSuggestionIntegration:
             presenter=presenter,
             interaction_rule_gateway=None,
         )
-    
-    @pytest.mark.asyncio
-    async def test_end_to_end_candidate_generation(self, controller_with_gateways, temp_dir):
+
+    def test_end_to_end_candidate_generation(self, controller_with_gateways, temp_dir):
         """エンドツーエンド候補生成テスト"""
         # 出力ファイル
         output_file = os.path.join(temp_dir, "candidates.txt")
@@ -114,7 +112,7 @@ class TestCandidateSuggestionIntegration:
         args.interaction_rules_file = None
         
         # 実行
-        await controller_with_gateways.handle_candidates_command(args)
+        controller_with_gateways.handle_candidates_command(args)
         
         # 出力ファイルの確認
         assert os.path.exists(output_file)
@@ -122,9 +120,8 @@ class TestCandidateSuggestionIntegration:
         with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
             assert "候補リスト提示結果" in content
-    
-    @pytest.mark.asyncio
-    async def test_end_to_end_json_output(self, controller_with_gateways, temp_dir):
+
+    def test_end_to_end_json_output(self, controller_with_gateways, temp_dir):
         """エンドツーエンドJSON出力テスト"""
         # 出力ファイル
         output_file = os.path.join(temp_dir, "candidates.json")
@@ -143,7 +140,7 @@ class TestCandidateSuggestionIntegration:
         args.interaction_rules_file = None
         
         # 実行
-        await controller_with_gateways.handle_candidates_command(args)
+        controller_with_gateways.handle_candidates_command(args)
         
         # 出力ファイルの確認
         assert os.path.exists(output_file)

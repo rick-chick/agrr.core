@@ -22,7 +22,6 @@ from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.usecase.services.llm_response_normalizer import LLMResponseNormalizer
 from agrr_core.usecase.services.crop_profile_mapper import CropProfileMapper
 
-
 class CropProfileCraftInteractor(CropProfileCraftInputPort):
     """Interactor: orchestrates gateway and presenter to craft crop profiles."""
 
@@ -30,7 +29,7 @@ class CropProfileCraftInteractor(CropProfileCraftInputPort):
         self.gateway = gateway
         self.presenter = presenter
 
-    async def execute(self, request: CropProfileCraftRequestDTO) -> dict:
+    def execute(self, request: CropProfileCraftRequestDTO) -> dict:
         """Craft crop profile from a minimal crop query.
         
         This method orchestrates the 3-step flow:
@@ -44,12 +43,12 @@ class CropProfileCraftInteractor(CropProfileCraftInputPort):
 
         try:
             # Step 1: Extract crop and variety
-            crop_variety_data = await self.gateway.extract_crop_variety(crop_query)
+            crop_variety_data = self.gateway.extract_crop_variety(crop_query)
             crop_name = crop_variety_data.get("crop_name", "Unknown")
             variety = crop_variety_data.get("variety", "default")
 
             # Step 2: Define growth stages
-            growth_stages_data = await self.gateway.define_growth_stages(crop_name, variety)
+            growth_stages_data = self.gateway.define_growth_stages(crop_name, variety)
             
             # Normalize growth stages field (Phase 2: use Normalizer)
             growth_stages = LLMResponseNormalizer.normalize_growth_stages_field(
@@ -57,13 +56,13 @@ class CropProfileCraftInteractor(CropProfileCraftInputPort):
             )
 
             # Extract crop economic information (separate LLM call)
-            crop_economics = await self.gateway.extract_crop_economics(crop_name, variety)
+            crop_economics = self.gateway.extract_crop_economics(crop_name, variety)
             area_per_unit = crop_economics.get("area_per_unit", 0.25)
             revenue_per_area = crop_economics.get("revenue_per_area")
             max_revenue = crop_economics.get("max_revenue")  # Optional market constraint
 
             # Extract crop family information (separate LLM call)
-            crop_family = await self.gateway.extract_crop_family(crop_name, variety)
+            crop_family = self.gateway.extract_crop_family(crop_name, variety)
             family_scientific = crop_family.get("family_scientific")
             
             # Build groups list with family at the beginning
@@ -88,7 +87,7 @@ class CropProfileCraftInteractor(CropProfileCraftInputPort):
                 stage_name = LLMResponseNormalizer.normalize_stage_name(stage)
                 stage_description = LLMResponseNormalizer.normalize_stage_description(stage)
                 
-                stage_requirement_data = await self.gateway.research_stage_requirements(
+                stage_requirement_data = self.gateway.research_stage_requirements(
                     crop_name, variety, stage_name, stage_description
                 )
                 
@@ -130,6 +129,4 @@ class CropProfileCraftInteractor(CropProfileCraftInputPort):
             return crop_profile_data
         except Exception as e:
             return self.presenter.format_error(f"Crafting failed: {e}")
-
-
 

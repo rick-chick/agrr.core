@@ -22,7 +22,6 @@ from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirem
 from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.entity.entities.growth_stage_entity import GrowthStage
 
-
 @dataclass(frozen=True)
 class StageRequirement:
     """Requirement set for a growth stage (temperature, sunshine, thermal).
@@ -79,5 +78,4 @@ class StageRequirement:
     def is_thermal_met(self, gdd_cumulative: float) -> bool:
         """Return True if cumulative GDD meets the thermal requirement."""
         return self.thermal.is_met(gdd_cumulative)
-
 

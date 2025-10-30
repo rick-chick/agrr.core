@@ -9,7 +9,6 @@ from agrr_core.usecase.dto.multi_field_crop_allocation_response_dto import (
     MultiFieldCropAllocationResponseDTO,
 )
 
-
 class MultiFieldCropAllocationOutputPort(ABC):
     """Output port for multi-field crop allocation optimization use case."""
 

@@ -21,7 +21,6 @@ from agrr_core.entity.entities.temperature_profile_entity import TemperatureProf
 from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
 
-
 @pytest.fixture
 def test_crop():
     """Test crop fixture."""
@@ -34,7 +33,6 @@ def test_crop():
         family="solanaceae"
     )
 
-
 @pytest.fixture
 def test_field():
     """Test field fixture."""
@@ -45,7 +43,6 @@ def test_field():
         daily_fixed_cost=5000.0,
         fallow_period_days=14
     )
-
 
 @pytest.fixture
 def test_crop_profile(test_crop):
@@ -85,7 +82,6 @@ def test_crop_profile(test_crop):
         stage_requirements=[stage_requirement]
     )
 
-
 @pytest.mark.skip(reason="PeriodTemplate entity not yet implemented")
 def test_period_template_creation(test_crop):
     """Test PeriodTemplate entity creation.
@@ -105,7 +101,6 @@ def test_period_template_creation(test_crop):
     # assert template.template_id == "tomato_2024-05-01"
     # assert template.growth_days == 100
     pass
-
 
 @pytest.mark.skip(reason="PeriodTemplate entity not yet implemented")
 def test_period_template_apply_to_field(test_crop, test_field):
@@ -133,7 +128,6 @@ def test_period_template_apply_to_field(test_crop, test_field):
     # assert candidate.area_used == 5000.0
     pass
 
-
 @pytest.mark.skip(reason="PeriodTemplatePool not yet implemented")
 def test_period_template_pool_generation(test_crop_profile):
     """Test template pool generation from crop profile.
@@ -153,7 +147,7 @@ def test_period_template_pool_generation(test_crop_profile):
     # ]
     # 
     # pool = PeriodTemplatePool()
-    # templates = await pool.generate_templates(
+    # templates = pool.generate_templates(
     #     crop_profile=test_crop_profile,
     #     planning_start=datetime(2024, 4, 1),
     #     planning_end=datetime(2024, 10, 31),
@@ -165,7 +159,6 @@ def test_period_template_pool_generation(test_crop_profile):
     # assert all(t.crop.crop_id == test_crop_profile.crop.crop_id for t in templates)
     pass
 
-
 @pytest.mark.skip(reason="PeriodTemplateStrategy not yet implemented")
 def test_period_template_strategy_find_candidate(test_crop, test_field):
     """Test finding candidate for movement from template pool.
@@ -176,7 +169,7 @@ def test_period_template_strategy_find_candidate(test_crop, test_field):
     # strategy = PeriodTemplateStrategy(max_templates_per_crop=200)
     # 
     # # Initialize with test data
-    # await strategy.initialize(...)
+    # strategy.initialize(...)
     # 
     # # Find candidate for movement
     # candidate = strategy.find_candidate_for_movement(

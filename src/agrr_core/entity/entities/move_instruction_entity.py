@@ -20,14 +20,12 @@ from datetime import datetime
 from typing import Optional
 from enum import Enum
 
-
 class MoveAction(str, Enum):
     """Action type for move instruction."""
     
     MOVE = "move"
     REMOVE = "remove"
     ADD = "add"  # Add new crop allocation
-
 
 @dataclass(frozen=True)
 class MoveInstruction:

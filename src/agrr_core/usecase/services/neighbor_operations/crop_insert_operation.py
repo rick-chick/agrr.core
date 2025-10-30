@@ -8,7 +8,6 @@ from agrr_core.usecase.services.neighbor_operations.base_neighbor_operation impo
     NeighborOperation,
 )
 
-
 class CropInsertOperation(NeighborOperation):
     """C3. Crop Insert: Insert new crop allocation from unused candidates.
     

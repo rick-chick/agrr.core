@@ -3,7 +3,6 @@
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
-
 @dataclass
 class OptimizationConfig:
     """Configuration for optimization algorithm.

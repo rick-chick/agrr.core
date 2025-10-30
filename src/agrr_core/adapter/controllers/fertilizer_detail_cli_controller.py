@@ -5,7 +5,6 @@ from agrr_core.usecase.interactors.fertilizer_detail_interactor import Fertilize
 from agrr_core.usecase.dto.fertilizer_dto import FertilizerDetailRequestDTO
 from agrr_core.adapter.presenters.fertilizer_cli_presenter import FertilizerDetailCliPresenter
 
-
 class FertilizerDetailCliController:
     """CLI controller for fertilizer detail information."""
     
@@ -18,7 +17,7 @@ class FertilizerDetailCliController:
         self.interactor = interactor
         self.presenter = FertilizerDetailCliPresenter()
     
-    async def execute(self, fertilizer_name: str, json_output: bool = False) -> str:
+    def execute(self, fertilizer_name: str, json_output: bool = False) -> str:
         """Execute fertilizer detail command.
         
         Args:
@@ -33,7 +32,7 @@ class FertilizerDetailCliController:
             request = FertilizerDetailRequestDTO(fertilizer_name=fertilizer_name)
             
             # Execute interactor
-            response = await self.interactor.execute(request)
+            response = self.interactor.execute(request)
             
             # Format output
             if json_output:

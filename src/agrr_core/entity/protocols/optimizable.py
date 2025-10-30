@@ -3,7 +3,6 @@
 from typing import Protocol
 from agrr_core.entity.value_objects.optimization_objective import OptimizationMetrics
 
-
 class Optimizable(Protocol):
     """Protocol for entities that can be optimized.
     

@@ -7,7 +7,6 @@ from .weather_data_response_dto import WeatherDataResponseDTO
 from .forecast_response_dto import ForecastResponseDTO
 from .model_accuracy_dto import ModelAccuracyDTO
 
-
 @dataclass
 class AdvancedPredictionResponseDTO:
     """DTO for advanced prediction response."""

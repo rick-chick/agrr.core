@@ -21,7 +21,6 @@ from agrr_core.usecase.services.neighbor_operations import (
 )
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 
-
 @pytest.fixture
 def unprofitable_crop():
     """Create a crop with low revenue (unprofitable)."""
@@ -35,7 +34,6 @@ def unprofitable_crop():
         groups=[]
     )
 
-
 @pytest.fixture
 def field1():
     """Create field 1 with high daily cost."""
@@ -45,7 +43,6 @@ def field1():
         area=25.0,
         daily_fixed_cost=125.0  # High cost
     )
-
 
 @pytest.fixture
 def unprofitable_allocation(unprofitable_crop, field1):
@@ -73,14 +70,12 @@ def unprofitable_allocation(unprofitable_crop, field1):
         profit=profit,
     )
 
-
 @pytest.fixture
 def config():
     """Create optimization config with filtering disabled."""
     return OptimizationConfig(
         enable_candidate_filtering=False  # Important: filtering disabled
     )
-
 
 class TestNeighborOperationsWithNegativeProfit:
     """Test that all neighbor operations handle negative profit correctly."""
@@ -224,7 +219,6 @@ class TestNeighborOperationsWithNegativeProfit:
             except Exception as e:
                 pytest.fail(f"{op.__class__.__name__} failed with unprofitable allocation: {e}")
 
-
 class TestLocalSearchPreservesUnprofitableSolutions:
     """Test that local search doesn't discard valid unprofitable solutions."""
     
@@ -238,7 +232,6 @@ class TestLocalSearchPreservesUnprofitableSolutions:
         
         # In the actual implementation, this would be preserved
         # (local search skips when solution < 2 allocations)
-
 
 def test_optimization_config_filtering_disabled_by_default():
     """Test that candidate filtering is disabled by default."""

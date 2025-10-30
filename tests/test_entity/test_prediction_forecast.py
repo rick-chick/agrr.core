@@ -5,7 +5,6 @@ from datetime import datetime
 
 from agrr_core.entity import Forecast
 
-
 class TestForecast:
     """Test Forecast entity."""
     

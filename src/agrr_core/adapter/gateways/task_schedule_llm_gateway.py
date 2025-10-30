@@ -9,7 +9,6 @@ from agrr_core.entity.entities.task_schedule_entity import TaskSchedule
 from agrr_core.usecase.gateways.task_schedule_generation_gateway import TaskScheduleGenerationGateway
 from agrr_core.adapter.interfaces.clients.llm_client_interface import LLMClientInterface
 
-
 # Debug mode - set to True for debugging
 DEBUG_MODE = os.getenv("AGRRCORE_DEBUG", "false").lower() == "true"
 
@@ -98,7 +97,6 @@ def extract_prompt_section(content: str, section_name: str) -> str:
     
     return result
 
-
 class TaskScheduleLLMGateway(TaskScheduleGenerationGateway):
     """LLM-based gateway for task schedule generation.
     
@@ -114,7 +112,7 @@ class TaskScheduleLLMGateway(TaskScheduleGenerationGateway):
         """
         self.llm_client = llm_client
     
-    async def generate_task_schedule(
+    def generate_task_schedule(
         self,
         crop_name: str,
         variety: str,
@@ -169,7 +167,7 @@ class TaskScheduleLLMGateway(TaskScheduleGenerationGateway):
         }
         
         # Generate schedule using LLM
-        result = await self.llm_client.struct(full_query, structure, "Generate task schedule based on crop requirements and available tasks.")
+        result = self.llm_client.struct(full_query, structure, "Generate task schedule based on crop requirements and available tasks.")
         debug_print(f"LLM result: {result['data']}")
         
         # Parse and create TaskSchedule objects
@@ -209,7 +207,7 @@ class TaskScheduleLLMGateway(TaskScheduleGenerationGateway):
             weather_dependencies=weather_dependencies
         )
     
-    async def validate_task_schedule(self, task_schedule: TaskScheduleResult) -> bool:
+    def validate_task_schedule(self, task_schedule: TaskScheduleResult) -> bool:
         """Validate generated task schedule.
         
         Args:

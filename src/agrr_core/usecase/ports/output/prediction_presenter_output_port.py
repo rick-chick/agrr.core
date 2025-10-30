@@ -6,7 +6,6 @@ from typing import Dict, Any
 from agrr_core.entity.entities.prediction_forecast_entity import Forecast
 from agrr_core.usecase.dto.prediction_response_dto import PredictionResponseDTO
 
-
 class PredictionPresenterOutputPort(ABC):
     """Interface for weather prediction presentation output operations."""
     

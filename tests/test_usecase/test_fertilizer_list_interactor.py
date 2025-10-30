@@ -1,12 +1,11 @@
 """Tests for fertilizer list interactor."""
 
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 
 from agrr_core.usecase.interactors.fertilizer_list_interactor import FertilizerListInteractor
 from agrr_core.usecase.dto.fertilizer_dto import FertilizerListRequestDTO, FertilizerListResponseDTO
 from agrr_core.entity.entities.fertilizer_entity import FertilizerListRequest, FertilizerListResult
-
 
 class TestFertilizerListInteractor:
     """Tests for FertilizerListInteractor."""
@@ -14,16 +13,15 @@ class TestFertilizerListInteractor:
     @pytest.fixture
     def mock_gateway(self):
         """Create a mock fertilizer gateway."""
-        gateway = AsyncMock()
+        gateway = Mock()
         return gateway
     
     @pytest.fixture
     def interactor(self, mock_gateway):
         """Create interactor with mock gateway."""
         return FertilizerListInteractor(gateway=mock_gateway)
-    
-    @pytest.mark.asyncio
-    async def test_execute(self, interactor, mock_gateway):
+
+    def test_execute(self, interactor, mock_gateway):
         """Test execute method."""
         # Setup mock
         mock_gateway.search_list.return_value = FertilizerListResult(
@@ -32,7 +30,7 @@ class TestFertilizerListInteractor:
         
         # Execute
         request = FertilizerListRequestDTO(language="ja", limit=3)
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Verify
         assert isinstance(response, FertilizerListResponseDTO)
@@ -45,16 +43,15 @@ class TestFertilizerListInteractor:
         assert isinstance(call_args, FertilizerListRequest)
         assert call_args.language == "ja"
         assert call_args.limit == 3
-    
-    @pytest.mark.asyncio
-    async def test_execute_empty_list(self, interactor, mock_gateway):
+
+    def test_execute_empty_list(self, interactor, mock_gateway):
         """Test execute with empty list result."""
         # Setup mock
         mock_gateway.search_list.return_value = FertilizerListResult(fertilizers=[])
         
         # Execute
         request = FertilizerListRequestDTO(language="en", limit=5)
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Verify
         assert isinstance(response, FertilizerListResponseDTO)

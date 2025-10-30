@@ -8,7 +8,6 @@ from typing import Optional
 
 from agrr_core.entity.value_objects.violation_type import ViolationType
 
-
 @dataclass(frozen=True)
 class Violation:
     """Represents a single violation in a crop allocation.

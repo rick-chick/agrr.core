@@ -14,7 +14,6 @@ from agrr_core.usecase.ports.output.growth_progress_calculate_output_port import
     GrowthProgressCalculateOutputPort,
 )
 
-
 class GrowthProgressCLIPresenter(GrowthProgressCalculateOutputPort):
     """Presenter for CLI output of growth progress calculations."""
 

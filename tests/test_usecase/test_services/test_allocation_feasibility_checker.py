@@ -10,7 +10,6 @@ from agrr_core.usecase.services.allocation_feasibility_checker import (
     AllocationFeasibilityChecker,
 )
 
-
 @pytest.mark.unit
 class TestIsFeasible:
     """Tests for is_feasible method."""
@@ -148,7 +147,6 @@ class TestIsFeasible:
         
         assert checker.is_feasible([alloc1, alloc2]) is True
 
-
 @pytest.mark.unit
 class TestCheckTimeConstraints:
     """Tests for _check_time_constraints method."""
@@ -222,7 +220,6 @@ class TestCheckTimeConstraints:
         )
         
         assert checker._check_time_constraints([alloc1, alloc2]) is False
-
 
 @pytest.mark.unit
 class TestCheckAreaConstraints:
@@ -360,7 +357,6 @@ class TestCheckAreaConstraints:
         
         assert checker._check_area_constraints([alloc1, alloc2]) is True
 
-
 @pytest.mark.unit
 class TestComplexScenarios:
     """Tests for complex feasibility scenarios."""
@@ -439,7 +435,6 @@ class TestComplexScenarios:
         )
         
         assert checker.is_feasible([alloc1, alloc2]) is True
-
 
 @pytest.mark.unit
 class TestFallowPeriodConstraints:

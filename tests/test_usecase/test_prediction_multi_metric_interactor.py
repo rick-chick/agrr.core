@@ -1,7 +1,7 @@
 """Tests for multi-metric prediction interactor."""
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import Mock, MagicMock
 from datetime import datetime, timedelta
 
 from agrr_core.entity import WeatherData, Forecast, Location
@@ -13,7 +13,6 @@ from agrr_core.usecase.ports.output.prediction_presenter_output_port import Pred
 from agrr_core.usecase.dto.prediction_config_dto import PredictionConfigDTO
 from agrr_core.usecase.dto.multi_metric_prediction_request_dto import MultiMetricPredictionRequestDTO
 from agrr_core.entity.exceptions.prediction_error import PredictionError
-
 
 @pytest.fixture
 def sample_weather_data():
@@ -35,14 +34,13 @@ def sample_weather_data():
     
     return data
 
-
 @pytest.fixture
 def mock_gateways():
     """Mock gateways for testing."""
-    weather_data_gateway = AsyncMock(spec=WeatherDataGateway)
-    model_config_gateway = AsyncMock(spec=ModelConfigGateway)
-    prediction_model_gateway = AsyncMock(spec=PredictionModelGateway)
-    prediction_presenter_port = AsyncMock(spec=PredictionPresenterOutputPort)
+    weather_data_gateway = Mock(spec=WeatherDataGateway)
+    model_config_gateway = Mock(spec=ModelConfigGateway)
+    prediction_model_gateway = Mock(spec=PredictionModelGateway)
+    prediction_presenter_port = Mock(spec=PredictionPresenterOutputPort)
     
     return {
         'weather_data_gateway': weather_data_gateway,
@@ -50,7 +48,6 @@ def mock_gateways():
         'prediction_model_gateway': prediction_model_gateway,
         'prediction_presenter_port': prediction_presenter_port
     }
-
 
 @pytest.fixture
 def interactor(mock_gateways):
@@ -61,7 +58,6 @@ def interactor(mock_gateways):
         prediction_model_gateway=mock_gateways['prediction_model_gateway'],
         prediction_presenter_output_port=mock_gateways['prediction_presenter_port']
     )
-
 
 @pytest.fixture
 def sample_request():
@@ -86,9 +82,7 @@ def sample_request():
         location_name='Tokyo'
     )
 
-
-@pytest.mark.asyncio
-async def test_execute_success(interactor, sample_request, sample_weather_data, mock_gateways):
+def test_execute_success(interactor, sample_request, sample_weather_data, mock_gateways):
     """Test successful multi-metric prediction execution."""
     # Setup mocks
     mock_gateways['weather_data_gateway'].get_weather_data_by_location_and_date_range.return_value = (
@@ -111,7 +105,7 @@ async def test_execute_success(interactor, sample_request, sample_weather_data, 
     mock_gateways['model_config_gateway'].save_forecast_with_metadata.return_value = None
     
     # Execute
-    result = await interactor.execute(sample_request)
+    result = interactor.execute(sample_request)
     
     # Assertions
     assert result is not None
@@ -125,9 +119,7 @@ async def test_execute_success(interactor, sample_request, sample_weather_data, 
     mock_gateways['prediction_model_gateway'].predict_multiple_metrics.assert_called_once()
     mock_gateways['model_config_gateway'].save_forecast_with_metadata.assert_called_once()
 
-
-@pytest.mark.asyncio
-async def test_execute_no_historical_data(interactor, sample_request, mock_gateways):
+def test_execute_no_historical_data(interactor, sample_request, mock_gateways):
     """Test execution with no historical data."""
     # Setup mocks - return empty data
     mock_gateways['weather_data_gateway'].get_weather_data_by_location_and_date_range.return_value = (
@@ -136,35 +128,29 @@ async def test_execute_no_historical_data(interactor, sample_request, mock_gatew
     
     # Execute and expect exception
     with pytest.raises(PredictionError, match="No historical data available"):
-        await interactor.execute(sample_request)
+        interactor.execute(sample_request)
 
-
-@pytest.mark.asyncio
-async def test_execute_invalid_location(interactor, sample_request):
+def test_execute_invalid_location(interactor, sample_request):
     """Test execution with invalid location."""
     # Invalid latitude
     sample_request.latitude = 200.0
     
     with pytest.raises(PredictionError, match="Invalid request parameters"):
-        await interactor.execute(sample_request)
+        interactor.execute(sample_request)
 
-
-@pytest.mark.asyncio
-async def test_execute_invalid_date_range(interactor, sample_request):
+def test_execute_invalid_date_range(interactor, sample_request):
     """Test execution with invalid date range."""
     # Invalid date range
     sample_request.start_date = '2024-01-31'
     sample_request.end_date = '2024-01-01'
     
     with pytest.raises(PredictionError, match="Invalid request parameters"):
-        await interactor.execute(sample_request)
+        interactor.execute(sample_request)
 
-
-@pytest.mark.asyncio
-async def test_execute_gateway_error(interactor, sample_request, mock_gateways):
+def test_execute_gateway_error(interactor, sample_request, mock_gateways):
     """Test execution with gateway error."""
     # Setup gateway to raise exception
     mock_gateways['weather_data_gateway'].get_weather_data_by_location_and_date_range.side_effect = Exception("Gateway error")
     
     with pytest.raises(PredictionError, match="Prediction failed"):
-        await interactor.execute(sample_request)
+        interactor.execute(sample_request)

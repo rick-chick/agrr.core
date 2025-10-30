@@ -5,24 +5,49 @@ import os
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-
 class ConfigLoader:
     """Configuration loader with environment variable support."""
     
     def __init__(self, config_file: str = "agrr_config.yaml"):
-        """Initialize config loader."""
-        self.config_file = config_file
+        """Initialize config loader.
+        
+        Config file path resolution:
+        - 絶対パスの場合: そのまま使用
+        - 相対パスの場合:
+          - PyInstallerバイナリ: 実行ファイルのディレクトリを基準
+          - 通常のPython実行: 現在のワーキングディレクトリを基準
+        - ファイルが見つからない場合はデフォルト設定を使用（エラーにしない）
+        """
+        # 相対パスの場合は絶対パスに変換
+        if not os.path.isabs(config_file):
+            import sys
+            if getattr(sys, 'frozen', False):
+                # PyInstallerバイナリの場合、実行ファイルのディレクトリを基準にする
+                # (onefileでもonedirでも、実行ファイルのディレクトリを使用)
+                base_path = Path(sys.executable).parent
+            else:
+                # 通常のPython実行環境では現在のワーキングディレクトリを使用
+                base_path = Path.cwd()
+            
+            self.config_file = str(base_path / config_file)
+        else:
+            self.config_file = config_file
+        
         self.config: Dict[str, Any] = {}
         self._load_config()
     
     def _load_config(self):
         """Load configuration from file and environment variables."""
-        # Load from file if exists
-        if os.path.exists(self.config_file):
-            with open(self.config_file, 'r') as f:
-                self.config = yaml.safe_load(f) or {}
-        else:
-            # Use default configuration
+        # Load from file if exists (ファイルがなくてもエラーにしない)
+        try:
+            if os.path.exists(self.config_file) and os.path.isfile(self.config_file):
+                with open(self.config_file, 'r', encoding='utf-8') as f:
+                    self.config = yaml.safe_load(f) or {}
+            else:
+                # Use default configuration
+                self.config = self._get_default_config()
+        except (FileNotFoundError, PermissionError, OSError):
+            # ファイルアクセスエラーは無視してデフォルト設定を使用
             self.config = self._get_default_config()
         
         # Override with environment variables
@@ -166,10 +191,8 @@ class ConfigLoader:
         """Check if health check is enabled."""
         return self.get("daemon.health_check.enabled", True)
 
-
 # Global config instance
 _global_config: Optional[ConfigLoader] = None
-
 
 def get_config() -> ConfigLoader:
     """Get global config instance."""
@@ -177,7 +200,6 @@ def get_config() -> ConfigLoader:
     if _global_config is None:
         _global_config = ConfigLoader()
     return _global_config
-
 
 def load_config(config_file: str = "agrr_config.yaml") -> ConfigLoader:
     """Load configuration from file."""

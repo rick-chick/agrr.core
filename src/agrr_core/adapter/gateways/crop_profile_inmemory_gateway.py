@@ -8,7 +8,6 @@ from typing import Dict, List
 from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 
-
 class CropProfileInMemoryGateway(CropProfileGateway):
     """In-memory implementation of CropProfileGateway.
     
@@ -35,7 +34,7 @@ class CropProfileInMemoryGateway(CropProfileGateway):
         variety = profile.crop.variety
         return f"{crop_id}:{variety}" if variety else crop_id
     
-    async def get(self) -> CropProfile:
+    def get(self) -> CropProfile:
         """Get the most recently saved crop profile.
         
         Returns:
@@ -54,7 +53,7 @@ class CropProfileInMemoryGateway(CropProfileGateway):
         # Return the most recently saved profile (last item in dict)
         return list(self._profiles.values())[-1]
     
-    async def get_all(self) -> List[CropProfile]:
+    def get_all(self) -> List[CropProfile]:
         """Get all crop profiles.
         
         Returns:
@@ -62,7 +61,7 @@ class CropProfileInMemoryGateway(CropProfileGateway):
         """
         return list(self._profiles.values())
 
-    async def save(self, profile: CropProfile) -> None:
+    def save(self, profile: CropProfile) -> None:
         """Save a crop profile.
         
         Args:
@@ -71,14 +70,14 @@ class CropProfileInMemoryGateway(CropProfileGateway):
         key = self._make_key(profile)
         self._profiles[key] = profile
     
-    async def delete(self) -> None:
+    def delete(self) -> None:
         """Delete current crop profile.
         
         Note: In-memory implementation clears all profiles.
         """
         self._profiles.clear()
     
-    async def get_by_crop_id(self, crop_id: str, variety: str = None) -> CropProfile:
+    def get_by_crop_id(self, crop_id: str, variety: str = None) -> CropProfile:
         """Get crop profile by crop_id and variety.
         
         Args:
@@ -96,7 +95,7 @@ class CropProfileInMemoryGateway(CropProfileGateway):
     
     # LLM operations not supported
     
-    async def generate(self, crop_query: str) -> CropProfile:
+    def generate(self, crop_query: str) -> CropProfile:
         """Generate a crop profile.
         
         Raises:
@@ -107,7 +106,7 @@ class CropProfileInMemoryGateway(CropProfileGateway):
             "Use CropProfileLLMGateway instead."
         )
     
-    async def extract_crop_variety(self, crop_query: str) -> Dict:
+    def extract_crop_variety(self, crop_query: str) -> Dict:
         """Extract crop variety.
         
         Raises:
@@ -117,7 +116,7 @@ class CropProfileInMemoryGateway(CropProfileGateway):
             "LLM operations not supported by in-memory gateway."
         )
     
-    async def define_growth_stages(self, crop_name: str, variety: str) -> Dict:
+    def define_growth_stages(self, crop_name: str, variety: str) -> Dict:
         """Define growth stages.
         
         Raises:
@@ -127,7 +126,7 @@ class CropProfileInMemoryGateway(CropProfileGateway):
             "LLM operations not supported by in-memory gateway."
         )
     
-    async def research_stage_requirements(
+    def research_stage_requirements(
         self, 
         crop_name: str, 
         variety: str, 
@@ -143,7 +142,7 @@ class CropProfileInMemoryGateway(CropProfileGateway):
             "LLM operations not supported by in-memory gateway."
         )
     
-    async def extract_crop_economics(self, crop_name: str, variety: str) -> Dict:
+    def extract_crop_economics(self, crop_name: str, variety: str) -> Dict:
         """Extract crop economics.
         
         Raises:
@@ -153,7 +152,7 @@ class CropProfileInMemoryGateway(CropProfileGateway):
             "LLM operations not supported by in-memory gateway."
         )
     
-    async def extract_crop_family(self, crop_name: str, variety: str) -> Dict:
+    def extract_crop_family(self, crop_name: str, variety: str) -> Dict:
         """Extract crop family.
         
         Raises:

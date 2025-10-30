@@ -14,13 +14,11 @@ from agrr_core.entity.entities.optimization_schedule_entity import (
 )
 from agrr_core.usecase.gateways.optimization_result_gateway import OptimizationResultGateway
 
-
 @dataclass
 class StoredOptimizationResult:
     """Container for stored optimization results with optional metadata."""
     results: List[OptimizationIntermediateResult]
     total_cost: Optional[float] = None
-
 
 class OptimizationResultInMemoryGateway(OptimizationResultGateway):
     """In-memory gateway for storing optimization intermediate results.
@@ -32,7 +30,7 @@ class OptimizationResultInMemoryGateway(OptimizationResultGateway):
         """Initialize in-memory storage."""
         self._storage: Dict[str, StoredOptimizationResult] = {}
 
-    async def save(
+    def save(
         self, 
         optimization_id: str,
         results: List[OptimizationIntermediateResult],
@@ -50,7 +48,7 @@ class OptimizationResultInMemoryGateway(OptimizationResultGateway):
             total_cost=total_cost
         )
 
-    async def get(
+    def get(
         self, 
         optimization_id: str
     ) -> Optional[OptimizationSchedule]:
@@ -71,7 +69,7 @@ class OptimizationResultInMemoryGateway(OptimizationResultGateway):
             )
         return None
 
-    async def get_all(self) -> List[OptimizationSchedule]:
+    def get_all(self) -> List[OptimizationSchedule]:
         """Retrieve all stored optimization results.
         
         Returns:
@@ -86,7 +84,7 @@ class OptimizationResultInMemoryGateway(OptimizationResultGateway):
             for opt_id, stored in self._storage.items()
         ]
 
-    async def delete(self, optimization_id: str) -> bool:
+    def delete(self, optimization_id: str) -> bool:
         """Delete optimization intermediate results by ID.
         
         Args:
@@ -100,11 +98,11 @@ class OptimizationResultInMemoryGateway(OptimizationResultGateway):
             return True
         return False
 
-    async def clear(self) -> None:
+    def clear(self) -> None:
         """Clear all stored optimization results."""
         self._storage.clear()
 
-    async def clear_schedules(self) -> None:
+    def clear_schedules(self) -> None:
         """Clear all stored optimization schedules.
         
         Only clears entries with total_cost (schedules), preserves regular results.

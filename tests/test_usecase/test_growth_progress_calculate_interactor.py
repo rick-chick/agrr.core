@@ -1,7 +1,7 @@
 """Tests for GrowthProgressCalculateInteractor."""
 
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 from datetime import datetime
 
 from agrr_core.entity.entities.crop_entity import Crop
@@ -22,7 +22,6 @@ from agrr_core.usecase.interactors.growth_progress_calculate_interactor import (
     GrowthProgressCalculateInteractor,
 )
 
-
 class TestGrowthProgressCalculateInteractor:
     """Test cases for GrowthProgressCalculateInteractor."""
 
@@ -40,8 +39,7 @@ class TestGrowthProgressCalculateInteractor:
             weather_gateway=self.mock_weather_gateway,
         )
 
-    @pytest.mark.asyncio
-    async def test_execute_success(self):
+    def test_execute_success(self):
         """Test successful growth progress calculation."""
         # Setup mock crop requirements
         crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
@@ -109,7 +107,7 @@ class TestGrowthProgressCalculateInteractor:
             start_date=datetime(2024, 5, 1)
         )
 
-        response = await self.interactor.execute(request)
+        response = self.interactor.execute(request)
 
         # Assertions
         assert response.crop_name == "Rice"
@@ -133,8 +131,7 @@ class TestGrowthProgressCalculateInteractor:
         assert record2.growth_percentage == 3.0
         assert record2.is_complete is False
 
-    @pytest.mark.asyncio
-    async def test_execute_completes_at_100_percent(self):
+    def test_execute_completes_at_100_percent(self):
         """Test that growth caps at 100%."""
         # Setup mock crop requirements with small GDD requirement
         crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25)
@@ -187,7 +184,7 @@ class TestGrowthProgressCalculateInteractor:
             start_date=datetime(2024, 5, 1)
         )
 
-        response = await self.interactor.execute(request)
+        response = self.interactor.execute(request)
 
         # Assertions
         assert len(response.progress_records) == 1
@@ -195,8 +192,7 @@ class TestGrowthProgressCalculateInteractor:
         assert record.growth_percentage == 100.0  # Capped at 100
         assert record.is_complete is True
 
-    @pytest.mark.asyncio
-    async def test_determine_current_stage(self):
+    def test_determine_current_stage(self):
         """Test stage determination based on cumulative GDD."""
         # Create stages with different GDD requirements
         stage1 = GrowthStage(name="Stage1", order=1)
@@ -240,8 +236,7 @@ class TestGrowthProgressCalculateInteractor:
         current_stage = self.interactor._determine_current_stage(250.0, stage_requirements)
         assert current_stage.stage.name == "Stage2"  # Returns last stage
 
-    @pytest.mark.asyncio
-    async def test_progress_with_harvest_start_gdd(self):
+    def test_progress_with_harvest_start_gdd(self):
         """Test growth progress calculation with harvest_start_gdd for fruiting crops."""
         # Create eggplant crop profile with harvest_start_gdd
         crop = Crop(
@@ -322,7 +317,7 @@ class TestGrowthProgressCalculateInteractor:
             start_date=datetime(2024, 6, 1)
         )
         
-        response = await self.interactor.execute(request)
+        response = self.interactor.execute(request)
         
         # Verify response
         assert response.crop_name == "Eggplant"

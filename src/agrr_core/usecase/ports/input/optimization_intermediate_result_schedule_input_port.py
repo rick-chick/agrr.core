@@ -15,12 +15,11 @@ from agrr_core.usecase.dto.optimization_intermediate_result_schedule_response_dt
     OptimizationIntermediateResultScheduleResponseDTO,
 )
 
-
 class OptimizationIntermediateResultScheduleInputPort(ABC):
     """Input port for optimization intermediate result scheduling use case."""
 
     @abstractmethod
-    async def execute(
+    def execute(
         self, 
         request: OptimizationIntermediateResultScheduleRequestDTO,
         schedule_id: Optional[str] = None

@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from typing import Dict, Any
 
-
 @dataclass
 class PredictionConfigDTO:
     """DTO for prediction configuration."""

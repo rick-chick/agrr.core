@@ -8,7 +8,6 @@ from datetime import datetime
 from typing import List, Optional
 from agrr_core.entity.entities.candidate_suggestion_entity import CandidateSuggestion
 
-
 @dataclass
 class CandidateSuggestionRequestDTO:
     """
@@ -26,7 +25,6 @@ class CandidateSuggestionRequestDTO:
             raise ValueError("target_crop_idは必須です")
         if self.planning_period_start >= self.planning_period_end:
             raise ValueError("planning_period_startはplanning_period_endより前である必要があります")
-
 
 @dataclass
 class CandidateSuggestionResponseDTO:

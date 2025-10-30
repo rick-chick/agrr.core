@@ -8,7 +8,6 @@ from typing import List, Optional
 
 from agrr_core.entity.entities.crop_entity import Crop
 
-
 @dataclass(frozen=True)
 class Nutrients:
     """Elemental nutrients in g/m2.
@@ -22,7 +21,6 @@ class Nutrients:
     N: float
     P: float
     K: float
-
 
 @dataclass(frozen=True)
 class FertilizerApplication:
@@ -41,7 +39,6 @@ class FertilizerApplication:
     schedule_hint: Optional[str]
     nutrients: Nutrients
     per_application: Optional[Nutrients] = None
-
 
 @dataclass(frozen=True)
 class FertilizerPlan:
@@ -62,5 +59,4 @@ class FertilizerPlan:
     sources: List[str]
     confidence: float
     notes: Optional[str] = None
-
 

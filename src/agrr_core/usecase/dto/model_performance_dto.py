@@ -5,7 +5,6 @@ from typing import Dict, Optional
 
 from .model_accuracy_dto import ModelAccuracyDTO
 
-
 @dataclass
 class ModelPerformanceDTO:
     """DTO for model performance comparison."""

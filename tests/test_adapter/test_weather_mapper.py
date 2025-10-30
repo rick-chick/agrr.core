@@ -8,7 +8,6 @@ from agrr_core.adapter.mappers.weather_mapper import WeatherMapper
 from agrr_core.entity import WeatherData
 from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
 
-
 class TestWeatherMapper:
     """Test WeatherMapper."""
     

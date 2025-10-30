@@ -9,7 +9,6 @@ from typing import List, Dict, Optional
 from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 
-
 class AllocationFeasibilityChecker:
     """Check if allocation solutions are feasible.
     

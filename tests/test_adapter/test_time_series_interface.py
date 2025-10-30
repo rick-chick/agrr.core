@@ -10,7 +10,6 @@ from agrr_core.adapter.interfaces.ml.time_series_service_interface import (
     FittedTimeSeriesModelInterface
 )
 
-
 class TestTimeSeriesInterface:
     """Test cases for TimeSeriesServiceInterface."""
     
@@ -34,7 +33,6 @@ class TestTimeSeriesInterface:
         assert getattr(TimeSeriesServiceInterface.check_stationarity, '__isabstractmethod__', False)
         assert getattr(TimeSeriesServiceInterface.make_stationary, '__isabstractmethod__', False)
 
-
 class TestTimeSeriesModel:
     """Test cases for TimeSeriesModelInterface."""
     
@@ -53,7 +51,6 @@ class TestTimeSeriesModel:
         
         # Check that it is abstract
         assert getattr(TimeSeriesModelInterface.fit, '__isabstractmethod__', False)
-
 
 class TestFittedTimeSeriesModel:
     """Test cases for FittedTimeSeriesModelInterface."""
@@ -76,7 +73,6 @@ class TestFittedTimeSeriesModel:
         assert getattr(FittedTimeSeriesModelInterface.forecast, '__isabstractmethod__', False)
         assert getattr(FittedTimeSeriesModelInterface.get_forecast_with_intervals, '__isabstractmethod__', False)
 
-
 class ConcreteTimeSeriesInterface(TimeSeriesServiceInterface):
     """Concrete implementation for testing."""
     
@@ -89,7 +85,6 @@ class ConcreteTimeSeriesInterface(TimeSeriesServiceInterface):
     def make_stationary(self, data):
         return data[1:] if len(data) > 1 else []
 
-
 class ConcreteTimeSeriesModel(TimeSeriesModelInterface):
     """Concrete model implementation for testing."""
     
@@ -100,7 +95,6 @@ class ConcreteTimeSeriesModel(TimeSeriesModelInterface):
     
     def fit(self):
         return ConcreteFittedTimeSeriesModel(self.data)
-
 
 class ConcreteFittedTimeSeriesModel(FittedTimeSeriesModelInterface):
     """Concrete fitted model implementation for testing."""
@@ -115,7 +109,6 @@ class ConcreteFittedTimeSeriesModel(FittedTimeSeriesModelInterface):
         predictions = np.array([1.0] * steps)
         intervals = np.array([[0.5, 1.5]] * steps)
         return predictions, intervals
-
 
 class TestConcreteImplementation:
     """Test cases for concrete implementations."""

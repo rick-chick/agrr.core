@@ -8,7 +8,6 @@ from agrr_core.usecase.services.neighbor_operations.base_neighbor_operation impo
     NeighborOperation,
 )
 
-
 class AreaAdjustOperation(NeighborOperation):
     """A1. Area Adjust: Increase or decrease area by ±10%, ±20%.
     

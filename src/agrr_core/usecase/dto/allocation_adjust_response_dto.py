@@ -18,7 +18,6 @@ from agrr_core.entity.entities.multi_field_optimization_result_entity import (
 )
 from agrr_core.entity.entities.move_instruction_entity import MoveInstruction
 
-
 @dataclass(frozen=True)
 class AllocationAdjustResponseDTO:
     """Response DTO for allocation adjustment use case."""

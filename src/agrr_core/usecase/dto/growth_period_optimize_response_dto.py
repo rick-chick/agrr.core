@@ -22,7 +22,6 @@ from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.crop_entity import Crop
 from agrr_core.entity.value_objects.optimization_objective import OptimizationMetrics
 
-
 @dataclass
 class CandidateResultDTO:
     """Evaluation result for a single candidate start date.
@@ -100,7 +99,6 @@ class CandidateResultDTO:
             result["profit"] = metrics.profit
         
         return result
-
 
 @dataclass
 class OptimalGrowthPeriodResponseDTO:

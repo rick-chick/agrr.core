@@ -38,7 +38,6 @@ from agrr_core.usecase.gateways.optimization_result_gateway import (
 )
 from agrr_core.usecase.interactors.base_optimizer import BaseOptimizer
 
-
 class OptimizationIntermediateResultScheduleInteractor(
     BaseOptimizer[OptimizationIntermediateResult],
     OptimizationIntermediateResultScheduleInputPort
@@ -57,7 +56,7 @@ class OptimizationIntermediateResultScheduleInteractor(
         super().__init__()  # Initialize BaseOptimizer
         self.optimization_result_gateway = optimization_result_gateway
 
-    async def execute(
+    def execute(
         self, request: OptimizationIntermediateResultScheduleRequestDTO,
         schedule_id: Optional[str] = None
     ) -> OptimizationIntermediateResultScheduleResponseDTO:
@@ -96,7 +95,7 @@ class OptimizationIntermediateResultScheduleInteractor(
 
         # Save schedule if gateway is available and schedule_id is provided
         if self.optimization_result_gateway and schedule_id:
-            await self.optimization_result_gateway.save(
+            self.optimization_result_gateway.save(
                 optimization_id=schedule_id,
                 results=selected_results,
                 total_cost=total_cost

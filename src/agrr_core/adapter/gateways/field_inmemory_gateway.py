@@ -8,7 +8,6 @@ from typing import Dict, Optional, List
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.usecase.gateways.field_gateway import FieldGateway
 
-
 class FieldInMemoryGateway(FieldGateway):
     """In-memory implementation of FieldGateway.
     
@@ -20,7 +19,7 @@ class FieldInMemoryGateway(FieldGateway):
         """Initialize with empty field storage."""
         self._fields: Dict[str, Field] = {}
 
-    async def get(self, field_id: str) -> Optional[Field]:
+    def get(self, field_id: str) -> Optional[Field]:
         """Get field by ID.
         
         Args:
@@ -31,7 +30,7 @@ class FieldInMemoryGateway(FieldGateway):
         """
         return self._fields.get(field_id)
     
-    async def get_all(self) -> List[Field]:
+    def get_all(self) -> List[Field]:
         """Get all fields from configured source.
         
         Returns:
@@ -39,7 +38,7 @@ class FieldInMemoryGateway(FieldGateway):
         """
         return list(self._fields.values())
 
-    async def save(self, field: Field) -> None:
+    def save(self, field: Field) -> None:
         """Save a field.
         
         Args:
@@ -47,7 +46,7 @@ class FieldInMemoryGateway(FieldGateway):
         """
         self._fields[field.field_id] = field
 
-    async def delete(self, field_id: str) -> bool:
+    def delete(self, field_id: str) -> bool:
         """Delete a field.
         
         Args:

@@ -14,13 +14,11 @@ from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.framework.services.io.file_service import FileService
 
-
 @pytest.fixture
 def temp_dir():
     """テスト用一時ディレクトリ"""
     with tempfile.TemporaryDirectory() as tmpdirname:
         yield Path(tmpdirname)
-
 
 @pytest.fixture
 def repository():
@@ -28,12 +26,10 @@ def repository():
     file_repo = FileService()
     return FieldFileRepository(file_repository=file_repo)
 
-
 class TestFieldRepositoryToEntity:
     """Repository → Entity 境界のデータ変換テスト"""
 
-    @pytest.mark.asyncio
-    async def test_repository_creates_valid_field_entity(self, repository, temp_dir):
+    def test_repository_creates_valid_field_entity(self, repository, temp_dir):
         """Repository が有効な Field Entity を生成
         
         検証内容:
@@ -54,7 +50,7 @@ class TestFieldRepositoryToEntity:
         field_file.write_text(json.dumps(json_data, ensure_ascii=False), encoding='utf-8')
 
         # Act
-        fields = await repository.read_fields_from_file(str(field_file))
+        fields = repository.read_fields_from_file(str(field_file))
         field = fields[0]
 
         # Assert - 正しい Entity が生成される
@@ -66,8 +62,7 @@ class TestFieldRepositoryToEntity:
         assert isinstance(field.daily_fixed_cost, float)
         assert field.location == "北区画"
 
-    @pytest.mark.asyncio
-    async def test_repository_validates_negative_cost(self, repository, temp_dir):
+    def test_repository_validates_negative_cost(self, repository, temp_dir):
         """Repository が負のコストを拒否
         
         検証内容:
@@ -86,10 +81,9 @@ class TestFieldRepositoryToEntity:
 
         # Act & Assert - Repository 層でエラー
         with pytest.raises(FileError, match="must be non-negative"):
-            await repository.read_fields_from_file(str(field_file))
+            repository.read_fields_from_file(str(field_file))
 
-    @pytest.mark.asyncio
-    async def test_field_entity_is_immutable(self, repository, temp_dir):
+    def test_field_entity_is_immutable(self, repository, temp_dir):
         """生成された Field Entity が不変
         
         検証内容:
@@ -107,21 +101,20 @@ class TestFieldRepositoryToEntity:
         field_file.write_text(json.dumps(json_data, ensure_ascii=False), encoding='utf-8')
 
         # Act
-        fields = await repository.read_fields_from_file(str(field_file))
+        fields = repository.read_fields_from_file(str(field_file))
         field = fields[0]
 
         # Assert - イミュータブル
         with pytest.raises(Exception):  # FrozenInstanceError
             field.daily_fixed_cost = 9999.0
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize("cost", [
         0.0,        # 最小値
         5000.0,     # 通常値
         5432.10,    # 小数点
         999999.99,  # 大きい値
     ])
-    async def test_repository_preserves_cost_precision(self, repository, temp_dir, cost):
+    def test_repository_preserves_cost_precision(self, repository, temp_dir, cost):
         """Repository がコストの精度を保持
         
         検証内容:
@@ -140,7 +133,7 @@ class TestFieldRepositoryToEntity:
         field_file.write_text(json.dumps(json_data), encoding='utf-8')
 
         # Act
-        fields = await repository.read_fields_from_file(str(field_file))
+        fields = repository.read_fields_from_file(str(field_file))
         field = fields[0]
 
         # Assert - 精度が保持される

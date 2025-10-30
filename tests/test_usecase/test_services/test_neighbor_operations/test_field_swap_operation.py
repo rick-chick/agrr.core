@@ -10,13 +10,11 @@ from agrr_core.usecase.services.neighbor_operations.field_swap_operation import 
     FieldSwapOperation,
 )
 
-
 @pytest.mark.unit
 def test_field_swap_operation_name():
     """Test operation name."""
     operation = FieldSwapOperation()
     assert operation.operation_name == "field_swap"
-
 
 @pytest.mark.unit
 def test_field_swap_generates_neighbors():
@@ -77,7 +75,6 @@ def test_field_swap_generates_neighbors():
         # Verify crops are kept
         assert neighbor[0].crop.crop_id == crop1.crop_id
         assert neighbor[1].crop.crop_id == crop2.crop_id
-
 
 @pytest.mark.unit
 @pytest.mark.skip(reason="New implementation preserves area; this test expects area adjustment which is no longer supported")
@@ -146,7 +143,6 @@ def test_field_swap_adjusts_quantities():
     # Verify area is maintained
     assert neighbor[0].area_used == 150.0  # Same area as original alloc2
     assert neighbor[1].area_used == 500.0  # Same area as original alloc1
-
 
 @pytest.mark.unit
 def test_field_swap_skips_same_field():

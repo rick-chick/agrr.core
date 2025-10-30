@@ -10,9 +10,8 @@ from agrr_core.entity.entities.fertilizer_recommendation_entity import (
 )
 from agrr_core.usecase.gateways.fertilizer_recommend_gateway import FertilizerRecommendGateway
 
-
 class FertilizerRecommendInMemoryGateway(FertilizerRecommendGateway):
-    async def recommend(self, crop_profile: Dict[str, Any]) -> FertilizerPlan:
+    def recommend(self, crop_profile: Dict[str, Any]) -> FertilizerPlan:
         crop_info = crop_profile.get("crop", {})
         crop = Crop(
             crop_id=crop_info.get("crop_id", "unknown"),
@@ -51,5 +50,4 @@ class FertilizerRecommendInMemoryGateway(FertilizerRecommendGateway):
             confidence=0.5,
             notes="In-memory gateway placeholder",
         )
-
 

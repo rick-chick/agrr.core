@@ -7,7 +7,6 @@ from datetime import datetime, date, timedelta
 from agrr_core.adapter.services.weather_linear_interpolator import WeatherLinearInterpolator
 from agrr_core.entity.entities.weather_entity import WeatherData
 
-
 class TestWeatherLinearInterpolator:
     """Test cases for WeatherLinearInterpolator."""
     

@@ -15,7 +15,6 @@ from agrr_core.adapter.gateways.weather_jma_gateway import (
     LOCATION_MAPPING
 )
 
-
 class TestJMA47Prefectures:
     """E2E tests for all 47 prefectures."""
     
@@ -28,8 +27,7 @@ class TestJMA47Prefectures:
     def repository(self, html_table_fetcher):
         """Create JMA repository instance."""
         return WeatherJMAGateway(html_table_fetcher)
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
     @pytest.mark.parametrize("coords,expected", [
         # 動作確認済みの地点
@@ -38,7 +36,7 @@ class TestJMA47Prefectures:
         ((34.6937, 135.5023), (62, 47772, "大阪")),
         ((35.4439, 139.6380), (46, 47670, "横浜")),  # 神奈川（修正済み）
     ])
-    async def test_location_code_accuracy(
+    def test_location_code_accuracy(
         self,
         repository,
         html_table_fetcher,
@@ -68,7 +66,7 @@ class TestJMA47Prefectures:
         print(f"URL: {url}")
         
         try:
-            tables = await html_table_fetcher.get(url)
+            tables = html_table_fetcher.get(url)
             assert len(tables) > 0, f"No tables found for {name}"
             
             # Find data table
@@ -85,11 +83,10 @@ class TestJMA47Prefectures:
             
         except Exception as e:
             pytest.fail(f"Failed to fetch data for {name} (prec_no={prec_no}, block_no={block_no}): {e}")
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
     @pytest.mark.slow
-    async def test_all_47_prefectures_fetchable(self, repository, html_table_fetcher):
+    def test_all_47_prefectures_fetchable(self, repository, html_table_fetcher):
         """Test that all 47 prefectures can fetch data from JMA.
         
         This test is marked as 'slow' because it makes 47 HTTP requests.
@@ -106,7 +103,7 @@ class TestJMA47Prefectures:
             )
             
             try:
-                tables = await html_table_fetcher.get(url)
+                tables = html_table_fetcher.get(url)
                 
                 # Find data table
                 data_table = None

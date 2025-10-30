@@ -9,7 +9,6 @@ from datetime import datetime
 from agrr_core.entity.entities.temperature_profile_entity import TemperatureProfile
 from agrr_core.entity.entities.weather_entity import WeatherData
 
-
 @pytest.fixture
 def rice_temperature_profile():
     """Temperature profile for rice (typical values)."""
@@ -23,7 +22,6 @@ def rice_temperature_profile():
         max_temperature=42.0,
         sterility_risk_threshold=35.0,
     )
-
 
 @pytest.fixture
 def wheat_temperature_profile():
@@ -39,7 +37,6 @@ def wheat_temperature_profile():
         sterility_risk_threshold=None,
     )
 
-
 @pytest.fixture
 def tomato_temperature_profile():
     """Temperature profile for tomato (typical values)."""
@@ -53,7 +50,6 @@ def tomato_temperature_profile():
         max_temperature=40.0,
         sterility_risk_threshold=35.0,
     )
-
 
 class TestTemperatureJudgments:
     """Test temperature judgment methods."""
@@ -101,7 +97,6 @@ class TestTemperatureJudgments:
         """Test sterility risk returns False when threshold is None."""
         assert wheat_temperature_profile.is_sterility_risk(40.0) is False
 
-
 class TestDailyGDD:
     """Test daily GDD calculations."""
     
@@ -146,7 +141,6 @@ class TestDailyGDD:
         """Test GDD is zero for None temperature."""
         gdd = rice_temperature_profile.daily_gdd(None)
         assert gdd == 0.0
-
 
 class TestCalculateDailyStressImpacts:
     """Test calculate_daily_stress_impacts method."""
@@ -347,7 +341,6 @@ class TestCalculateDailyStressImpacts:
         assert abs(impacts["high_temp"] - expected_high_temp) < 0.001
         assert impacts["sterility"] == 0.0
 
-
 class TestGDDEfficiencyBasedAttenuation:
     """Test GDD efficiency-based stress attenuation feature."""
     
@@ -477,7 +470,6 @@ class TestGDDEfficiencyBasedAttenuation:
         # New impact should be significantly lower
         assert impacts["high_temp"] < old_impact_estimate * 0.4  # At least 60% reduction
         assert impacts["high_temp"] < 0.005  # Less than 0.5% impact
-
 
 class TestTemperatureProfileImmutability:
     """Test that TemperatureProfile is immutable (frozen dataclass)."""

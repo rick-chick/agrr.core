@@ -14,7 +14,6 @@ from agrr_core.usecase.ports.output.multi_field_crop_allocation_output_port impo
     MultiFieldCropAllocationOutputPort,
 )
 
-
 class MultiFieldCropAllocationCliPresenter(MultiFieldCropAllocationOutputPort):
     """Presenter for CLI output of multi-field crop allocation optimization."""
 

@@ -6,7 +6,6 @@ from agrr_core.entity.entities.prediction_forecast_entity import Forecast
 from agrr_core.usecase.dto.prediction_response_dto import PredictionResponseDTO
 from agrr_core.usecase.ports.output.prediction_presenter_output_port import PredictionPresenterOutputPort
 
-
 class PredictionPresenter(PredictionPresenterOutputPort):
     """Presenter for formatting weather prediction responses."""
     

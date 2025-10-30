@@ -21,7 +21,7 @@ class WeatherPredictInteractor:
         self.weather_gateway = weather_gateway
         self.prediction_gateway = prediction_gateway
     
-    async def execute(
+    def execute(
         self,
         input_source: str,
         output_destination: str,
@@ -54,7 +54,7 @@ class WeatherPredictInteractor:
             raise ValueError("Invalid output destination format")
         
         # Get weather data from input source
-        historical_data = await self.prediction_gateway.read_historical_data(input_source)
+        historical_data = self.prediction_gateway.read_historical_data(input_source)
         
         # Validate weather data quality with detailed error information
         is_valid, error_message = WeatherValidator.validate_weather_data_detailed(historical_data)
@@ -65,7 +65,7 @@ class WeatherPredictInteractor:
         # デフォルトで全ての気温メトリックを予測（飽和問題の解決）
         if predict_all_temperature_metrics:
             # 複数メトリック予測（temperature, temperature_max, temperature_min）
-            all_predictions = await self.prediction_gateway.predict_multiple_metrics(
+            all_predictions = self.prediction_gateway.predict_multiple_metrics(
                 historical_data,
                 ['temperature', 'temperature_max', 'temperature_min'],
                 {'prediction_days': prediction_days}
@@ -74,27 +74,27 @@ class WeatherPredictInteractor:
             # モックモードの場合は、PredictionMockGatewayのcreateメソッドを使用
             if hasattr(self.prediction_gateway, 'mock_data_file') or type(self.prediction_gateway).__name__ == 'PredictionMockGateway':
                 # モックモード: 複数メトリックの予測結果を統合して保存
-                await self._create_multi_metric_predictions_mock(all_predictions, output_destination)
+                self._create_multi_metric_predictions_mock(all_predictions, output_destination)
             else:
                 # 通常モード: 複数メトリックの予測結果を統合して保存
-                await self._create_multi_metric_predictions(all_predictions, output_destination)
+                self._create_multi_metric_predictions(all_predictions, output_destination)
             
             # temperatureの予測結果を返す（後方互換性）
             predictions = all_predictions['temperature']
         else:
             # 単一メトリック予測（従来の動作）
-            predictions = await self.prediction_gateway.predict(
+            predictions = self.prediction_gateway.predict(
                 historical_data, 
                 'temperature', 
                 {'prediction_days': prediction_days}
             )
             
             # Create predictions
-            await self.prediction_gateway.create(predictions, output_destination)
+            self.prediction_gateway.create(predictions, output_destination)
         
         return predictions
     
-    async def _create_multi_metric_predictions(
+    def _create_multi_metric_predictions(
         self,
         all_predictions: dict,
         destination: str
@@ -147,7 +147,7 @@ class WeatherPredictInteractor:
         
         Path(destination).write_text(json.dumps(output_data, indent=2, ensure_ascii=False))
     
-    async def _create_multi_metric_predictions_mock(
+    def _create_multi_metric_predictions_mock(
         self,
         all_predictions: dict,
         destination: str

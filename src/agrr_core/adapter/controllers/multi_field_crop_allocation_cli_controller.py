@@ -1,7 +1,7 @@
 """CLI controller for multi-field crop allocation optimization (adapter layer)."""
 
 import argparse
-import asyncio
+
 import json
 from datetime import datetime
 from typing import Optional, List
@@ -27,7 +27,7 @@ from agrr_core.usecase.dto.multi_field_crop_allocation_response_dto import (
 )
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
-
+from agrr_core.framework.logging.agrr_logger import get_logger
 
 class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
     """CLI controller implementing Input Port for multi-field crop allocation optimization."""
@@ -64,6 +64,8 @@ class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
         self.presenter = presenter
         self.interaction_rule_gateway = interaction_rule_gateway
         self.config = config or OptimizationConfig()
+        # Logger
+        self.logger = get_logger()
         
         # Load interaction rules if gateway is provided
         self.interaction_rules: List[InteractionRule] = []
@@ -78,7 +80,7 @@ class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
             interaction_rules=self.interaction_rules,
         )
 
-    async def execute(
+    def execute(
         self, request: MultiFieldCropAllocationRequestDTO
     ) -> MultiFieldCropAllocationResponseDTO:
         """Execute the multi-field crop allocation optimization use case.
@@ -91,7 +93,7 @@ class MultiFieldCropAllocationCliController(MultiFieldCropAllocationInputPort):
         Returns:
             Response DTO containing optimized allocation result
         """
-        return await self.interactor.execute(request)
+        return self.interactor.execute(request)
 
     def create_argument_parser(self) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(
@@ -532,9 +534,7 @@ Growth Period Candidate Filtering (Default: Enabled):
                 f'Invalid date format: "{date_str}". Use YYYY-MM-DD (e.g., "2024-04-01")'
             )
 
-
-
-    async def handle_optimize_command(self, args) -> None:
+    def handle_optimize_command(self, args) -> None:
         """Handle the optimize command.
         
         Optimizes crop allocation across multiple fields to maximize profit or minimize cost.
@@ -549,30 +549,38 @@ Growth Period Candidate Filtering (Default: Enabled):
             planning_start = self._parse_date(args.planning_start)
             planning_end = self._parse_date(args.planning_end)
         except ValueError as e:
-            print(f'Error: {str(e)}')
+            self.logger.error(f'Invalid date format or range: {str(e)}')
             return
 
         # Load fields from gateway
         try:
-            fields = await self.field_gateway.get_all()
+            fields = self.field_gateway.get_all()
             if not fields:
-                print('Error: No fields found. Make sure --fields-file is a valid fields JSON file.')
+                self.logger.error('No fields found. Make sure --fields-file is a valid fields JSON file.')
                 return
             field_ids = [field.field_id for field in fields]
         except Exception as e:
-            print(f'Error loading fields: {str(e)}')
+            self.logger.error(f'Error loading fields: {str(e)}')
             return
+
+        # Determine output mode early (default: table)
+        is_json_mode = getattr(args, 'format', 'table') == 'json'
 
         # Load interaction rules if gateway is provided
         if self.interaction_rule_gateway:
             try:
-                interaction_rules = await self.interaction_rule_gateway.get_rules()
+                interaction_rules = self.interaction_rule_gateway.get_rules()
                 # Update interactor with loaded rules
                 self.interactor.interaction_rule_service.rules = interaction_rules
             except Exception as e:
+                # Non-fatal: in JSON mode write to stderr or suppress stdout pollution
                 import sys
-                print(f'Warning: Failed to load interaction rules: {str(e)}', file=sys.stderr)
-                print('Continuing without interaction rules...', file=sys.stderr)
+                msg = f"Warning: Failed to load interaction rules: {str(e)}\nContinuing without interaction rules..."
+                if is_json_mode:
+                    # Console handler logs to stderr; avoid polluting stdout JSON
+                    self.logger.warning(msg)
+                else:
+                    self.logger.info(msg)
 
         # Update presenter format
         self.presenter.output_format = args.format
@@ -600,7 +608,7 @@ Growth Period Candidate Filtering (Default: Enabled):
             enable_local_search = not getattr(args, 'disable_local_search', False)
             algorithm = getattr(args, 'algorithm', 'dp')
             
-            response = await self.interactor.execute(
+            response = self.interactor.execute(
                 request,
                 enable_local_search=enable_local_search,
                 config=config,
@@ -608,15 +616,15 @@ Growth Period Candidate Filtering (Default: Enabled):
             )
             self.presenter.present(response)
         except Exception as e:
-            print(f"Error optimizing crop allocation: {str(e)}")
+            self.logger.error(f"Error optimizing crop allocation: {str(e)}")
             import traceback
             traceback.print_exc()
 
-    async def run(self, args: Optional[list] = None) -> None:
+    def run(self, args: Optional[list] = None) -> None:
         """Run the controller with CLI arguments."""
         parser = self.create_argument_parser()
         parsed_args = parser.parse_args(args)
 
         # No subcommands - directly handle the optimize command
-        await self.handle_optimize_command(parsed_args)
+        self.handle_optimize_command(parsed_args)
 

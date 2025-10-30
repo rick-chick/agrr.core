@@ -7,10 +7,9 @@ import time
 from pathlib import Path
 
 from . import SOCKET_PATH
-
+from agrr_core.framework.logging.agrr_logger import get_logger
 
 PID_FILE = '/tmp/agrr.pid'
-
 
 class DaemonManager:
     """Manage daemon lifecycle (start/stop/status/restart)."""
@@ -40,13 +39,13 @@ class DaemonManager:
             # Internal command: start daemon server
             self._start_server()
         else:
-            print(f"Unknown command: {cmd}")
+            get_logger().error(f"Unknown command: {cmd}")
             self._print_help()
             sys.exit(1)
     
     def _print_help(self):
         """Print help message."""
-        print("""
+        get_logger().info("""
 agrr daemon - Daemon process manager for faster command execution
 
 What is daemon mode?
@@ -98,11 +97,19 @@ Examples:
         """Start daemon in background."""
         # 既に起動しているか確認
         if self._is_running():
-            print("✗ Daemon is already running")
+            get_logger().warning("✗ Daemon is already running")
             sys.exit(1)
         
         # バックグラウンドで起動
         executable = sys.executable
+        
+        # ワーキングディレクトリを設定（onefileバイナリの場合も考慮）
+        if getattr(sys, 'frozen', False):
+            # PyInstallerバイナリの場合、実行ファイルのディレクトリを基準にする
+            cwd = os.path.dirname(os.path.abspath(executable))
+        else:
+            # 通常のPython実行環境では現在のワーキングディレクトリを使用
+            cwd = os.getcwd()
         
         # デーモンプロセスを起動（内部コマンド _server を使用）
         # PyInstallerバイナリでも動作するように、自分自身を実行
@@ -111,18 +118,20 @@ Examples:
             else [executable, '-m', 'agrr_core', 'daemon', '_server'],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            start_new_session=True  # デーモン化
+            start_new_session=True,  # デーモン化
+            cwd=cwd  # ワーキングディレクトリを明示的に設定
         )
         
         # 起動を待つ（最大5秒）
         for _ in range(50):
             if os.path.exists(SOCKET_PATH):
-                print(f"✓ Daemon started (PID: {process.pid})")
-                print(f"✓ Socket: {SOCKET_PATH}")
+                logger = get_logger()
+                logger.info(f"✓ Daemon started (PID: {process.pid})")
+                logger.info(f"✓ Socket: {SOCKET_PATH}")
                 return
             time.sleep(0.1)
         
-        print("✗ Daemon failed to start")
+        get_logger().error("✗ Daemon failed to start")
         sys.exit(1)
     
     def _start_server(self):
@@ -134,7 +143,7 @@ Examples:
     def stop(self):
         """Stop daemon."""
         if not self._is_running():
-            print("✗ Daemon is not running")
+            get_logger().warning("✗ Daemon is not running")
             return
         
         # PIDファイルから読み込み
@@ -149,24 +158,24 @@ Examples:
                 # 停止を待つ（最大5秒）
                 for _ in range(50):
                     if not os.path.exists(SOCKET_PATH):
-                        print("✓ Daemon stopped")
+                        get_logger().info("✓ Daemon stopped")
                         return
                     time.sleep(0.1)
                 
                 # まだ動いてる場合はSIGKILL
                 try:
                     os.kill(pid, signal.SIGKILL)
-                    print("✓ Daemon stopped (forced)")
+                    get_logger().info("✓ Daemon stopped (forced)")
                 except ProcessLookupError:
-                    print("✓ Daemon stopped")
+                    get_logger().info("✓ Daemon stopped")
                     
             except (ValueError, ProcessLookupError):
-                print("✗ Daemon was not running (cleaning up)")
+                get_logger().warning("✗ Daemon was not running (cleaning up)")
                 self._cleanup()
         else:
             # PIDファイルがない場合はソケットを削除
             self._cleanup()
-            print("✓ Cleaned up stale socket")
+            get_logger().info("✓ Cleaned up stale socket")
     
     def status(self):
         """Check daemon status."""
@@ -175,16 +184,16 @@ Examples:
             if os.path.exists(PID_FILE):
                 with open(PID_FILE) as f:
                     pid = f.read().strip()
-                print(f"✓ Daemon is running (PID: {pid})")
+                get_logger().info(f"✓ Daemon is running (PID: {pid})")
             else:
-                print("✓ Daemon is running")
+                get_logger().info("✓ Daemon is running")
         else:
-            print("✗ Daemon is not running")
+            get_logger().warning("✗ Daemon is not running")
             sys.exit(1)
     
     def restart(self):
         """Restart daemon."""
-        print("Restarting daemon...")
+        get_logger().info("Restarting daemon...")
         self.stop()
         time.sleep(0.5)
         self.start()

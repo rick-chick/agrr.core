@@ -5,7 +5,6 @@ from typing import Optional
 
 from ..exceptions.invalid_location_error import InvalidLocationError
 
-
 @dataclass
 class Location:
     """Location entity for weather data requests."""

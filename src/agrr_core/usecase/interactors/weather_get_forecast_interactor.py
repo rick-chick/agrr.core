@@ -23,7 +23,7 @@ class WeatherGetForecastInteractor:
         self.weather_gateway = weather_gateway
         self.weather_presenter_output_port = weather_presenter_output_port
     
-    async def execute(self, request: WeatherForecastRequestDTO) -> dict:
+    def execute(self, request: WeatherForecastRequestDTO) -> dict:
         """
         Execute weather forecast retrieval.
         
@@ -47,7 +47,7 @@ class WeatherGetForecastInteractor:
             location = Location(request.latitude, request.longitude)
             
             # Get 16-day forecast starting from tomorrow
-            weather_data_with_location = await self.weather_gateway.get_forecast(
+            weather_data_with_location = self.weather_gateway.get_forecast(
                 location.latitude,
                 location.longitude
             )

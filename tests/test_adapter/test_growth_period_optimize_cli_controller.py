@@ -6,7 +6,7 @@ specifically focusing on the filter_redundant_candidates flag.
 
 import pytest
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import Mock, MagicMock, patch
 from argparse import Namespace
 
 from agrr_core.adapter.controllers.growth_period_optimize_cli_controller import (
@@ -28,14 +28,13 @@ from agrr_core.usecase.dto.growth_period_optimize_response_dto import (
     CandidateResultDTO,
 )
 
-
 class TestGrowthPeriodOptimizeCliController:
     """Test data transfer through controller layer."""
 
     @pytest.fixture
     def mock_crop_profile_gateway(self):
         """Create mock crop profile gateway."""
-        gateway = AsyncMock()
+        gateway = Mock()
         
         # Create test crop profile
         crop = Crop(
@@ -70,7 +69,7 @@ class TestGrowthPeriodOptimizeCliController:
     @pytest.fixture
     def mock_weather_gateway(self):
         """Create mock weather gateway."""
-        gateway = AsyncMock()
+        gateway = Mock()
         return gateway
 
     @pytest.fixture
@@ -100,8 +99,7 @@ class TestGrowthPeriodOptimizeCliController:
             field=test_field,
         )
 
-    @pytest.mark.asyncio
-    async def test_flag_transfer_with_default_filtering_enabled(
+    def test_flag_transfer_with_default_filtering_enabled(
         self, controller, mock_crop_profile_gateway
     ):
         """Test that filter_redundant_candidates=True is passed by default."""
@@ -131,23 +129,22 @@ class TestGrowthPeriodOptimizeCliController:
         # Mock the interactor's execute method to capture the request
         captured_request = None
         
-        async def capture_execute(request):
+        def capture_execute(request):
             nonlocal captured_request
             captured_request = request
             return mock_response
         
-        controller.interactor.execute = AsyncMock(side_effect=capture_execute)
+        controller.interactor.execute = Mock(side_effect=capture_execute)
         
         # Execute the command
-        await controller.handle_period_command(args)
+        controller.handle_period_command(args)
         
         # Verify that the request was created with filter_redundant_candidates=True
         assert captured_request is not None, "Request was not passed to interactor"
         assert captured_request.filter_redundant_candidates is True, \
             "Expected filter_redundant_candidates=True by default"
 
-    @pytest.mark.asyncio
-    async def test_flag_transfer_with_filtering_disabled(
+    def test_flag_transfer_with_filtering_disabled(
         self, controller, mock_crop_profile_gateway
     ):
         """Test that filter_redundant_candidates=False is passed when --no-filter-redundant is specified."""
@@ -177,23 +174,22 @@ class TestGrowthPeriodOptimizeCliController:
         # Mock the interactor's execute method to capture the request
         captured_request = None
         
-        async def capture_execute(request):
+        def capture_execute(request):
             nonlocal captured_request
             captured_request = request
             return mock_response
         
-        controller.interactor.execute = AsyncMock(side_effect=capture_execute)
+        controller.interactor.execute = Mock(side_effect=capture_execute)
         
         # Execute the command
-        await controller.handle_period_command(args)
+        controller.handle_period_command(args)
         
         # Verify that the request was created with filter_redundant_candidates=False
         assert captured_request is not None, "Request was not passed to interactor"
         assert captured_request.filter_redundant_candidates is False, \
             "Expected filter_redundant_candidates=False when --no-filter-redundant is specified"
 
-    @pytest.mark.asyncio
-    async def test_request_dto_structure(self, controller, mock_crop_profile_gateway):
+    def test_request_dto_structure(self, controller, mock_crop_profile_gateway):
         """Test that RequestDTO is created with all required fields including the flag."""
         args = Namespace(
             evaluation_start="2024-04-01",
@@ -220,15 +216,15 @@ class TestGrowthPeriodOptimizeCliController:
         # Mock the interactor's execute method to capture the request
         captured_request = None
         
-        async def capture_execute(request):
+        def capture_execute(request):
             nonlocal captured_request
             captured_request = request
             return mock_response
         
-        controller.interactor.execute = AsyncMock(side_effect=capture_execute)
+        controller.interactor.execute = Mock(side_effect=capture_execute)
         
         # Execute the command
-        await controller.handle_period_command(args)
+        controller.handle_period_command(args)
         
         # Verify all DTO fields
         assert captured_request is not None

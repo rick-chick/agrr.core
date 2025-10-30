@@ -12,7 +12,6 @@ This normalizer provides centralized logic to handle all variations.
 
 from typing import Dict, Any, List
 
-
 class LLMResponseNormalizer:
     """Normalize LLM response field names to standardized format.
     

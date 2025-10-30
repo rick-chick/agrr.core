@@ -15,7 +15,6 @@ Fields:
 from dataclasses import dataclass
 from typing import Optional
 
-
 @dataclass(frozen=True)
 class Field:
     """Represents a field with daily fixed cost information."""

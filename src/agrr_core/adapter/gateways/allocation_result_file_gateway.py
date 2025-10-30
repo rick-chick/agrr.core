@@ -17,7 +17,6 @@ from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 from agrr_core.entity.entities.crop_entity import Crop
 from agrr_core.adapter.interfaces.io.file_service_interface import FileServiceInterface
 
-
 class AllocationResultFileGateway(AllocationResultGateway):
     """File-based gateway for allocation result operations."""
     
@@ -35,7 +34,7 @@ class AllocationResultFileGateway(AllocationResultGateway):
         self.file_repository = file_repository
         self.file_path = file_path
     
-    async def get_by_id(self, optimization_id: str) -> Optional[MultiFieldOptimizationResult]:
+    def get_by_id(self, optimization_id: str) -> Optional[MultiFieldOptimizationResult]:
         """Get optimization result by ID.
         
         Note: This implementation loads from file and checks ID.
@@ -47,12 +46,12 @@ class AllocationResultFileGateway(AllocationResultGateway):
         Returns:
             Optimization result entity if found and ID matches, None otherwise
         """
-        result = await self.get()
+        result = self.get()
         if result and result.optimization_id == optimization_id:
             return result
         return None
     
-    async def get(self) -> Optional[MultiFieldOptimizationResult]:
+    def get(self) -> Optional[MultiFieldOptimizationResult]:
         """Get optimization result from configured source (file in this implementation).
         
         Returns:
@@ -63,7 +62,7 @@ class AllocationResultFileGateway(AllocationResultGateway):
         
         try:
             # Read JSON file
-            content = await self.file_repository.read(self.file_path)
+            content = self.file_repository.read(self.file_path)
             data = json.loads(content)
             
             # Parse JSON to entity

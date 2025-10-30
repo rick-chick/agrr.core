@@ -10,12 +10,11 @@ from typing import List, Dict, Any
 
 from agrr_core.entity import WeatherData, Forecast
 
-
 class PredictionServiceInterface(ABC):
     """Interface for prediction services (Framework layer implements this, Adapter layer defines)."""
     
     @abstractmethod
-    async def predict(
+    def predict(
         self,
         historical_data: List[WeatherData],
         metric: str,
@@ -40,7 +39,7 @@ class PredictionServiceInterface(ABC):
         pass
     
     @abstractmethod
-    async def evaluate(
+    def evaluate(
         self,
         test_data: List[WeatherData],
         predictions: List[Forecast],

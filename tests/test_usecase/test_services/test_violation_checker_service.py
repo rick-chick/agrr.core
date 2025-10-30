@@ -12,7 +12,6 @@ from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.usecase.services.violation_checker_service import ViolationCheckerService
 from agrr_core.usecase.services.interaction_rule_service import InteractionRuleService
 
-
 class TestViolationCheckerService:
     """Test ViolationCheckerService."""
     

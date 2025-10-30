@@ -2,7 +2,7 @@
 
 import pytest
 from datetime import datetime
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 
 from agrr_core.entity.entities.crop_entity import Crop
 from agrr_core.entity.entities.crop_profile_entity import (
@@ -22,17 +22,15 @@ from agrr_core.usecase.interactors.growth_period_optimize_interactor import (
     GrowthPeriodOptimizeInteractor,
 )
 
-
-@pytest.mark.asyncio
 class TestOptimizationResultSaving:
     """Test cases for optimization result saving functionality."""
 
-    async def test_saves_intermediate_results_when_gateway_provided(self):
+    def test_saves_intermediate_results_when_gateway_provided(self):
         """Test that intermediate results are saved when gateway is provided."""
         # Setup mocks
-        gateway_crop_profile = AsyncMock()
-        mock_weather_gateway = AsyncMock()
-        mock_optimization_result_gateway = AsyncMock()
+        gateway_crop_profile = Mock()
+        mock_weather_gateway = Mock()
+        mock_optimization_result_gateway = Mock()
 
         # Setup crop requirements (total 100 GDD)
         crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
@@ -97,7 +95,7 @@ class TestOptimizationResultSaving:
             field=test_field,
         )
 
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
 
         # Verify that save was called
         mock_optimization_result_gateway.save.assert_called_once()
@@ -122,11 +120,11 @@ class TestOptimizationResultSaving:
             if result.completion_date:
                 assert result.completion_date >= result.start_date
 
-    async def test_does_not_save_when_gateway_not_provided(self):
+    def test_does_not_save_when_gateway_not_provided(self):
         """Test that no saving occurs when gateway is not provided."""
         # Setup mocks
-        gateway_crop_profile = AsyncMock()
-        mock_weather_gateway = AsyncMock()
+        gateway_crop_profile = Mock()
+        mock_weather_gateway = Mock()
 
         # Setup crop requirements (total 100 GDD)
         crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
@@ -192,18 +190,18 @@ class TestOptimizationResultSaving:
         )
 
         # Should not raise any errors
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Verify response is still valid
         assert response.optimal_start_date is not None
         assert response.completion_date is not None
 
-    async def test_saved_results_contain_accumulated_gdd(self):
+    def test_saved_results_contain_accumulated_gdd(self):
         """Test that saved results contain accurate accumulated GDD."""
         # Setup mocks
-        gateway_crop_profile = AsyncMock()
-        mock_weather_gateway = AsyncMock()
-        mock_optimization_result_gateway = AsyncMock()
+        gateway_crop_profile = Mock()
+        mock_weather_gateway = Mock()
+        mock_optimization_result_gateway = Mock()
 
         # Setup crop requirements (total 100 GDD)
         crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
@@ -268,7 +266,7 @@ class TestOptimizationResultSaving:
             field=test_field,
         )
 
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
 
         # Get saved results
         call_args = mock_optimization_result_gateway.save.call_args

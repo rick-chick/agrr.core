@@ -6,7 +6,6 @@ from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseD
 from agrr_core.usecase.dto.forecast_response_dto import ForecastResponseDTO
 from agrr_core.usecase.dto.prediction_response_dto import PredictionResponseDTO
 
-
 class TestPredictionResponseDTO:
     """Test PredictionResponseDTO."""
     

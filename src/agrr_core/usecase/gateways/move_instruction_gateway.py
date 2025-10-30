@@ -13,12 +13,11 @@ from typing import List
 
 from agrr_core.entity.entities.move_instruction_entity import MoveInstruction
 
-
 class MoveInstructionGateway(ABC):
     """Gateway interface for move instruction operations."""
     
     @abstractmethod
-    async def get_all(self) -> List[MoveInstruction]:
+    def get_all(self) -> List[MoveInstruction]:
         """Get all move instructions from configured source.
         
         Returns:

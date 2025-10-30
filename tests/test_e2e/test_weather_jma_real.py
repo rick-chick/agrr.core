@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from agrr_core.framework.services.io.html_table_service import HtmlTableService
 from agrr_core.adapter.gateways.weather_jma_gateway import WeatherJMAGateway as WeatherJMARepository
 
-
 class TestJMAAPIReal:
     """E2E tests for real JMA data retrieval."""
     
@@ -23,10 +22,9 @@ class TestJMAAPIReal:
     def repository(self, html_table_fetcher):
         """Create JMA repository instance."""
         return WeatherJMARepository(html_table_fetcher)
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
-    async def test_fetch_jma_html_table_tokyo(self, html_table_fetcher):
+    def test_fetch_jma_html_table_tokyo(self, html_table_fetcher):
         """Test fetching actual JMA HTML table for Tokyo."""
         # Tokyo: prec_no=44, block_no=47662
         # Download data for January 2024
@@ -36,7 +34,7 @@ class TestJMAAPIReal:
         )
         
         try:
-            tables = await html_table_fetcher.get(url)
+            tables = html_table_fetcher.get(url)
             
             # Verify tables are not empty
             assert len(tables) > 0, "No tables found"
@@ -57,10 +55,9 @@ class TestJMAAPIReal:
             
         except Exception as e:
             pytest.fail(f"Failed to fetch JMA HTML tables: {e}")
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
-    async def test_jma_repository_tokyo_recent_month(self, repository):
+    def test_jma_repository_tokyo_recent_month(self, repository):
         """Test fetching recent weather data for Tokyo."""
         # Tokyo coordinates
         latitude = 35.6895
@@ -77,7 +74,7 @@ class TestJMAAPIReal:
         print(f"Period: {start_date_str} to {end_date_str}")
         
         try:
-            result = await repository.get_by_location_and_date_range(
+            result = repository.get_by_location_and_date_range(
                 latitude=latitude,
                 longitude=longitude,
                 start_date=start_date_str,
@@ -113,10 +110,9 @@ class TestJMAAPIReal:
             # This test might fail until CSV parsing is fully implemented
             print(f"\n⚠️  Test failed (expected until parsing is implemented): {e}")
             pytest.skip(f"JMA parsing not yet fully implemented: {e}")
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
-    async def test_jma_location_mapping(self, repository):
+    def test_jma_location_mapping(self, repository):
         """Test location mapping to JMA stations."""
         test_locations = [
             (35.6895, 139.6917, "Tokyo"),
@@ -131,10 +127,9 @@ class TestJMAAPIReal:
             assert prec_no > 0
             assert block_no > 0
             assert location_name is not None
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
-    async def test_jma_url_building(self, repository):
+    def test_jma_url_building(self, repository):
         """Test URL building for JMA data."""
         url = repository._build_url(
             prec_no=44,

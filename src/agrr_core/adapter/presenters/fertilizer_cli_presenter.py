@@ -5,7 +5,6 @@ from typing import List
 
 from agrr_core.usecase.dto.fertilizer_dto import FertilizerDetailResponseDTO
 
-
 class FertilizerListCliPresenter:
     """Presenter for fertilizer list results in CLI format."""
     
@@ -43,7 +42,6 @@ class FertilizerListCliPresenter:
             "count": len(fertilizers)
         }
         return json.dumps(data, ensure_ascii=False, indent=2)
-
 
 class FertilizerDetailCliPresenter:
     """Presenter for fertilizer detail results in CLI format."""

@@ -7,17 +7,15 @@ from agrr_core.usecase.dto.crop_profile_craft_request_dto import (
     CropProfileCraftRequestDTO,
 )
 
-
-@pytest.mark.asyncio
 @pytest.mark.unit
-async def test_craft_success(gateway_crop_profile, output_port_crop_profile):
+def test_craft_success(gateway_crop_profile, output_port_crop_profile):
     interactor = CropProfileCraftInteractor(
         gateway=gateway_crop_profile,
         presenter=output_port_crop_profile,
     )
 
     req = CropProfileCraftRequestDTO(crop_query="トマト")
-    result = await interactor.execute(req)
+    result = interactor.execute(req)
 
     # Check new format: {"crop": {...}, "stage_requirements": [...]}
     assert "crop" in result
@@ -31,25 +29,21 @@ async def test_craft_success(gateway_crop_profile, output_port_crop_profile):
     assert isinstance(result["stage_requirements"], list)
     assert result["stage_requirements"][0]["stage"]["name"] == "Vegetative"
 
-
-@pytest.mark.asyncio
 @pytest.mark.unit
-async def test_craft_empty_query_returns_error(gateway_crop_profile, output_port_crop_profile):
+def test_craft_empty_query_returns_error(gateway_crop_profile, output_port_crop_profile):
     interactor = CropProfileCraftInteractor(
         gateway=gateway_crop_profile,
         presenter=output_port_crop_profile,
     )
 
     req = CropProfileCraftRequestDTO(crop_query="   ")
-    result = await interactor.execute(req)
+    result = interactor.execute(req)
 
     assert result["success"] is False
     assert "Empty crop query" in result["error"]
 
-
-@pytest.mark.asyncio
 @pytest.mark.unit
-async def test_craft_gateway_exception_returns_error(gateway_crop_profile, output_port_crop_profile):
+def test_craft_gateway_exception_returns_error(gateway_crop_profile, output_port_crop_profile):
     # Configure gateway to raise on any step
     gateway_crop_profile.extract_crop_variety.side_effect = RuntimeError("llm error")
 
@@ -59,15 +53,13 @@ async def test_craft_gateway_exception_returns_error(gateway_crop_profile, outpu
     )
 
     req = CropProfileCraftRequestDTO(crop_query="トマト")
-    result = await interactor.execute(req)
+    result = interactor.execute(req)
 
     assert result["success"] is False
     assert "Crafting failed" in result["error"]
 
-
-@pytest.mark.asyncio
 @pytest.mark.unit
-async def test_craft_includes_family_in_groups(gateway_crop_profile, output_port_crop_profile):
+def test_craft_includes_family_in_groups(gateway_crop_profile, output_port_crop_profile):
     """Test that crop family is extracted and added to groups."""
     interactor = CropProfileCraftInteractor(
         gateway=gateway_crop_profile,
@@ -75,7 +67,7 @@ async def test_craft_includes_family_in_groups(gateway_crop_profile, output_port
     )
 
     req = CropProfileCraftRequestDTO(crop_query="トマト")
-    result = await interactor.execute(req)
+    result = interactor.execute(req)
 
     # Check new format
     assert "crop" in result
@@ -98,5 +90,4 @@ async def test_craft_includes_family_in_groups(gateway_crop_profile, output_port
     # - tests/test_usecase/test_services/test_llm_response_normalizer.py (2 tests)
     # - tests/test_usecase/test_services/test_crop_profile_mapper.py (3 tests)
     # No need for additional CropProfileCraftInteractor tests
-
 

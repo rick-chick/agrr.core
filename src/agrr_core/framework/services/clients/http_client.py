@@ -7,7 +7,6 @@ from urllib.parse import urljoin
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.adapter.interfaces.clients.http_client_interface import HttpClientInterface
 
-
 class HttpClient(HttpClientInterface):
     """Generic HTTP client for API requests."""
     
@@ -17,7 +16,7 @@ class HttpClient(HttpClientInterface):
         self.timeout = timeout
         self.session = requests.Session()
     
-    async def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make GET request."""
         try:
             url = urljoin(self.base_url + '/', endpoint.lstrip('/'))
@@ -29,7 +28,7 @@ class HttpClient(HttpClientInterface):
         except Exception as e:
             raise WeatherAPIError(f"Failed to process HTTP response: {e}")
     
-    async def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make POST request."""
         try:
             url = urljoin(self.base_url + '/', endpoint.lstrip('/'))

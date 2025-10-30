@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple, Optional
 import numpy as np
 
-
 class TimeSeriesServiceInterface(ABC):
     """Interface for time series analysis operations."""
     
@@ -24,7 +23,6 @@ class TimeSeriesServiceInterface(ABC):
         """Make data stationary by differencing."""
         pass
 
-
 class TimeSeriesModelInterface(ABC):
     """Interface for time series model operations."""
     
@@ -32,7 +30,6 @@ class TimeSeriesModelInterface(ABC):
     def fit(self) -> 'FittedTimeSeriesModelInterface':
         """Fit the model to data."""
         pass
-
 
 class FittedTimeSeriesModelInterface(ABC):
     """Interface for fitted time series model operations."""

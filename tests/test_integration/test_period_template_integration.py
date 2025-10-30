@@ -19,9 +19,7 @@ from agrr_core.usecase.dto.multi_field_crop_allocation_request_dto import (
 )
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 
-
-@pytest.mark.asyncio
-async def test_period_template_strategy_basic():
+def test_period_template_strategy_basic():
     """Test basic Period Template strategy allocation.
     
     Expected to fail with NotImplementedError until Period Template is implemented.
@@ -71,15 +69,13 @@ async def test_period_template_strategy_basic():
     )
     
     # This should now work with Period Template implementation
-    result = await interactor.execute(request)
+    result = interactor.execute(request)
     
     # Verify result structure
     assert result is not None
     assert result.optimization_result is not None
 
-
-@pytest.mark.asyncio
-async def test_period_template_with_dp_algorithm():
+def test_period_template_with_dp_algorithm():
     """Test Period Template strategy with DP algorithm.
     
     Expected quality: 98-99% (TODO: verify after implementation)
@@ -125,7 +121,7 @@ async def test_period_template_with_dp_algorithm():
     )
     
     # Execute with DP algorithm
-    result = await interactor.execute(request, algorithm="dp")
+    result = interactor.execute(request, algorithm="dp")
     
     # Verify implementation results
     assert result is not None
@@ -133,9 +129,7 @@ async def test_period_template_with_dp_algorithm():
     assert len(result.optimization_result.field_schedules) > 0
     assert result.optimization_result.total_profit > 0
 
-
-@pytest.mark.asyncio
-async def test_period_template_with_greedy_algorithm():
+def test_period_template_with_greedy_algorithm():
     """Test Period Template strategy with Greedy algorithm.
     
     Expected to use top 50 templates per crop.
@@ -181,15 +175,13 @@ async def test_period_template_with_greedy_algorithm():
     )
     
     # Execute with Greedy algorithm
-    result = await interactor.execute(request, algorithm="greedy")
+    result = interactor.execute(request, algorithm="greedy")
     
     # Verify implementation results
     assert result is not None
     assert len(result.optimization_result.field_schedules) > 0
 
-
-@pytest.mark.asyncio
-async def test_period_template_with_local_search():
+def test_period_template_with_local_search():
     """Test Period Template strategy with Local Search.
     
     Expected to explore 200 templates per crop.
@@ -236,7 +228,7 @@ async def test_period_template_with_local_search():
     )
     
     # Execute with Local Search
-    result = await interactor.execute(
+    result = interactor.execute(
         request, 
         algorithm="dp",
         enable_local_search=True
@@ -246,9 +238,7 @@ async def test_period_template_with_local_search():
     assert result is not None
     assert result.optimization_result.total_profit > 0
 
-
-@pytest.mark.asyncio
-async def test_period_template_with_alns():
+def test_period_template_with_alns():
     """Test Period Template strategy with ALNS (optional).
     
     Expected quality: 95-99% (highest)
@@ -296,15 +286,13 @@ async def test_period_template_with_alns():
     )
     
     # Execute with ALNS (optional, high-quality)
-    result = await interactor.execute(request, algorithm="dp")
+    result = interactor.execute(request, algorithm="dp")
     
     # Verify implementation results
     assert result is not None
     assert result.optimization_result.total_profit > 0
 
-
-@pytest.mark.asyncio
-async def test_period_template_memory_efficiency():
+def test_period_template_memory_efficiency():
     """Test that Period Template uses less memory than candidate pool.
     
     Expected: Memory usage depends on crop count, not field count.
@@ -351,7 +339,7 @@ async def test_period_template_memory_efficiency():
     )
     
     # Execute to verify memory efficiency
-    result = await interactor.execute(request)
+    result = interactor.execute(request)
     
     # Verify basic results (detailed memory measurement would require profiling)
     assert result is not None
@@ -360,9 +348,7 @@ async def test_period_template_memory_efficiency():
     # With Period Template: 6 crops × 200 templates × ~100 bytes ≈ 120 KB
     # With Candidate Pool: 4 fields × 6 crops × 10 periods × 4 areas × ~200 bytes ≈ 192 KB
 
-
-@pytest.mark.asyncio
-async def test_period_template_exploration_space():
+def test_period_template_exploration_space():
     """Test that Period Template explores larger space than candidate pool.
     
     Expected: 200 periods/crop vs 10 periods/crop (20x expansion)
@@ -407,7 +393,7 @@ async def test_period_template_exploration_space():
     )
     
     # Execute to verify exploration space
-    result = await interactor.execute(request, algorithm="dp")
+    result = interactor.execute(request, algorithm="dp")
     
     # Verify results (detailed exploration verification would require comparing with candidate pool)
     assert result is not None

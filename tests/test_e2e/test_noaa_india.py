@@ -11,9 +11,8 @@ from agrr_core.adapter.gateways.weather_noaa_gateway import WeatherNOAAGateway
 from agrr_core.framework.services.clients.http_client import HttpClient
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
 
-
 @pytest.mark.e2e
-@pytest.mark.asyncio
+
 class TestNOAAIndiaE2E:
     """E2E tests for NOAA India data retrieval."""
     
@@ -24,10 +23,10 @@ class TestNOAAIndiaE2E:
         return WeatherNOAAGateway(http_client)
     
     @pytest.mark.slow
-    async def test_delhi_weather_2023(self, gateway):
+    def test_delhi_weather_2023(self, gateway):
         """Test fetching Delhi weather data for 2023."""
         # Delhi: (28.5844, 77.2031)
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=28.5844,
             longitude=77.2031,
             start_date="2023-01-01",
@@ -52,14 +51,14 @@ class TestNOAAIndiaE2E:
                 assert -10 <= weather_data.temperature_2m_mean <= 50
     
     @pytest.mark.slow
-    async def test_mumbai_weather_recent(self, gateway):
+    def test_mumbai_weather_recent(self, gateway):
         """Test fetching Mumbai weather data for recent dates."""
         # Mumbai: (19.0896, 72.8681)
         # Fetch last 7 days
         end_date = datetime.now() - timedelta(days=1)  # Yesterday
         start_date = end_date - timedelta(days=6)  # 7 days ago
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=19.0896,
             longitude=72.8681,
             start_date=start_date.strftime("%Y-%m-%d"),
@@ -76,10 +75,10 @@ class TestNOAAIndiaE2E:
                 assert 10 <= weather_data.temperature_2m_mean <= 45
     
     @pytest.mark.slow
-    async def test_ludhiana_agricultural_region_2022(self, gateway):
+    def test_ludhiana_agricultural_region_2022(self, gateway):
         """Test fetching Ludhiana (Punjab agricultural region) data for 2022."""
         # Ludhiana: (30.9000, 75.8500) - Punjab wheat belt
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=30.9000,
             longitude=75.8500,
             start_date="2022-06-01",
@@ -98,10 +97,10 @@ class TestNOAAIndiaE2E:
             assert max(temps) <= 50, "Max temperature should be <= 50°C"
     
     @pytest.mark.slow
-    async def test_bangalore_southern_region_2021(self, gateway):
+    def test_bangalore_southern_region_2021(self, gateway):
         """Test fetching Bangalore (Karnataka) data for 2021."""
         # Bangalore: (12.9500, 77.6681) - Southern India
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=12.9500,
             longitude=77.6681,
             start_date="2021-03-01",
@@ -120,10 +119,10 @@ class TestNOAAIndiaE2E:
             assert max(temps) <= 40, "Max temperature should be <= 40°C"
     
     @pytest.mark.slow
-    async def test_kolkata_eastern_region_2020(self, gateway):
+    def test_kolkata_eastern_region_2020(self, gateway):
         """Test fetching Kolkata (West Bengal) data for 2020."""
         # Kolkata: (22.6544, 88.4467) - Eastern India
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=22.6544,
             longitude=88.4467,
             start_date="2020-01-01",
@@ -141,14 +140,14 @@ class TestNOAAIndiaE2E:
             assert max(temps) <= 35, "Max temperature should be <= 35°C"
     
     @pytest.mark.slow
-    async def test_multiple_years_data_availability(self, gateway):
+    def test_multiple_years_data_availability(self, gateway):
         """Test that data is available for multiple years (2000-2024)."""
         # Test Delhi for different years
         test_years = [2000, 2010, 2020, 2023]
         
         for year in test_years:
             try:
-                result = await gateway.get_by_location_and_date_range(
+                result = gateway.get_by_location_and_date_range(
                     latitude=28.5844,  # Delhi
                     longitude=77.2031,
                     start_date=f"{year}-07-01",
@@ -165,11 +164,11 @@ class TestNOAAIndiaE2E:
                 continue
     
     @pytest.mark.slow
-    async def test_data_quality_precipitation(self, gateway):
+    def test_data_quality_precipitation(self, gateway):
         """Test that precipitation data is present and reasonable."""
         # Test Chennai (coastal) during monsoon season
         # Chennai: (12.9900, 80.1692)
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=12.9900,
             longitude=80.1692,
             start_date="2022-11-01",

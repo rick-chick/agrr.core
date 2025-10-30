@@ -27,7 +27,6 @@ from agrr_core.usecase.dto.multi_field_crop_allocation_request_dto import (
 )
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 
-
 # ===== Test Data Sets =====
 # Different combinations of crops, fields, and weather for comprehensive testing
 
@@ -61,12 +60,10 @@ TEST_DATASETS = [
     },
 ]
 
-
 @pytest.fixture
 def test_data_file_service():
     """File service for test data."""
     return FileService()
-
 
 @pytest.fixture
 def crop_gateway(test_data_file_service):
@@ -76,7 +73,6 @@ def crop_gateway(test_data_file_service):
         file_path="test_data/allocation_crops_1760447748.json"
     )
 
-
 @pytest.fixture
 def weather_gateway(test_data_file_service):
     """Weather gateway with test data."""
@@ -84,7 +80,6 @@ def weather_gateway(test_data_file_service):
         file_repository=test_data_file_service,
         file_path="test_data/weather_2023_full.json"
     )
-
 
 @pytest.fixture
 def field_gateway(test_data_file_service):
@@ -94,12 +89,10 @@ def field_gateway(test_data_file_service):
         file_path="test_data/allocation_fields_1760447748.json"
     )
 
-
 @pytest.fixture
 def crop_profile_gateway_internal():
     """Internal crop profile gateway."""
     return CropProfileInMemoryGateway()
-
 
 @pytest.fixture
 def allocation_request():
@@ -111,9 +104,7 @@ def allocation_request():
         optimization_objective="maximize_profit",
     )
 
-
-@pytest.mark.asyncio
-async def test_strategy_comparison_greedy(
+def test_strategy_comparison_greedy(
     crop_gateway,
     weather_gateway,
     field_gateway,
@@ -142,7 +133,7 @@ async def test_strategy_comparison_greedy(
         config=config_legacy,
     )
     
-    result_legacy = await interactor_legacy.execute(allocation_request, algorithm="greedy")
+    result_legacy = interactor_legacy.execute(allocation_request, algorithm="greedy")
     
     # ===== New: Period Template Strategy =====
     config_template = OptimizationConfig(
@@ -158,7 +149,7 @@ async def test_strategy_comparison_greedy(
         config=config_template,
     )
     
-    result_template = await interactor_template.execute(allocation_request, algorithm="greedy")
+    result_template = interactor_template.execute(allocation_request, algorithm="greedy")
     
     # ===== Verification =====
     
@@ -200,9 +191,7 @@ async def test_strategy_comparison_greedy(
         f"Candidate Pool profit ({profit_legacy})"
     )
 
-
-@pytest.mark.asyncio
-async def test_strategy_comparison_dp(
+def test_strategy_comparison_dp(
     crop_gateway,
     weather_gateway,
     field_gateway,
@@ -231,7 +220,7 @@ async def test_strategy_comparison_dp(
         config=config_legacy,
     )
     
-    result_legacy = await interactor_legacy.execute(allocation_request, algorithm="dp")
+    result_legacy = interactor_legacy.execute(allocation_request, algorithm="dp")
     
     # ===== New: Period Template Strategy =====
     config_template = OptimizationConfig(
@@ -247,7 +236,7 @@ async def test_strategy_comparison_dp(
         config=config_template,
     )
     
-    result_template = await interactor_template.execute(allocation_request, algorithm="dp")
+    result_template = interactor_template.execute(allocation_request, algorithm="dp")
     
     # ===== Verification =====
     
@@ -306,9 +295,7 @@ async def test_strategy_comparison_dp(
         f"Candidate Pool profit ({profit_legacy}) with DP algorithm"
     )
 
-
-@pytest.mark.asyncio
-async def test_strategy_comparison_with_local_search(
+def test_strategy_comparison_with_local_search(
     crop_gateway,
     weather_gateway,
     field_gateway,
@@ -337,7 +324,7 @@ async def test_strategy_comparison_with_local_search(
         config=config_legacy,
     )
     
-    result_legacy = await interactor_legacy.execute(
+    result_legacy = interactor_legacy.execute(
         allocation_request, 
         algorithm="dp",
         enable_local_search=True
@@ -358,7 +345,7 @@ async def test_strategy_comparison_with_local_search(
         config=config_template,
     )
     
-    result_template = await interactor_template.execute(
+    result_template = interactor_template.execute(
         allocation_request,
         algorithm="dp",
         enable_local_search=True
@@ -391,13 +378,11 @@ async def test_strategy_comparison_with_local_search(
         f"Candidate Pool profit ({profit_legacy}) with Local Search"
     )
 
-
 # ===== Parametrized Tests for Multiple Datasets =====
 
-
 @pytest.mark.parametrize("dataset", TEST_DATASETS, ids=lambda d: d["name"])
-@pytest.mark.asyncio
-async def test_multiple_datasets_dp_comparison(dataset):
+
+def test_multiple_datasets_dp_comparison(dataset):
     """Compare strategies across multiple datasets with DP algorithm.
     
     Tests Period Template superiority across diverse scenarios:
@@ -447,7 +432,7 @@ async def test_multiple_datasets_dp_comparison(dataset):
         config=config_legacy,
     )
     
-    result_legacy = await interactor_legacy.execute(request, algorithm="dp")
+    result_legacy = interactor_legacy.execute(request, algorithm="dp")
     
     # ===== Period Template Strategy =====
     config_template = OptimizationConfig(
@@ -463,7 +448,7 @@ async def test_multiple_datasets_dp_comparison(dataset):
         config=config_template,
     )
     
-    result_template = await interactor_template.execute(request, algorithm="dp")
+    result_template = interactor_template.execute(request, algorithm="dp")
     
     # ===== Comparison =====
     profit_legacy = result_legacy.optimization_result.total_profit
@@ -485,10 +470,9 @@ async def test_multiple_datasets_dp_comparison(dataset):
         f"for dataset: {dataset['name']}"
     )
 
-
 @pytest.mark.parametrize("dataset", TEST_DATASETS, ids=lambda d: d["name"])
-@pytest.mark.asyncio
-async def test_multiple_datasets_greedy_comparison(dataset):
+
+def test_multiple_datasets_greedy_comparison(dataset):
     """Compare strategies across multiple datasets with Greedy algorithm."""
     file_repo = FileService()
     
@@ -530,7 +514,7 @@ async def test_multiple_datasets_greedy_comparison(dataset):
         config=config_legacy,
     )
     
-    result_legacy = await interactor_legacy.execute(request, algorithm="greedy")
+    result_legacy = interactor_legacy.execute(request, algorithm="greedy")
     
     # ===== Period Template Strategy =====
     config_template = OptimizationConfig(
@@ -546,7 +530,7 @@ async def test_multiple_datasets_greedy_comparison(dataset):
         config=config_template,
     )
     
-    result_template = await interactor_template.execute(request, algorithm="greedy")
+    result_template = interactor_template.execute(request, algorithm="greedy")
     
     # ===== Comparison =====
     profit_legacy = result_legacy.optimization_result.total_profit
@@ -581,9 +565,7 @@ async def test_multiple_datasets_greedy_comparison(dataset):
             f"for dataset: {dataset['name']}"
         )
 
-
-@pytest.mark.asyncio
-async def test_comprehensive_benchmark_all_datasets():
+def test_comprehensive_benchmark_all_datasets():
     """Run comprehensive benchmark across all datasets and generate summary report.
     
     This test generates a detailed comparison report including:
@@ -635,7 +617,7 @@ async def test_comprehensive_benchmark_all_datasets():
                 config=config_legacy,
             )
             
-            result_legacy = await interactor_legacy.execute(request, algorithm=algorithm)
+            result_legacy = interactor_legacy.execute(request, algorithm=algorithm)
             
             # Period Template
             config_template = OptimizationConfig(
@@ -652,7 +634,7 @@ async def test_comprehensive_benchmark_all_datasets():
                 config=config_template,
             )
             
-            result_template = await interactor_template.execute(request, algorithm=algorithm)
+            result_template = interactor_template.execute(request, algorithm=algorithm)
             
             # Extract metrics
             profit_legacy = result_legacy.optimization_result.total_profit

@@ -1,7 +1,7 @@
 """CLI weather controller for adapter layer."""
 
 import argparse
-import asyncio
+
 from typing import Optional, Tuple
 from datetime import datetime, timedelta
 
@@ -11,7 +11,6 @@ from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherD
 from agrr_core.usecase.interactors.weather_get_forecast_interactor import WeatherGetForecastInteractor
 from agrr_core.usecase.dto.weather_data_request_dto import WeatherDataRequestDTO
 from agrr_core.usecase.dto.weather_forecast_request_dto import WeatherForecastRequestDTO
-
 
 class WeatherCliFetchController:
     """CLI controller for weather data fetch operations."""
@@ -291,7 +290,7 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
         
         return start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')
     
-    async def handle_weather_command(self, args) -> None:
+    def handle_weather_command(self, args) -> None:
         """Handle weather command execution."""
         try:
             # Parse location
@@ -322,7 +321,7 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
             
             if self._should_split_by_year(start_date, end_date, data_source):
                 # Fetch data year by year (more reliable for long-term data)
-                await self._fetch_by_year_chunks(
+                self._fetch_by_year_chunks(
                     latitude, longitude, start_date, end_date, 
                     data_source, json_output, output_file
                 )
@@ -349,7 +348,7 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
             #     )
             
             # Execute interactor
-            result = await self.weather_interactor.execute(request)
+            result = self.weather_interactor.execute(request)
             
             # Display results based on interactor response
             if result.get('success', False):
@@ -489,7 +488,7 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
         days_diff = (end - start).days
         return days_diff > 365
     
-    async def _fetch_by_year_chunks(
+    def _fetch_by_year_chunks(
         self,
         latitude: float,
         longitude: float,
@@ -544,7 +543,7 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
                 )
                 
                 # Execute interactor
-                result = await self.weather_interactor.execute(request)
+                result = self.weather_interactor.execute(request)
                 
                 if result.get('success', False):
                     data = result.get('data', {})
@@ -679,7 +678,7 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
                 
                 self.cli_presenter.display_weather_data(response_dto)
     
-    async def handle_forecast_command(self, args) -> None:
+    def handle_forecast_command(self, args) -> None:
         """Handle forecast command execution."""
         try:
             # Parse location
@@ -696,7 +695,7 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
             output_file = getattr(args, 'output', None)
             
             # Execute interactor
-            result = await self.forecast_interactor.execute(request)
+            result = self.forecast_interactor.execute(request)
             
             # Display results based on interactor response
             if result.get('success', False):
@@ -818,7 +817,7 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
             json_output = getattr(args, 'json', False)
             self.cli_presenter.display_error(f"Unexpected error: {e}", "INTERNAL_ERROR", json_output=json_output)
     
-    async def run(self, args: Optional[list] = None) -> None:
+    def run(self, args: Optional[list] = None) -> None:
         """Run CLI application with given arguments."""
         parser = self.create_argument_parser()
         parsed_args = parser.parse_args(args)
@@ -828,8 +827,8 @@ Note: Forecast data starts from tomorrow and extends 16 days into the future.
             return
         
         if parsed_args.command == 'weather':
-            await self.handle_weather_command(parsed_args)
+            self.handle_weather_command(parsed_args)
         elif parsed_args.command == 'forecast':
-            await self.handle_forecast_command(parsed_args)
+            self.handle_forecast_command(parsed_args)
         else:
             parser.print_help()

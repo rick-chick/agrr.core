@@ -1,7 +1,7 @@
 """Tests for fertilizer LLM gateway."""
 
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 
 from agrr_core.adapter.gateways.fertilizer_llm_gateway import FertilizerLLMGateway
 from agrr_core.entity.entities.fertilizer_entity import (
@@ -11,23 +11,21 @@ from agrr_core.entity.entities.fertilizer_entity import (
     FertilizerDetail,
 )
 
-
 class TestFertilizerLLMGateway:
     """Tests for FertilizerLLMGateway."""
     
     @pytest.fixture
     def mock_llm_client(self):
         """Create a mock LLM client."""
-        client = AsyncMock()
+        client = Mock()
         return client
     
     @pytest.fixture
     def gateway(self, mock_llm_client):
         """Create gateway with mock LLM client."""
         return FertilizerLLMGateway(llm_client=mock_llm_client)
-    
-    @pytest.mark.asyncio
-    async def test_search_list(self, gateway, mock_llm_client):
+
+    def test_search_list(self, gateway, mock_llm_client):
         """Test search_list method."""
         # Setup mock
         mock_llm_client.struct.return_value = {
@@ -38,7 +36,7 @@ class TestFertilizerLLMGateway:
         
         # Execute
         request = FertilizerListRequest(language="ja", limit=3)
-        result = await gateway.search_list(request)
+        result = gateway.search_list(request)
         
         # Verify
         assert isinstance(result, FertilizerListResult)
@@ -47,9 +45,8 @@ class TestFertilizerLLMGateway:
         
         # Verify LLM client was called
         mock_llm_client.struct.assert_called_once()
-    
-    @pytest.mark.asyncio
-    async def test_search_list_empty(self, gateway, mock_llm_client):
+
+    def test_search_list_empty(self, gateway, mock_llm_client):
         """Test search_list with empty result."""
         # Setup mock
         mock_llm_client.struct.return_value = {
@@ -60,14 +57,13 @@ class TestFertilizerLLMGateway:
         
         # Execute
         request = FertilizerListRequest(language="en", limit=5)
-        result = await gateway.search_list(request)
+        result = gateway.search_list(request)
         
         # Verify
         assert isinstance(result, FertilizerListResult)
         assert len(result.fertilizers) == 0
-    
-    @pytest.mark.asyncio
-    async def test_search_detail(self, gateway, mock_llm_client):
+
+    def test_search_detail(self, gateway, mock_llm_client):
         """Test search_detail method."""
         # Setup mock
         mock_llm_client.struct.return_value = {
@@ -84,7 +80,7 @@ class TestFertilizerLLMGateway:
         
         # Execute
         request = FertilizerDetailRequest(fertilizer_name="尿素")
-        result = await gateway.search_detail(request)
+        result = gateway.search_detail(request)
         
         # Verify
         assert isinstance(result, FertilizerDetail)
@@ -98,9 +94,8 @@ class TestFertilizerLLMGateway:
         
         # Verify LLM client was called
         mock_llm_client.struct.assert_called_once()
-    
-    @pytest.mark.asyncio
-    async def test_search_detail_minimal(self, gateway, mock_llm_client):
+
+    def test_search_detail_minimal(self, gateway, mock_llm_client):
         """Test search_detail with minimal fields."""
         # Setup mock
         mock_llm_client.struct.return_value = {
@@ -117,7 +112,7 @@ class TestFertilizerLLMGateway:
         
         # Execute
         request = FertilizerDetailRequest(fertilizer_name="urea")
-        result = await gateway.search_detail(request)
+        result = gateway.search_detail(request)
         
         # Verify
         assert isinstance(result, FertilizerDetail)
@@ -128,9 +123,8 @@ class TestFertilizerLLMGateway:
         assert result.additional_info is None
         assert result.description == ""
         assert result.link is None  # Empty link becomes None
-    
-    @pytest.mark.asyncio
-    async def test_search_list_with_area(self, gateway, mock_llm_client):
+
+    def test_search_list_with_area(self, gateway, mock_llm_client):
         """Test search_list method with area parameter."""
         # Setup mock
         mock_llm_client.struct.return_value = {
@@ -141,7 +135,7 @@ class TestFertilizerLLMGateway:
         
         # Execute with area
         request = FertilizerListRequest(language="ja", limit=2, area_m2=100.0)
-        result = await gateway.search_list(request)
+        result = gateway.search_list(request)
         
         # Verify
         assert isinstance(result, FertilizerListResult)

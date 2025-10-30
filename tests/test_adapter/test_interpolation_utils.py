@@ -5,7 +5,6 @@ import numpy as np
 
 from agrr_core.framework.services.utils.interpolation_service import InterpolationService
 
-
 class TestInterpolationService:
     """Test cases for InterpolationService."""
     

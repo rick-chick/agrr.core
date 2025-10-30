@@ -18,7 +18,6 @@ Invariants
 from dataclasses import dataclass
 from typing import Optional
 
-
 @dataclass(frozen=True)
 class SunshineProfile:
     """Sunshine requirements for a crop at a given growth stage.
@@ -49,5 +48,4 @@ class SunshineProfile:
         if sunshine_hours is None or self.target_sunshine_hours is None:
             return False
         return sunshine_hours >= self.target_sunshine_hours
-
 

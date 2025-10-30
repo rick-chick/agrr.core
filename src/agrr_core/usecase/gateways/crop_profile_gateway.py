@@ -5,7 +5,6 @@ from typing import List, Dict, Any
 
 from agrr_core.entity.entities.crop_profile_entity import CropProfile
 
-
 class CropProfileGateway(ABC):
     """Gateway for crop profile data access and generation.
     
@@ -14,7 +13,7 @@ class CropProfileGateway(ABC):
     """
 
     @abstractmethod
-    async def get_all(self) -> List[CropProfile]:
+    def get_all(self) -> List[CropProfile]:
         """Get all crop profiles from the configured data source.
         
         Data sources may include: files, SQL databases, in-memory storage, sessions, etc.
@@ -26,7 +25,7 @@ class CropProfileGateway(ABC):
         pass
 
     @abstractmethod
-    async def generate(self, crop_query: str) -> CropProfile:
+    def generate(self, crop_query: str) -> CropProfile:
         """Generate a crop profile from the given query.
         
         Generation methods may include: templates, LLMs, or other generation strategies.
@@ -41,7 +40,7 @@ class CropProfileGateway(ABC):
         pass
 
     # LLM-specific methods for step-by-step profile generation
-    async def extract_crop_variety(self, crop_query: str) -> Dict[str, Any]:
+    def extract_crop_variety(self, crop_query: str) -> Dict[str, Any]:
         """Extract crop name and variety from user input.
         
         Args:
@@ -52,7 +51,7 @@ class CropProfileGateway(ABC):
         """
         raise NotImplementedError("This gateway does not support LLM operations")
 
-    async def define_growth_stages(self, crop_name: str, variety: str) -> Dict[str, Any]:
+    def define_growth_stages(self, crop_name: str, variety: str) -> Dict[str, Any]:
         """Define growth stages for the crop variety.
         
         Args:
@@ -64,7 +63,7 @@ class CropProfileGateway(ABC):
         """
         raise NotImplementedError("This gateway does not support LLM operations")
 
-    async def research_stage_requirements(
+    def research_stage_requirements(
         self, crop_name: str, variety: str, stage_name: str, stage_description: str
     ) -> Dict[str, Any]:
         """Research variety-specific requirements for a specific stage.
@@ -80,7 +79,7 @@ class CropProfileGateway(ABC):
         """
         raise NotImplementedError("This gateway does not support LLM operations")
 
-    async def extract_crop_economics(self, crop_name: str, variety: str) -> Dict[str, Any]:
+    def extract_crop_economics(self, crop_name: str, variety: str) -> Dict[str, Any]:
         """Extract crop economic information (area per unit and revenue per area).
         
         Args:
@@ -92,7 +91,7 @@ class CropProfileGateway(ABC):
         """
         raise NotImplementedError("This gateway does not support LLM operations")
 
-    async def extract_crop_family(self, crop_name: str, variety: str) -> Dict[str, Any]:
+    def extract_crop_family(self, crop_name: str, variety: str) -> Dict[str, Any]:
         """Extract crop family (科) information.
         
         Args:
@@ -103,6 +102,4 @@ class CropProfileGateway(ABC):
             Dict containing family (科) information
         """
         raise NotImplementedError("This gateway does not support LLM operations")
-
-
 

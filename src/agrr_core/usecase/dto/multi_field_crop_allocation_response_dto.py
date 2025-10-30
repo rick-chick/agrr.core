@@ -12,7 +12,6 @@ from typing import Dict, Any
 
 from agrr_core.entity.entities.multi_field_optimization_result_entity import MultiFieldOptimizationResult
 
-
 @dataclass
 class MultiFieldCropAllocationResponseDTO:
     """Response DTO for multi-field, multi-crop allocation optimization."""

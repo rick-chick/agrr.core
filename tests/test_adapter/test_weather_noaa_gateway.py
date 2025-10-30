@@ -2,7 +2,7 @@
 
 import pytest
 from datetime import datetime
-from unittest.mock import Mock, AsyncMock
+from unittest.mock import Mock, Mock
 from agrr_core.adapter.gateways.weather_noaa_gateway import (
     WeatherNOAAGateway, 
     LOCATION_MAPPING,
@@ -11,7 +11,6 @@ from agrr_core.adapter.gateways.weather_noaa_gateway import (
 )
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
-
 
 class TestWeatherNOAAGateway:
     """Tests for WeatherNOAAGateway."""
@@ -31,24 +30,21 @@ class TestWeatherNOAAGateway:
         gateway = WeatherNOAAGateway(mock_http_client)
         assert gateway.http_client == mock_http_client
         assert gateway.logger is not None
-    
-    @pytest.mark.asyncio
-    async def test_get_not_implemented(self, gateway):
+
+    def test_get_not_implemented(self, gateway):
         """Test that get() raises NotImplementedError."""
         with pytest.raises(NotImplementedError):
-            await gateway.get()
-    
-    @pytest.mark.asyncio
-    async def test_create_not_implemented(self, gateway):
+            gateway.get()
+
+    def test_create_not_implemented(self, gateway):
         """Test that create() raises NotImplementedError."""
         with pytest.raises(NotImplementedError):
-            await gateway.create([], "")
-    
-    @pytest.mark.asyncio
-    async def test_get_forecast_not_implemented(self, gateway):
+            gateway.create([], "")
+
+    def test_get_forecast_not_implemented(self, gateway):
         """Test that get_forecast() raises NotImplementedError."""
         with pytest.raises(NotImplementedError):
-            await gateway.get_forecast(40.7128, -74.0060)
+            gateway.get_forecast(40.7128, -74.0060)
     
     def test_find_nearest_location_new_york(self, gateway):
         """Test finding nearest location for New York."""
@@ -99,22 +95,20 @@ class TestWeatherNOAAGateway:
         """Test parsing negative NOAA value."""
         result = gateway._parse_noaa_value("-50,1", scale=10.0)
         assert result == pytest.approx(-5.0, abs=0.1)
-    
-    @pytest.mark.asyncio
-    async def test_get_by_location_invalid_date_format(self, gateway):
+
+    def test_get_by_location_invalid_date_format(self, gateway):
         """Test invalid date format raises error."""
         with pytest.raises(WeatherAPIError, match="Invalid date format"):
-            await gateway.get_by_location_and_date_range(
+            gateway.get_by_location_and_date_range(
                 40.7128, -74.0060,
                 "2024/01/01",  # Invalid format
                 "2024-01-07"
             )
-    
-    @pytest.mark.asyncio
-    async def test_get_by_location_invalid_date_order(self, gateway):
+
+    def test_get_by_location_invalid_date_order(self, gateway):
         """Test invalid date order raises error."""
         with pytest.raises(WeatherAPIError, match="must be before or equal to"):
-            await gateway.get_by_location_and_date_range(
+            gateway.get_by_location_and_date_range(
                 40.7128, -74.0060,
                 "2024-01-07",
                 "2024-01-01"  # End before start
@@ -245,7 +239,6 @@ class TestWeatherNOAAGateway:
         assert "Ludhiana" in name
         assert lat == pytest.approx(30.9000, abs=0.01)
         assert lon == pytest.approx(75.8500, abs=0.01)
-
 
 class TestNOAALocationMapping:
     """Tests for NOAA location mapping."""

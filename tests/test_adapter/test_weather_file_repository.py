@@ -12,21 +12,20 @@ from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway
 from agrr_core.entity import WeatherData, Forecast
 from agrr_core.entity.exceptions.file_error import FileError
 
-
 class TestWeatherFileGateway:
     """Test cases for WeatherFileGateway."""
     
     def setup_method(self):
         """Set up test fixtures."""
         # Create mock file repository with proper sync/async method handling
-        from unittest.mock import MagicMock, AsyncMock
+        from unittest.mock import MagicMock, Mock
         self.mock_file_repository = MagicMock()
         # Configure synchronous methods
         self.mock_file_repository.exists.return_value = True
         # Configure asynchronous methods
-        self.mock_file_repository.read = AsyncMock(return_value='{"data": [{"time": "2024-01-01", "temperature_2m_max": 25.0}]}')
-        self.mock_file_repository.write = AsyncMock(return_value=None)
-        self.mock_file_repository.delete = AsyncMock(return_value=None)
+        self.mock_file_repository.read = Mock(return_value='{"data": [{"time": "2024-01-01", "temperature_2m_max": 25.0}]}')
+        self.mock_file_repository.write = Mock(return_value=None)
+        self.mock_file_repository.delete = Mock(return_value=None)
         self.gateway = WeatherFileGateway(
             self.mock_file_repository,
             file_path="test_weather.json"
@@ -65,9 +64,8 @@ class TestWeatherFileGateway:
             assert self.repository.validate_output_path(output_path) is False
     
     # ===== JSON Reading Tests =====
-    
-    @pytest.mark.asyncio
-    async def test_read_json_file_simple_array(self):
+
+    def test_read_json_file_simple_array(self):
         """Test reading simple JSON array."""
         json_data = [
             {
@@ -96,7 +94,7 @@ class TestWeatherFileGateway:
             temp_file = f.name
         
         try:
-            result = await self.repository._read_json_file(temp_file)
+            result = self.repository._read_json_file(temp_file)
             
             assert len(result) == 2
             assert isinstance(result[0], WeatherData)
@@ -107,9 +105,8 @@ class TestWeatherFileGateway:
             assert result[0].sunshine_duration == 28800
         finally:
             os.unlink(temp_file)
-    
-    @pytest.mark.asyncio
-    async def test_read_json_file_wrapped_data(self):
+
+    def test_read_json_file_wrapped_data(self):
         """Test reading JSON with wrapped data structure."""
         json_data = {
             "data": [
@@ -132,7 +129,7 @@ class TestWeatherFileGateway:
             temp_file = f.name
         
         try:
-            result = await self.repository._read_json_file(temp_file)
+            result = self.repository._read_json_file(temp_file)
             
             assert len(result) == 1
             assert result[0].temperature_2m_max == 25.0
@@ -141,9 +138,8 @@ class TestWeatherFileGateway:
             os.unlink(temp_file)
     
     # ===== CSV Reading Tests =====
-    
-    @pytest.mark.asyncio
-    async def test_read_csv_file(self):
+
+    def test_read_csv_file(self):
         """Test reading CSV file."""
         csv_data = "time,temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,sunshine_duration\n2024-01-01,25.0,15.0,20.0,2.0,28800\n2024-01-02,26.0,16.0,21.0,0.0,32400"
         
@@ -155,7 +151,7 @@ class TestWeatherFileGateway:
             temp_file = f.name
         
         try:
-            result = await self.repository._read_csv_file(temp_file)
+            result = self.repository._read_csv_file(temp_file)
             
             assert len(result) == 2
             assert isinstance(result[0], WeatherData)
@@ -235,9 +231,8 @@ class TestWeatherFileGateway:
         assert result is None
     
     # ===== Output Writing Tests =====
-    
-    @pytest.mark.asyncio
-    async def test_write_json_file(self):
+
+    def test_write_json_file(self):
         """Test writing predictions to JSON file."""
         predictions = [
             Forecast(
@@ -259,7 +254,7 @@ class TestWeatherFileGateway:
         
         # Mock the file repository write method to capture what would be written
         written_content = None
-        async def mock_write(content, file_path):
+        def mock_write(content, file_path):
             nonlocal written_content
             written_content = content
             return None
@@ -267,7 +262,7 @@ class TestWeatherFileGateway:
         self.mock_file_repository.write.side_effect = mock_write
         
         try:
-            await self.repository._write_json_file(predictions, temp_file, include_metadata=True)
+            self.repository._write_json_file(predictions, temp_file, include_metadata=True)
             
             # Verify the mock was called (may be called multiple times for data and metadata)
             assert self.mock_file_repository.write.call_count >= 1
@@ -289,41 +284,37 @@ class TestWeatherFileGateway:
     
     
     # ===== Error Handling Tests =====
-    
-    @pytest.mark.asyncio
-    async def test_read_weather_data_from_file_not_found(self):
+
+    def test_read_weather_data_from_file_not_found(self):
         """Test reading weather data from non-existent file."""
         # Mock file repository to return False for exists (synchronous call)
         from unittest.mock import Mock
         self.mock_file_repository.exists = Mock(return_value=False)
         
         with pytest.raises(FileError, match="File not found"):
-            await self.repository.read_weather_data_from_file("nonexistent.json")
-    
-    @pytest.mark.asyncio
-    async def test_read_weather_data_from_file_invalid_format(self):
+            self.repository.read_weather_data_from_file("nonexistent.json")
+
+    def test_read_weather_data_from_file_invalid_format(self):
         """Test reading weather data from invalid file format."""
         with tempfile.NamedTemporaryFile(suffix='.txt', delete=False) as f:
             temp_file = f.name
         
         try:
             with pytest.raises(FileError, match="Unsupported file format"):
-                await self.repository.read_weather_data_from_file(temp_file)
+                self.repository.read_weather_data_from_file(temp_file)
         finally:
             os.unlink(temp_file)
-    
-    @pytest.mark.asyncio
-    async def test_write_predictions_to_file_invalid_format(self):
+
+    def test_write_predictions_to_file_invalid_format(self):
         """Test writing predictions to invalid file format."""
         predictions = [Forecast(date=datetime.now(), predicted_value=20.0)]
         
         with pytest.raises(FileError, match="Invalid output path"):
-            await self.repository.write_predictions_to_file(predictions, "output.xyz", "xyz")
+            self.repository.write_predictions_to_file(predictions, "output.xyz", "xyz")
     
     # ===== Integration Tests =====
-    
-    @pytest.mark.asyncio
-    async def test_read_and_write_integration(self):
+
+    def test_read_and_write_integration(self):
         """Test reading weather data and writing predictions integration."""
         # Create test JSON file
         json_data = [
@@ -351,7 +342,7 @@ class TestWeatherFileGateway:
         
         try:
             # Read weather data
-            weather_data = await self.repository.read_weather_data_from_file(input_file)
+            weather_data = self.repository.read_weather_data_from_file(input_file)
             assert len(weather_data) == 2
             
             # Create mock predictions
@@ -362,14 +353,14 @@ class TestWeatherFileGateway:
             
             # Mock the file repository write method to capture what would be written
             written_contents = []
-            async def mock_write(content, file_path):
+            def mock_write(content, file_path):
                 written_contents.append(content)
                 return None
             
             self.mock_file_repository.write.side_effect = mock_write
             
             # Write predictions
-            await self.repository.write_predictions_to_file(predictions, output_file, include_metadata=True)
+            self.repository.write_predictions_to_file(predictions, output_file, include_metadata=True)
             
             # Verify output (check the written content)
             assert len(written_contents) >= 1
@@ -390,19 +381,17 @@ class TestWeatherFileGateway:
             dir_path = os.path.join(temp_dir, "not_a_file")
             os.makedirs(dir_path)
             assert self.repository.validate_input_file_format(dir_path) is False
-    
-    @pytest.mark.asyncio
-    async def test_read_weather_data_from_file_not_a_file(self):
+
+    def test_read_weather_data_from_file_not_a_file(self):
         """Test reading from path that is not a file."""
         with tempfile.TemporaryDirectory() as temp_dir:
             dir_path = os.path.join(temp_dir, "not_a_file")
             os.makedirs(dir_path)
             
         with pytest.raises(FileError, match="Unsupported file format"):
-            await self.repository.read_weather_data_from_file(dir_path)
-    
-    @pytest.mark.asyncio
-    async def test_read_weather_data_from_file_unsupported_format(self):
+            self.repository.read_weather_data_from_file(dir_path)
+
+    def test_read_weather_data_from_file_unsupported_format(self):
         """Test reading from unsupported file format."""
         with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
             temp_file = f.name
@@ -410,12 +399,11 @@ class TestWeatherFileGateway:
         
         try:
             with pytest.raises(FileError, match="Unsupported file format: \\.txt"):
-                await self.repository.read_weather_data_from_file(temp_file)
+                self.repository.read_weather_data_from_file(temp_file)
         finally:
             os.unlink(temp_file)
-    
-    @pytest.mark.asyncio
-    async def test_read_json_file_with_data_wrapper(self):
+
+    def test_read_json_file_with_data_wrapper(self):
         """Test reading JSON with 'data' wrapper."""
         json_data = {
             "data": [
@@ -435,14 +423,13 @@ class TestWeatherFileGateway:
             temp_file = f.name
         
         try:
-            result = await self.repository._read_json_file(temp_file)
+            result = self.repository._read_json_file(temp_file)
             assert len(result) == 1
             assert result[0].temperature_2m_mean == 15.0
         finally:
             os.unlink(temp_file)
-    
-    @pytest.mark.asyncio
-    async def test_read_json_file_with_weather_data_wrapper(self):
+
+    def test_read_json_file_with_weather_data_wrapper(self):
         """Test reading JSON with 'weather_data' wrapper."""
         json_data = {
             "weather_data": [
@@ -462,14 +449,13 @@ class TestWeatherFileGateway:
             temp_file = f.name
         
         try:
-            result = await self.repository._read_json_file(temp_file)
+            result = self.repository._read_json_file(temp_file)
             assert len(result) == 1
             assert result[0].temperature_2m_mean == 20.0
         finally:
             os.unlink(temp_file)
-    
-    @pytest.mark.asyncio
-    async def test_read_json_file_invalid_structure(self):
+
+    def test_read_json_file_invalid_structure(self):
         """Test reading JSON with invalid structure."""
         # Mock file repository to return invalid JSON
         self.mock_file_repository.read.return_value = "invalid json structure"
@@ -479,12 +465,11 @@ class TestWeatherFileGateway:
         
         try:
             with pytest.raises(FileError, match="Failed to read JSON file"):
-                await self.repository._read_json_file(temp_file)
+                self.repository._read_json_file(temp_file)
         finally:
             os.unlink(temp_file)
-    
-    @pytest.mark.asyncio
-    async def test_read_csv_file_success(self):
+
+    def test_read_csv_file_success(self):
         """Test successful CSV file reading."""
         csv_data = "time,temperature_2m_mean,precipitation_sum,sunshine_duration\n2024-01-01T00:00:00,18.5,1.2,6.5\n2024-01-02T00:00:00,19.0,0.8,7.0"
         
@@ -495,15 +480,14 @@ class TestWeatherFileGateway:
             temp_file = f.name
         
         try:
-            result = await self.repository._read_csv_file(temp_file)
+            result = self.repository._read_csv_file(temp_file)
             assert len(result) == 2
             assert result[0].temperature_2m_mean == 18.5
             assert result[1].temperature_2m_mean == 19.0
         finally:
             os.unlink(temp_file)
-    
-    @pytest.mark.asyncio
-    async def test_convert_dict_to_weather_data_csv_format(self):
+
+    def test_convert_dict_to_weather_data_csv_format(self):
         """Test converting CSV data to WeatherData."""
         csv_data = {
             "time": "2024-01-01T00:00:00",
@@ -518,9 +502,8 @@ class TestWeatherFileGateway:
         assert result.temperature_2m_mean == 22.3
         assert result.precipitation_sum == 3.1
         assert result.sunshine_duration == 9.5
-    
-    @pytest.mark.asyncio
-    async def test_get_input_file_info_success(self):
+
+    def test_get_input_file_info_success(self):
         """Test getting file information."""
         json_data = [
             {
@@ -536,7 +519,7 @@ class TestWeatherFileGateway:
             json.dump(json_data, f)
         
         try:
-            result = await self.repository.get_input_file_info(temp_file)
+            result = self.repository.get_input_file_info(temp_file)
             
             assert result["file_path"] == str(Path(temp_file).absolute())
             assert result["file_size"] > 0
@@ -547,19 +530,17 @@ class TestWeatherFileGateway:
             assert result["sample_record"] is not None
         finally:
             os.unlink(temp_file)
-    
-    @pytest.mark.asyncio
-    async def test_get_input_file_info_not_found(self):
+
+    def test_get_input_file_info_not_found(self):
         """Test getting file information for non-existent file."""
         # Mock file repository to return False for exists (synchronous call)
         from unittest.mock import Mock
         self.mock_file_repository.exists = Mock(return_value=False)
         
         with pytest.raises(FileError, match="Failed to get file info"):
-            await self.repository.get_input_file_info("/nonexistent/file.json")
-    
-    @pytest.mark.asyncio
-    async def test_write_csv_file_success(self):
+            self.repository.get_input_file_info("/nonexistent/file.json")
+
+    def test_write_csv_file_success(self):
         """Test writing predictions to CSV file."""
         predictions = [
             Forecast(
@@ -581,14 +562,14 @@ class TestWeatherFileGateway:
         
         # Mock the file repository write method to capture what would be written
         written_contents = []
-        async def mock_write(content, file_path):
+        def mock_write(content, file_path):
             written_contents.append(content)
             return None
         
         self.mock_file_repository.write.side_effect = mock_write
         
         try:
-            await self.repository._write_csv_file(predictions, temp_file, include_metadata=True)
+            self.repository._write_csv_file(predictions, temp_file, include_metadata=True)
             
             # Verify the mock was called (may be called multiple times for data and metadata)
             assert self.mock_file_repository.write.call_count >= 1
@@ -617,9 +598,8 @@ class TestWeatherFileGateway:
         """Test determining output format from invalid extension."""
         with pytest.raises(FileError, match="Unsupported file extension"):
             self.repository._determine_output_format_from_extension(".txt")
-    
-    @pytest.mark.asyncio
-    async def test_write_predictions_to_file_csv_format(self):
+
+    def test_write_predictions_to_file_csv_format(self):
         """Test writing predictions to file with CSV format."""
         predictions = [
             Forecast(
@@ -635,14 +615,14 @@ class TestWeatherFileGateway:
         
         # Mock the file repository write method to capture what would be written
         written_contents = []
-        async def mock_write(content, file_path):
+        def mock_write(content, file_path):
             written_contents.append(content)
             return None
         
         self.mock_file_repository.write.side_effect = mock_write
         
         try:
-            await self.repository.write_predictions_to_file(
+            self.repository.write_predictions_to_file(
                 predictions, 
                 temp_file, 
                 format_type='csv',

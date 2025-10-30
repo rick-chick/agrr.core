@@ -8,12 +8,10 @@ from datetime import datetime
 from typing import Optional
 from enum import Enum
 
-
 class CandidateType(Enum):
     """候補タイプの列挙型"""
     INSERT = "INSERT"  # 新しい作物挿入候補
     MOVE = "MOVE"      # 既存作物移動候補
-
 
 @dataclass
 class CandidateSuggestion:

@@ -6,7 +6,6 @@ from datetime import datetime
 from agrr_core.entity.entities.growth_progress_entity import GrowthProgress
 from agrr_core.entity.entities.growth_stage_entity import GrowthStage
 
-
 class TestGrowthProgress:
     """Test cases for GrowthProgress entity."""
 

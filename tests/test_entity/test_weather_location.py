@@ -5,7 +5,6 @@ import pytest
 from agrr_core.entity import Location
 from agrr_core.entity.exceptions.invalid_location_error import InvalidLocationError
 
-
 class TestLocation:
     """Test Location entity."""
     

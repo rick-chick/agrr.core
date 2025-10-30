@@ -16,7 +16,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
-
 @dataclass
 class MultiFieldCropAllocationRequestDTO:
     """Request DTO for multi-field, multi-crop allocation optimization."""

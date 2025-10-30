@@ -5,7 +5,6 @@ from typing import List
 
 from .prediction_config_dto import PredictionConfigDTO
 
-
 @dataclass
 class ModelEvaluationRequestDTO:
     """DTO for model evaluation request."""

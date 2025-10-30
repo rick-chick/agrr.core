@@ -7,7 +7,6 @@ This entity models the execution plan for agricultural tasks.
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
-
 @dataclass(frozen=True)
 class TaskSchedule:
     """Represents a scheduled agricultural task.

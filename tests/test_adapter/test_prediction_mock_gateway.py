@@ -10,7 +10,6 @@ from agrr_core.adapter.gateways.prediction_mock_gateway import PredictionMockGat
 from agrr_core.entity.entities.weather_entity import WeatherData
 from agrr_core.entity.entities.prediction_forecast_entity import Forecast
 
-
 class TestPredictionMockGateway:
     """Test cases for PredictionMockGateway."""
     
@@ -25,9 +24,8 @@ class TestPredictionMockGateway:
         mock_file = "test_mock_data.json"
         gateway = PredictionMockGateway(mock_data_file=mock_file)
         assert gateway.mock_data_file == mock_file
-    
-    @pytest.mark.asyncio
-    async def test_read_historical_data(self, tmp_path):
+
+    def test_read_historical_data(self, tmp_path):
         """Test reading historical data from file."""
         gateway = PredictionMockGateway()
         
@@ -64,7 +62,7 @@ class TestPredictionMockGateway:
             json.dump(test_data, f)
         
         # Call method
-        result = await gateway.read_historical_data(str(test_file))
+        result = gateway.read_historical_data(str(test_file))
         
         # Assertions
         assert len(result) == 2
@@ -73,9 +71,8 @@ class TestPredictionMockGateway:
         assert result[0].temperature_2m_max == 25.0
         assert result[0].temperature_2m_min == 15.0
         assert result[0].temperature_2m_mean == 20.0
-    
-    @pytest.mark.asyncio
-    async def test_create_predictions(self, tmp_path):
+
+    def test_create_predictions(self, tmp_path):
         """Test creating predictions file."""
         gateway = PredictionMockGateway()
         
@@ -97,7 +94,7 @@ class TestPredictionMockGateway:
         
         # Create output file
         output_file = tmp_path / "test_predictions.json"
-        await gateway.create(test_predictions, str(output_file))
+        gateway.create(test_predictions, str(output_file))
         
         # Check that file was created
         assert output_file.exists()
@@ -124,9 +121,8 @@ class TestPredictionMockGateway:
         assert first_pred['predicted_value'] == 20.5
         assert first_pred['confidence_lower'] == 18.0
         assert first_pred['confidence_upper'] == 23.0
-    
-    @pytest.mark.asyncio
-    async def test_predict_single_metric(self):
+
+    def test_predict_single_metric(self):
         """Test predicting single metric."""
         gateway = PredictionMockGateway()
         
@@ -158,7 +154,7 @@ class TestPredictionMockGateway:
         config = {'prediction_days': 3}
         
         # Call method
-        result = await gateway.predict(
+        result = gateway.predict(
             historical_data=historical_data,
             metric='temperature',
             config=config
@@ -178,9 +174,8 @@ class TestPredictionMockGateway:
             assert prediction.confidence_upper is not None
             assert prediction.confidence_lower <= prediction.predicted_value
             assert prediction.confidence_upper >= prediction.predicted_value
-    
-    @pytest.mark.asyncio
-    async def test_predict_multiple_metrics(self):
+
+    def test_predict_multiple_metrics(self):
         """Test predicting multiple metrics."""
         gateway = PredictionMockGateway()
         
@@ -203,7 +198,7 @@ class TestPredictionMockGateway:
         metrics = ['temperature', 'temperature_max', 'temperature_min']
         
         # Call method
-        result = await gateway.predict_multiple_metrics(
+        result = gateway.predict_multiple_metrics(
             historical_data=historical_data,
             metrics=metrics,
             config=config
@@ -298,15 +293,14 @@ class TestPredictionMockGateway:
         # Check temperature relationships
         assert summer_max > summer_temp > summer_min
         assert winter_max > winter_temp > winter_min
-    
-    @pytest.mark.asyncio
-    async def test_error_handling(self):
+
+    def test_error_handling(self):
         """Test error handling for invalid inputs."""
         gateway = PredictionMockGateway()
         
         # Test with non-existent file
         with pytest.raises(Exception):
-            await gateway.read_historical_data("non_existent_file.json")
+            gateway.read_historical_data("non_existent_file.json")
         
         # Test with invalid JSON file
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -315,12 +309,12 @@ class TestPredictionMockGateway:
         
         try:
             with pytest.raises(Exception):
-                await gateway.read_historical_data(temp_file)
+                gateway.read_historical_data(temp_file)
         finally:
             Path(temp_file).unlink()
         
         # Test with empty historical data - should use seasonal averages
-        predictions = await gateway.predict(
+        predictions = gateway.predict(
             historical_data=[],
             metric='temperature',
             config={'prediction_days': 1}

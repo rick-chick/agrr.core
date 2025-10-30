@@ -1,14 +1,13 @@
 """Tests for CropCliCraftController."""
 
 import pytest
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, Mock, patch
 from io import StringIO
 import json
 
 from agrr_core.adapter.controllers.crop_cli_craft_controller import CropCliCraftController
 from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway as CropProfileGatewayImpl
 from agrr_core.adapter.presenters.crop_profile_craft_presenter import CropProfileCraftPresenter
-
 
 class TestCropCliCraftController:
     """Test cases for CropCliCraftController."""
@@ -47,12 +46,11 @@ class TestCropCliCraftController:
         assert args.query == 'トマト'
     
     # ===== Data Transfer Tests: CLI Args → RequestDTO =====
-    
-    @pytest.mark.asyncio
-    async def test_handle_craft_command_cli_args_to_request_dto(self):
+
+    def test_handle_craft_command_cli_args_to_request_dto(self):
         """Test data transfer from CLI args to RequestDTO."""
         # Mock interactor execute to capture request
-        self.controller.interactor.execute = AsyncMock(
+        self.controller.interactor.execute = Mock(
             return_value={"success": True, "data": {"crop_name": "tomato"}}
         )
         
@@ -63,7 +61,7 @@ class TestCropCliCraftController:
         
         # Execute
         with patch('sys.stdout', new=StringIO()):
-            await self.controller.handle_craft_command(args)
+            self.controller.handle_craft_command(args)
         
         # Verify interactor was called with correct RequestDTO
         self.controller.interactor.execute.assert_called_once()
@@ -71,12 +69,11 @@ class TestCropCliCraftController:
         
         # Verify RequestDTO contains the query
         assert call_args.crop_query == "トマト"
-    
-    @pytest.mark.asyncio
-    async def test_handle_craft_command_japanese_query(self):
+
+    def test_handle_craft_command_japanese_query(self):
         """Test handling Japanese query string."""
         # Mock interactor response
-        self.controller.interactor.execute = AsyncMock(
+        self.controller.interactor.execute = Mock(
             return_value={
                 "success": True,
                 "data": {
@@ -96,7 +93,7 @@ class TestCropCliCraftController:
         
         # Execute
         with patch('sys.stdout', new=StringIO()) as fake_stdout:
-            await self.controller.handle_craft_command(args)
+            self.controller.handle_craft_command(args)
             output = fake_stdout.getvalue()
         
         # Verify interactor was called
@@ -108,9 +105,8 @@ class TestCropCliCraftController:
         assert result["data"]["crop_name"] == "tomato"
     
     # ===== Data Transfer Tests: Interactor Result → JSON Output =====
-    
-    @pytest.mark.asyncio
-    async def test_handle_craft_command_success_json_output(self):
+
+    def test_handle_craft_command_success_json_output(self):
         """Test data transfer from interactor result to JSON output."""
         # Mock successful interactor response
         mock_result = {
@@ -132,7 +128,7 @@ class TestCropCliCraftController:
             }
         }
         
-        self.controller.interactor.execute = AsyncMock(return_value=mock_result)
+        self.controller.interactor.execute = Mock(return_value=mock_result)
         
         # Mock arguments
         args = Mock()
@@ -141,7 +137,7 @@ class TestCropCliCraftController:
         
         # Execute
         with patch('sys.stdout', new=StringIO()) as fake_stdout:
-            await self.controller.handle_craft_command(args)
+            self.controller.handle_craft_command(args)
             output = fake_stdout.getvalue()
         
         # Verify output is valid JSON
@@ -156,9 +152,8 @@ class TestCropCliCraftController:
         assert len(result["data"]["stages"]) == 1
         assert result["data"]["stages"][0]["name"] == "germination"
         assert result["data"]["stages"][0]["description"] == "種子発芽期"
-    
-    @pytest.mark.asyncio
-    async def test_handle_craft_command_error_json_output(self):
+
+    def test_handle_craft_command_error_json_output(self):
         """Test data transfer for error response to JSON output."""
         # Mock error interactor response
         mock_error = {
@@ -166,7 +161,7 @@ class TestCropCliCraftController:
             "error": "Failed to craft crop requirement"
         }
         
-        self.controller.interactor.execute = AsyncMock(return_value=mock_error)
+        self.controller.interactor.execute = Mock(return_value=mock_error)
         
         # Mock arguments
         args = Mock()
@@ -175,7 +170,7 @@ class TestCropCliCraftController:
         
         # Execute
         with patch('sys.stdout', new=StringIO()) as fake_stdout:
-            await self.controller.handle_craft_command(args)
+            self.controller.handle_craft_command(args)
             output = fake_stdout.getvalue()
         
         # Verify error output is valid JSON
@@ -186,9 +181,8 @@ class TestCropCliCraftController:
         assert "Failed to craft crop requirement" in result["error"]
     
     # ===== Data Integrity Tests =====
-    
-    @pytest.mark.asyncio
-    async def test_ensure_ascii_false_preserves_unicode(self):
+
+    def test_ensure_ascii_false_preserves_unicode(self):
         """Test that ensure_ascii=False preserves Japanese characters."""
         # Mock interactor response with Japanese description
         mock_result = {
@@ -204,7 +198,7 @@ class TestCropCliCraftController:
             }
         }
         
-        self.controller.interactor.execute = AsyncMock(return_value=mock_result)
+        self.controller.interactor.execute = Mock(return_value=mock_result)
         
         # Mock arguments
         args = Mock()
@@ -213,16 +207,15 @@ class TestCropCliCraftController:
         
         # Execute
         with patch('sys.stdout', new=StringIO()) as fake_stdout:
-            await self.controller.handle_craft_command(args)
+            self.controller.handle_craft_command(args)
             output = fake_stdout.getvalue()
         
         # Verify Japanese characters are preserved (not escaped)
         assert "栄養成長期" in output
         # Should not be escaped like "\u6804\u990a\u6210\u9577\u671f"
         assert "\\u" not in output
-    
-    @pytest.mark.asyncio
-    async def test_numeric_precision_preserved(self):
+
+    def test_numeric_precision_preserved(self):
         """Test that numeric values maintain precision through data transfer."""
         # Mock interactor response with precise values
         mock_result = {
@@ -242,7 +235,7 @@ class TestCropCliCraftController:
             }
         }
         
-        self.controller.interactor.execute = AsyncMock(return_value=mock_result)
+        self.controller.interactor.execute = Mock(return_value=mock_result)
         
         # Mock arguments
         args = Mock()
@@ -251,7 +244,7 @@ class TestCropCliCraftController:
         
         # Execute
         with patch('sys.stdout', new=StringIO()) as fake_stdout:
-            await self.controller.handle_craft_command(args)
+            self.controller.handle_craft_command(args)
             output = fake_stdout.getvalue()
         
         # Verify numeric precision is preserved
@@ -263,34 +256,31 @@ class TestCropCliCraftController:
         assert result["data"]["stages"][0]["optimal_temp_max"] == 30.7
     
     # ===== Run Method Tests =====
-    
-    @pytest.mark.asyncio
-    async def test_run_no_query(self):
+
+    def test_run_no_query(self):
         """Test run method with no query argument provided."""
         # Should raise SystemExit because --query is required
         with pytest.raises(SystemExit):
-            await self.controller.run([])
-    
-    @pytest.mark.asyncio
-    async def test_run_with_query(self):
+            self.controller.run([])
+
+    def test_run_with_query(self):
         """Test run method with query argument."""
-        self.controller.interactor.execute = AsyncMock(
+        self.controller.interactor.execute = Mock(
             return_value={"crop": {"crop_id": "tomato", "name": "Tomato"}, "stage_requirements": []}
         )
         
         args = ['--query', 'トマト']
         
         with patch('sys.stdout', new=StringIO()):
-            await self.controller.run(args)
+            self.controller.run(args)
         
         self.controller.interactor.execute.assert_called_once()
-    
-    @pytest.mark.asyncio
-    async def test_run_with_invalid_argument(self):
+
+    def test_run_with_invalid_argument(self):
         """Test run method with invalid argument."""
         # Invalid argument should raise SystemExit
         with pytest.raises(SystemExit):
-            await self.controller.run(['--invalid-arg'])
+            self.controller.run(['--invalid-arg'])
     
     # ===== Integration Tests with Gateway and Presenter =====
     
@@ -314,9 +304,8 @@ class TestCropCliCraftController:
         assert self.controller.interactor.presenter == self.controller.presenter
     
     # ===== Edge Cases =====
-    
-    @pytest.mark.asyncio
-    async def test_handle_craft_command_empty_stages(self):
+
+    def test_handle_craft_command_empty_stages(self):
         """Test handling crop requirement with empty stages list."""
         mock_result = {
             "success": True,
@@ -329,7 +318,7 @@ class TestCropCliCraftController:
             }
         }
         
-        self.controller.interactor.execute = AsyncMock(return_value=mock_result)
+        self.controller.interactor.execute = Mock(return_value=mock_result)
         
         args = Mock()
         args.query = "unknown-crop"
@@ -337,29 +326,28 @@ class TestCropCliCraftController:
         
         # Should not raise error even with empty stages
         with patch('sys.stdout', new=StringIO()) as fake_stdout:
-            await self.controller.handle_craft_command(args)
+            self.controller.handle_craft_command(args)
             output = fake_stdout.getvalue()
         
         result = json.loads(output)
         assert result["success"] is True
         assert result["data"]["stages"] == []
-    
-    @pytest.mark.asyncio
-    async def test_handle_craft_command_special_characters(self):
+
+    def test_handle_craft_command_special_characters(self):
         """Test handling query with special characters."""
         mock_result = {
             "success": True,
             "data": {"crop_name": "special"}
         }
         
-        self.controller.interactor.execute = AsyncMock(return_value=mock_result)
+        self.controller.interactor.execute = Mock(return_value=mock_result)
         
         args = Mock()
         args.query = "作物名/品種①"  # Special characters
         args.json = True
         
         with patch('sys.stdout', new=StringIO()) as fake_stdout:
-            await self.controller.handle_craft_command(args)
+            self.controller.handle_craft_command(args)
             output = fake_stdout.getvalue()
         
         # Should handle special characters without error

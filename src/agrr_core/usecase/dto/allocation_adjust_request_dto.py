@@ -15,7 +15,6 @@ from typing import List
 
 from agrr_core.entity.entities.move_instruction_entity import MoveInstruction
 
-
 @dataclass(frozen=True)
 class AllocationAdjustRequestDTO:
     """Request DTO for allocation adjustment use case."""

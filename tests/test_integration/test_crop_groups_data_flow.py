@@ -22,7 +22,6 @@ from agrr_core.adapter.gateways.crop_profile_file_gateway import CropProfileFile
 # CropProfileFileRepository is now CropProfileFileGateway
 from agrr_core.framework.services.io.file_service import FileService
 
-
 class TestCropGroupsDataFlowThroughMapper:
     """Test groups field data flow through Mapper layer."""
     
@@ -110,12 +109,10 @@ class TestCropGroupsDataFlowThroughMapper:
         assert "groups" in payload
         assert payload["groups"] == []
 
-
 class TestCropGroupsDataFlowThroughGateway:
     """Test groups field data flow through Gateway layer (file I/O)."""
-    
-    @pytest.mark.asyncio
-    async def test_save_and_load_crop_with_groups(self):
+
+    def test_save_and_load_crop_with_groups(self):
         """Test that Crop with groups can be saved to and loaded from JSON file."""
         # Create temporary file
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -170,7 +167,7 @@ class TestCropGroupsDataFlowThroughGateway:
                 file_path=str(temp_file)
             )
             
-            aggregate = await gateway.get()
+            aggregate = gateway.get()
             
             # Verify groups field was loaded correctly
             assert aggregate.crop.groups is not None
@@ -185,9 +182,8 @@ class TestCropGroupsDataFlowThroughGateway:
         finally:
             # Cleanup
             temp_file.unlink()
-    
-    @pytest.mark.asyncio
-    async def test_load_crop_without_groups_field(self):
+
+    def test_load_crop_without_groups_field(self):
         """Test loading JSON that doesn't have groups field (backward compatibility)."""
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             temp_file = Path(f.name)
@@ -237,7 +233,7 @@ class TestCropGroupsDataFlowThroughGateway:
                 file_path=str(temp_file)
             )
             
-            aggregate = await gateway.get()
+            aggregate = gateway.get()
             
             # groups should be None for backward compatibility
             assert aggregate.crop.groups is None
@@ -245,9 +241,8 @@ class TestCropGroupsDataFlowThroughGateway:
             
         finally:
             temp_file.unlink()
-    
-    @pytest.mark.asyncio
-    async def test_roundtrip_crop_with_groups(self):
+
+    def test_roundtrip_crop_with_groups(self):
         """Test complete roundtrip: Entity → Gateway format JSON → Gateway → Entity."""
         # 1. Create original Crop entity with groups
         original_crop = Crop(
@@ -311,7 +306,7 @@ class TestCropGroupsDataFlowThroughGateway:
                 file_path=str(temp_file)
             )
             
-            loaded_aggregate = await gateway.get()
+            loaded_aggregate = gateway.get()
             
             # 5. Verify all fields including groups
             assert loaded_aggregate.crop.crop_id == original_crop.crop_id
@@ -327,7 +322,6 @@ class TestCropGroupsDataFlowThroughGateway:
             
         finally:
             temp_file.unlink()
-
 
 class TestCropGroupsJSONSerializationFormat:
     """Test JSON serialization format of groups field."""
@@ -408,12 +402,10 @@ class TestCropGroupsJSONSerializationFormat:
         assert isinstance(parsed["groups"], list)
         assert len(parsed["groups"]) == 0
 
-
 class TestRealWorldCropGroupsScenarios:
     """Test real-world scenarios with crop groups."""
-    
-    @pytest.mark.asyncio
-    async def test_multiple_crops_with_different_groups(self):
+
+    def test_multiple_crops_with_different_groups(self):
         """Test handling multiple crops with different group configurations."""
         crops_data = [
             {

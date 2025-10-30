@@ -8,7 +8,6 @@ from agrr_core.entity.exceptions.html_fetch_error import HtmlFetchError
 from agrr_core.adapter.interfaces.io.html_table_service_interface import HtmlTableServiceInterface
 from agrr_core.adapter.interfaces.structures.html_table_structures import HtmlTable, TableRow
 
-
 class HtmlTableService(HtmlTableServiceInterface):
     """HTMLテーブル取得サービス"""
     
@@ -22,7 +21,7 @@ class HtmlTableService(HtmlTableServiceInterface):
         self.timeout = timeout
         self.session = requests.Session()
     
-    async def get(self, url: str) -> List[HtmlTable]:
+    def get(self, url: str) -> List[HtmlTable]:
         """
         URLから全テーブルを取得してパース
         

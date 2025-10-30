@@ -14,7 +14,6 @@ from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.crop_entity import Crop
 
-
 class TestOperatorPerformance:
     """Test OperatorPerformance tracking."""
     
@@ -58,7 +57,6 @@ class TestOperatorPerformance:
         op.total_improvement = 150.0
         
         assert op.avg_improvement == 50.0
-
 
 class TestAdaptiveWeights:
     """Test AdaptiveWeights manager."""
@@ -175,7 +173,6 @@ class TestAdaptiveWeights:
         
         # Weight should not change
         assert weights.operators['op1'].weight == initial_weight
-
 
 class TestALNSOptimizer:
     """Test ALNS optimizer."""

@@ -25,16 +25,14 @@ if TYPE_CHECKING:  # avoid runtime dependency until DTO is introduced
         CropProfileCraftRequestDTO,
     )
 
-
 class CropProfileCraftInputPort(ABC):
     """Interface for crafting crop stage requirement profiles (LLM-backed)."""
 
     @abstractmethod
-    async def execute(self, request: "CropProfileCraftRequestDTO") -> None:
+    def execute(self, request: "CropProfileCraftRequestDTO") -> None:
         """Craft stage requirements for the specified crop.
 
         The implementing interactor should pass the result to its output port.
         """
         pass
-
 

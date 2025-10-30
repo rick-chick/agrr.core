@@ -12,12 +12,11 @@ from agrr_core.usecase.dto.multi_field_crop_allocation_response_dto import (
     MultiFieldCropAllocationResponseDTO,
 )
 
-
 class MultiFieldCropAllocationInputPort(ABC):
     """Input port for multi-field crop allocation optimization use case."""
 
     @abstractmethod
-    async def execute(
+    def execute(
         self, request: MultiFieldCropAllocationRequestDTO
     ) -> MultiFieldCropAllocationResponseDTO:
         """Execute the multi-field crop allocation optimization use case.

@@ -5,7 +5,6 @@ from typing import List, Optional
 
 from .prediction_config_dto import PredictionConfigDTO
 
-
 @dataclass
 class MultiMetricPredictionRequestDTO:
     """DTO for multi-metric prediction request."""

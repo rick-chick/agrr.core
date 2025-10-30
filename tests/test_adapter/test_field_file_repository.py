@@ -9,13 +9,11 @@ from agrr_core.adapter.gateways.field_file_gateway import FieldFileGateway
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.exceptions.file_error import FileError
 
-
 @pytest.fixture
 def temp_dir():
     """Create a temporary directory for test files."""
     with tempfile.TemporaryDirectory() as tmpdirname:
         yield Path(tmpdirname)
-
 
 @pytest.fixture
 def file_repository():
@@ -23,18 +21,15 @@ def file_repository():
     from agrr_core.framework.services.io.file_service import FileService
     return FileService()
 
-
 @pytest.fixture
 def field_file_repository(file_repository):
     """Create a field file gateway for testing."""
     return FieldFileGateway(file_repository=file_repository)
 
-
-@pytest.mark.asyncio
 class TestFieldFileGateway:
     """Test cases for FieldFileGateway."""
 
-    async def test_read_single_field_json(self, field_file_repository, temp_dir):
+    def test_read_single_field_json(self, field_file_repository, temp_dir):
         """Test reading a single field from JSON file."""
         # Arrange
         test_file = temp_dir / "test_field.json"
@@ -48,7 +43,7 @@ class TestFieldFileGateway:
         test_file.write_text(json.dumps(field_data, ensure_ascii=False), encoding='utf-8')
 
         # Act
-        fields = await field_file_repository.read_fields_from_file(str(test_file))
+        fields = field_file_repository.read_fields_from_file(str(test_file))
 
         # Assert
         assert len(fields) == 1
@@ -59,7 +54,7 @@ class TestFieldFileGateway:
         assert field.daily_fixed_cost == 5000.0
         assert field.location == "北区画"
 
-    async def test_read_multiple_fields_json(self, field_file_repository, temp_dir):
+    def test_read_multiple_fields_json(self, field_file_repository, temp_dir):
         """Test reading multiple fields from JSON file."""
         # Arrange
         test_file = temp_dir / "test_fields.json"
@@ -84,7 +79,7 @@ class TestFieldFileGateway:
         test_file.write_text(json.dumps(fields_data, ensure_ascii=False), encoding='utf-8')
 
         # Act
-        fields = await field_file_repository.read_fields_from_file(str(test_file))
+        fields = field_file_repository.read_fields_from_file(str(test_file))
 
         # Assert
         assert len(fields) == 2
@@ -93,7 +88,7 @@ class TestFieldFileGateway:
         assert fields[1].field_id == "field_02"
         assert fields[1].daily_fixed_cost == 7000.0
 
-    async def test_get_field_by_id(self, field_file_repository, temp_dir):
+    def test_get_field_by_id(self, field_file_repository, temp_dir):
         """Test getting a specific field by ID."""
         # Arrange
         test_file = temp_dir / "test_fields.json"
@@ -116,7 +111,7 @@ class TestFieldFileGateway:
         test_file.write_text(json.dumps(fields_data, ensure_ascii=False), encoding='utf-8')
 
         # Act
-        field = await field_file_repository.get_field_by_id(str(test_file), "field_02")
+        field = field_file_repository.get_field_by_id(str(test_file), "field_02")
 
         # Assert
         assert field is not None
@@ -124,7 +119,7 @@ class TestFieldFileGateway:
         assert field.name == "南圃場"
         assert field.daily_fixed_cost == 7000.0
 
-    async def test_get_field_by_id_not_found(self, field_file_repository, temp_dir):
+    def test_get_field_by_id_not_found(self, field_file_repository, temp_dir):
         """Test getting a field that doesn't exist."""
         # Arrange
         test_file = temp_dir / "test_fields.json"
@@ -141,12 +136,12 @@ class TestFieldFileGateway:
         test_file.write_text(json.dumps(fields_data, ensure_ascii=False), encoding='utf-8')
 
         # Act
-        field = await field_file_repository.get_field_by_id(str(test_file), "field_99")
+        field = field_file_repository.get_field_by_id(str(test_file), "field_99")
 
         # Assert
         assert field is None
 
-    async def test_read_fields_with_optional_location(self, field_file_repository, temp_dir):
+    def test_read_fields_with_optional_location(self, field_file_repository, temp_dir):
         """Test reading fields with optional location field."""
         # Arrange
         test_file = temp_dir / "test_fields.json"
@@ -164,19 +159,19 @@ class TestFieldFileGateway:
         test_file.write_text(json.dumps(fields_data, ensure_ascii=False), encoding='utf-8')
 
         # Act
-        fields = await field_file_repository.read_fields_from_file(str(test_file))
+        fields = field_file_repository.read_fields_from_file(str(test_file))
 
         # Assert
         assert len(fields) == 1
         assert fields[0].location is None
 
-    async def test_read_fields_file_not_found(self, field_file_repository):
+    def test_read_fields_file_not_found(self, field_file_repository):
         """Test reading from non-existent file."""
         # Act & Assert
         with pytest.raises(FileError, match="File not found"):
-            await field_file_repository.read_fields_from_file("/nonexistent/file.json")
+            field_file_repository.read_fields_from_file("/nonexistent/file.json")
 
-    async def test_read_fields_invalid_json(self, field_file_repository, temp_dir):
+    def test_read_fields_invalid_json(self, field_file_repository, temp_dir):
         """Test reading invalid JSON."""
         # Arrange
         test_file = temp_dir / "invalid.json"
@@ -184,9 +179,9 @@ class TestFieldFileGateway:
 
         # Act & Assert
         with pytest.raises(FileError):
-            await field_file_repository.read_fields_from_file(str(test_file))
+            field_file_repository.read_fields_from_file(str(test_file))
 
-    async def test_read_fields_missing_required_field(self, field_file_repository, temp_dir):
+    def test_read_fields_missing_required_field(self, field_file_repository, temp_dir):
         """Test reading fields with missing required fields."""
         # Arrange
         test_file = temp_dir / "test_fields.json"
@@ -203,9 +198,9 @@ class TestFieldFileGateway:
 
         # Act & Assert
         with pytest.raises(FileError, match="Missing required field"):
-            await field_file_repository.read_fields_from_file(str(test_file))
+            field_file_repository.read_fields_from_file(str(test_file))
 
-    async def test_validate_field_data_valid(self, field_file_repository):
+    def test_validate_field_data_valid(self, field_file_repository):
         """Test validation of valid field data."""
         # Arrange
         field_data = {
@@ -221,7 +216,7 @@ class TestFieldFileGateway:
         # Assert
         assert result is True
 
-    async def test_validate_field_data_missing_required(self, field_file_repository):
+    def test_validate_field_data_missing_required(self, field_file_repository):
         """Test validation of field data with missing required fields."""
         # Arrange
         field_data = {
@@ -236,7 +231,7 @@ class TestFieldFileGateway:
         # Assert
         assert result is False
 
-    async def test_validate_field_data_negative_values(self, field_file_repository):
+    def test_validate_field_data_negative_values(self, field_file_repository):
         """Test validation rejects negative values for area and cost."""
         # Arrange
         field_data = {
@@ -252,7 +247,7 @@ class TestFieldFileGateway:
         # Assert
         assert result is False
 
-    async def test_get_method_with_file_path(self, file_repository, temp_dir):
+    def test_get_method_with_file_path(self, file_repository, temp_dir):
         """Test get method (FieldRepositoryInterface implementation)."""
         # Arrange
         test_file = temp_dir / "test_fields.json"
@@ -278,7 +273,7 @@ class TestFieldFileGateway:
         repository = FieldFileGateway(file_repository=file_repository, file_path=str(test_file))
 
         # Act
-        field = await repository.get("field_02")
+        field = repository.get("field_02")
 
         # Assert
         assert field is not None
@@ -286,7 +281,7 @@ class TestFieldFileGateway:
         assert field.name == "南圃場"
         assert field.daily_fixed_cost == 7000.0
 
-    async def test_get_method_not_found(self, file_repository, temp_dir):
+    def test_get_method_not_found(self, file_repository, temp_dir):
         """Test get method returns None for non-existent field."""
         # Arrange
         test_file = temp_dir / "test_fields.json"
@@ -306,12 +301,12 @@ class TestFieldFileGateway:
         repository = FieldFileGateway(file_repository=file_repository, file_path=str(test_file))
 
         # Act
-        field = await repository.get("field_99")
+        field = repository.get("field_99")
 
         # Assert
         assert field is None
 
-    async def test_read_field_with_default_fallow_period(self, field_file_repository, temp_dir):
+    def test_read_field_with_default_fallow_period(self, field_file_repository, temp_dir):
         """Test reading field without fallow_period_days uses default value."""
         # Arrange
         test_file = temp_dir / "test_field.json"
@@ -325,14 +320,14 @@ class TestFieldFileGateway:
         test_file.write_text(json.dumps(field_data, ensure_ascii=False), encoding='utf-8')
 
         # Act
-        fields = await field_file_repository.read_fields_from_file(str(test_file))
+        fields = field_file_repository.read_fields_from_file(str(test_file))
 
         # Assert
         assert len(fields) == 1
         field = fields[0]
         assert field.fallow_period_days == 28  # Default value
 
-    async def test_read_field_with_custom_fallow_period(self, field_file_repository, temp_dir):
+    def test_read_field_with_custom_fallow_period(self, field_file_repository, temp_dir):
         """Test reading field with custom fallow_period_days."""
         # Arrange
         test_file = temp_dir / "test_field.json"
@@ -346,14 +341,14 @@ class TestFieldFileGateway:
         test_file.write_text(json.dumps(field_data, ensure_ascii=False), encoding='utf-8')
 
         # Act
-        fields = await field_file_repository.read_fields_from_file(str(test_file))
+        fields = field_file_repository.read_fields_from_file(str(test_file))
 
         # Assert
         assert len(fields) == 1
         field = fields[0]
         assert field.fallow_period_days == 14
 
-    async def test_read_field_with_zero_fallow_period(self, field_file_repository, temp_dir):
+    def test_read_field_with_zero_fallow_period(self, field_file_repository, temp_dir):
         """Test reading field with zero fallow_period_days."""
         # Arrange
         test_file = temp_dir / "test_field.json"
@@ -367,14 +362,14 @@ class TestFieldFileGateway:
         test_file.write_text(json.dumps(field_data, ensure_ascii=False), encoding='utf-8')
 
         # Act
-        fields = await field_file_repository.read_fields_from_file(str(test_file))
+        fields = field_file_repository.read_fields_from_file(str(test_file))
 
         # Assert
         assert len(fields) == 1
         field = fields[0]
         assert field.fallow_period_days == 0
 
-    async def test_read_multiple_fields_with_different_fallow_periods(self, field_file_repository, temp_dir):
+    def test_read_multiple_fields_with_different_fallow_periods(self, field_file_repository, temp_dir):
         """Test reading multiple fields with different fallow periods."""
         # Arrange
         test_file = temp_dir / "test_fields.json"
@@ -406,7 +401,7 @@ class TestFieldFileGateway:
         test_file.write_text(json.dumps(fields_data, ensure_ascii=False), encoding='utf-8')
 
         # Act
-        fields = await field_file_repository.read_fields_from_file(str(test_file))
+        fields = field_file_repository.read_fields_from_file(str(test_file))
 
         # Assert
         assert len(fields) == 3
@@ -414,7 +409,7 @@ class TestFieldFileGateway:
         assert fields[1].fallow_period_days == 21
         assert fields[2].fallow_period_days == 28  # Default
 
-    async def test_validate_field_data_with_valid_fallow_period(self, field_file_repository):
+    def test_validate_field_data_with_valid_fallow_period(self, field_file_repository):
         """Test validation accepts valid fallow_period_days."""
         # Arrange
         field_data = {
@@ -431,7 +426,7 @@ class TestFieldFileGateway:
         # Assert
         assert result is True
 
-    async def test_validate_field_data_with_negative_fallow_period(self, field_file_repository):
+    def test_validate_field_data_with_negative_fallow_period(self, field_file_repository):
         """Test validation rejects negative fallow_period_days."""
         # Arrange
         field_data = {

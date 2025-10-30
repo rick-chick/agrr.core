@@ -11,12 +11,10 @@ from agrr_core.framework.services.io.file_service import FileService
 from agrr_core.entity.exceptions.file_error import FileError
 from agrr_core.entity.value_objects.rule_type import RuleType
 
-
 class TestInteractionRuleFileGateway:
     """Test InteractionRuleFileGateway."""
-    
-    @pytest.mark.asyncio
-    async def test_get_rules_from_valid_file(self):
+
+    def test_get_rules_from_valid_file(self):
         """Test loading rules from a valid JSON file."""
         rules_data = [
             {
@@ -51,7 +49,7 @@ class TestInteractionRuleFileGateway:
             gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
             # Call gateway (UseCase layer)
-            rules = await gateway.get_rules()
+            rules = gateway.get_rules()
             
             assert len(rules) == 2
             assert rules[0].rule_id == "rule_001"
@@ -67,9 +65,8 @@ class TestInteractionRuleFileGateway:
             
         finally:
             temp_file.unlink()
-    
-    @pytest.mark.asyncio
-    async def test_get_rules_with_default_is_directional(self):
+
+    def test_get_rules_with_default_is_directional(self):
         """Test that is_directional defaults to True if not specified."""
         rules_data = [
             {
@@ -91,16 +88,15 @@ class TestInteractionRuleFileGateway:
             # Repository layer removed - gateway now directly uses file_repository
             gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
-            rules = await gateway.get_rules()
+            rules = gateway.get_rules()
             
             assert len(rules) == 1
             assert rules[0].is_directional is True  # Default value
             
         finally:
             temp_file.unlink()
-    
-    @pytest.mark.asyncio
-    async def test_get_rules_with_missing_field_raises_error(self):
+
+    def test_get_rules_with_missing_field_raises_error(self):
         """Test that missing required field raises FileError."""
         rules_data = [
             {
@@ -122,13 +118,12 @@ class TestInteractionRuleFileGateway:
             gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
             with pytest.raises(FileError, match="Missing required field"):
-                await gateway.get_rules()
+                gateway.get_rules()
                 
         finally:
             temp_file.unlink()
-    
-    @pytest.mark.asyncio
-    async def test_get_rules_with_invalid_json_raises_error(self):
+
+    def test_get_rules_with_invalid_json_raises_error(self):
         """Test that invalid JSON raises FileError."""
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             temp_file = Path(f.name)
@@ -140,13 +135,12 @@ class TestInteractionRuleFileGateway:
             gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
             with pytest.raises(FileError, match="Invalid JSON format"):
-                await gateway.get_rules()
+                gateway.get_rules()
                 
         finally:
             temp_file.unlink()
-    
-    @pytest.mark.asyncio
-    async def test_get_rules_with_non_list_json_raises_error(self):
+
+    def test_get_rules_with_non_list_json_raises_error(self):
         """Test that non-list JSON raises FileError."""
         rule_data = {
             "rule_id": "rule_001",
@@ -166,13 +160,12 @@ class TestInteractionRuleFileGateway:
             gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
             with pytest.raises(FileError, match="expected list"):
-                await gateway.get_rules()
+                gateway.get_rules()
                 
         finally:
             temp_file.unlink()
-    
-    @pytest.mark.asyncio
-    async def test_get_rules_with_invalid_impact_ratio_raises_error(self):
+
+    def test_get_rules_with_invalid_impact_ratio_raises_error(self):
         """Test that invalid impact_ratio raises FileError."""
         rules_data = [
             {
@@ -194,13 +187,12 @@ class TestInteractionRuleFileGateway:
             gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
             with pytest.raises(FileError, match="Invalid rule data"):
-                await gateway.get_rules()
+                gateway.get_rules()
                 
         finally:
             temp_file.unlink()
-    
-    @pytest.mark.asyncio
-    async def test_get_rules_empty_list(self):
+
+    def test_get_rules_empty_list(self):
         """Test loading an empty rules list."""
         rules_data = []
         
@@ -213,7 +205,7 @@ class TestInteractionRuleFileGateway:
             # Repository layer removed - gateway now directly uses file_repository
             gateway = InteractionRuleFileGateway(file_repository, str(temp_file))
             
-            rules = await gateway.get_rules()
+            rules = gateway.get_rules()
             
             assert len(rules) == 0
             assert isinstance(rules, list)

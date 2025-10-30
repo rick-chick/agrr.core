@@ -24,7 +24,6 @@ from agrr_core.entity.value_objects.optimization_objective import OptimizationMe
 if TYPE_CHECKING:
     from agrr_core.entity.entities.field_entity import Field
 
-
 @dataclass(frozen=True)
 class OptimizationIntermediateResult:
     """Represents intermediate results for a single candidate start date in optimization.

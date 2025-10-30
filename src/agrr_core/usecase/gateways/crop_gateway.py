@@ -5,12 +5,11 @@ from typing import List
 
 from agrr_core.entity.entities.crop_entity import Crop
 
-
 class CropGateway(ABC):
     """Gateway for crop data access."""
 
     @abstractmethod
-    async def get_all(self) -> List[Crop]:
+    def get_all(self) -> List[Crop]:
         """Get all crops.
         
         Returns:

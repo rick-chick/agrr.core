@@ -8,7 +8,6 @@ from agrr_core.usecase.gateways.prediction_gateway import PredictionGateway
 from agrr_core.adapter.interfaces.io.file_service_interface import FileServiceInterface
 from agrr_core.adapter.interfaces.ml.prediction_service_interface import PredictionServiceInterface
 
-
 class PredictionGatewayImpl(PredictionGateway):
     """Implementation of prediction gateway.
     
@@ -30,7 +29,7 @@ class PredictionGatewayImpl(PredictionGateway):
         self.file_repository = file_repository
         self.prediction_service = prediction_service
     
-    async def read_historical_data(self, source: str) -> List[WeatherData]:
+    def read_historical_data(self, source: str) -> List[WeatherData]:
         """Read historical weather data from source file.
         
         Args:
@@ -39,18 +38,18 @@ class PredictionGatewayImpl(PredictionGateway):
         Returns:
             List of WeatherData entities
         """
-        return await self.file_repository.read_weather_data_from_file(source)
+        return self.file_repository.read_weather_data_from_file(source)
     
-    async def create(self, predictions: List[Forecast], destination: str) -> None:
+    def create(self, predictions: List[Forecast], destination: str) -> None:
         """Create predictions at destination."""
-        await self.file_repository.write_predictions_to_file(
+        self.file_repository.write_predictions_to_file(
             predictions,
             destination,
             'auto',
             include_metadata=True
         )
     
-    async def predict(
+    def predict(
         self,
         historical_data: List[WeatherData],
         metric: str,
@@ -67,14 +66,14 @@ class PredictionGatewayImpl(PredictionGateway):
             List of forecast entities
         """
         prediction_days = config.get('prediction_days', 30)
-        return await self.prediction_service.predict(
+        return self.prediction_service.predict(
             historical_data=historical_data,
             metric=metric,
             prediction_days=prediction_days,
             model_config=config
         )
     
-    async def predict_multiple_metrics(
+    def predict_multiple_metrics(
         self,
         historical_data: List[WeatherData],
         metrics: List[str],
@@ -90,7 +89,7 @@ class PredictionGatewayImpl(PredictionGateway):
         Returns:
             Dictionary mapping metric names to forecast lists
         """
-        return await self.prediction_service.predict_multiple_metrics(
+        return self.prediction_service.predict_multiple_metrics(
             historical_data=historical_data,
             metrics=metrics,
             model_config=config

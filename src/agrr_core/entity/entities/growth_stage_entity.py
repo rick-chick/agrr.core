@@ -11,7 +11,6 @@ Fields
 
 from dataclasses import dataclass
 
-
 @dataclass(frozen=True)
 class GrowthStage:
     """Represents a crop growth stage with an ordering index.
@@ -22,5 +21,4 @@ class GrowthStage:
 
     name: str
     order: int
-
 

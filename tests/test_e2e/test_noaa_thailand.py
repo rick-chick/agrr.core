@@ -12,9 +12,8 @@ from datetime import datetime
 from agrr_core.adapter.gateways.weather_noaa_gateway import WeatherNOAAGateway
 from agrr_core.framework.services.clients.http_client import HttpClient
 
-
 @pytest.mark.e2e
-@pytest.mark.asyncio
+
 class TestNOAAThailandE2E:
     """E2E tests for NOAA Thailand weather data."""
     
@@ -24,7 +23,7 @@ class TestNOAAThailandE2E:
         http_client = HttpClient()
         return WeatherNOAAGateway(http_client)
     
-    async def test_bangkok_weather_2023(self, gateway):
+    def test_bangkok_weather_2023(self, gateway):
         """Test Bangkok (Don Mueang) weather data retrieval for 2023.
         
         バンコク（ドンムアン空港）の2023年1月のデータ取得テスト
@@ -35,7 +34,7 @@ class TestNOAAThailandE2E:
         start_date = "2023-01-01"
         end_date = "2023-01-31"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=start_date,
@@ -59,7 +58,7 @@ class TestNOAAThailandE2E:
             if weather_data.temperature_2m_mean is not None:
                 assert 15 <= weather_data.temperature_2m_mean <= 40
     
-    async def test_chiang_mai_weather_2023(self, gateway):
+    def test_chiang_mai_weather_2023(self, gateway):
         """Test Chiang Mai weather data retrieval for 2023.
         
         チェンマイの2023年3月のデータ取得テスト（北部・米・果樹生産地）
@@ -70,7 +69,7 @@ class TestNOAAThailandE2E:
         start_date = "2023-03-01"
         end_date = "2023-03-31"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=start_date,
@@ -91,7 +90,7 @@ class TestNOAAThailandE2E:
             if weather_data.temperature_2m_mean is not None:
                 assert 10 <= weather_data.temperature_2m_mean <= 42
     
-    async def test_udon_thani_weather_2023(self, gateway):
+    def test_udon_thani_weather_2023(self, gateway):
         """Test Udon Thani weather data retrieval for 2023.
         
         ウドンターニーの2023年8月のデータ取得テスト（東北部イサーン・米の主要生産地）
@@ -102,7 +101,7 @@ class TestNOAAThailandE2E:
         start_date = "2023-08-01"
         end_date = "2023-08-31"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=start_date,
@@ -125,7 +124,7 @@ class TestNOAAThailandE2E:
         # Note: May not have precipitation every day, so just verify data exists
         assert len(result.weather_data_list) > 0
     
-    async def test_surat_thani_weather_2023(self, gateway):
+    def test_surat_thani_weather_2023(self, gateway):
         """Test Surat Thani weather data retrieval for 2023.
         
         スラートターニーの2023年5月のデータ取得テスト（南部・パーム油・ゴム生産地）
@@ -136,7 +135,7 @@ class TestNOAAThailandE2E:
         start_date = "2023-05-01"
         end_date = "2023-05-31"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=start_date,
@@ -156,7 +155,7 @@ class TestNOAAThailandE2E:
             if weather_data.temperature_2m_mean is not None:
                 assert 20 <= weather_data.temperature_2m_mean <= 38
     
-    async def test_khon_kaen_weather_2023(self, gateway):
+    def test_khon_kaen_weather_2023(self, gateway):
         """Test Khon Kaen weather data retrieval for 2023.
         
         コーンケンの2023年11月のデータ取得テスト（東北部・米の主要生産地）
@@ -167,7 +166,7 @@ class TestNOAAThailandE2E:
         start_date = "2023-11-01"
         end_date = "2023-11-30"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=start_date,
@@ -182,7 +181,7 @@ class TestNOAAThailandE2E:
         # Verify weather data
         assert len(result.weather_data_list) > 0
     
-    async def test_phuket_weather_2023(self, gateway):
+    def test_phuket_weather_2023(self, gateway):
         """Test Phuket weather data retrieval for 2023.
         
         プーケットの2023年12月のデータ取得テスト（南部・観光地・ゴム生産地）
@@ -193,7 +192,7 @@ class TestNOAAThailandE2E:
         start_date = "2023-12-01"
         end_date = "2023-12-31"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=start_date,
@@ -213,7 +212,7 @@ class TestNOAAThailandE2E:
             if weather_data.temperature_2m_mean is not None:
                 assert 22 <= weather_data.temperature_2m_mean <= 36
     
-    async def test_nakhon_ratchasima_weather_2022(self, gateway):
+    def test_nakhon_ratchasima_weather_2022(self, gateway):
         """Test Nakhon Ratchasima (Korat) weather data for 2022.
         
         ナコーンラーチャシーマー（コラート）の2022年データ取得テスト
@@ -225,7 +224,7 @@ class TestNOAAThailandE2E:
         start_date = "2022-06-01"
         end_date = "2022-06-30"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=start_date,
@@ -240,7 +239,7 @@ class TestNOAAThailandE2E:
         # Verify weather data
         assert len(result.weather_data_list) > 0
     
-    async def test_multiple_years_chiang_mai(self, gateway):
+    def test_multiple_years_chiang_mai(self, gateway):
         """Test multi-year data retrieval for Chiang Mai.
         
         チェンマイの複数年データ取得テスト（2020-2021年）
@@ -251,7 +250,7 @@ class TestNOAAThailandE2E:
         start_date = "2020-12-15"
         end_date = "2021-01-15"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=start_date,
@@ -268,7 +267,7 @@ class TestNOAAThailandE2E:
         years = {wd.time.year for wd in result.weather_data_list}
         assert 2020 in years or 2021 in years
     
-    async def test_agromet_station_data(self, gateway):
+    def test_agromet_station_data(self, gateway):
         """Test agricultural meteorological station data.
         
         農業気象観測所（Agromet）のデータ取得テスト
@@ -279,7 +278,7 @@ class TestNOAAThailandE2E:
         start_date = "2023-04-01"
         end_date = "2023-04-15"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=start_date,
@@ -294,9 +293,8 @@ class TestNOAAThailandE2E:
         # Verify weather data
         assert len(result.weather_data_list) > 0
 
-
 @pytest.mark.e2e
-@pytest.mark.asyncio
+
 class TestNOAAThailandRegionalCoverage:
     """Test NOAA coverage across all major Thai agricultural regions."""
     
@@ -306,7 +304,7 @@ class TestNOAAThailandRegionalCoverage:
         http_client = HttpClient()
         return WeatherNOAAGateway(http_client)
     
-    async def test_northern_region_coverage(self, gateway):
+    def test_northern_region_coverage(self, gateway):
         """Test northern region (rice, fruits, tea) coverage.
         
         北部地域（米・果樹・茶）のカバレッジテスト
@@ -322,7 +320,7 @@ class TestNOAAThailandRegionalCoverage:
         end_date = "2023-02-05"
         
         for lat, lon, name in stations:
-            result = await gateway.get_by_location_and_date_range(
+            result = gateway.get_by_location_and_date_range(
                 latitude=lat,
                 longitude=lon,
                 start_date=start_date,
@@ -332,7 +330,7 @@ class TestNOAAThailandRegionalCoverage:
             assert result.location is not None, f"Failed to get location for {name}"
             assert len(result.weather_data_list) > 0, f"No data for {name}"
     
-    async def test_isan_region_coverage(self, gateway):
+    def test_isan_region_coverage(self, gateway):
         """Test Isan region (major rice production) coverage.
         
         イサーン地域（最大の米生産地域）のカバレッジテスト
@@ -348,7 +346,7 @@ class TestNOAAThailandRegionalCoverage:
         end_date = "2023-07-05"
         
         for lat, lon, name in stations:
-            result = await gateway.get_by_location_and_date_range(
+            result = gateway.get_by_location_and_date_range(
                 latitude=lat,
                 longitude=lon,
                 start_date=start_date,
@@ -358,7 +356,7 @@ class TestNOAAThailandRegionalCoverage:
             assert result.location is not None, f"Failed to get location for {name}"
             assert len(result.weather_data_list) > 0, f"No data for {name}"
     
-    async def test_central_region_coverage(self, gateway):
+    def test_central_region_coverage(self, gateway):
         """Test central region (Chao Phraya basin, rice) coverage.
         
         中部地域（チャオプラヤー川流域・米生産地）のカバレッジテスト
@@ -374,7 +372,7 @@ class TestNOAAThailandRegionalCoverage:
         end_date = "2023-09-05"
         
         for lat, lon, name in stations:
-            result = await gateway.get_by_location_and_date_range(
+            result = gateway.get_by_location_and_date_range(
                 latitude=lat,
                 longitude=lon,
                 start_date=start_date,
@@ -384,7 +382,7 @@ class TestNOAAThailandRegionalCoverage:
             assert result.location is not None, f"Failed to get location for {name}"
             assert len(result.weather_data_list) > 0, f"No data for {name}"
     
-    async def test_southern_region_coverage(self, gateway):
+    def test_southern_region_coverage(self, gateway):
         """Test southern region (rubber, palm oil) coverage.
         
         南部地域（ゴム・パーム油生産地）のカバレッジテスト
@@ -400,7 +398,7 @@ class TestNOAAThailandRegionalCoverage:
         end_date = "2023-10-05"
         
         for lat, lon, name in stations:
-            result = await gateway.get_by_location_and_date_range(
+            result = gateway.get_by_location_and_date_range(
                 latitude=lat,
                 longitude=lon,
                 start_date=start_date,
@@ -409,7 +407,6 @@ class TestNOAAThailandRegionalCoverage:
             
             assert result.location is not None, f"Failed to get location for {name}"
             assert len(result.weather_data_list) > 0, f"No data for {name}"
-
 
 if __name__ == "__main__":
     """Run E2E tests for Thailand weather data."""

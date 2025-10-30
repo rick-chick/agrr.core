@@ -18,7 +18,6 @@ from typing import List, Optional
 from agrr_core.entity.entities.crop_entity import Crop
 from agrr_core.entity.entities.growth_progress_entity import GrowthProgress
 
-
 @dataclass(frozen=True)
 class GrowthProgressTimeline:
     """Associates a crop with its daily growth progress timeline.

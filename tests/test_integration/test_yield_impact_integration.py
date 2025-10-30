@@ -35,7 +35,6 @@ from agrr_core.usecase.dto.growth_period_optimize_request_dto import (
     OptimalGrowthPeriodRequestDTO,
 )
 
-
 class MockCropProfileGateway:
     """Mock gateway that returns a predefined crop profile."""
     
@@ -45,7 +44,6 @@ class MockCropProfileGateway:
     async def get(self):
         return self.crop_profile
 
-
 class MockWeatherGateway:
     """Mock gateway that returns predefined weather data."""
     
@@ -54,7 +52,6 @@ class MockWeatherGateway:
     
     async def get(self):
         return self.weather_data
-
 
 @pytest.fixture
 def rice_crop_profile_with_revenue():
@@ -104,7 +101,6 @@ def rice_crop_profile_with_revenue():
         stage_requirements=[germination, flowering],
     )
 
-
 @pytest.fixture
 def weather_data_with_stress():
     """Weather data containing temperature stress conditions."""
@@ -149,7 +145,6 @@ def weather_data_with_stress():
     
     return weather_list
 
-
 @pytest.fixture
 def weather_data_perfect():
     """Weather data with perfect conditions (no stress)."""
@@ -166,7 +161,6 @@ def weather_data_perfect():
     
     return weather_list
 
-
 @pytest.fixture
 def test_field():
     """Test field entity."""
@@ -178,12 +172,10 @@ def test_field():
         location=None,
     )
 
-
 class TestYieldImpactIntegration:
     """Integration tests for yield impact through entire stack."""
-    
-    @pytest.mark.asyncio
-    async def test_growth_progress_calculates_yield_factor(
+
+    def test_growth_progress_calculates_yield_factor(
         self,
         rice_crop_profile_with_revenue,
         weather_data_with_stress,
@@ -205,7 +197,7 @@ class TestYieldImpactIntegration:
         )
         
         # Execute
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Verify yield_factor exists and shows impact
         assert response.yield_factor is not None
@@ -219,9 +211,8 @@ class TestYieldImpactIntegration:
         
         print(f"\nYield factor: {response.yield_factor:.3f}")
         print(f"Yield loss: {(1.0 - response.yield_factor) * 100:.1f}%")
-    
-    @pytest.mark.asyncio
-    async def test_perfect_weather_no_yield_loss(
+
+    def test_perfect_weather_no_yield_loss(
         self,
         rice_crop_profile_with_revenue,
         weather_data_perfect,
@@ -243,14 +234,13 @@ class TestYieldImpactIntegration:
         )
         
         # Execute
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Verify no yield loss
         assert response.yield_factor == 1.0
         print(f"\nPerfect weather - Yield factor: {response.yield_factor:.3f}")
-    
-    @pytest.mark.asyncio
-    async def test_optimization_result_contains_yield_factor(
+
+    def test_optimization_result_contains_yield_factor(
         self,
         rice_crop_profile_with_revenue,
         weather_data_with_stress,
@@ -275,7 +265,7 @@ class TestYieldImpactIntegration:
         )
         
         # Execute
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Verify candidates have yield_factor field
         assert len(response.candidates) > 0
@@ -293,9 +283,8 @@ class TestYieldImpactIntegration:
             assert metrics.yield_factor >= 0.0
         
         print(f"\nOptimization result has yield_factor support: OK")
-    
-    @pytest.mark.asyncio
-    async def test_yield_factor_field_exists_in_optimization(
+
+    def test_yield_factor_field_exists_in_optimization(
         self,
         rice_crop_profile_with_revenue,
         weather_data_with_stress,
@@ -324,7 +313,7 @@ class TestYieldImpactIntegration:
             field=test_field,
         )
         
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Verify yield_factor field exists
         assert len(response.candidates) > 0
@@ -339,12 +328,10 @@ class TestYieldImpactIntegration:
         print(f"  Yield factor field exists: ✓")
         print(f"  Default value (efficient mode): {optimal.yield_factor}")
 
-
 class TestYieldImpactRealisticScenarios:
     """Test realistic agricultural scenarios."""
-    
-    @pytest.mark.asyncio
-    async def test_high_temperature_during_flowering_reduces_yield(
+
+    def test_high_temperature_during_flowering_reduces_yield(
         self,
         rice_crop_profile_with_revenue,
         test_field,
@@ -405,7 +392,7 @@ class TestYieldImpactRealisticScenarios:
             start_date=datetime(2024, 5, 1),
         )
         
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Verify severe yield loss
         # 5 days sterility @ 20% per day, sensitivity 1.0 = (1-0.20)^5 = 0.328
@@ -416,9 +403,8 @@ class TestYieldImpactRealisticScenarios:
         print(f"\nExtreme heat scenario:")
         print(f"  Yield factor: {response.yield_factor:.3f}")
         print(f"  Yield loss: {(1.0 - response.yield_factor) * 100:.1f}%")
-    
-    @pytest.mark.asyncio
-    async def test_frost_during_germination(
+
+    def test_frost_during_germination(
         self,
         rice_crop_profile_with_revenue,
     ):
@@ -459,7 +445,7 @@ class TestYieldImpactRealisticScenarios:
             start_date=datetime(2024, 4, 1),
         )
         
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Verify significant yield loss
         # 3 days frost @ 15% per day: (1 - 0.15)^3 = 0.85^3 ≈ 0.614 (38.6% yield loss)

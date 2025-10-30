@@ -34,7 +34,6 @@ from typing import Optional
 
 from agrr_core.entity.entities.field_entity import Field
 
-
 @dataclass
 class OptimalGrowthPeriodRequestDTO:
     """Request DTO for optimal growth period calculation use case."""

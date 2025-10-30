@@ -1,12 +1,11 @@
 """Tests for fertilizer detail interactor."""
 
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 
 from agrr_core.usecase.interactors.fertilizer_detail_interactor import FertilizerDetailInteractor
 from agrr_core.usecase.dto.fertilizer_dto import FertilizerDetailRequestDTO, FertilizerDetailResponseDTO
 from agrr_core.entity.entities.fertilizer_entity import FertilizerDetailRequest, FertilizerDetail
-
 
 class TestFertilizerDetailInteractor:
     """Tests for FertilizerDetailInteractor."""
@@ -14,16 +13,15 @@ class TestFertilizerDetailInteractor:
     @pytest.fixture
     def mock_gateway(self):
         """Create a mock fertilizer gateway."""
-        gateway = AsyncMock()
+        gateway = Mock()
         return gateway
     
     @pytest.fixture
     def interactor(self, mock_gateway):
         """Create interactor with mock gateway."""
         return FertilizerDetailInteractor(gateway=mock_gateway)
-    
-    @pytest.mark.asyncio
-    async def test_execute(self, interactor, mock_gateway):
+
+    def test_execute(self, interactor, mock_gateway):
         """Test execute method."""
         # Setup mock
         mock_gateway.search_detail.return_value = FertilizerDetail(
@@ -36,7 +34,7 @@ class TestFertilizerDetailInteractor:
         
         # Execute
         request = FertilizerDetailRequestDTO(fertilizer_name="尿素")
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Verify
         assert isinstance(response, FertilizerDetailResponseDTO)
@@ -51,9 +49,8 @@ class TestFertilizerDetailInteractor:
         call_args = mock_gateway.search_detail.call_args[0][0]
         assert isinstance(call_args, FertilizerDetailRequest)
         assert call_args.fertilizer_name == "尿素"
-    
-    @pytest.mark.asyncio
-    async def test_execute_minimal(self, interactor, mock_gateway):
+
+    def test_execute_minimal(self, interactor, mock_gateway):
         """Test execute with minimal response."""
         # Setup mock
         mock_gateway.search_detail.return_value = FertilizerDetail(
@@ -63,7 +60,7 @@ class TestFertilizerDetailInteractor:
         
         # Execute
         request = FertilizerDetailRequestDTO(fertilizer_name="urea")
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Verify
         assert isinstance(response, FertilizerDetailResponseDTO)

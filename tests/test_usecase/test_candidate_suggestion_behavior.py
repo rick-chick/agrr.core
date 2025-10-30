@@ -8,8 +8,8 @@ CLI optimize candidates機能の動作確認テスト
 """
 
 import pytest
-import asyncio
-from unittest.mock import Mock, AsyncMock
+
+from unittest.mock import Mock, Mock
 from datetime import datetime, timedelta
 
 from agrr_core.usecase.interactors.candidate_suggestion_interactor import CandidateSuggestionInteractor
@@ -21,12 +21,10 @@ from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 from agrr_core.entity.entities.field_schedule_entity import FieldSchedule
 
-
 class TestCandidateSuggestionBehavior:
     """候補リスト提示機能の動作確認テスト"""
-    
-    @pytest.mark.asyncio
-    async def test_three_fields_one_crop_returns_three_candidates(self):
+
+    def test_three_fields_one_crop_returns_three_candidates(self):
         """3つの圃場があって、1つの作物を選んだ時にmovesが3つ返ってくることを確認"""
         # Arrange
         interactor = self._create_interactor()
@@ -51,13 +49,13 @@ class TestCandidateSuggestionBehavior:
         allocation_result.field_schedules = []
         
         # ゲートウェイをモック
-        interactor._allocation_result_gateway.get = AsyncMock(return_value=allocation_result)
-        interactor._field_gateway.get_all = AsyncMock(return_value=fields)
-        interactor._crop_gateway.get_all = AsyncMock(return_value=crops)
-        interactor._weather_gateway.get = AsyncMock(return_value=[{"time": "2024-04-01", "temperature_2m_max": 20.0, "temperature_2m_min": 10.0}])
+        interactor._allocation_result_gateway.get = Mock(return_value=allocation_result)
+        interactor._field_gateway.get_all = Mock(return_value=fields)
+        interactor._crop_gateway.get_all = Mock(return_value=crops)
+        interactor._weather_gateway.get = Mock(return_value=[{"time": "2024-04-01", "temperature_2m_max": 20.0, "temperature_2m_min": 10.0}])
         
         # 候補生成をモック（各圃場に1つずつ候補を返す）
-        interactor._generate_candidates = AsyncMock(return_value=[
+        interactor._generate_candidates = Mock(return_value=[
             CandidateSuggestion(field_id="field_1", candidate_type=CandidateType.INSERT, crop_id="tomato", start_date=datetime(2024, 4, 1), area=50.0, expected_profit=1000.0, move_instruction=None),
             CandidateSuggestion(field_id="field_2", candidate_type=CandidateType.INSERT, crop_id="tomato", start_date=datetime(2024, 4, 15), area=75.0, expected_profit=1200.0, move_instruction=None),
             CandidateSuggestion(field_id="field_3", candidate_type=CandidateType.INSERT, crop_id="tomato", start_date=datetime(2024, 5, 1), area=100.0, expected_profit=1500.0, move_instruction=None)
@@ -70,16 +68,15 @@ class TestCandidateSuggestionBehavior:
         )
         
         # Act
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Assert
         assert response.success
         assert len(response.candidates) == 3
         assert all(candidate.field_id in ["field_1", "field_2", "field_3"] for candidate in response.candidates)
         assert len(set(candidate.field_id for candidate in response.candidates)) == 3  # 各圃場に1つずつ
-    
-    @pytest.mark.asyncio
-    async def test_one_field_one_crop_returns_one_candidate(self):
+
+    def test_one_field_one_crop_returns_one_candidate(self):
         """1つの圃場があって、1つの作物を選んだ時にmovesが1つ返ってくることを確認"""
         # Arrange
         interactor = self._create_interactor()
@@ -102,13 +99,13 @@ class TestCandidateSuggestionBehavior:
         allocation_result.field_schedules = []
         
         # ゲートウェイをモック
-        interactor._allocation_result_gateway.get = AsyncMock(return_value=allocation_result)
-        interactor._field_gateway.get_all = AsyncMock(return_value=fields)
-        interactor._crop_gateway.get_all = AsyncMock(return_value=crops)
-        interactor._weather_gateway.get = AsyncMock(return_value=[{"time": "2024-04-01", "temperature_2m_max": 20.0, "temperature_2m_min": 10.0}])
+        interactor._allocation_result_gateway.get = Mock(return_value=allocation_result)
+        interactor._field_gateway.get_all = Mock(return_value=fields)
+        interactor._crop_gateway.get_all = Mock(return_value=crops)
+        interactor._weather_gateway.get = Mock(return_value=[{"time": "2024-04-01", "temperature_2m_max": 20.0, "temperature_2m_min": 10.0}])
         
         # 候補生成をモック（1つの圃場に1つの候補を返す）
-        interactor._generate_candidates = AsyncMock(return_value=[
+        interactor._generate_candidates = Mock(return_value=[
             CandidateSuggestion(field_id="field_1", candidate_type=CandidateType.INSERT, crop_id="tomato", start_date=datetime(2024, 4, 1), area=50.0, expected_profit=1000.0, move_instruction=None)
         ])
         
@@ -119,15 +116,14 @@ class TestCandidateSuggestionBehavior:
         )
         
         # Act
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Assert
         assert response.success
         assert len(response.candidates) == 1
         assert response.candidates[0].field_id == "field_1"
-    
-    @pytest.mark.asyncio
-    async def test_three_fields_two_optimal_candidates_returns_two_candidates(self):
+
+    def test_three_fields_two_optimal_candidates_returns_two_candidates(self):
         """3つの圃場があって2つしか最適な挿入位置が見つからないとき2つのmovesが返ってくることを確認"""
         # Arrange
         interactor = self._create_interactor()
@@ -152,13 +148,13 @@ class TestCandidateSuggestionBehavior:
         allocation_result.field_schedules = []
         
         # ゲートウェイをモック
-        interactor._allocation_result_gateway.get = AsyncMock(return_value=allocation_result)
-        interactor._field_gateway.get_all = AsyncMock(return_value=fields)
-        interactor._crop_gateway.get_all = AsyncMock(return_value=crops)
-        interactor._weather_gateway.get = AsyncMock(return_value=[{"time": "2024-04-01", "temperature_2m_max": 20.0, "temperature_2m_min": 10.0}])
+        interactor._allocation_result_gateway.get = Mock(return_value=allocation_result)
+        interactor._field_gateway.get_all = Mock(return_value=fields)
+        interactor._crop_gateway.get_all = Mock(return_value=crops)
+        interactor._weather_gateway.get = Mock(return_value=[{"time": "2024-04-01", "temperature_2m_max": 20.0, "temperature_2m_min": 10.0}])
         
         # 候補生成をモック（2つの圃場にのみ候補を返す）
-        interactor._generate_candidates = AsyncMock(return_value=[
+        interactor._generate_candidates = Mock(return_value=[
             CandidateSuggestion(field_id="field_1", candidate_type=CandidateType.INSERT, crop_id="tomato", start_date=datetime(2024, 4, 1), area=50.0, expected_profit=1000.0, move_instruction=None),
             CandidateSuggestion(field_id="field_3", candidate_type=CandidateType.INSERT, crop_id="tomato", start_date=datetime(2024, 5, 1), area=100.0, expected_profit=1500.0, move_instruction=None)
         ])
@@ -170,16 +166,15 @@ class TestCandidateSuggestionBehavior:
         )
         
         # Act
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Assert
         assert response.success
         assert len(response.candidates) == 2
         assert all(candidate.field_id in ["field_1", "field_3"] for candidate in response.candidates)
         assert len(set(candidate.field_id for candidate in response.candidates)) == 2  # 2つの圃場に1つずつ
-    
-    @pytest.mark.asyncio
-    async def test_select_best_candidates_per_field_logic(self):
+
+    def test_select_best_candidates_per_field_logic(self):
         """圃場ごとの最良候補選択ロジックを直接テスト"""
         # Arrange
         interactor = self._create_interactor()

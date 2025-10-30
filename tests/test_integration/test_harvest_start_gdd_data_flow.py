@@ -21,13 +21,11 @@ from agrr_core.adapter.gateways.crop_profile_file_gateway import CropProfileFile
 from agrr_core.framework.services.io.file_service import FileService
 from agrr_core.usecase.services.crop_profile_mapper import CropProfileMapper
 
-
 @pytest.mark.integration
 class TestHarvestStartGddDataFlow:
     """Test harvest_start_gdd data flow through optimization commands."""
-    
-    @pytest.mark.asyncio
-    async def test_json_to_entity_with_harvest_start_gdd(self):
+
+    def test_json_to_entity_with_harvest_start_gdd(self):
         """Test loading crop profile with harvest_start_gdd from JSON file."""
         # Create temporary JSON file
         profile_data = {
@@ -94,7 +92,7 @@ class TestHarvestStartGddDataFlow:
             # Load profile from file
             file_repo = FileService()
             crop_profile_repo = CropProfileFileGateway(file_repo, temp_file)
-            profile = await crop_profile_repo.get()
+            profile = crop_profile_repo.get()
             
             # Verify crop
             assert profile.crop.crop_id == "eggplant"
@@ -168,9 +166,8 @@ class TestHarvestStartGddDataFlow:
         assert harvest['thermal']['required_gdd'] == 2200.0
         assert 'harvest_start_gdd' in harvest['thermal']
         assert harvest['thermal']['harvest_start_gdd'] == 200.0
-    
-    @pytest.mark.asyncio
-    async def test_round_trip_json_entity_json(self):
+
+    def test_round_trip_json_entity_json(self):
         """Test full round-trip: JSON → Entity → JSON."""
         # Original JSON data
         original_data = {
@@ -217,7 +214,7 @@ class TestHarvestStartGddDataFlow:
             # Load profile from file (JSON → Entity)
             file_repo = FileService()
             crop_profile_repo = CropProfileFileGateway(file_repo, temp_file)
-            profile = await crop_profile_repo.get()
+            profile = crop_profile_repo.get()
             
             # Convert back to JSON (Entity → JSON)
             result = CropProfileMapper.to_crop_profile_format(profile)

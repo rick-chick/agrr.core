@@ -13,7 +13,6 @@ from agrr_core.usecase.services.neighbor_operations.field_swap_operation import 
 from agrr_core.usecase.services.neighbor_operations.crop_change_operation import CropChangeOperation
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 
-
 @pytest.fixture
 def field_a_with_fallow():
     """Field A with 28-day fallow period."""
@@ -26,7 +25,6 @@ def field_a_with_fallow():
         fallow_period_days=28
     )
 
-
 @pytest.fixture
 def field_b_with_fallow():
     """Field B with 28-day fallow period."""
@@ -38,7 +36,6 @@ def field_b_with_fallow():
         location="Test",
         fallow_period_days=28
     )
-
 
 @pytest.fixture
 def crop_tomato():
@@ -53,7 +50,6 @@ def crop_tomato():
         groups=["Solanaceae"]
     )
 
-
 @pytest.fixture
 def crop_lettuce():
     """Lettuce crop."""
@@ -67,7 +63,6 @@ def crop_lettuce():
         groups=["Asteraceae"]
     )
 
-
 @pytest.fixture
 def crop_carrot():
     """Carrot crop."""
@@ -80,7 +75,6 @@ def crop_carrot():
         max_revenue=None,
         groups=["Apiaceae"]
     )
-
 
 class MockCandidate:
     """Mock allocation candidate."""
@@ -104,7 +98,6 @@ class MockCandidate:
     @property
     def profit(self):
         return self.revenue - self.cost
-
 
 class TestFieldSwapOperationFallowPeriod:
     """Test FieldSwapOperation respects fallow period."""
@@ -181,7 +174,6 @@ class TestFieldSwapOperationFallowPeriod:
                                 f"Alloc2 ({a2.start_date} - {a2.completion_date}), "
                                 f"fallow: {a1.field.fallow_period_days} days"
                             )
-
 
 class TestCropChangeOperationFallowPeriod:
     """Test CropChangeOperation respects fallow period."""

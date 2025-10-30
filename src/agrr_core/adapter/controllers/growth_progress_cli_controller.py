@@ -1,7 +1,7 @@
 """CLI controller for growth progress calculation (adapter layer)."""
 
 import argparse
-import asyncio
+
 from datetime import datetime
 from typing import Optional
 
@@ -22,7 +22,7 @@ from agrr_core.usecase.dto.growth_progress_calculate_request_dto import (
 from agrr_core.usecase.dto.growth_progress_calculate_response_dto import (
     GrowthProgressCalculateResponseDTO,
 )
-
+from agrr_core.framework.logging.agrr_logger import get_logger
 
 class GrowthProgressCliController(GrowthProgressCalculateInputPort):
     """CLI controller implementing Input Port for growth progress calculation."""
@@ -43,6 +43,7 @@ class GrowthProgressCliController(GrowthProgressCalculateInputPort):
         self.crop_profile_gateway = crop_profile_gateway
         self.weather_gateway = weather_gateway
         self.presenter = presenter
+        self.logger = get_logger()
         
         # Instantiate interactor inside controller
         self.interactor = GrowthProgressCalculateInteractor(
@@ -50,7 +51,7 @@ class GrowthProgressCliController(GrowthProgressCalculateInputPort):
             weather_gateway=self.weather_gateway,
         )
 
-    async def execute(
+    def execute(
         self, request: GrowthProgressCalculateRequestDTO
     ) -> GrowthProgressCalculateResponseDTO:
         """Execute the growth progress calculation use case.
@@ -63,7 +64,7 @@ class GrowthProgressCliController(GrowthProgressCalculateInputPort):
         Returns:
             Response DTO containing growth progress data
         """
-        return await self.interactor.execute(request)
+        return self.interactor.execute(request)
 
     def create_argument_parser(self) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(
@@ -158,13 +159,13 @@ Note:
 
         return parser
 
-    async def handle_progress_command(self, args) -> None:
+    def handle_progress_command(self, args) -> None:
         """Handle the progress calculation command."""
         # Parse start date
         try:
             start_date = datetime.strptime(args.start_date, "%Y-%m-%d")
         except ValueError:
-            print('Error: Invalid date format. Use YYYY-MM-DD (e.g., "2024-05-01")')
+            self.logger.error('Error: Invalid date format. Use YYYY-MM-DD (e.g., "2024-05-01")')
             return
 
         # Update presenter format
@@ -173,11 +174,11 @@ Note:
         # Get crop profile to extract crop_id and variety for RequestDTO
         # Gateway is already configured with the file path in cli.py
         try:
-            crop_profile = await self.crop_profile_gateway.get()
+            crop_profile = self.crop_profile_gateway.get()
             crop_id = crop_profile.crop.crop_id
             variety = crop_profile.crop.variety
         except Exception as e:
-            print(f"Error loading crop profile: {str(e)}")
+            self.logger.error(f"Error loading crop profile: {str(e)}")
             return
 
         # Create request DTO
@@ -189,18 +190,18 @@ Note:
 
         # Execute use case
         try:
-            response = await self.execute(request)
+            response = self.execute(request)
             self.presenter.present(response)
         except Exception as e:
-            print(f"Error calculating growth progress: {str(e)}")
+            self.logger.error(f"Error calculating growth progress: {str(e)}")
             import traceback
-            traceback.print_exc()
+            self.logger.error(traceback.format_exc())
 
-    async def run(self, args: Optional[list] = None) -> None:
+    def run(self, args: Optional[list] = None) -> None:
         """Run the controller with CLI arguments."""
         parser = self.create_argument_parser()
         parsed_args = parser.parse_args(args)
 
         # No subcommands - directly handle the progress command
-        await self.handle_progress_command(parsed_args)
+        self.handle_progress_command(parsed_args)
 

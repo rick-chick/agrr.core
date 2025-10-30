@@ -9,7 +9,6 @@ from agrr_core.usecase.services.neighbor_operations.base_neighbor_operation impo
     NeighborOperation,
 )
 
-
 class CropChangeOperation(NeighborOperation):
     """C1. Crop Change: Change crop while keeping field and approximate period.
     

@@ -24,8 +24,6 @@ from agrr_core.usecase.dto.multi_field_crop_allocation_request_dto import (
     MultiFieldCropAllocationRequestDTO,
 )
 
-
-@pytest.mark.asyncio
 @pytest.mark.slow
 class TestFilterRedundantComparison:
     """Compare optimization results with filter_redundant_candidates ON vs OFF.
@@ -82,7 +80,7 @@ class TestFilterRedundantComparison:
         )
 
         # Load fields
-        fields = await field_gateway.get_all()
+        fields = field_gateway.get_all()
         field_ids = [f.field_id for f in fields]
 
         # Create request
@@ -95,27 +93,27 @@ class TestFilterRedundantComparison:
         )
 
         # Execute
-        response = await controller.interactor.execute(
+        response = controller.interactor.execute(
             request, enable_local_search=False, algorithm="greedy"
         )
 
         return response.optimization_result
 
-    async def test_scenario_1_with_fallow_4crops(self, test_data_dir):
+    def test_scenario_1_with_fallow_4crops(self, test_data_dir):
         """Scenario 1: 4 fields with fallow period, 4 crops (ナス, キュウリ, ニンジン, ほうれん草)."""
         fields_file = test_data_dir / "allocation_fields_with_fallow.json"
         crops_file = test_data_dir / "allocation_crops_1760447748.json"
         weather_file = test_data_dir / "weather_2023_full.json"
 
         # Run with filtering ON
-        result_on = await self._run_optimization(
+        result_on = self._run_optimization(
             fields_file, crops_file, weather_file,
             "2023-04-01", "2023-10-31",
             filter_redundant=True,
         )
 
         # Run with filtering OFF
-        result_off = await self._run_optimization(
+        result_off = self._run_optimization(
             fields_file, crops_file, weather_file,
             "2023-04-01", "2023-10-31",
             filter_redundant=False,
@@ -132,21 +130,21 @@ class TestFilterRedundantComparison:
         assert result_on.total_profit > 0, "Filter ON should produce positive profit"
         assert result_off.total_profit > 0, "Filter OFF should produce positive profit"
 
-    async def test_scenario_2_no_fallow_4crops(self, test_data_dir):
+    def test_scenario_2_no_fallow_4crops(self, test_data_dir):
         """Scenario 2: 4 fields without fallow period (continuous cultivation), 4 crops."""
         fields_file = test_data_dir / "allocation_fields_no_fallow.json"
         crops_file = test_data_dir / "allocation_crops_1760447748.json"
         weather_file = test_data_dir / "weather_2023_full.json"
 
         # Run with filtering ON
-        result_on = await self._run_optimization(
+        result_on = self._run_optimization(
             fields_file, crops_file, weather_file,
             "2023-04-01", "2023-10-31",
             filter_redundant=True,
         )
 
         # Run with filtering OFF
-        result_off = await self._run_optimization(
+        result_off = self._run_optimization(
             fields_file, crops_file, weather_file,
             "2023-04-01", "2023-10-31",
             filter_redundant=False,
@@ -162,21 +160,21 @@ class TestFilterRedundantComparison:
         assert result_on.total_profit > 0
         assert result_off.total_profit > 0
 
-    async def test_scenario_3_strict_fallow_4crops(self, test_data_dir):
+    def test_scenario_3_strict_fallow_4crops(self, test_data_dir):
         """Scenario 3: 4 fields with strict fallow period (longer rest), 4 crops."""
         fields_file = test_data_dir / "allocation_fields_strict_fallow.json"
         crops_file = test_data_dir / "allocation_crops_1760447748.json"
         weather_file = test_data_dir / "weather_2023_full.json"
 
         # Run with filtering ON
-        result_on = await self._run_optimization(
+        result_on = self._run_optimization(
             fields_file, crops_file, weather_file,
             "2023-04-01", "2023-10-31",
             filter_redundant=True,
         )
 
         # Run with filtering OFF
-        result_off = await self._run_optimization(
+        result_off = self._run_optimization(
             fields_file, crops_file, weather_file,
             "2023-04-01", "2023-10-31",
             filter_redundant=False,
@@ -191,21 +189,21 @@ class TestFilterRedundantComparison:
         assert result_on.total_profit > 0
         assert result_off.total_profit > 0
 
-    async def test_scenario_4_with_fallow_6crops(self, test_data_dir):
+    def test_scenario_4_with_fallow_6crops(self, test_data_dir):
         """Scenario 4: 4 fields with fallow period, 6 crop types (increased complexity)."""
         fields_file = test_data_dir / "allocation_fields_with_fallow.json"
         crops_file = test_data_dir / "allocation_crops_6types.json"
         weather_file = test_data_dir / "weather_2023_full.json"
 
         # Run with filtering ON
-        result_on = await self._run_optimization(
+        result_on = self._run_optimization(
             fields_file, crops_file, weather_file,
             "2023-04-01", "2023-10-31",
             filter_redundant=True,
         )
 
         # Run with filtering OFF
-        result_off = await self._run_optimization(
+        result_off = self._run_optimization(
             fields_file, crops_file, weather_file,
             "2023-04-01", "2023-10-31",
             filter_redundant=False,
@@ -221,21 +219,21 @@ class TestFilterRedundantComparison:
         assert result_on.total_profit > 0
         assert result_off.total_profit > 0
 
-    async def test_scenario_5_large_fields_6crops(self, test_data_dir):
+    def test_scenario_5_large_fields_6crops(self, test_data_dir):
         """Scenario 5: Large fields with fallow period, 6 crop types."""
         fields_file = test_data_dir / "allocation_fields_large.json"
         crops_file = test_data_dir / "allocation_crops_6types.json"
         weather_file = test_data_dir / "weather_2023_full.json"
 
         # Run with filtering ON
-        result_on = await self._run_optimization(
+        result_on = self._run_optimization(
             fields_file, crops_file, weather_file,
             "2023-04-01", "2023-10-31",
             filter_redundant=True,
         )
 
         # Run with filtering OFF
-        result_off = await self._run_optimization(
+        result_off = self._run_optimization(
             fields_file, crops_file, weather_file,
             "2023-04-01", "2023-10-31",
             filter_redundant=False,
@@ -251,21 +249,21 @@ class TestFilterRedundantComparison:
         assert result_on.total_profit > 0
         assert result_off.total_profit > 0
 
-    async def test_scenario_6_balanced_crops(self, test_data_dir):
+    def test_scenario_6_balanced_crops(self, test_data_dir):
         """Scenario 6: 4 fields with fallow, balanced crop configuration."""
         fields_file = test_data_dir / "allocation_fields_with_fallow.json"
         crops_file = test_data_dir / "allocation_crops_balanced.json"
         weather_file = test_data_dir / "weather_2023_full.json"
 
         # Run with filtering ON
-        result_on = await self._run_optimization(
+        result_on = self._run_optimization(
             fields_file, crops_file, weather_file,
             "2023-04-01", "2023-10-31",
             filter_redundant=True,
         )
 
         # Run with filtering OFF
-        result_off = await self._run_optimization(
+        result_off = self._run_optimization(
             fields_file, crops_file, weather_file,
             "2023-04-01", "2023-10-31",
             filter_redundant=False,
@@ -280,21 +278,21 @@ class TestFilterRedundantComparison:
         assert result_on.total_profit > 0
         assert result_off.total_profit > 0
 
-    async def test_scenario_7_xlarge_fields_6crops(self, test_data_dir):
+    def test_scenario_7_xlarge_fields_6crops(self, test_data_dir):
         """Scenario 7: Extra-large fields with fallow period, 6 crop types (maximum scale)."""
         fields_file = test_data_dir / "allocation_fields_xlarge.json"
         crops_file = test_data_dir / "allocation_crops_6types.json"
         weather_file = test_data_dir / "weather_2023_full.json"
 
         # Run with filtering ON
-        result_on = await self._run_optimization(
+        result_on = self._run_optimization(
             fields_file, crops_file, weather_file,
             "2023-04-01", "2023-10-31",
             filter_redundant=True,
         )
 
         # Run with filtering OFF
-        result_off = await self._run_optimization(
+        result_off = self._run_optimization(
             fields_file, crops_file, weather_file,
             "2023-04-01", "2023-10-31",
             filter_redundant=False,
@@ -311,7 +309,7 @@ class TestFilterRedundantComparison:
         assert result_on.total_cost > 0, "Should have calculated costs"
         assert result_off.total_cost > 0, "Should have calculated costs"
 
-    async def test_comprehensive_summary(self, test_data_dir):
+    def test_comprehensive_summary(self, test_data_dir):
         """Comprehensive test: Run all scenarios and generate summary report."""
         scenarios = [
             {
@@ -379,10 +377,10 @@ class TestFilterRedundantComparison:
                 start, end = scenario["period"]
 
                 # Run both
-                result_on = await self._run_optimization(
+                result_on = self._run_optimization(
                     fields_file, crops_file, weather_file, start, end, True
                 )
-                result_off = await self._run_optimization(
+                result_off = self._run_optimization(
                     fields_file, crops_file, weather_file, start, end, False
                 )
 

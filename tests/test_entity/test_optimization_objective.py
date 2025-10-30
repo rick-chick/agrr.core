@@ -12,7 +12,6 @@ from agrr_core.entity.value_objects.optimization_objective import (
     DEFAULT_OBJECTIVE,
 )
 
-
 class TestOptimizationMetrics:
     """Test OptimizationMetrics value object."""
     
@@ -66,7 +65,6 @@ class TestOptimizationMetrics:
         assert metrics.cost == 1000
         assert metrics.revenue == 1500  # Capped at max_revenue
         assert metrics.profit == 500  # 1500 - 1000
-
 
 class TestOptimizationObjective:
     """Test OptimizationObjective."""
@@ -139,7 +137,6 @@ class TestOptimizationObjective:
         """DEFAULT_OBJECTIVE is available."""
         assert DEFAULT_OBJECTIVE is not None
         assert isinstance(DEFAULT_OBJECTIVE, OptimizationObjective)
-
 
 class TestObjectiveFunctionSignature:
     """Tests to detect objective function changes.
@@ -215,7 +212,6 @@ class TestObjectiveFunctionSignature:
         profit = objective.calculate(metrics)
         
         assert profit == expected_profit
-
 
 class TestYieldFactorImpact:
     """Test yield_factor impact on revenue and profit."""
@@ -352,7 +348,6 @@ class TestYieldFactorImpact:
         # B: revenue=200*10*0.95=1900, cost=1000, profit=900
         # B should win despite lower revenue_per_area
         assert best["name"] == "B"
-
 
 class TestSoilRecoveryFactor:
     """Test soil_recovery_factor impact on revenue and profit."""

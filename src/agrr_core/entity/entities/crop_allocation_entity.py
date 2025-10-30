@@ -26,7 +26,6 @@ from typing import Optional
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.crop_entity import Crop
 
-
 @dataclass(frozen=True)
 class CropAllocation:
     """Represents allocation of a specific crop to a specific field with timing and area."""

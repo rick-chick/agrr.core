@@ -15,7 +15,6 @@ from agrr_core.usecase.dto.growth_period_optimize_response_dto import (
 )
 from agrr_core.entity.entities.field_entity import Field
 
-
 class TestGrowthPeriodOptimizeCliPresenter:
     """Test cases for GrowthPeriodOptimizeCliPresenter."""
 

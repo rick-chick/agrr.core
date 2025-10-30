@@ -14,7 +14,6 @@ from agrr_core.usecase.services.neighbor_operations.crop_insert_operation import
 from agrr_core.usecase.services.neighbor_operations.period_replace_operation import PeriodReplaceOperation
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 
-
 @pytest.fixture
 def field_with_fallow():
     """Field with 28-day fallow period."""
@@ -26,7 +25,6 @@ def field_with_fallow():
         location="Test",
         fallow_period_days=28
     )
-
 
 @pytest.fixture
 def crop_a():
@@ -41,7 +39,6 @@ def crop_a():
         groups=["GroupA"]
     )
 
-
 @pytest.fixture
 def crop_b():
     """Crop B."""
@@ -54,7 +51,6 @@ def crop_b():
         max_revenue=None,
         groups=["GroupB"]
     )
-
 
 class MockCandidate:
     """Mock allocation candidate."""
@@ -78,7 +74,6 @@ class MockCandidate:
     @property
     def profit(self):
         return self.revenue - self.cost
-
 
 class TestCropInsertOperationFallowPeriod:
     """Test CropInsertOperation respects fallow period."""
@@ -195,7 +190,6 @@ class TestCropInsertOperationFallowPeriod:
         assert len(neighbors[0]) == 2
         assert neighbors[0][0] == existing_alloc
         assert neighbors[0][1].crop.crop_id == crop_b.crop_id
-
 
 class TestPeriodReplaceOperationFallowPeriod:
     """Test PeriodReplaceOperation respects fallow period."""

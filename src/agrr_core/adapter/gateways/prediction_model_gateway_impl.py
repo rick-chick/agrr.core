@@ -21,7 +21,6 @@ from agrr_core.entity.exceptions.prediction_error import PredictionError
 from agrr_core.usecase.gateways.prediction_model_gateway import PredictionModelGateway
 from agrr_core.adapter.interfaces.ml.prediction_service_interface import PredictionServiceInterface
 
-
 class PredictionModelGatewayImpl(PredictionModelGateway):
     """
     Gateway implementation for prediction models (Adapter layer).
@@ -57,7 +56,7 @@ class PredictionModelGatewayImpl(PredictionModelGateway):
         if not self.models:
             raise ValueError("At least one prediction model service must be provided")
     
-    async def predict(
+    def predict(
         self,
         historical_data: List[WeatherData],
         metric: str,
@@ -101,14 +100,14 @@ class PredictionModelGatewayImpl(PredictionModelGateway):
             )
         
         # Delegate to model
-        return await model.predict(
+        return model.predict(
             historical_data=historical_data,
             metric=metric,
             prediction_days=prediction_days,
             model_config=model_config
         )
     
-    async def evaluate(
+    def evaluate(
         self,
         test_data: List[WeatherData],
         predictions: List[Forecast],
@@ -133,7 +132,7 @@ class PredictionModelGatewayImpl(PredictionModelGateway):
             raise PredictionError(f"Model '{model_type}' not available")
         
         model = self.models[model_type]
-        return await model.evaluate(test_data, predictions, metric)
+        return model.evaluate(test_data, predictions, metric)
     
     def get_model_info(self, model_type: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -165,7 +164,7 @@ class PredictionModelGatewayImpl(PredictionModelGateway):
         """
         return list(self.models.keys())
     
-    async def predict_ensemble(
+    def predict_ensemble(
         self,
         historical_data: List[WeatherData],
         metric: str,
@@ -211,7 +210,7 @@ class PredictionModelGatewayImpl(PredictionModelGateway):
                 raise PredictionError(f"Model '{model_type}' not available for ensemble")
             
             config = model_configs.get(model_type, {})
-            preds = await self.predict(
+            preds = self.predict(
                 historical_data, metric, prediction_days, model_type, config
             )
             all_predictions.append(preds)
@@ -250,7 +249,7 @@ class PredictionModelGatewayImpl(PredictionModelGateway):
     
     # Implement PredictionModelGateway interface methods
     
-    async def predict_multiple_metrics(
+    def predict_multiple_metrics(
         self, 
         historical_data: List[WeatherData], 
         metrics: List[str],
@@ -271,7 +270,7 @@ class PredictionModelGatewayImpl(PredictionModelGateway):
         
         results = {}
         for metric in metrics:
-            forecasts = await self.predict(
+            forecasts = self.predict(
                 historical_data=historical_data,
                 metric=metric,
                 prediction_days=prediction_days,
@@ -282,7 +281,7 @@ class PredictionModelGatewayImpl(PredictionModelGateway):
         
         return results
     
-    async def evaluate_model_accuracy(
+    def evaluate_model_accuracy(
         self,
         test_data: List[WeatherData],
         predictions: List[Forecast],
@@ -299,14 +298,14 @@ class PredictionModelGatewayImpl(PredictionModelGateway):
             Dictionary with evaluation metrics
         """
         # Use default model for evaluation
-        return await self.evaluate(
+        return self.evaluate(
             test_data=test_data,
             predictions=predictions,
             metric=metric,
             model_type=self.default_model
         )
     
-    async def train_model(
+    def train_model(
         self,
         training_data: List[WeatherData],
         model_config: Dict[str, Any],
@@ -334,7 +333,7 @@ class PredictionModelGatewayImpl(PredictionModelGateway):
             'status': 'trained'
         }
     
-    async def get_model_info(self, model_type: str) -> Dict[str, Any]:
+    def get_model_info(self, model_type: str) -> Dict[str, Any]:
         """Get information about specific model.
         
         Args:
@@ -348,7 +347,7 @@ class PredictionModelGatewayImpl(PredictionModelGateway):
         
         return self.models[model_type].get_model_info()
     
-    async def predict_with_confidence_intervals(
+    def predict_with_confidence_intervals(
         self,
         historical_data: List[WeatherData],
         prediction_days: int,
@@ -372,7 +371,7 @@ class PredictionModelGatewayImpl(PredictionModelGateway):
         # Add confidence level to config
         config = {**model_config, 'confidence_level': confidence_level}
         
-        return await self.predict(
+        return self.predict(
             historical_data=historical_data,
             metric=metric,
             prediction_days=prediction_days,
@@ -380,7 +379,7 @@ class PredictionModelGatewayImpl(PredictionModelGateway):
             model_config=config
         )
     
-    async def batch_predict(
+    def batch_predict(
         self,
         historical_data_list: List[List[WeatherData]],
         model_config: Dict[str, Any],
@@ -400,7 +399,7 @@ class PredictionModelGatewayImpl(PredictionModelGateway):
         
         for historical_data in historical_data_list:
             try:
-                result = await self.predict_multiple_metrics(
+                result = self.predict_multiple_metrics(
                     historical_data, metrics, model_config
                 )
                 results.append(result)

@@ -33,7 +33,7 @@ Optimizations (Phase 1-3):
 
 import time
 import uuid
-import asyncio
+
 import dataclasses
 from datetime import datetime
 from typing import List, Dict, Optional
@@ -63,7 +63,6 @@ from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.usecase.services.interaction_rule_service import InteractionRuleService
 from agrr_core.usecase.services.alns_optimizer_service import ALNSOptimizer
 from agrr_core.usecase.services.violation_checker_service import ViolationCheckerService
-
 
 @dataclass
 class AllocationCandidate:
@@ -182,7 +181,6 @@ class AllocationCandidate:
         return not (self_end_with_fallow <= other.start_date or 
                     other_end_with_fallow <= self.start_date)
 
-
 class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate]):
     """Interactor for multi-field crop allocation using greedy + local search.
     
@@ -235,7 +233,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         # Create ALNS optimizer if enabled
         self.alns_optimizer = ALNSOptimizer(self.config) if self.config.enable_alns else None
 
-    async def execute(
+    def execute(
         self,
         request: MultiFieldCropAllocationRequestDTO,
         enable_local_search: bool = True,
@@ -269,21 +267,21 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             optimization_config.max_local_search_iterations = max_local_search_iterations
         
         # Phase 1: Load crops and fields
-        fields = await self._load_fields(request.field_ids)
-        crops = await self.crop_gateway.get_all()
+        fields = self._load_fields(request.field_ids)
+        crops = self.crop_gateway.get_all()
         
         # Phase 1: Generate candidates based on strategy
         if optimization_config.candidate_generation_strategy == "period_template":
             # Use Period Template strategy
-            candidates = await self._generate_candidates_with_period_template(
+            candidates = self._generate_candidates_with_period_template(
                 fields, crops, request, optimization_config, algorithm
             )
         else:
             # Use legacy candidate pool strategy
             if optimization_config.enable_parallel_candidate_generation:
-                candidates = await self._generate_candidates_parallel(fields, crops, request, optimization_config)
+                candidates = self._generate_candidates_parallel(fields, crops, request, optimization_config)
             else:
-                candidates = await self._generate_candidates(fields, crops, request, optimization_config)
+                candidates = self._generate_candidates(fields, crops, request, optimization_config)
         
         # Check if any candidates were generated
         if not candidates:
@@ -348,17 +346,17 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         
         return MultiFieldCropAllocationResponseDTO(optimization_result=result)
 
-    async def _load_fields(self, field_ids: List[str]) -> List[Field]:
+    def _load_fields(self, field_ids: List[str]) -> List[Field]:
         """Load field entities from gateway."""
         fields = []
         for field_id in field_ids:
-            field = await self.field_gateway.get(field_id)
+            field = self.field_gateway.get(field_id)
             if field is None:
                 raise ValueError(f"Field not found: {field_id}")
             fields.append(field)
         return fields
 
-    async def _generate_candidates(
+    def _generate_candidates(
         self,
         fields: List[Field],
         crops: List,
@@ -390,12 +388,12 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 )
                 
                 # Set crop requirement in growth period optimizer gateway
-                await self.crop_profile_gateway_internal.save(crop_aggregate)
+                self.crop_profile_gateway_internal.save(crop_aggregate)
                 
-                optimization_result = await self.growth_period_optimizer.execute(optimization_request)
+                optimization_result = self.growth_period_optimizer.execute(optimization_request)
                 
                 # Clean up
-                await self.crop_profile_gateway_internal.delete()
+                self.crop_profile_gateway_internal.delete()
                 
                 # Calculate maximum area that can fit in the field
                 field_max_area = field.area
@@ -463,7 +461,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         
         return candidates
     
-    async def _generate_candidates_parallel(
+    def _generate_candidates_parallel(
         self,
         fields: List[Field],
         crops: List,
@@ -486,7 +484,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 tasks.append(task)
         
         # Execute all tasks in parallel
-        candidate_lists = await asyncio.gather(*tasks)
+        candidate_lists = asyncio.gather(*tasks)
         
         # Flatten results
         all_candidates = []
@@ -500,7 +498,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         
         return all_candidates
     
-    async def _generate_candidates_with_period_template(
+    def _generate_candidates_with_period_template(
         self,
         fields: List[Field],
         crops: List,
@@ -553,10 +551,10 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             )
             
             # Set crop requirement in growth period optimizer gateway
-            await self.crop_profile_gateway_internal.save(crop_aggregate)
+            self.crop_profile_gateway_internal.save(crop_aggregate)
             
             try:
-                optimization_result = await self.growth_period_optimizer.execute(optimization_request)
+                optimization_result = self.growth_period_optimizer.execute(optimization_request)
                 
                 # Convert CandidateResultDTO to PeriodTemplate using factory method
                 templates = []
@@ -611,7 +609,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         
         return candidates
     
-    async def _generate_candidates_for_field_crop(
+    def _generate_candidates_for_field_crop(
         self,
         field: Field,
         crop_aggregate,
@@ -644,10 +642,10 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         )
         
         # Set crop requirement in growth period optimizer gateway
-        await self.crop_profile_gateway_internal.save(crop_aggregate)
+        self.crop_profile_gateway_internal.save(crop_aggregate)
         
         try:
-            optimization_result = await self.growth_period_optimizer.execute(optimization_request)
+            optimization_result = self.growth_period_optimizer.execute(optimization_request)
             
         except ValueError as e:
             # Crop cannot complete growth in the planning period
@@ -659,7 +657,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
             )
             
             # Clean up before returning
-            await self.crop_profile_gateway_internal.delete()
+            self.crop_profile_gateway_internal.delete()
             
             # Return empty list to skip this crop
             return []
@@ -667,7 +665,7 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
         finally:
             # Ensure cleanup happens even if unexpected error occurs
             try:
-                await self.crop_profile_gateway_internal.delete()
+                self.crop_profile_gateway_internal.delete()
             except Exception:
                 pass  # Ignore cleanup errors
         

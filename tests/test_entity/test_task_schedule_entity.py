@@ -4,7 +4,6 @@ import pytest
 
 from agrr_core.entity.entities.task_schedule_entity import TaskSchedule
 
-
 class TestTaskSchedule:
     """Test cases for TaskSchedule entity."""
     

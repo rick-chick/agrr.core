@@ -24,7 +24,7 @@ class FetchWeatherDataInteractor:
         self.weather_gateway = weather_gateway
         self.weather_presenter_output_port = weather_presenter_output_port
     
-    async def execute(self, request: WeatherDataRequestDTO) -> dict:
+    def execute(self, request: WeatherDataRequestDTO) -> dict:
         """
         Execute weather data fetching.
         
@@ -57,7 +57,7 @@ class FetchWeatherDataInteractor:
             date_range = DateRange(request.start_date, request.end_date)
             
             # Get weather data with location information
-            weather_data_with_location = await self.weather_gateway.get_by_location_and_date_range(
+            weather_data_with_location = self.weather_gateway.get_by_location_and_date_range(
                 location.latitude,
                 location.longitude,
                 date_range.start_date,

@@ -8,8 +8,6 @@ import pytest
 from datetime import datetime, timedelta
 from agrr_core.adapter.gateways.weather_noaa_ftp_gateway import WeatherNOAAFTPGateway
 
-
-@pytest.mark.asyncio
 @pytest.mark.slow
 @pytest.mark.e2e
 class TestNOAAUSCities:
@@ -25,14 +23,14 @@ class TestNOAAUSCities:
         ("Los Angeles", 34.0522, -118.2437),
         ("Chicago", 41.8781, -87.6298),
     ])
-    async def test_fetch_weather_for_us_cities(self, gateway, city_name, latitude, longitude):
+    def test_fetch_weather_for_us_cities(self, gateway, city_name, latitude, longitude):
         """Test fetching weather data for major US cities."""
         # Use historical data (2023) instead of recent data to avoid availability issues
         start_date = datetime(2023, 1, 1).date()
         end_date = datetime(2023, 1, 7).date()
         
         # Fetch data
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=start_date.strftime("%Y-%m-%d"),
@@ -67,9 +65,9 @@ class TestNOAAUSCities:
             sample = result.weather_data_list[0]
             print(f"   Sample: {sample.time.date()} - Temp: {sample.temperature_2m_mean}°C")
     
-    async def test_fetch_historical_data_2023(self, gateway):
+    def test_fetch_historical_data_2023(self, gateway):
         """Test fetching historical data from 2023 for New York."""
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=40.7128,
             longitude=-74.0060,
             start_date="2023-01-01",
@@ -86,13 +84,13 @@ class TestNOAAUSCities:
         
         print(f"\n✅ Historical 2023: Fetched {len(result.weather_data_list)} days")
     
-    async def test_fetch_data_new_york_full_week(self, gateway):
+    def test_fetch_data_new_york_full_week(self, gateway):
         """Test fetching a full week of data for New York."""
         # Use historical data to ensure availability
         start_date = datetime(2023, 6, 1).date()
         end_date = datetime(2023, 6, 7).date()
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=40.7128,
             longitude=-74.0060,
             start_date=start_date.strftime("%Y-%m-%d"),
@@ -117,10 +115,10 @@ class TestNOAAUSCities:
         
         print(f"\n✅ New York Full Week: {len(weather_data_list)} days, {temps_found} with temps")
     
-    async def test_fetch_data_los_angeles_month(self, gateway):
+    def test_fetch_data_los_angeles_month(self, gateway):
         """Test fetching a month of data for Los Angeles."""
         # Get January 2023
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=34.0522,
             longitude=-118.2437,
             start_date="2023-01-01",

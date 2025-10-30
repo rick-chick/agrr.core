@@ -21,12 +21,10 @@ from agrr_core.adapter.gateways.optimization_result_inmemory_gateway import (
     OptimizationResultInMemoryGateway,
 )
 
-
 class TestOptimizationScheduleGatewayImpl:
     """Test suite for optimization schedule gateway implementation."""
 
-    @pytest.mark.asyncio
-    async def test_save_and_get_schedule(self):
+    def test_save_and_get_schedule(self):
         """Test saving and retrieving a schedule through gateway."""
         # Gateway directly implements the interface now
         gateway = OptimizationResultInMemoryGateway()
@@ -54,10 +52,10 @@ class TestOptimizationScheduleGatewayImpl:
         ]
         
         # Save schedule through gateway using save()
-        await gateway.save("schedule_001", results, 1800.0)
+        gateway.save("schedule_001", results, 1800.0)
         
         # Retrieve schedule through gateway using get()
-        retrieved = await gateway.get("schedule_001")
+        retrieved = gateway.get("schedule_001")
         
         assert retrieved is not None
         assert isinstance(retrieved, OptimizationSchedule)
@@ -65,8 +63,7 @@ class TestOptimizationScheduleGatewayImpl:
         assert len(retrieved.selected_results) == 2
         assert retrieved.total_cost == 1800.0
 
-    @pytest.mark.asyncio
-    async def test_get_all_schedules(self):
+    def test_get_all_schedules(self):
         """Test retrieving all schedules through gateway."""
         gateway = OptimizationResultInMemoryGateway()
         
@@ -96,11 +93,11 @@ class TestOptimizationScheduleGatewayImpl:
         ]
         
         # Save schedules using save()
-        await gateway.save("schedule_001", results1, 1000.0)
-        await gateway.save("schedule_002", results2, 900.0)
+        gateway.save("schedule_001", results1, 1000.0)
+        gateway.save("schedule_002", results2, 900.0)
         
         # Retrieve all (includes schedules and intermediate results)
-        all_results = await gateway.get_all()
+        all_results = gateway.get_all()
         all_schedules = [r for r in all_results if r.is_schedule]
         
         assert len(all_schedules) == 2
@@ -109,8 +106,7 @@ class TestOptimizationScheduleGatewayImpl:
         assert "schedule_001" in schedule_ids
         assert "schedule_002" in schedule_ids
 
-    @pytest.mark.asyncio
-    async def test_delete_schedule(self):
+    def test_delete_schedule(self):
         """Test deleting a schedule through gateway."""
         gateway = OptimizationResultInMemoryGateway()
         
@@ -127,19 +123,18 @@ class TestOptimizationScheduleGatewayImpl:
             ),
         ]
         
-        await gateway.save("schedule_001", results, 1000.0)
+        gateway.save("schedule_001", results, 1000.0)
         
         # Delete schedule using delete()
-        deleted = await gateway.delete("schedule_001")
+        deleted = gateway.delete("schedule_001")
         
         assert deleted is True
         
         # Verify it's gone
-        retrieved = await gateway.get("schedule_001")
+        retrieved = gateway.get("schedule_001")
         assert retrieved is None
 
-    @pytest.mark.asyncio
-    async def test_clear_schedules(self):
+    def test_clear_schedules(self):
         """Test clearing all schedules through gateway."""
         gateway = OptimizationResultInMemoryGateway()
         
@@ -156,13 +151,13 @@ class TestOptimizationScheduleGatewayImpl:
             ),
         ]
         
-        await gateway.save("schedule_001", results, 1000.0)
-        await gateway.save("schedule_002", results, 1000.0)
+        gateway.save("schedule_001", results, 1000.0)
+        gateway.save("schedule_002", results, 1000.0)
         
         # Clear all schedules
-        await gateway.clear_schedules()
+        gateway.clear_schedules()
         
         # Verify they're all gone
-        all_results = await gateway.get_all()
+        all_results = gateway.get_all()
         all_schedules = [r for r in all_results if r.is_schedule]
         assert len(all_schedules) == 0

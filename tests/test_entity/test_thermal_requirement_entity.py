@@ -4,7 +4,6 @@ import pytest
 
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
 
-
 class TestThermalRequirement:
     """Test ThermalRequirement entity."""
 

@@ -12,7 +12,6 @@ from agrr_core.entity.entities.temperature_profile_entity import TemperatureProf
 from agrr_core.entity.entities.sunshine_profile_entity import SunshineProfile
 from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirement
 
-
 class CropProfileMapper:
     """Map between CropProfile domain entities and data transfer objects.
     
@@ -194,8 +193,6 @@ class CropProfileMapper:
             result["harvest_start_gdd"] = thermal.harvest_start_gdd
         return result
 
-
 # Backward compatibility alias
 CropRequirementMapper = CropProfileMapper
-
 

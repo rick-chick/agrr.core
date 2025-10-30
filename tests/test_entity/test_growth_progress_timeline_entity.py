@@ -8,7 +8,6 @@ from agrr_core.entity.entities.growth_progress_entity import GrowthProgress
 from agrr_core.entity.entities.growth_progress_timeline_entity import GrowthProgressTimeline
 from agrr_core.entity.entities.growth_stage_entity import GrowthStage
 
-
 class TestGrowthProgressTimeline:
     """Test cases for GrowthProgressTimeline entity."""
 

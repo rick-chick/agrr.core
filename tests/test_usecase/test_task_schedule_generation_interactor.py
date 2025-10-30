@@ -1,13 +1,12 @@
 """Tests for TaskScheduleGenerationInteractor."""
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import Mock, MagicMock
 
 from agrr_core.usecase.interactors.task_schedule_generation_interactor import TaskScheduleGenerationInteractor
 from agrr_core.usecase.dto.task_schedule_generation_request_dto import TaskScheduleGenerationRequestDTO
 from agrr_core.entity.entities.task_schedule_result_entity import TaskScheduleResult
 from agrr_core.entity.entities.task_schedule_entity import TaskSchedule
-
 
 class TestTaskScheduleGenerationInteractor:
     """Test cases for TaskScheduleGenerationInteractor."""
@@ -15,7 +14,7 @@ class TestTaskScheduleGenerationInteractor:
     @pytest.fixture
     def mock_gateway(self):
         """Create mock gateway."""
-        gateway = AsyncMock()
+        gateway = Mock()
         return gateway
     
     @pytest.fixture
@@ -69,16 +68,15 @@ class TestTaskScheduleGenerationInteractor:
             total_duration_days=2.0,
             weather_dependencies=["low"]
         )
-    
-    @pytest.mark.asyncio
-    async def test_execute_success(self, interactor, mock_gateway, valid_request, mock_result):
+
+    def test_execute_success(self, interactor, mock_gateway, valid_request, mock_result):
         """Test successful execution."""
         # Setup mock
         mock_gateway.generate_task_schedule.return_value = mock_result
         mock_gateway.validate_task_schedule.return_value = True
         
         # Execute
-        result = await interactor.execute(valid_request)
+        result = interactor.execute(valid_request)
         
         # Verify
         assert result == mock_result
@@ -89,9 +87,8 @@ class TestTaskScheduleGenerationInteractor:
             agricultural_tasks=valid_request.agricultural_tasks
         )
         mock_gateway.validate_task_schedule.assert_called_once_with(mock_result)
-    
-    @pytest.mark.asyncio
-    async def test_execute_invalid_request(self, interactor, mock_gateway):
+
+    def test_execute_invalid_request(self, interactor, mock_gateway):
         """Test execution with invalid request."""
         # Create invalid request
         invalid_request = TaskScheduleGenerationRequestDTO(
@@ -103,20 +100,18 @@ class TestTaskScheduleGenerationInteractor:
         
         # Execute and expect ValueError
         with pytest.raises(ValueError, match="Invalid request data"):
-            await interactor.execute(invalid_request)
-    
-    @pytest.mark.asyncio
-    async def test_execute_generation_failure(self, interactor, mock_gateway, valid_request):
+            interactor.execute(invalid_request)
+
+    def test_execute_generation_failure(self, interactor, mock_gateway, valid_request):
         """Test execution with generation failure."""
         # Setup mock to raise exception
         mock_gateway.generate_task_schedule.side_effect = Exception("LLM error")
         
         # Execute and expect RuntimeError
         with pytest.raises(RuntimeError, match="Task schedule generation failed"):
-            await interactor.execute(valid_request)
-    
-    @pytest.mark.asyncio
-    async def test_execute_validation_failure(self, interactor, mock_gateway, valid_request, mock_result):
+            interactor.execute(valid_request)
+
+    def test_execute_validation_failure(self, interactor, mock_gateway, valid_request, mock_result):
         """Test execution with validation failure."""
         # Setup mock
         mock_gateway.generate_task_schedule.return_value = mock_result
@@ -124,17 +119,16 @@ class TestTaskScheduleGenerationInteractor:
         
         # Execute and expect RuntimeError
         with pytest.raises(RuntimeError, match="Generated task schedule is invalid"):
-            await interactor.execute(valid_request)
-    
-    @pytest.mark.asyncio
-    async def test_generate_for_crop_success(self, interactor, mock_gateway, mock_result):
+            interactor.execute(valid_request)
+
+    def test_generate_for_crop_success(self, interactor, mock_gateway, mock_result):
         """Test generate_for_crop convenience method."""
         # Setup mock
         mock_gateway.generate_task_schedule.return_value = mock_result
         mock_gateway.validate_task_schedule.return_value = True
         
         # Execute
-        result = await interactor.generate_for_crop(
+        result = interactor.generate_for_crop(
             crop_name="トマト",
             variety="桃太郎",
             stage_requirements=[{"stage": {"name": "育苗期", "order": 1}}],

@@ -9,7 +9,6 @@ from agrr_core.usecase.dto.batch_prediction_request_dto import BatchPredictionRe
 from agrr_core.usecase.dto.batch_prediction_response_dto import BatchPredictionResponseDTO
 from agrr_core.usecase.dto.multi_metric_prediction_request_dto import MultiMetricPredictionRequestDTO
 
-
 class BatchPredictionInteractor(BatchPredictionInputPort):
     """Interactor for batch prediction for multiple locations."""
     
@@ -19,7 +18,7 @@ class BatchPredictionInteractor(BatchPredictionInputPort):
     ):
         self.multi_metric_prediction_interactor = multi_metric_prediction_interactor
     
-    async def execute(self, request: BatchPredictionRequestDTO) -> BatchPredictionResponseDTO:
+    def execute(self, request: BatchPredictionRequestDTO) -> BatchPredictionResponseDTO:
         """Execute batch prediction for multiple locations."""
         start_time = time.time()
         
@@ -41,7 +40,7 @@ class BatchPredictionInteractor(BatchPredictionInputPort):
                 )
                 
                 # Execute prediction
-                result = await self.multi_metric_prediction_interactor.execute(single_request)
+                result = self.multi_metric_prediction_interactor.execute(single_request)
                 results.append({
                     'location': location_data,
                     'prediction': result,

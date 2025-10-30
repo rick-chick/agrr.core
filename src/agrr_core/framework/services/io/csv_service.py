@@ -8,7 +8,6 @@ from typing import Optional
 from agrr_core.entity.exceptions.csv_download_error import CsvDownloadError
 from agrr_core.adapter.interfaces.io.csv_service_interface import CsvServiceInterface
 
-
 class CsvService(CsvServiceInterface):
     """CSV service for fetching CSV data from URLs."""
     
@@ -22,7 +21,7 @@ class CsvService(CsvServiceInterface):
         self.timeout = timeout
         self.session: Optional[requests.Session] = requests.Session()
     
-    async def download_csv(
+    def download_csv(
         self,
         url: str,
         encoding: str = 'utf-8'

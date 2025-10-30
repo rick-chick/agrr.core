@@ -17,7 +17,6 @@ from agrr_core.adapter.interfaces.clients.http_client_interface import HttpClien
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 
-
 # NOAA ISD 観測地点マッピング（緯度経度 → (USAF, WBAN, name)）
 # アメリカ主要都市の観測所を定義
 US_LOCATION_MAPPING: Dict[Tuple[float, float], Tuple[str, str, str, float, float]] = {
@@ -48,7 +47,6 @@ US_LOCATION_MAPPING: Dict[Tuple[float, float], Tuple[str, str, str, float, float
     (33.4484, -112.0740): ("722780", "23183", "Phoenix Airport, AZ", 33.4342, -112.0116),  # Phoenix
     (30.2672, -97.7431): ("722540", "13904", "Austin Airport, TX", 30.1945, -97.6699),  # Austin
 }
-
 
 # インド主要農業地域の観測所マッピング（50地点）
 # 選定基準：主要農業州（パンジャブ、UP、マハーラーシュトラ等）の代表都市と主要作物生産地域
@@ -138,7 +136,6 @@ INDIA_LOCATION_MAPPING: Dict[Tuple[float, float], Tuple[str, str, str, float, fl
     # ジャールカンド州（Jharkhand）- 米
     (23.3100, 85.3200): ("427180", "99999", "Ranchi/Birsa Munda Airport", 23.3143, 85.3217),
 }
-
 
 # タイ主要農業地域の観測所マッピング（81地点）
 # 選定基準：主要農作物生産地域（米、ゴム、パーム油、キャッサバ、サトウキビ等）、地理的バランス
@@ -241,14 +238,12 @@ THAILAND_LOCATION_MAPPING: Dict[Tuple[float, float], Tuple[str, str, str, float,
     (8.4710, 99.9560): ("485520", "99999", "Cha Ian", 8.471, 99.956),
 }
 
-
 # 統合マッピング（US + India + Thailand）
 LOCATION_MAPPING: Dict[Tuple[float, float], Tuple[str, str, str, float, float]] = {
     **US_LOCATION_MAPPING,
     **INDIA_LOCATION_MAPPING,
     **THAILAND_LOCATION_MAPPING,
 }
-
 
 class WeatherNOAAGateway(WeatherGateway):
     """Gateway for fetching weather data from NOAA ISD.
@@ -269,7 +264,7 @@ class WeatherNOAAGateway(WeatherGateway):
         self.http_client = http_client
         self.logger = logging.getLogger(__name__)
     
-    async def get(self) -> List[WeatherData]:
+    def get(self) -> List[WeatherData]:
         """Get weather data from configured source.
         
         Note: This method is not used for NOAA weather data.
@@ -283,7 +278,7 @@ class WeatherNOAAGateway(WeatherGateway):
             "Use get_by_location_and_date_range() instead."
         )
     
-    async def create(self, weather_data: List[WeatherData], destination: str) -> None:
+    def create(self, weather_data: List[WeatherData], destination: str) -> None:
         """Create weather data at destination.
         
         Raises:
@@ -293,7 +288,7 @@ class WeatherNOAAGateway(WeatherGateway):
             "Weather data creation not supported for NOAA source"
         )
     
-    async def get_forecast(
+    def get_forecast(
         self,
         latitude: float,
         longitude: float
@@ -337,7 +332,7 @@ class WeatherNOAAGateway(WeatherGateway):
         
         return nearest
     
-    async def get_by_location_and_date_range(
+    def get_by_location_and_date_range(
         self,
         latitude: float,
         longitude: float,
@@ -402,7 +397,7 @@ class WeatherNOAAGateway(WeatherGateway):
                     self.logger.info(f"Fetching NOAA data from: {url}")
                     
                     # Fetch CSV data (as text)
-                    response_text = await self._fetch_csv_text(url)
+                    response_text = self._fetch_csv_text(url)
                     
                     # Parse CSV data
                     year_data = self._parse_noaa_csv(response_text, start_date, end_date)
@@ -465,7 +460,7 @@ class WeatherNOAAGateway(WeatherGateway):
         except Exception as e:
             raise WeatherAPIError(f"Failed to fetch NOAA data: {e}")
     
-    async def _fetch_csv_text(self, url: str) -> str:
+    def _fetch_csv_text(self, url: str) -> str:
         """Fetch CSV text from URL.
         
         Args:

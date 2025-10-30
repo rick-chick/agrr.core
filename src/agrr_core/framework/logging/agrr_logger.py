@@ -8,7 +8,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-
 class AgrrLogger:
     """Enhanced logging system for AGRR application."""
     
@@ -86,7 +85,6 @@ class AgrrLogger:
             return f"{message} ({context})"
         return message
 
-
 class DaemonLogger:
     """Specialized logger for daemon operations."""
     
@@ -149,10 +147,8 @@ class DaemonLogger:
         else:
             self.logger.info(f"Health check", status=status)
 
-
 # Global logger instance
 _global_logger: Optional[AgrrLogger] = None
-
 
 def get_logger() -> AgrrLogger:
     """Get global logger instance."""
@@ -160,7 +156,6 @@ def get_logger() -> AgrrLogger:
     if _global_logger is None:
         _global_logger = AgrrLogger()
     return _global_logger
-
 
 def setup_logging(log_file: str = '/tmp/agrr.log', 
                   log_level: str = 'INFO') -> AgrrLogger:

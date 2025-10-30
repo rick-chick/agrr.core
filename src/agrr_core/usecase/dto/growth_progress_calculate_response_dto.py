@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 
-
 @dataclass
 class GrowthProgressRecordDTO:
     """Single progress record for a specific date."""
@@ -36,7 +35,6 @@ class GrowthProgressRecordDTO:
             "stage_name": self.stage_name,
             "is_complete": self.is_complete,
         }
-
 
 @dataclass
 class GrowthProgressCalculateResponseDTO:

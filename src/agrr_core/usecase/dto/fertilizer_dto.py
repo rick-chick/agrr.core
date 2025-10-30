@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-
 @dataclass
 class FertilizerListRequestDTO:
     """Request DTO for fertilizer list search."""
@@ -11,18 +10,15 @@ class FertilizerListRequestDTO:
     limit: int = 5
     area_m2: Optional[float] = None
 
-
 @dataclass
 class FertilizerListResponseDTO:
     """Response DTO for fertilizer list search."""
     fertilizers: List[str]
 
-
 @dataclass
 class FertilizerDetailRequestDTO:
     """Request DTO for fertilizer detail search."""
     fertilizer_name: str
-
 
 @dataclass
 class FertilizerDetailResponseDTO:

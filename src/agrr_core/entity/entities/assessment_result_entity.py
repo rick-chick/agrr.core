@@ -19,7 +19,6 @@ from typing import Optional
 
 from agrr_core.entity.entities.weather_entity import WeatherData
 
-
 @dataclass(frozen=True)
 class AssessmentResult:
     """Holds daily assessment flags and indices for a stage."""
@@ -36,5 +35,4 @@ class AssessmentResult:
     gdd_cumulative: float
     daily_temperature_range: Optional[float]
     photo_thermal_index: Optional[float]
-
 

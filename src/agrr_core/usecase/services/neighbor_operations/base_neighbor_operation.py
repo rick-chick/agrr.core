@@ -5,7 +5,6 @@ from typing import List, Dict, Any
 
 from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 
-
 class NeighborOperation(ABC):
     """Abstract base class for neighbor operations.
     

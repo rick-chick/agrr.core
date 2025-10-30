@@ -10,7 +10,6 @@ from datetime import datetime
 from agrr_core.framework.services.clients.http_client import HttpClient
 from agrr_core.adapter.gateways.weather_nasa_power_gateway import WeatherNASAPowerGateway
 
-
 class TestNASAPowerRealAPI:
     """E2E tests for NASA POWER API (real API calls)."""
     
@@ -23,10 +22,9 @@ class TestNASAPowerRealAPI:
     def gateway(self, http_client):
         """Create NASA POWER gateway instance."""
         return WeatherNASAPowerGateway(http_client)
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
-    async def test_fetch_new_delhi_short_period(self, gateway):
+    def test_fetch_new_delhi_short_period(self, gateway):
         """Test fetching real data for New Delhi (short period)."""
         # New Delhi coordinates
         latitude = 28.6139
@@ -36,7 +34,7 @@ class TestNASAPowerRealAPI:
         start_date = "2023-01-01"
         end_date = "2023-01-07"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude, longitude, start_date, end_date
         )
         
@@ -54,10 +52,9 @@ class TestNASAPowerRealAPI:
                 assert 0 <= weather_data.temperature_2m_mean <= 40
         
         print(f"\n✅ New Delhi: Successfully fetched {len(result.weather_data_list)} days")
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
-    async def test_fetch_mumbai_long_period(self, gateway):
+    def test_fetch_mumbai_long_period(self, gateway):
         """Test fetching real data for Mumbai (1 year)."""
         # Mumbai coordinates
         latitude = 19.0760
@@ -67,7 +64,7 @@ class TestNASAPowerRealAPI:
         start_date = "2023-01-01"
         end_date = "2023-12-31"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude, longitude, start_date, end_date
         )
         
@@ -86,11 +83,10 @@ class TestNASAPowerRealAPI:
         assert max(temps) < 40   # Mumbai rarely exceeds 40°C
         
         print(f"\n✅ Mumbai: Successfully fetched {len(result.weather_data_list)} days")
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
     @pytest.mark.slow
-    async def test_fetch_india_2000_2024(self, gateway):
+    def test_fetch_india_2000_2024(self, gateway):
         """Test fetching 24 years of data (2000-2024) for Delhi.
         
         This test verifies that NASA POWER can handle long-term data requests.
@@ -104,7 +100,7 @@ class TestNASAPowerRealAPI:
         start_date = "2000-01-01"
         end_date = "2024-12-31"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude, longitude, start_date, end_date
         )
         
@@ -118,8 +114,7 @@ class TestNASAPowerRealAPI:
         assert max(dates) <= datetime(2024, 12, 31)
         
         print(f"\n✅ Delhi 2000-2024: Successfully fetched {len(result.weather_data_list)} days")
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
     @pytest.mark.parametrize("coords,city_name", [
         ((28.6139, 77.2090), "New Delhi"),
@@ -128,7 +123,7 @@ class TestNASAPowerRealAPI:
         ((22.5726, 88.3639), "Kolkata"),
         ((12.9716, 77.5946), "Bangalore"),
     ])
-    async def test_major_cities_data_availability(self, gateway, coords, city_name):
+    def test_major_cities_data_availability(self, gateway, coords, city_name):
         """Test that major Indian cities have data available.
         
         This test verifies that NASA POWER covers all major Indian cities.
@@ -137,7 +132,7 @@ class TestNASAPowerRealAPI:
         start_date = "2023-06-01"
         end_date = "2023-06-07"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude, longitude, start_date, end_date
         )
         
@@ -152,10 +147,9 @@ class TestNASAPowerRealAPI:
         assert has_temp, f"{city_name} should have temperature data"
         
         print(f"\n✅ {city_name}: Data available")
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
-    async def test_remote_location_coverage(self, gateway):
+    def test_remote_location_coverage(self, gateway):
         """Test that NASA POWER covers remote locations (not just cities).
         
         Tests a rural location in Rajasthan to verify grid-based coverage.
@@ -167,7 +161,7 @@ class TestNASAPowerRealAPI:
         start_date = "2023-01-01"
         end_date = "2023-01-07"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude, longitude, start_date, end_date
         )
         
@@ -175,10 +169,9 @@ class TestNASAPowerRealAPI:
         assert len(result.weather_data_list) == 7
         
         print(f"\n✅ Remote Rajasthan location: Data available")
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
-    async def test_data_quality_checks(self, gateway):
+    def test_data_quality_checks(self, gateway):
         """Test data quality for a known location."""
         # Bangalore (moderate climate)
         latitude = 12.9716
@@ -187,7 +180,7 @@ class TestNASAPowerRealAPI:
         start_date = "2023-01-01"
         end_date = "2023-12-31"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude, longitude, start_date, end_date
         )
         
@@ -222,10 +215,9 @@ class TestNASAPowerRealAPI:
         print(f"   Temperature Max:  {has_temp_max/total_days*100:.1f}%")
         print(f"   Temperature Min:  {has_temp_min/total_days*100:.1f}%")
         print(f"   Precipitation:    {has_precip/total_days*100:.1f}%")
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
-    async def test_rate_limiting(self, gateway):
+    def test_rate_limiting(self, gateway):
         """Test that rate limiting works correctly.
         
         Makes 5 consecutive requests to verify rate limiting doesn't cause issues.
@@ -243,7 +235,7 @@ class TestNASAPowerRealAPI:
         
         results = []
         for lat, lon in cities:
-            result = await gateway.get_by_location_and_date_range(
+            result = gateway.get_by_location_and_date_range(
                 lat, lon, start_date, end_date
             )
             results.append(result)
@@ -256,10 +248,9 @@ class TestNASAPowerRealAPI:
         assert gateway._request_count == 5
         
         print(f"\n✅ Rate limiting: {gateway._request_count} requests completed successfully")
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.e2e
-    async def test_json_output_format(self, gateway):
+    def test_json_output_format(self, gateway):
         """Test that JSON output format is correct for NASA POWER data.
         
         This test verifies that the data can be properly formatted for JSON output,
@@ -273,7 +264,7 @@ class TestNASAPowerRealAPI:
         start_date = "2023-01-01"
         end_date = "2023-01-07"
         
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude, longitude, start_date, end_date
         )
         

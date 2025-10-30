@@ -1,13 +1,11 @@
 {
   "moves": [
     {
-      "allocation_id": "alloc_001",
+      "allocation_id": "5e1e8536-f102-470b-9811-6a36cfefae81",
       "action": "move",
-      "to_field_id": "field_02",
-      "to_start_date": "2024-04-01T00:00:00",
-      "to_area": 1000.0,
-      "crop_id": null,
-      "variety": null
+      "to_field_id": "field_01",
+      "to_start_date": "2024-06-15",
+      "to_area": 300.0
     }
   ]
 }

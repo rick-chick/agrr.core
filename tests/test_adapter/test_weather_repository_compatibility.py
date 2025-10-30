@@ -6,7 +6,7 @@ and can be used interchangeably in the system.
 
 import pytest
 import inspect
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 import pandas as pd
 
 from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway as WeatherAPIOpenMeteoRepository
@@ -16,20 +16,19 @@ from agrr_core.adapter.interfaces.io.html_table_service_interface import HtmlTab
 from agrr_core.adapter.interfaces.structures.html_table_structures import HtmlTable, TableRow
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 
-
 class TestWeatherRepositoryCompatibility:
     """Test that OpenMeteo and JMA repositories are compatible."""
     
     @pytest.fixture
     def openmeteo_repository(self):
         """Create OpenMeteo repository."""
-        mock_http = AsyncMock(spec=HttpClientInterface)
+        mock_http = Mock(spec=HttpClientInterface)
         return WeatherAPIOpenMeteoRepository(mock_http)
     
     @pytest.fixture
     def jma_repository(self):
         """Create JMA repository."""
-        mock_html_fetcher = AsyncMock(spec=HtmlTableServiceInterface)
+        mock_html_fetcher = Mock(spec=HtmlTableServiceInterface)
         return WeatherJMAGateway(mock_html_fetcher)
     
     def test_both_have_same_method(self, openmeteo_repository, jma_repository):
@@ -66,12 +65,11 @@ class TestWeatherRepositoryCompatibility:
         # Both should return WeatherDataWithLocationDTO
         assert openmeteo_sig.return_annotation == WeatherDataWithLocationDTO
         assert jma_sig.return_annotation == WeatherDataWithLocationDTO
-    
-    @pytest.mark.asyncio
-    async def test_both_return_compatible_data_structure(self):
+
+    def test_both_return_compatible_data_structure(self):
         """Test that both repositories return the same data structure."""
         # Setup OpenMeteo mock
-        mock_http_openmeteo = AsyncMock(spec=HttpClientInterface)
+        mock_http_openmeteo = Mock(spec=HttpClientInterface)
         mock_http_openmeteo.get.return_value = {
             'latitude': 35.6895,
             'longitude': 139.6917,
@@ -91,7 +89,7 @@ class TestWeatherRepositoryCompatibility:
         openmeteo_repo = WeatherAPIOpenMeteoRepository(mock_http_openmeteo)
         
         # Setup JMA mock with HtmlTable
-        mock_html_fetcher_jma = AsyncMock(spec=HtmlTableServiceInterface)
+        mock_html_fetcher_jma = Mock(spec=HtmlTableServiceInterface)
         
         # Helper function to create HtmlTable
         def create_table_row(day, precip, temp_mean, temp_max, temp_min, sunshine_h, wind_max):
@@ -116,14 +114,14 @@ class TestWeatherRepositoryCompatibility:
         jma_repo = WeatherJMAGateway(mock_html_fetcher_jma)
         
         # Get data from both
-        openmeteo_result = await openmeteo_repo.get_by_location_and_date_range(
+        openmeteo_result = openmeteo_repo.get_by_location_and_date_range(
             latitude=35.6895,
             longitude=139.6917,
             start_date='2024-01-01',
             end_date='2024-01-02'
         )
         
-        jma_result = await jma_repo.get_by_location_and_date_range(
+        jma_result = jma_repo.get_by_location_and_date_range(
             latitude=35.6895,
             longitude=139.6917,
             start_date='2024-01-01',
@@ -200,8 +198,8 @@ class TestWeatherRepositoryCompatibility:
         
         This is useful for logging, debugging, and metrics.
         """
-        mock_http = AsyncMock(spec=HttpClientInterface)
-        mock_html_fetcher = AsyncMock(spec=HtmlTableServiceInterface)
+        mock_http = Mock(spec=HttpClientInterface)
+        mock_html_fetcher = Mock(spec=HtmlTableServiceInterface)
         
         openmeteo_repo = WeatherAPIOpenMeteoRepository(mock_http)
         jma_repo = WeatherJMAGateway(mock_html_fetcher)

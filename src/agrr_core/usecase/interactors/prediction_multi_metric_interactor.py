@@ -17,7 +17,6 @@ from agrr_core.usecase.dto.advanced_prediction_response_dto import AdvancedPredi
 from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
 from agrr_core.usecase.dto.forecast_response_dto import ForecastResponseDTO
 
-
 class MultiMetricPredictionInteractor(MultiMetricPredictionInputPort):
     """Interactor for multi-metric weather prediction."""
     
@@ -33,7 +32,7 @@ class MultiMetricPredictionInteractor(MultiMetricPredictionInputPort):
         self.prediction_model_gateway = prediction_model_gateway
         self.prediction_presenter_output_port = prediction_presenter_output_port
     
-    async def execute(self, request: MultiMetricPredictionRequestDTO) -> AdvancedPredictionResponseDTO:
+    def execute(self, request: MultiMetricPredictionRequestDTO) -> AdvancedPredictionResponseDTO:
         """Execute multi-metric weather prediction."""
         try:
             # Validate location
@@ -43,7 +42,7 @@ class MultiMetricPredictionInteractor(MultiMetricPredictionInputPort):
             date_range = DateRange(request.start_date, request.end_date)
             
             # Get historical weather data
-            historical_data_list, actual_location = await self.weather_data_gateway.get_weather_data_by_location_and_date_range(
+            historical_data_list, actual_location = self.weather_data_gateway.get_weather_data_by_location_and_date_range(
                 location.latitude,
                 location.longitude,
                 date_range.start_date,
@@ -65,7 +64,7 @@ class MultiMetricPredictionInteractor(MultiMetricPredictionInputPort):
             }
             
             # Use advanced prediction service to generate forecasts
-            forecasts_dict = await self.prediction_model_gateway.predict_multiple_metrics(
+            forecasts_dict = self.prediction_model_gateway.predict_multiple_metrics(
                 historical_data_list, 
                 request.metrics,
                 model_config
@@ -88,7 +87,7 @@ class MultiMetricPredictionInteractor(MultiMetricPredictionInputPort):
             for metric, forecasts in forecasts_dict.items():
                 all_forecasts.extend(forecasts)
             
-            await self.model_config_gateway.save_forecast_with_metadata(
+            self.model_config_gateway.save_forecast_with_metadata(
                 all_forecasts, metadata
             )
             

@@ -15,12 +15,11 @@ from agrr_core.entity.entities.multi_field_optimization_result_entity import (
     MultiFieldOptimizationResult,
 )
 
-
 class AllocationResultGateway(ABC):
     """Gateway interface for allocation result operations."""
     
     @abstractmethod
-    async def get_by_id(self, optimization_id: str) -> Optional[MultiFieldOptimizationResult]:
+    def get_by_id(self, optimization_id: str) -> Optional[MultiFieldOptimizationResult]:
         """Get allocation result by ID.
         
         Args:
@@ -32,7 +31,7 @@ class AllocationResultGateway(ABC):
         pass
     
     @abstractmethod
-    async def get(self) -> Optional[MultiFieldOptimizationResult]:
+    def get(self) -> Optional[MultiFieldOptimizationResult]:
         """Get allocation result from configured source.
         
         Returns:

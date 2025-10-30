@@ -4,7 +4,6 @@ from agrr_core.entity.entities.crop_entity import Crop
 from agrr_core.entity.entities.fertilizer_recommendation_entity import Nutrients, FertilizerApplication, FertilizerPlan
 from agrr_core.usecase.gateways.fertilizer_recommend_gateway import FertilizerRecommendGateway
 
-
 class _FakeFertilizerRecommendGateway(FertilizerRecommendGateway):
     def __init__(self, plan: FertilizerPlan):
         self._plan = plan
@@ -12,11 +11,9 @@ class _FakeFertilizerRecommendGateway(FertilizerRecommendGateway):
     async def recommend(self, crop_profile):
         return self._plan
 
-
 @pytest.fixture
 def crop_profile_sample():
     return {"crop": {"crop_id": "tomato", "name": "Tomato"}}
-
 
 @pytest.fixture
 def fake_gateway_valid(crop_profile_sample):
@@ -28,7 +25,6 @@ def fake_gateway_valid(crop_profile_sample):
     ]
     plan = FertilizerPlan(crop=crop, totals=totals, applications=applications, sources=["ref1"], confidence=0.8)
     return _FakeFertilizerRecommendGateway(plan)
-
 
 @pytest.fixture
 def fake_gateway_bad_totals(crop_profile_sample):
@@ -48,7 +44,7 @@ Fixtures are organized by Clean Architecture layers:
 """
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import Mock, MagicMock
 from datetime import datetime, timedelta
 
 from agrr_core.entity import WeatherData, Forecast, Location
@@ -61,7 +57,6 @@ from agrr_core.entity import (
     StageRequirement,
 )
 from agrr_core.entity.entities.crop_profile_entity import CropProfile
-
 
 # ============================================================================
 # Entity Layer Fixtures
@@ -78,7 +73,6 @@ def entity_weather_data():
         precipitation_sum=5.0,
         sunshine_duration=28800.0
     )
-
 
 @pytest.fixture
 def entity_weather_data_list():
@@ -100,7 +94,6 @@ def entity_weather_data_list():
     
     return data
 
-
 @pytest.fixture
 def entity_forecast():
     """Single forecast entity for testing."""
@@ -110,7 +103,6 @@ def entity_forecast():
         confidence_lower=20.0,
         confidence_upper=24.0
     )
-
 
 @pytest.fixture
 def entity_forecast_list():
@@ -130,12 +122,10 @@ def entity_forecast_list():
     
     return forecasts
 
-
 @pytest.fixture
 def entity_location():
     """Location entity for testing."""
     return Location(35.6762, 139.6503)
-
 
 @pytest.fixture
 def entity_crop_profile() -> CropProfile:
@@ -157,7 +147,6 @@ def entity_crop_profile() -> CropProfile:
     sr = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
     return CropProfile(crop=crop, stage_requirements=[sr])
 
-
 @pytest.fixture
 def entity_crop_profile_rice() -> CropProfile:
     """Rice crop requirement aggregate for growth progress tests."""
@@ -177,7 +166,6 @@ def entity_crop_profile_rice() -> CropProfile:
     sr = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
     return CropProfile(crop=crop, stage_requirements=[sr])
 
-
 # ============================================================================
 # UseCase Layer Fixtures - Gateway Interfaces
 # ============================================================================
@@ -185,16 +173,15 @@ def entity_crop_profile_rice() -> CropProfile:
 @pytest.fixture
 def gateway_weather(entity_weather_data_list):
     """Mock WeatherGateway (UseCase layer interface)."""
-    gateway = AsyncMock()
+    gateway = Mock()
     gateway.get.return_value = entity_weather_data_list
     gateway.get_by_location_and_date_range.return_value = entity_weather_data_list
     return gateway
 
-
 @pytest.fixture
 def gateway_crop_profile(entity_crop_profile):
     """Mock CropProfileGateway (UseCase layer interface)."""
-    gateway = AsyncMock()
+    gateway = Mock()
     gateway.craft.return_value = entity_crop_profile
     
     # Mock 3-step LLM methods
@@ -245,24 +232,21 @@ def gateway_crop_profile(entity_crop_profile):
     }
     return gateway
 
-
 @pytest.fixture
 def gateway_interaction_rule():
     """Mock InteractionRuleGateway (UseCase layer interface)."""
-    gateway = AsyncMock()
+    gateway = Mock()
     gateway.get_rules.return_value = []
     return gateway
-
 
 @pytest.fixture
 def gateway_crop_profile_internal():
     """Mock CropProfileGateway for internal use (in-memory)."""
-    gateway = AsyncMock()
+    gateway = Mock()
     gateway.save.return_value = None
     gateway.delete.return_value = None
     gateway.get.return_value = None
     return gateway
-
 
 # ============================================================================
 # UseCase Layer Fixtures - Output Ports (Presenter Interfaces)
@@ -280,7 +264,6 @@ def output_port_crop_profile():
     }
     return port
 
-
 @pytest.fixture
 def output_port_weather():
     """Mock WeatherOutputPort (presenter interface)."""
@@ -289,11 +272,10 @@ def output_port_weather():
     port.format_error.return_value = {'error': 'Test error'}
     return port
 
-
 @pytest.fixture
 def output_port_prediction(entity_forecast_list):
     """Mock PredictionOutputPort (presenter interface)."""
-    port = AsyncMock()
+    port = Mock()
     port.predict_multiple_metrics.return_value = {
         'temperature': entity_forecast_list,
         'precipitation': entity_forecast_list
@@ -321,14 +303,12 @@ def output_port_prediction(entity_forecast_list):
     ]
     return port
 
-
 @pytest.fixture
 def output_port_growth_progress():
     """Mock GrowthProgressCalculateOutputPort (presenter interface)."""
     presenter = MagicMock()
     presenter.present = MagicMock()
     return presenter
-
 
 # ============================================================================
 # UseCase Layer Fixtures - Input Ports (for advanced features)
@@ -337,14 +317,13 @@ def output_port_growth_progress():
 @pytest.fixture
 def input_port_prediction():
     """Mock PredictionInputPort (for advanced prediction features)."""
-    port = AsyncMock()
+    port = Mock()
     port.save_prediction_config.return_value = None
     port.get_model_performance.return_value = {'accuracy': 0.85}
     port.save_model_evaluation.return_value = None
     port.get_available_models.return_value = ['prophet', 'lstm', 'arima']
     port.save_forecast_with_metadata.return_value = None
     return port
-
 
 # ============================================================================
 # Adapter Layer Fixtures - Repository Implementations
@@ -353,34 +332,31 @@ def input_port_prediction():
 @pytest.fixture
 def repository_weather_data(entity_weather_data_list, entity_location):
     """Mock weather data repository (Adapter layer implementation)."""
-    repository = AsyncMock()
+    repository = Mock()
     repository.get_weather_data_by_location_and_date_range.return_value = (
         entity_weather_data_list, entity_location
     )
     repository.save_weather_data.return_value = None
     return repository
 
-
 @pytest.fixture
 def repository_prediction(entity_forecast_list):
     """Mock prediction repository (Adapter layer implementation)."""
-    repository = AsyncMock()
+    repository = Mock()
     repository.save_forecast.return_value = None
     repository.get_forecast_by_date_range.return_value = entity_forecast_list
     repository.clear.return_value = None
     return repository
 
-
 @pytest.fixture
 def repository_file():
     """Mock file repository (Adapter layer implementation)."""
-    repository = AsyncMock()
+    repository = Mock()
     repository.exists.return_value = True
     repository.read.return_value = '{"data": [{"time": "2024-01-01", "temperature_2m_max": 25.0}]}'
     repository.write.return_value = None
     repository.delete.return_value = None
     return repository
-
 
 # ============================================================================
 # Adapter Layer Fixtures - Service Implementations
@@ -389,30 +365,27 @@ def repository_file():
 @pytest.fixture
 def service_prophet(entity_forecast_list):
     """Mock Prophet prediction service (Adapter layer implementation)."""
-    service = AsyncMock()
+    service = Mock()
     service.predict_weather.return_value = entity_forecast_list
     return service
-
 
 @pytest.fixture
 def service_lstm(entity_forecast_list):
     """Mock LSTM prediction service (Adapter layer implementation)."""
-    service = AsyncMock()
+    service = Mock()
     service.predict_multiple_metrics.return_value = {
         'temperature': entity_forecast_list
     }
     return service
-
 
 @pytest.fixture
 def service_arima(entity_forecast_list):
     """Mock ARIMA prediction service (Adapter layer implementation)."""
-    service = AsyncMock()
+    service = Mock()
     service.predict_multiple_metrics.return_value = {
         'temperature': entity_forecast_list
     }
     return service
-
 
 # ============================================================================
 # Framework Layer Fixtures - External Services
@@ -421,7 +394,7 @@ def service_arima(entity_forecast_list):
 @pytest.fixture
 def external_http_service():
     """Mock HTTP service for external API calls (Framework layer)."""
-    service = AsyncMock()
+    service = Mock()
     service.get.return_value = {
         'latitude': 35.6762,
         'longitude': 139.6503,
@@ -438,14 +411,12 @@ def external_http_service():
     }
     return service
 
-
 # ============================================================================
 # Pytest Configuration
 # ============================================================================
 
 # Async test marker
 pytest_plugins = ['pytest_asyncio']
-
 
 def pytest_configure(config):
     """Configure pytest with custom markers."""

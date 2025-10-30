@@ -1,7 +1,7 @@
 """Tests for batch prediction interactor."""
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import Mock, MagicMock
 
 from agrr_core.usecase.interactors.prediction_batch_interactor import BatchPredictionInteractor
 from agrr_core.usecase.ports.input.multi_metric_prediction_input_port import MultiMetricPredictionInputPort
@@ -10,12 +10,10 @@ from agrr_core.usecase.dto.batch_prediction_request_dto import BatchPredictionRe
 from agrr_core.usecase.dto.multi_metric_prediction_request_dto import MultiMetricPredictionRequestDTO
 from agrr_core.usecase.dto.advanced_prediction_response_dto import AdvancedPredictionResponseDTO
 
-
 @pytest.fixture
 def mock_multi_metric_interactor():
     """Mock multi-metric prediction interactor."""
-    return AsyncMock(spec=MultiMetricPredictionInputPort)
-
+    return Mock(spec=MultiMetricPredictionInputPort)
 
 @pytest.fixture
 def interactor(mock_multi_metric_interactor):
@@ -23,7 +21,6 @@ def interactor(mock_multi_metric_interactor):
     return BatchPredictionInteractor(
         multi_metric_prediction_interactor=mock_multi_metric_interactor
     )
-
 
 @pytest.fixture
 def sample_request():
@@ -52,7 +49,6 @@ def sample_request():
         config=config
     )
 
-
 @pytest.fixture
 def sample_prediction_response():
     """Sample prediction response."""
@@ -63,15 +59,13 @@ def sample_prediction_response():
         prediction_metadata={}
     )
 
-
-@pytest.mark.asyncio
-async def test_execute_success(interactor, sample_request, sample_prediction_response, mock_multi_metric_interactor):
+def test_execute_success(interactor, sample_request, sample_prediction_response, mock_multi_metric_interactor):
     """Test successful batch prediction execution."""
     # Setup mock to return successful predictions
     mock_multi_metric_interactor.execute.return_value = sample_prediction_response
     
     # Execute
-    result = await interactor.execute(sample_request)
+    result = interactor.execute(sample_request)
     
     # Assertions
     assert result is not None
@@ -85,9 +79,7 @@ async def test_execute_success(interactor, sample_request, sample_prediction_res
     # Verify multi-metric interactor was called for each location
     assert mock_multi_metric_interactor.execute.call_count == 3
 
-
-@pytest.mark.asyncio
-async def test_execute_partial_success(interactor, sample_request, sample_prediction_response, mock_multi_metric_interactor):
+def test_execute_partial_success(interactor, sample_request, sample_prediction_response, mock_multi_metric_interactor):
     """Test batch prediction with partial success."""
     # Setup mock to succeed for first location, fail for others
     def side_effect(request):
@@ -99,7 +91,7 @@ async def test_execute_partial_success(interactor, sample_request, sample_predic
     mock_multi_metric_interactor.execute.side_effect = side_effect
     
     # Execute
-    result = await interactor.execute(sample_request)
+    result = interactor.execute(sample_request)
     
     # Assertions
     assert result is not None
@@ -114,15 +106,13 @@ async def test_execute_partial_success(interactor, sample_request, sample_predic
     assert 'New York' in error_locations
     assert 'London' in error_locations
 
-
-@pytest.mark.asyncio
-async def test_execute_all_failures(interactor, sample_request, mock_multi_metric_interactor):
+def test_execute_all_failures(interactor, sample_request, mock_multi_metric_interactor):
     """Test batch prediction with all failures."""
     # Setup mock to fail for all locations
     mock_multi_metric_interactor.execute.side_effect = Exception("All predictions failed")
     
     # Execute
-    result = await interactor.execute(sample_request)
+    result = interactor.execute(sample_request)
     
     # Assertions
     assert result is not None
@@ -137,9 +127,7 @@ async def test_execute_all_failures(interactor, sample_request, mock_multi_metri
         assert error['error'] == "All predictions failed"
         assert error['status'] == 'failed'
 
-
-@pytest.mark.asyncio
-async def test_execute_empty_locations(interactor, mock_multi_metric_interactor):
+def test_execute_empty_locations(interactor, mock_multi_metric_interactor):
     """Test batch prediction with empty locations list."""
     config = PredictionConfigDTO(
         model_type='Prophet',
@@ -160,7 +148,7 @@ async def test_execute_empty_locations(interactor, mock_multi_metric_interactor)
     )
     
     # Execute
-    result = await interactor.execute(empty_request)
+    result = interactor.execute(empty_request)
     
     # Assertions
     assert result is not None

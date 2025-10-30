@@ -7,7 +7,6 @@ from agrr_core.usecase.dto.advanced_prediction_response_dto import AdvancedPredi
 from agrr_core.usecase.dto.model_accuracy_dto import ModelAccuracyDTO
 from agrr_core.usecase.dto.batch_prediction_response_dto import BatchPredictionResponseDTO
 
-
 class AdvancedPredictionOutputPort(ABC):
     """Interface for advanced weather prediction presenter operations."""
     

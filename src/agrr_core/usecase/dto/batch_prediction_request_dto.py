@@ -5,7 +5,6 @@ from typing import List, Dict, Any
 
 from .prediction_config_dto import PredictionConfigDTO
 
-
 @dataclass
 class BatchPredictionRequestDTO:
     """DTO for batch prediction request."""

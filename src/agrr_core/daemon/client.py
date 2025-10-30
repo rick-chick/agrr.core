@@ -6,7 +6,6 @@ from typing import List
 
 from . import SOCKET_PATH
 
-
 def send_to_daemon(args: List[str]) -> int:
     """
     Send command to daemon and return exit code.

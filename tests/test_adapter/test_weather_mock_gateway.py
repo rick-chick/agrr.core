@@ -7,7 +7,6 @@ from unittest.mock import Mock
 from agrr_core.adapter.gateways.weather_mock_gateway import WeatherMockGateway
 from agrr_core.entity.entities.weather_entity import WeatherData
 
-
 class TestWeatherMockGateway:
     """Test cases for WeatherMockGateway."""
     
@@ -22,9 +21,8 @@ class TestWeatherMockGateway:
         mock_file = "test_mock_data.json"
         gateway = WeatherMockGateway(mock_data_file=mock_file)
         assert gateway.mock_data_file == mock_file
-    
-    @pytest.mark.asyncio
-    async def test_get_by_location_and_date_range(self):
+
+    def test_get_by_location_and_date_range(self):
         """Test getting weather data by location and date range."""
         gateway = WeatherMockGateway()
         
@@ -35,7 +33,7 @@ class TestWeatherMockGateway:
         end_date = "2024-01-07"
         
         # Call method
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=start_date,
@@ -63,9 +61,8 @@ class TestWeatherMockGateway:
             assert data.sunshine_duration is not None
             assert data.wind_speed_10m is not None
             assert data.weather_code is not None
-    
-    @pytest.mark.asyncio
-    async def test_get_forecast(self):
+
+    def test_get_forecast(self):
         """Test getting weather forecast."""
         gateway = WeatherMockGateway()
         
@@ -74,7 +71,7 @@ class TestWeatherMockGateway:
         longitude = 139.6503
         
         # Call method
-        result = await gateway.get_forecast(
+        result = gateway.get_forecast(
             latitude=latitude,
             longitude=longitude
         )
@@ -90,9 +87,8 @@ class TestWeatherMockGateway:
         tomorrow = datetime.now().date() + timedelta(days=1)
         first_date = result.weather_data_list[0].time.date()
         assert first_date == tomorrow
-    
-    @pytest.mark.asyncio
-    async def test_create_weather_data(self, tmp_path):
+
+    def test_create_weather_data(self, tmp_path):
         """Test creating weather data file."""
         gateway = WeatherMockGateway()
         
@@ -122,7 +118,7 @@ class TestWeatherMockGateway:
         
         # Create output file
         output_file = tmp_path / "test_weather.json"
-        await gateway.create(test_data, str(output_file))
+        gateway.create(test_data, str(output_file))
         
         # Check that file was created
         assert output_file.exists()
@@ -210,15 +206,14 @@ class TestWeatherMockGateway:
         assert code_cloudy == 1  # Cloudy
         assert code_light_rain == 2  # Light rain
         assert code_heavy_rain == 3  # Heavy rain
-    
-    @pytest.mark.asyncio
-    async def test_error_handling(self):
+
+    def test_error_handling(self):
         """Test error handling for invalid inputs."""
         gateway = WeatherMockGateway()
         
         # Test invalid date format
         with pytest.raises(Exception):
-            await gateway.get_by_location_and_date_range(
+            gateway.get_by_location_and_date_range(
                 latitude=35.6762,
                 longitude=139.6503,
                 start_date="invalid-date",
@@ -227,7 +222,7 @@ class TestWeatherMockGateway:
         
         # Test invalid coordinates
         with pytest.raises(Exception):
-            await gateway.get_by_location_and_date_range(
+            gateway.get_by_location_and_date_range(
                 latitude=999.0,  # Invalid latitude
                 longitude=139.6503,
                 start_date="2024-01-01",

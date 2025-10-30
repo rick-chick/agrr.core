@@ -10,7 +10,6 @@ from agrr_core.usecase.services.optimization_result_builder import (
     OptimizationResultBuilder,
 )
 
-
 @pytest.mark.unit
 class TestBuild:
     """Tests for build method."""
@@ -231,7 +230,6 @@ class TestBuild:
         assert result.total_revenue == 0.0  # No revenue
         assert result.total_profit == 0.0  # No profit
 
-
 @pytest.mark.unit
 class TestGroupByField:
     """Tests for _group_by_field method."""
@@ -348,7 +346,6 @@ class TestGroupByField:
         assert len(grouped["f1"]) == 1
         assert len(grouped["f2"]) == 0  # Empty field
 
-
 @pytest.mark.unit
 class TestCalculateFieldMetrics:
     """Tests for _calculate_field_metrics method."""
@@ -424,7 +421,6 @@ class TestCalculateFieldMetrics:
         assert metrics['profit'] == 6600000.0
         assert metrics['area_used'] == 750.0
         assert metrics['utilization'] == pytest.approx(75.0)
-
 
 @pytest.mark.unit
 class TestAggregateMetrics:

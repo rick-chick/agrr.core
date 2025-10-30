@@ -4,7 +4,6 @@ import pytest
 
 from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseDTO
 
-
 class TestWeatherDataResponseDTO:
     """Test WeatherDataResponseDTO."""
     

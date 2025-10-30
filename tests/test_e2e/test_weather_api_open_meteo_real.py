@@ -11,7 +11,6 @@ from agrr_core.adapter.gateways.weather_api_gateway import WeatherAPIGateway as 
 from agrr_core.entity import Location, WeatherData
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 
-
 @pytest.mark.e2e
 class TestOpenMeteoAPIReal:
     """E2E tests for real Open-Meteo API calls."""
@@ -28,10 +27,9 @@ class TestOpenMeteoAPIReal:
         start_date = end_date - timedelta(days=6)
         self.start_date = start_date.strftime('%Y-%m-%d')
         self.end_date = end_date.strftime('%Y-%m-%d')
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.skip(reason="Network dependent E2E test - may timeout or fail due to network conditions")
-    async def test_real_api_call_tokyo(self):
+    def test_real_api_call_tokyo(self):
         """Test real API call with Tokyo coordinates.
         
         This test verifies:
@@ -44,7 +42,7 @@ class TestOpenMeteoAPIReal:
         longitude = 139.6503
         
         # Make actual API call
-        result = await self.repository.get_by_location_and_date_range(
+        result = self.repository.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=self.start_date,
@@ -69,17 +67,16 @@ class TestOpenMeteoAPIReal:
         assert isinstance(location, Location)
         assert location.latitude is not None
         assert location.longitude is not None
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.skip(reason="Network dependent E2E test - may timeout or fail due to network conditions")
-    async def test_real_api_call_new_york(self):
+    def test_real_api_call_new_york(self):
         """Test real API call with New York coordinates."""
         # New York coordinates
         latitude = 40.7128
         longitude = -74.0060
         
         # Make actual API call
-        result = await self.repository.get_by_location_and_date_range(
+        result = self.repository.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=self.start_date,
@@ -94,15 +91,14 @@ class TestOpenMeteoAPIReal:
         
         # Verify that we got weather data for the requested location
         assert len(weather_data_list) > 0
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.skip(reason="Network dependent E2E test - may timeout or fail due to network conditions")
-    async def test_real_api_call_single_day(self):
+    def test_real_api_call_single_day(self):
         """Test real API call for a single day."""
         # Use a single historical date
         single_date = (datetime.now().date() - timedelta(days=10)).strftime('%Y-%m-%d')
         
-        result = await self.repository.get_by_location_and_date_range(
+        result = self.repository.get_by_location_and_date_range(
             latitude=51.5074,  # London
             longitude=-0.1278,
             start_date=single_date,
@@ -115,12 +111,11 @@ class TestOpenMeteoAPIReal:
         # Should get exactly 1 day of data
         assert len(weather_data_list) == 1
         assert weather_data_list[0].time.strftime('%Y-%m-%d') == single_date
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.skip(reason="Network dependent E2E test - may timeout or fail due to network conditions")
-    async def test_real_api_data_completeness(self):
+    def test_real_api_data_completeness(self):
         """Test that API returns all expected fields."""
-        result = await self.repository.get_by_location_and_date_range(
+        result = self.repository.get_by_location_and_date_range(
             latitude=35.6762,
             longitude=139.6503,
             start_date=self.start_date,
@@ -148,16 +143,15 @@ class TestOpenMeteoAPIReal:
         if first_day.sunshine_duration is not None:
             expected_hours = first_day.sunshine_duration / 3600
             assert abs(first_day.sunshine_hours - expected_hours) < 0.01
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.skip(reason="Network dependent E2E test - may timeout or fail due to network conditions")
-    async def test_real_api_edge_case_extreme_coordinates(self):
+    def test_real_api_edge_case_extreme_coordinates(self):
         """Test API call with extreme but valid coordinates."""
         # Northern location (Reykjavik, Iceland)
         latitude = 64.1466
         longitude = -21.9426
         
-        result = await self.repository.get_by_location_and_date_range(
+        result = self.repository.get_by_location_and_date_range(
             latitude=latitude,
             longitude=longitude,
             start_date=self.start_date,
@@ -175,15 +169,14 @@ class TestOpenMeteoAPIReal:
             if data.sunshine_hours is not None:
                 assert data.sunshine_hours >= 0
                 assert data.sunshine_hours <= 24
-    
-    @pytest.mark.asyncio
-    async def test_real_api_response_time(self):
+
+    def test_real_api_response_time(self):
         """Test that API responds within reasonable time."""
         import time
         
         start_time = time.time()
         
-        await self.repository.get_by_location_and_date_range(
+        self.repository.get_by_location_and_date_range(
             latitude=35.6762,
             longitude=139.6503,
             start_date=self.start_date,

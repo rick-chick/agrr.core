@@ -11,9 +11,7 @@ from agrr_core.entity.value_objects.optimization_objective import (
 )
 from agrr_core.entity.protocols.optimizable import Optimizable
 
-
 T = TypeVar('T', bound=Optimizable)
-
 
 class BaseOptimizer(ABC, Generic[T]):
     """Base class for all optimization interactors.
@@ -61,7 +59,7 @@ class BaseOptimizer(ABC, Generic[T]):
             ValueError: If candidates is empty
             
         Example:
-            candidates = await self._generate_candidates(request)
+            candidates = self._generate_candidates(request)
             optimal = self.select_best(candidates)
         """
         return self.objective.select_best(

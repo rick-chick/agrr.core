@@ -33,7 +33,6 @@ from agrr_core.usecase.ports.input.growth_progress_calculate_input_port import (
     GrowthProgressCalculateInputPort,
 )
 
-
 class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
     """Interactor for calculating growth progress timeline."""
 
@@ -45,7 +44,7 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
         self.crop_profile_gateway = crop_profile_gateway
         self.weather_gateway = weather_gateway
 
-    async def execute(
+    def execute(
         self, request: GrowthProgressCalculateRequestDTO
     ) -> GrowthProgressCalculateResponseDTO:
         """Calculate growth progress timeline.
@@ -57,12 +56,12 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
             Response DTO containing daily growth progress records
         """
         # Step 1: Get crop profile
-        crop_profile = await self._get_crop_profile(
+        crop_profile = self._get_crop_profile(
             request.crop_id, request.variety
         )
 
         # Step 2: Get weather data via gateway (file path configured at initialization)
-        weather_data_list = await self.weather_gateway.get()
+        weather_data_list = self.weather_gateway.get()
 
         # Step 3: Calculate growth progress timeline
         timeline = self._calculate_growth_progress(
@@ -72,11 +71,11 @@ class GrowthProgressCalculateInteractor(GrowthProgressCalculateInputPort):
         # Step 4: Convert to response DTO
         return self._to_response_dto(timeline)
 
-    async def _get_crop_profile(
+    def _get_crop_profile(
         self, crop_id: str, variety: str
     ) -> CropProfile:
         """Get crop profile from gateway."""
-        return await self.crop_profile_gateway.get()
+        return self.crop_profile_gateway.get()
 
     def _calculate_growth_progress(
         self,

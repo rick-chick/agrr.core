@@ -10,14 +10,12 @@ from datetime import datetime
 
 from ..logging.agrr_logger import get_logger
 
-
 class NotificationChannel:
     """Base class for notification channels."""
     
     def send(self, title: str, message: str, details: Optional[Dict] = None):
         """Send notification."""
         raise NotImplementedError
-
 
 class EmailNotificationChannel(NotificationChannel):
     """Email notification channel."""
@@ -69,7 +67,6 @@ Message: {message}
         except Exception as e:
             self.logger.error(f"Failed to send email notification", error=str(e))
 
-
 class SlackNotificationChannel(NotificationChannel):
     """Slack notification channel."""
     
@@ -116,7 +113,6 @@ class SlackNotificationChannel(NotificationChannel):
             
         except Exception as e:
             self.logger.error(f"Failed to send Slack notification", error=str(e))
-
 
 class ErrorNotifier:
     """Error notification system."""
@@ -193,10 +189,8 @@ class ErrorNotifier:
             "timestamp": datetime.now().isoformat()
         })
 
-
 # Global notifier instance
 _global_notifier: Optional[ErrorNotifier] = None
-
 
 def get_notifier() -> ErrorNotifier:
     """Get global notifier instance."""
@@ -204,7 +198,6 @@ def get_notifier() -> ErrorNotifier:
     if _global_notifier is None:
         _global_notifier = ErrorNotifier()
     return _global_notifier
-
 
 def setup_notifications(config: Dict) -> ErrorNotifier:
     """Setup notification system from config."""

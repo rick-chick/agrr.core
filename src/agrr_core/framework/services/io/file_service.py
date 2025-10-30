@@ -10,7 +10,7 @@ class FileService(FileServiceInterface):
         """Initialize file service implementation."""
         pass
     
-    async def read(self, file_path: str) -> str:
+    def read(self, file_path: str) -> str:
         """Read file content as string."""
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -19,7 +19,7 @@ class FileService(FileServiceInterface):
             from agrr_core.entity.exceptions.file_error import FileError
             raise FileError(f"Failed to read file {file_path}: {e}")
     
-    async def write(self, content: str, file_path: str) -> None:
+    def write(self, content: str, file_path: str) -> None:
         """Write content to file."""
         try:
             from pathlib import Path

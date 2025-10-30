@@ -6,7 +6,6 @@ that can affect revenue and performance.
 
 from enum import Enum
 
-
 class RuleType(str, Enum):
     """Types of interaction rules.
     

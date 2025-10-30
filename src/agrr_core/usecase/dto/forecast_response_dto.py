@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from typing import Optional
 
-
 @dataclass
 class ForecastResponseDTO:
     """DTO for forecast response."""

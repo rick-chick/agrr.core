@@ -14,7 +14,6 @@ from agrr_core.entity.entities.optimization_schedule_entity import (
 )
 from agrr_core.entity.entities.field_entity import Field
 
-
 class TestOptimizationSchedule:
     """Test suite for OptimizationSchedule entity."""
 

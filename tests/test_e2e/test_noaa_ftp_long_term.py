@@ -7,8 +7,6 @@ import pytest
 from datetime import datetime
 from agrr_core.adapter.gateways.weather_noaa_ftp_gateway import WeatherNOAAFTPGateway
 
-
-@pytest.mark.asyncio
 @pytest.mark.slow
 @pytest.mark.e2e
 class TestNOAAFTPLongTerm:
@@ -19,9 +17,9 @@ class TestNOAAFTPLongTerm:
         """Create gateway."""
         return WeatherNOAAFTPGateway()
     
-    async def test_fetch_2023_new_york_one_week(self, gateway):
+    def test_fetch_2023_new_york_one_week(self, gateway):
         """Test fetching 1 week of data from 2023 for New York."""
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=40.7128,
             longitude=-74.0060,
             start_date="2023-01-01",
@@ -53,9 +51,9 @@ class TestNOAAFTPLongTerm:
             sample = result.weather_data_list[0]
             print(f"   Sample: {sample.time.date()} - Temp: {sample.temperature_2m_mean}°C")
     
-    async def test_fetch_2010_los_angeles_one_month(self, gateway):
+    def test_fetch_2010_los_angeles_one_month(self, gateway):
         """Test fetching 1 month of data from 2010 for Los Angeles."""
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=34.0522,
             longitude=-118.2437,
             start_date="2010-07-01",
@@ -72,9 +70,9 @@ class TestNOAAFTPLongTerm:
         
         print(f"\n✅ 2010 Los Angeles: Fetched {len(result.weather_data_list)} days")
     
-    async def test_fetch_2005_chicago(self, gateway):
+    def test_fetch_2005_chicago(self, gateway):
         """Test fetching data from 2005 for Chicago."""
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=41.8781,
             longitude=-87.6298,
             start_date="2005-12-01",
@@ -86,9 +84,9 @@ class TestNOAAFTPLongTerm:
         
         print(f"\n✅ 2005 Chicago: Fetched {len(result.weather_data_list)} days")
     
-    async def test_fetch_2000_miami(self, gateway):
+    def test_fetch_2000_miami(self, gateway):
         """Test fetching data from 2000 for Miami."""
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=25.7617,
             longitude=-80.1918,
             start_date="2000-06-01",
@@ -107,9 +105,9 @@ class TestNOAAFTPLongTerm:
         
         print(f"\n✅ 2000 Miami: Fetched {len(result.weather_data_list)} days")
     
-    async def test_fetch_multi_year_data(self, gateway):
+    def test_fetch_multi_year_data(self, gateway):
         """Test fetching data across multiple years (2020-2021)."""
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=40.7128,
             longitude=-74.0060,
             start_date="2020-12-25",
@@ -127,8 +125,6 @@ class TestNOAAFTPLongTerm:
         print(f"\n✅ Multi-year (2020-2021): Fetched {len(result.weather_data_list)} days")
         print(f"   Years covered: {sorted(years)}")
 
-
-@pytest.mark.asyncio
 @pytest.mark.slow
 @pytest.mark.e2e
 class TestNOAAFTPDataQuality:
@@ -139,9 +135,9 @@ class TestNOAAFTPDataQuality:
         """Create gateway."""
         return WeatherNOAAFTPGateway()
     
-    async def test_temperature_aggregation(self, gateway):
+    def test_temperature_aggregation(self, gateway):
         """Test that daily temperature aggregation works correctly."""
-        result = await gateway.get_by_location_and_date_range(
+        result = gateway.get_by_location_and_date_range(
             latitude=40.7128,
             longitude=-74.0060,
             start_date="2023-01-15",
@@ -163,7 +159,7 @@ class TestNOAAFTPDataQuality:
         
         print(f"\n✅ Temperature aggregation check passed")
     
-    async def test_location_mapping(self, gateway):
+    def test_location_mapping(self, gateway):
         """Test that location mapping works for all major cities."""
         test_cities = [
             (40.7128, -74.0060, "New York"),

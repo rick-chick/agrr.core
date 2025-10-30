@@ -13,7 +13,7 @@ API Limits: ~1000 requests/hour (estimated), no API key required
 """
 
 import logging
-import asyncio
+
 from typing import Dict, Tuple, List, Optional
 from datetime import datetime
 
@@ -23,7 +23,6 @@ from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherData
 from agrr_core.adapter.interfaces.clients.http_client_interface import HttpClientInterface
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
-
 
 class WeatherNASAPowerGateway(WeatherGateway):
     """Gateway for fetching weather data from NASA POWER API.
@@ -49,7 +48,7 @@ class WeatherNASAPowerGateway(WeatherGateway):
         self.logger = logging.getLogger(__name__)
         self._request_count = 0
     
-    async def get(self) -> List[WeatherData]:
+    def get(self) -> List[WeatherData]:
         """Get weather data from configured source.
         
         Note: This method is not used for NASA POWER API.
@@ -63,7 +62,7 @@ class WeatherNASAPowerGateway(WeatherGateway):
             "Use get_by_location_and_date_range() instead."
         )
     
-    async def create(self, weather_data: List[WeatherData], destination: str) -> None:
+    def create(self, weather_data: List[WeatherData], destination: str) -> None:
         """Create weather data at destination.
         
         Raises:
@@ -73,7 +72,7 @@ class WeatherNASAPowerGateway(WeatherGateway):
             "Weather data creation not supported for NASA POWER source"
         )
     
-    async def get_forecast(
+    def get_forecast(
         self,
         latitude: float,
         longitude: float
@@ -87,7 +86,7 @@ class WeatherNASAPowerGateway(WeatherGateway):
             "NASA POWER does not provide forecast data. Use Open-Meteo API instead."
         )
     
-    async def get_by_location_and_date_range(
+    def get_by_location_and_date_range(
         self,
         latitude: float,
         longitude: float,
@@ -151,10 +150,10 @@ class WeatherNASAPowerGateway(WeatherGateway):
             
             # Rate limiting (1秒待機)
             if self._request_count > 0:
-                await asyncio.sleep(self.RATE_LIMIT_DELAY)
+                asyncio.sleep(self.RATE_LIMIT_DELAY)
             
             # Fetch data
-            response_data = await self._fetch_data(url)
+            response_data = self._fetch_data(url)
             self._request_count += 1
             
             # Parse data
@@ -236,7 +235,7 @@ class WeatherNASAPowerGateway(WeatherGateway):
         
         return url
     
-    async def _fetch_data(self, url: str) -> dict:
+    def _fetch_data(self, url: str) -> dict:
         """Fetch data from NASA POWER API.
         
         Args:

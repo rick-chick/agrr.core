@@ -7,7 +7,6 @@ from agrr_core.usecase.services.neighbor_operations.base_neighbor_operation impo
     NeighborOperation,
 )
 
-
 class FieldRemoveOperation(NeighborOperation):
     """F5. Field Remove: Remove one allocation.
     

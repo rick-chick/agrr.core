@@ -22,7 +22,6 @@ from typing import List, Dict
 
 from agrr_core.entity.entities.field_schedule_entity import FieldSchedule
 
-
 @dataclass(frozen=True)
 class MultiFieldOptimizationResult:
     """Represents the complete optimization result across multiple fields."""

@@ -47,7 +47,6 @@ from agrr_core.usecase.interactors.growth_period_optimize_interactor import (
 from agrr_core.usecase.services.violation_checker_service import ViolationCheckerService
 from agrr_core.usecase.services.interaction_rule_service import InteractionRuleService
 
-
 class AllocationAdjustInteractor:
     """Interactor for allocation adjustment use case."""
     
@@ -97,7 +96,7 @@ class AllocationAdjustInteractor:
             weather_gateway=weather_gateway,
         )
     
-    async def execute(
+    def execute(
         self,
         request: AllocationAdjustRequestDTO,
     ) -> AllocationAdjustResponseDTO:
@@ -117,7 +116,7 @@ class AllocationAdjustInteractor:
         
         # Load current allocation result
         t_load0 = time.perf_counter() if prof else 0.0
-        current_result = await self.allocation_result_gateway.get()
+        current_result = self.allocation_result_gateway.get()
         if prof:
             t_load1 = time.perf_counter()
             print(f"[PROFILE] AllocationAdjust: load_result elapsed={t_load1-t_load0:.3f}s", flush=True)
@@ -141,7 +140,7 @@ class AllocationAdjustInteractor:
         t_rules0 = time.perf_counter() if prof else 0.0
         if self.interaction_rule_gateway:
             try:
-                self.interaction_rules = await self.interaction_rule_gateway.get_rules()
+                self.interaction_rules = self.interaction_rule_gateway.get_rules()
                 # Initialize violation checker with interaction rule service
                 interaction_rule_service = InteractionRuleService(rules=self.interaction_rules)
                 self.violation_checker = ViolationCheckerService(
@@ -156,7 +155,7 @@ class AllocationAdjustInteractor:
         
         # Apply move instructions with GDD calculation
         t_apply0 = time.perf_counter() if prof else 0.0
-        adjusted_result, applied_moves, rejected_moves = await self._apply_moves(
+        adjusted_result, applied_moves, rejected_moves = self._apply_moves(
             current_result=current_result,
             move_instructions=move_instructions,
             planning_period_start=request.planning_period_start,
@@ -200,7 +199,7 @@ class AllocationAdjustInteractor:
                    f"{len(rejected_moves)} moves rejected.",
         )
     
-    async def _apply_moves(
+    def _apply_moves(
         self,
         current_result: MultiFieldOptimizationResult,
         move_instructions: List[MoveInstruction],
@@ -317,7 +316,7 @@ class AllocationAdjustInteractor:
                     # Get target field
                     if move.to_field_id not in field_map:
                         # Target field may not exist in current schedules, load it
-                        target_field = await self.field_gateway.get(move.to_field_id)
+                        target_field = self.field_gateway.get(move.to_field_id)
                         if target_field is None:
                             rejected_moves.append({
                                 "move": move,
@@ -342,7 +341,7 @@ class AllocationAdjustInteractor:
                             max_revenue=allocation.crop.max_revenue,
                             groups=allocation.crop.groups
                         )
-                        completion_date, growth_days = await self._calculate_completion_date(
+                        completion_date, growth_days = self._calculate_completion_date(
                             crop=crop,
                             field=target_field,
                             start_date=move.to_start_date,
@@ -423,7 +422,7 @@ class AllocationAdjustInteractor:
                     # Get target field
                     if move.to_field_id not in field_map:
                         # Target field may not exist in current schedules, load it
-                        target_field = await self.field_gateway.get(move.to_field_id)
+                        target_field = self.field_gateway.get(move.to_field_id)
                         if target_field is None:
                             rejected_moves.append({
                                 "move": move,
@@ -436,7 +435,7 @@ class AllocationAdjustInteractor:
                     target_field = field_map[move.to_field_id]
                     
                     # Get crop from gateway (gateway handles caching internally)
-                    all_crops = await self.crop_gateway.get_all()
+                    all_crops = self.crop_gateway.get_all()
                     crop = None
                     for crop_profile in all_crops:
                         if crop_profile.crop.crop_id == move.crop_id:
@@ -455,7 +454,7 @@ class AllocationAdjustInteractor:
                     # Calculate completion date using GDD calculation
                     t_gdd0 = time.perf_counter() if prof else 0.0
                     try:
-                        completion_date, growth_days = await self._calculate_completion_date(
+                        completion_date, growth_days = self._calculate_completion_date(
                             crop=crop,
                             field=target_field,
                             start_date=move.to_start_date,
@@ -630,7 +629,7 @@ class AllocationAdjustInteractor:
         
         return adjusted_result, applied_moves, rejected_moves
     
-    async def _calculate_completion_date(
+    def _calculate_completion_date(
         self,
         crop: Crop,
         field: Field,
@@ -656,7 +655,7 @@ class AllocationAdjustInteractor:
         
         # Get crop profile from gateway (gateway handles caching internally)
         t_crop0 = time.perf_counter() if prof else 0.0
-        all_crops = await self.crop_gateway.get_all()
+        all_crops = self.crop_gateway.get_all()
         crop_profile = None
         for cp in all_crops:
             if cp.crop.crop_id == crop.crop_id:
@@ -667,7 +666,7 @@ class AllocationAdjustInteractor:
             raise ValueError(f"Crop profile not found for crop {crop.crop_id}")
         
         # Set crop in internal gateway for GrowthPeriodOptimizeInteractor
-        await self.crop_profile_gateway_internal.save(crop_profile)
+        self.crop_profile_gateway_internal.save(crop_profile)
         
         if prof:
             t_crop1 = time.perf_counter()
@@ -705,7 +704,7 @@ class AllocationAdjustInteractor:
                     filter_redundant_candidates=True,  # Enable filtering for performance
                 )
                 
-                response = await self.growth_period_optimizer.execute(request)
+                response = self.growth_period_optimizer.execute(request)
                 candidates = response.candidates
                 
                 # Cache the candidates for future moves
@@ -742,5 +741,5 @@ class AllocationAdjustInteractor:
         
         finally:
             # Clean up
-            await self.crop_profile_gateway_internal.delete()
+            self.crop_profile_gateway_internal.delete()
 

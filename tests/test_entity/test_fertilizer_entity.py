@@ -9,7 +9,6 @@ from agrr_core.entity.entities.fertilizer_entity import (
     FertilizerDetail,
 )
 
-
 class TestFertilizerListRequest:
     """Tests for FertilizerListRequest."""
     
@@ -27,7 +26,6 @@ class TestFertilizerListRequest:
         assert request.language == "en"
         assert request.limit == 10
 
-
 class TestFertilizerListResult:
     """Tests for FertilizerListResult."""
     
@@ -44,7 +42,6 @@ class TestFertilizerListResult:
         
         assert result.fertilizers == fertilizers
 
-
 class TestFertilizerDetailRequest:
     """Tests for FertilizerDetailRequest."""
     
@@ -53,7 +50,6 @@ class TestFertilizerDetailRequest:
         request = FertilizerDetailRequest(fertilizer_name="尿素")
         
         assert request.fertilizer_name == "尿素"
-
 
 class TestFertilizerDetail:
     """Tests for FertilizerDetail."""

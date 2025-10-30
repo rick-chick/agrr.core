@@ -1,7 +1,7 @@
 """CLI controller for weather file-based prediction operations."""
 
 import argparse
-import asyncio
+
 from typing import Optional, List
 from datetime import datetime, timedelta
 
@@ -9,7 +9,6 @@ from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresent
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.prediction_gateway import PredictionGateway
 from agrr_core.framework.validation.output_validator import OutputValidator, OutputValidationError
-
 
 class WeatherCliPredictController:
     """CLI controller for weather file-based prediction operations."""
@@ -211,7 +210,7 @@ Notes:
         return parser
     
     
-    async def handle_predict_command(self, args) -> None:
+    def handle_predict_command(self, args) -> None:
         """Handle predict command execution."""
         try:
             # Get model type and metrics from args
@@ -242,7 +241,7 @@ Notes:
             
             # LightGBMの場合は自動的に全メトリック予測
             if model_type == 'lightgbm':
-                predictions = await self.predict_interactor.execute(
+                predictions = self.predict_interactor.execute(
                     input_source=args.input,
                     output_destination=args.output,
                     prediction_days=args.days,
@@ -250,7 +249,7 @@ Notes:
                 )
             elif model_type == 'mock':
                 # Mock mode: use last year's same period data
-                predictions = await self.predict_interactor.execute(
+                predictions = self.predict_interactor.execute(
                     input_source=args.input,
                     output_destination=args.output,
                     prediction_days=args.days,
@@ -266,7 +265,7 @@ Notes:
                     )
                     return
                 
-                predictions = await self.predict_interactor.execute(
+                predictions = self.predict_interactor.execute(
                     input_source=args.input,
                     output_destination=args.output,
                     prediction_days=args.days,
@@ -287,10 +286,10 @@ Notes:
         except Exception as e:
             self.cli_presenter.display_error(f"Unexpected error: {e}", "INTERNAL_ERROR")
     
-    async def run(self, args: Optional[list] = None) -> None:
+    def run(self, args: Optional[list] = None) -> None:
         """Run CLI application with given arguments."""
         parser = self.create_argument_parser()
         parsed_args = parser.parse_args(args)
         
         # Execute predict command directly (no subcommand needed)
-        await self.handle_predict_command(parsed_args)
+        self.handle_predict_command(parsed_args)

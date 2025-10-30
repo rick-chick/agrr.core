@@ -23,7 +23,6 @@ from agrr_core.usecase.interactors.growth_period_optimize_interactor import (
     GrowthPeriodOptimizeInteractor,
 )
 
-
 class TestGrowthPeriodOptimizeInteractor:
     """Test cases for GrowthPeriodOptimizeInteractor."""
 
@@ -41,8 +40,7 @@ class TestGrowthPeriodOptimizeInteractor:
             weather_gateway=self.gateway_weather,
         )
 
-    @pytest.mark.asyncio
-    async def test_execute_finds_optimal_period(self):
+    def test_execute_finds_optimal_period(self):
         """Test that the interactor finds the optimal growth period with minimum cost."""
         # Setup mock crop requirements (total 100 GDD)
         crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
@@ -118,7 +116,7 @@ class TestGrowthPeriodOptimizeInteractor:
             field=test_field,
         )
 
-        response = await self.interactor.execute(request)
+        response = self.interactor.execute(request)
 
         # Assertions
         assert response.crop_name == "Rice"
@@ -137,8 +135,7 @@ class TestGrowthPeriodOptimizeInteractor:
         valid_candidates = [c for c in response.candidates if c.total_cost is not None]
         assert len(valid_candidates) == 6  # April 1-6: each maps to unique completion date (April 10-15)
 
-    @pytest.mark.asyncio
-    async def test_execute_handles_incomplete_growth(self):
+    def test_execute_handles_incomplete_growth(self):
         """Test handling when growth doesn't reach 100% for any candidate in evaluation period."""
         # Setup mock crop requirements (total 1000 GDD - high requirement)
         crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25)
@@ -196,10 +193,9 @@ class TestGrowthPeriodOptimizeInteractor:
 
         # Should raise exception when no candidate completes
         with pytest.raises(ValueError, match="No candidate can complete growth within the planning period"):
-            await self.interactor.execute(request)
+            self.interactor.execute(request)
 
-    @pytest.mark.asyncio
-    async def test_execute_with_single_day_evaluation_period(self):
+    def test_execute_with_single_day_evaluation_period(self):
         """Test with evaluation period of just one day."""
         # Setup simple scenario
         crop = Crop(crop_id="tomato", name="Tomato", area_per_unit=0.5)
@@ -254,7 +250,7 @@ class TestGrowthPeriodOptimizeInteractor:
             field=test_field,
         )
 
-        response = await self.interactor.execute(request)
+        response = self.interactor.execute(request)
 
         # Single candidate is automatically optimal
         assert response.optimal_start_date == datetime(2024, 5, 1)
@@ -265,8 +261,7 @@ class TestGrowthPeriodOptimizeInteractor:
         assert len(valid_candidates) == 1
         assert valid_candidates[0].is_optimal is True
 
-    @pytest.mark.asyncio
-    async def test_execute_with_completion_deadline_filters_late_candidates(self):
+    def test_execute_with_completion_deadline_filters_late_candidates(self):
         """Test that candidates exceeding completion deadline are filtered out."""
         # Setup crop requirements (total 100 GDD)
         crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25, variety="Koshihikari")
@@ -337,7 +332,7 @@ class TestGrowthPeriodOptimizeInteractor:
             field=test_field,
         )
 
-        response = await self.interactor.execute(request)
+        response = self.interactor.execute(request)
 
         # All candidates complete by deadline, so it just picks min cost
         # All have same cost (10 days), after filtering each completion date has one candidate
@@ -349,8 +344,7 @@ class TestGrowthPeriodOptimizeInteractor:
         valid_candidates = [c for c in response.candidates if c.total_cost is not None]
         assert len(valid_candidates) == 3  # April 1, 2, 3: each maps to unique completion date (April 10, 11, 12)
 
-    @pytest.mark.asyncio
-    async def test_execute_raises_error_when_no_candidate_meets_deadline(self):
+    def test_execute_raises_error_when_no_candidate_meets_deadline(self):
         """Test error message when all candidates exceed completion deadline."""
         # Setup crop requirements (total 100 GDD - takes 10 days)
         crop = Crop(crop_id="rice", name="Rice", area_per_unit=0.25)
@@ -414,10 +408,9 @@ class TestGrowthPeriodOptimizeInteractor:
 
         # Should raise error with helpful message about deadline
         with pytest.raises(ValueError, match="No candidate can complete growth within the planning period"):
-            await self.interactor.execute(request)
+            self.interactor.execute(request)
 
-    @pytest.mark.asyncio
-    async def test_execute_loads_interaction_rules_when_file_provided(
+    def test_execute_loads_interaction_rules_when_file_provided(
         self, gateway_interaction_rule
     ):
         """Test that interaction rules are loaded when file path is provided in request."""
@@ -508,7 +501,7 @@ class TestGrowthPeriodOptimizeInteractor:
         )
 
         # Execute
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
 
         # Verify that interaction rules were loaded
         gateway_interaction_rule.get_rules.assert_called_once()
@@ -517,8 +510,7 @@ class TestGrowthPeriodOptimizeInteractor:
         assert response.optimal_start_date is not None
         assert response.completion_date is not None
 
-    @pytest.mark.asyncio
-    async def test_execute_optimizes_for_profit_when_revenue_available(self):
+    def test_execute_optimizes_for_profit_when_revenue_available(self):
         """Test that the interactor optimizes for profit (revenue - cost) when revenue information is available."""
         # Setup crop with revenue information
         crop = Crop(
@@ -601,7 +593,7 @@ class TestGrowthPeriodOptimizeInteractor:
             field=test_field,
         )
 
-        response = await self.interactor.execute(request)
+        response = self.interactor.execute(request)
 
         # Expected behavior:
         # - April 1 start: 5*5 + 75 = 100 GDD, needs ~13 days (5 days slow + 8 days fast)
@@ -628,8 +620,7 @@ class TestGrowthPeriodOptimizeInteractor:
         expected_profit = (1000.0 * 50000.0) - (optimal.growth_days * 1000.0)
         assert optimal.get_metrics().profit == expected_profit
 
-    @pytest.mark.asyncio
-    async def test_filter_shortest_candidates_per_completion_date(self):
+    def test_filter_shortest_candidates_per_completion_date(self):
         """Test that candidates are filtered to keep only the shortest period per completion date."""
         # Setup crop requirements (50 GDD total)
         crop = Crop(crop_id="lettuce", name="Lettuce", area_per_unit=0.1, variety="Romaine")
@@ -704,7 +695,7 @@ class TestGrowthPeriodOptimizeInteractor:
             field=test_field,
         )
 
-        response = await self.interactor.execute(request)
+        response = self.interactor.execute(request)
 
         # Without filtering: would have 5 candidates (April 1-5)
         # With filtering: only keep shortest period per completion_date
@@ -746,8 +737,7 @@ class TestGrowthPeriodOptimizeInteractor:
         # Verify that we have multiple completion dates with single candidates each
         assert len(valid_candidates) >= 2  # At least 2 different completion dates
 
-    @pytest.mark.asyncio
-    async def test_filter_can_be_disabled(self):
+    def test_filter_can_be_disabled(self):
         """Test that candidate filtering can be disabled via request parameter."""
         # Setup crop requirements (50 GDD total)
         crop = Crop(crop_id="lettuce", name="Lettuce", area_per_unit=0.1, variety="Romaine")
@@ -811,7 +801,7 @@ class TestGrowthPeriodOptimizeInteractor:
             filter_redundant_candidates=False,  # Disable filtering
         )
 
-        response_no_filter = await self.interactor.execute(request_no_filter)
+        response_no_filter = self.interactor.execute(request_no_filter)
 
         # Without filtering, we should have ALL valid candidates
         valid_candidates_no_filter = [c for c in response_no_filter.candidates if c.total_cost is not None]
@@ -826,7 +816,7 @@ class TestGrowthPeriodOptimizeInteractor:
             filter_redundant_candidates=True,  # Enable filtering (default)
         )
 
-        response_with_filter = await self.interactor.execute(request_with_filter)
+        response_with_filter = self.interactor.execute(request_with_filter)
 
         valid_candidates_with_filter = [c for c in response_with_filter.candidates if c.total_cost is not None]
         
@@ -839,8 +829,7 @@ class TestGrowthPeriodOptimizeInteractor:
         assert response_no_filter.growth_days == response_with_filter.growth_days
         assert response_no_filter.total_cost == response_with_filter.total_cost
 
-    @pytest.mark.asyncio
-    async def test_optimize_with_harvest_start_gdd(self):
+    def test_optimize_with_harvest_start_gdd(self):
         """Test optimize-period with harvest_start_gdd for fruiting crops."""
         # Create eggplant crop profile with harvest_start_gdd
         crop = Crop(
@@ -933,7 +922,7 @@ class TestGrowthPeriodOptimizeInteractor:
             field=test_field,
         )
         
-        response = await self.interactor.execute(request)
+        response = self.interactor.execute(request)
         
         # Verify response
         assert response.crop_name == "Eggplant"

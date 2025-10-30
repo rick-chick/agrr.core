@@ -35,7 +35,6 @@ from agrr_core.adapter.interfaces.ml.time_series_service_interface import (
     FittedTimeSeriesModelInterface
 )
 
-
 class TimeSeriesARIMAService(TimeSeriesServiceInterface):
     """ARIMA implementation of time series analysis interface."""
     
@@ -64,7 +63,6 @@ class TimeSeriesARIMAService(TimeSeriesServiceInterface):
         # Simple first difference
         diff_data = [data[i] - data[i-1] for i in range(1, len(data))]
         return diff_data
-
 
 class ARIMAModel(TimeSeriesModelInterface):
     """ARIMA model implementation."""
@@ -98,7 +96,6 @@ class ARIMAModel(TimeSeriesModelInterface):
                 return FittedARIMAModel(fitted_model)
             except Exception as fallback_e:
                 raise RuntimeError(f"Failed to fit ARIMA model: {e}. Fallback also failed: {fallback_e}")
-
 
 class FittedARIMAModel(FittedTimeSeriesModelInterface):
     """Fitted ARIMA model implementation."""

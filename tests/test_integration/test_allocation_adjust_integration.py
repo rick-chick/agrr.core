@@ -9,7 +9,7 @@ This module tests the complete workflow of the adjust command including:
 
 import pytest
 import json
-import asyncio
+
 from datetime import datetime
 from pathlib import Path
 
@@ -29,7 +29,6 @@ from agrr_core.adapter.gateways.crop_profile_inmemory_gateway import CropProfile
 from agrr_core.adapter.gateways.weather_file_gateway import WeatherFileGateway
 from agrr_core.framework.services.io.file_service import FileService
 
-
 class TestAllocationAdjustBasics:
     """Basic functionality tests for allocation adjustment."""
     
@@ -42,41 +41,37 @@ class TestAllocationAdjustBasics:
     def test_data_dir(self):
         """Get test data directory."""
         return Path(__file__).parent.parent.parent / "test_data"
-    
-    @pytest.mark.asyncio
-    async def test_load_current_allocation(self, file_service, test_data_dir):
+
+    def test_load_current_allocation(self, file_service, test_data_dir):
         """Test loading current allocation from JSON file."""
         allocation_file = str(test_data_dir / "test_current_allocation.json")
         
         gateway = AllocationResultFileGateway(file_service, allocation_file)
-        result = await gateway.get()
+        result = gateway.get()
         
         assert result is not None
         assert result.optimization_id is not None
         assert len(result.field_schedules) > 0
         assert result.total_profit > 0
-    
-    @pytest.mark.asyncio
-    async def test_load_move_instructions(self, file_service, test_data_dir):
+
+    def test_load_move_instructions(self, file_service, test_data_dir):
         """Test loading move instructions from JSON file."""
         moves_file = str(test_data_dir / "test_adjust_moves.json")
         
         gateway = MoveInstructionFileGateway(file_service, moves_file)
-        moves = await gateway.get_all()
+        moves = gateway.get_all()
         
         assert len(moves) > 0
         assert all(isinstance(m, MoveInstruction) for m in moves)
-    
-    @pytest.mark.asyncio
-    async def test_load_nonexistent_file(self, file_service):
+
+    def test_load_nonexistent_file(self, file_service):
         """Test error handling for nonexistent file."""
         gateway = AllocationResultFileGateway(file_service, "nonexistent.json")
         
-        result = await gateway.get()
+        result = gateway.get()
         assert result is None
-    
-    @pytest.mark.asyncio
-    async def test_invalid_json_format(self, file_service, tmp_path):
+
+    def test_invalid_json_format(self, file_service, tmp_path):
         """Test error handling for invalid JSON."""
         invalid_file = tmp_path / "invalid.json"
         invalid_file.write_text("{ invalid json }")
@@ -84,8 +79,7 @@ class TestAllocationAdjustBasics:
         gateway = AllocationResultFileGateway(file_service, str(invalid_file))
         
         with pytest.raises(ValueError, match="Invalid optimization result file format"):
-            await gateway.get()
-
+            gateway.get()
 
 class TestMoveInstructions:
     """Tests for move instruction handling."""
@@ -185,7 +179,6 @@ class TestMoveInstructions:
                 to_field_id="field_2",
             )
 
-
 class TestAllocationAdjustRequestDTO:
     """Tests for request DTO validation."""
     
@@ -243,7 +236,6 @@ class TestAllocationAdjustRequestDTO:
         # The adjust command simply applies moves and recalculates metrics
         pass
 
-
 class TestEndToEndWorkflow:
     """End-to-end integration tests."""
     
@@ -251,10 +243,9 @@ class TestEndToEndWorkflow:
     def test_data_dir(self):
         """Get test data directory."""
         return Path(__file__).parent.parent.parent / "test_data"
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.slow
-    async def test_complete_adjust_workflow(self, test_data_dir):
+    def test_complete_adjust_workflow(self, test_data_dir):
         """Test complete adjustment workflow with real data.
         
         This test simulates the actual CLI workflow:
@@ -304,7 +295,7 @@ class TestEndToEndWorkflow:
         )
         
         # Load moves for request
-        moves = await move_instruction_gateway.get_all()
+        moves = move_instruction_gateway.get_all()
         
         # Create request
         request = AllocationAdjustRequestDTO(
@@ -315,7 +306,7 @@ class TestEndToEndWorkflow:
         )
         
         # Execute
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Assertions
         assert response.success is True
@@ -323,9 +314,8 @@ class TestEndToEndWorkflow:
         assert response.optimized_result is not None
         assert response.optimized_result.total_profit > 0
         assert "adjust" in response.optimized_result.algorithm_used
-    
-    @pytest.mark.asyncio
-    async def test_all_moves_rejected(self, test_data_dir, tmp_path):
+
+    def test_all_moves_rejected(self, test_data_dir, tmp_path):
         """Test behavior when all moves are rejected."""
         file_service = FileService()
         
@@ -386,7 +376,7 @@ class TestEndToEndWorkflow:
         )
         
         # Load moves
-        moves = await move_instruction_gateway.get_all()
+        moves = move_instruction_gateway.get_all()
         
         # Create request
         request = AllocationAdjustRequestDTO(
@@ -397,7 +387,7 @@ class TestEndToEndWorkflow:
         )
         
         # Execute
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Assertions
         assert response.success is False
@@ -405,24 +395,20 @@ class TestEndToEndWorkflow:
         assert len(response.rejected_moves) == 2
         assert "No moves were applied" in response.message
 
-
 class TestOutputFormats:
     """Tests for output formatting."""
-    
-    @pytest.mark.asyncio
-    async def test_json_output_structure(self, tmp_path):
+
+    def test_json_output_structure(self, tmp_path):
         """Test JSON output has correct structure."""
         # This test would require setting up presenter and checking JSON structure
         # Placeholder for now
         pass
-    
-    @pytest.mark.asyncio
-    async def test_table_output_rendering(self):
+
+    def test_table_output_rendering(self):
         """Test table output renders correctly."""
         # This test would capture stdout and verify table format
         # Placeholder for now
         pass
-
 
 class TestConstraints:
     """Tests for constraint enforcement."""
@@ -431,10 +417,9 @@ class TestConstraints:
     def test_data_dir(self):
         """Get test data directory."""
         return Path(__file__).parent.parent.parent / "test_data"
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.slow
-    async def test_fallow_period_enforcement(self, test_data_dir):
+    def test_fallow_period_enforcement(self, test_data_dir):
         """Test that fallow period is enforced during re-optimization.
         
         Scenario:
@@ -487,7 +472,7 @@ class TestConstraints:
         )
         
         # Load moves
-        moves = await move_instruction_gateway.get_all()
+        moves = move_instruction_gateway.get_all()
         
         # Create request
         request = AllocationAdjustRequestDTO(
@@ -498,7 +483,7 @@ class TestConstraints:
         )
         
         # Execute
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Assertions
         assert response.success is True
@@ -520,9 +505,8 @@ class TestConstraints:
                     f"next starts {next_alloc.start_date} "
                     f"(should be >= {min_next_start} with {schedule.field.fallow_period_days}-day fallow)"
                 )
-    
-    @pytest.mark.asyncio
-    async def test_different_fallow_periods(self, test_data_dir):
+
+    def test_different_fallow_periods(self, test_data_dir):
         """Test that different fields have different fallow periods.
         
         Verify:
@@ -538,7 +522,7 @@ class TestConstraints:
             str(test_data_dir / "allocation_fields_with_fallow.json")
         )
         
-        fields = await field_gateway.get_all()
+        fields = field_gateway.get_all()
         
         expected_fallow = {
             "field_1": 28,
@@ -553,7 +537,6 @@ class TestConstraints:
                 f"got {field.fallow_period_days}"
             )
 
-
 class TestInteractionRules:
     """Tests for interaction rules (continuous cultivation, crop rotation)."""
     
@@ -561,10 +544,9 @@ class TestInteractionRules:
     def test_data_dir(self):
         """Get test data directory."""
         return Path(__file__).parent.parent.parent / "test_data"
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.slow
-    async def test_with_interaction_rules(self, test_data_dir):
+    def test_with_interaction_rules(self, test_data_dir):
         """Test adjustment with interaction rules applied.
         
         Verifies that interaction rules are loaded and applied during re-optimization.
@@ -622,7 +604,7 @@ class TestInteractionRules:
         )
         
         # Load moves
-        moves = await move_instruction_gateway.get_all()
+        moves = move_instruction_gateway.get_all()
         
         # Create request
         request = AllocationAdjustRequestDTO(
@@ -633,12 +615,11 @@ class TestInteractionRules:
         )
         
         # Execute
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Assertions
         assert response.success is True
         assert response.optimized_result is not None
-
 
 class TestAlgorithmComparison:
     """Tests for comparing DP vs Greedy algorithms."""
@@ -647,10 +628,9 @@ class TestAlgorithmComparison:
     def test_data_dir(self):
         """Get test data directory."""
         return Path(__file__).parent.parent.parent / "test_data"
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.slow
-    async def test_dp_vs_greedy_profit(self, test_data_dir):
+    def test_dp_vs_greedy_profit(self, test_data_dir):
         """Compare DP and Greedy algorithms for profit optimization.
         
         Expected: DP should produce equal or higher profit than Greedy.
@@ -695,7 +675,7 @@ class TestAlgorithmComparison:
         )
         
         # Load moves
-        moves = await move_instruction_gateway.get_all()
+        moves = move_instruction_gateway.get_all()
         
         # Create request
         request = AllocationAdjustRequestDTO(
@@ -706,7 +686,7 @@ class TestAlgorithmComparison:
         )
         
         # Execute
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Assertions
         assert response.success is True
@@ -727,7 +707,6 @@ class TestAlgorithmComparison:
         print(f"  DP time:       {response_dp.optimized_result.optimization_time:.3f}s")
         print(f"  Greedy time:   {response_greedy.optimized_result.optimization_time:.3f}s")
 
-
 class TestE2EScenarios:
     """End-to-end scenario tests."""
     
@@ -735,10 +714,9 @@ class TestE2EScenarios:
     def test_data_dir(self):
         """Get test data directory."""
         return Path(__file__).parent.parent.parent / "test_data"
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.slow
-    async def test_scenario_field_emergency(self, test_data_dir, tmp_path):
+    def test_scenario_field_emergency(self, test_data_dir, tmp_path):
         """Scenario 1: Field Emergency Response.
         
         Simulate field_1 becoming unavailable and moving all allocations to other fields.
@@ -800,7 +778,7 @@ class TestE2EScenarios:
         )
         
         # Load moves
-        moves = await move_instruction_gateway.get_all()
+        moves = move_instruction_gateway.get_all()
         
         # Create request
         request = AllocationAdjustRequestDTO(
@@ -811,7 +789,7 @@ class TestE2EScenarios:
         )
         
         # Execute
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Assertions
         assert response.success is True
@@ -826,10 +804,9 @@ class TestE2EScenarios:
         # field_1 might be re-used by optimizer or might be empty
         # Just verify the operation succeeded
         assert response.optimized_result.total_profit > 0
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.slow
-    async def test_scenario_profit_improvement(self, test_data_dir):
+    def test_scenario_profit_improvement(self, test_data_dir):
         """Scenario 2: Profit Improvement.
         
         Remove low-profit allocations and let optimizer re-allocate for better profit.
@@ -838,7 +815,7 @@ class TestE2EScenarios:
         
         # Load current allocation to find lowest profit allocation
         current_file = test_data_dir / "test_current_allocation.json"
-        content = await file_service.read(str(current_file))
+        content = file_service.read(str(current_file))
         data = json.loads(content)
         
         # Find allocation with lowest profit
@@ -910,7 +887,7 @@ class TestE2EScenarios:
             )
             
             # Load moves
-            moves = await move_instruction_gateway.get_all()
+            moves = move_instruction_gateway.get_all()
             
             # Create request
             request = AllocationAdjustRequestDTO(
@@ -921,7 +898,7 @@ class TestE2EScenarios:
             )
             
             # Execute
-            response = await interactor.execute(request)
+            response = interactor.execute(request)
             
             # Assertions
             assert response.success is True
@@ -942,10 +919,9 @@ class TestE2EScenarios:
         finally:
             # Cleanup temp file
             Path(improvement_moves_file).unlink(missing_ok=True)
-    
-    @pytest.mark.asyncio
+
     @pytest.mark.slow
-    async def test_scenario_sequential_adjustments(self, test_data_dir, tmp_path):
+    def test_scenario_sequential_adjustments(self, test_data_dir, tmp_path):
         """Scenario 3: Sequential Adjustments.
         
         Apply multiple adjustments in sequence: adjust → adjust → adjust
@@ -981,12 +957,12 @@ class TestE2EScenarios:
         
         request_1 = AllocationAdjustRequestDTO(
             current_optimization_id="",
-            move_instructions=await move_1.get_all(),
+            move_instructions=move_1.get_all(),
             planning_period_start=datetime(2023, 4, 1),
             planning_period_end=datetime(2023, 12, 31),
         )
         
-        response_1 = await interactor_1.execute(request_1)
+        response_1 = interactor_1.execute(request_1)
         
         # Assertions for first adjustment
         assert response_1.success is True
@@ -996,12 +972,10 @@ class TestE2EScenarios:
         # For now, just verify first adjustment succeeded
         assert profit_1 > 0
 
-
 class TestAddNewCropAllocation:
     """Test cases for ADD action to add new crop allocations."""
-    
-    @pytest.mark.asyncio
-    async def test_add_new_crop_allocation(self, tmp_path):
+
+    def test_add_new_crop_allocation(self, tmp_path):
         """Test adding a new crop allocation using ADD action."""
         file_service = FileService()
         test_data_dir = Path(__file__).parent.parent.parent / "test_data"
@@ -1067,13 +1041,13 @@ class TestAddNewCropAllocation:
         )
         
         # Get current allocation count
-        current_result = await optimization_result_gateway.get()
+        current_result = optimization_result_gateway.get()
         current_allocation_count = sum(
             len(s.allocations) for s in current_result.field_schedules
         )
         
         # Load moves
-        moves = await move_instruction_gateway.get_all()
+        moves = move_instruction_gateway.get_all()
         
         # Create request
         # Note: planning_period_start adjusted to 2023-02-01 to allow early planting
@@ -1085,7 +1059,7 @@ class TestAddNewCropAllocation:
         )
         
         # Execute
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Assertions
         # Note: The move might be rejected due to various constraints
@@ -1128,16 +1102,15 @@ class TestAddNewCropAllocation:
             assert new_alloc is not None
             assert new_alloc.allocation_id is not None
             assert new_alloc.allocation_id != ""
-    
-    @pytest.mark.asyncio
-    async def test_add_crop_with_overlap_rejected(self, tmp_path):
+
+    def test_add_crop_with_overlap_rejected(self, tmp_path):
         """Test that ADD action is rejected when there's overlap with existing allocation."""
         file_service = FileService()
         test_data_dir = Path(__file__).parent.parent.parent / "test_data"
         
         # Get existing allocation date to create overlap
         current_file = test_data_dir / "test_current_allocation.json"
-        content = await file_service.read(str(current_file))
+        content = file_service.read(str(current_file))
         data = json.loads(content)
         
         # Get first allocation
@@ -1203,7 +1176,7 @@ class TestAddNewCropAllocation:
         )
         
         # Load moves
-        moves = await move_instruction_gateway.get_all()
+        moves = move_instruction_gateway.get_all()
         
         # Create request
         request = AllocationAdjustRequestDTO(
@@ -1214,7 +1187,7 @@ class TestAddNewCropAllocation:
         )
         
         # Execute
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Assertions - should be rejected due to overlap/violation
         assert response.success is False
@@ -1223,9 +1196,8 @@ class TestAddNewCropAllocation:
         # Check for either "overlap" or "violation" or "fallow period" in rejection reason
         reason_lower = response.rejected_moves[0]["reason"].lower()
         assert any(keyword in reason_lower for keyword in ["overlap", "violation", "fallow period", "constraint", "not found", "crop"])
-    
-    @pytest.mark.asyncio
-    async def test_add_nonexistent_crop_rejected(self, tmp_path):
+
+    def test_add_nonexistent_crop_rejected(self, tmp_path):
         """Test that ADD action is rejected when crop_id doesn't exist."""
         file_service = FileService()
         test_data_dir = Path(__file__).parent.parent.parent / "test_data"
@@ -1286,7 +1258,7 @@ class TestAddNewCropAllocation:
         )
         
         # Load moves
-        moves = await move_instruction_gateway.get_all()
+        moves = move_instruction_gateway.get_all()
         
         # Create request
         request = AllocationAdjustRequestDTO(
@@ -1297,7 +1269,7 @@ class TestAddNewCropAllocation:
         )
         
         # Execute
-        response = await interactor.execute(request)
+        response = interactor.execute(request)
         
         # Assertions - should be rejected due to non-existent crop
         assert response.success is False

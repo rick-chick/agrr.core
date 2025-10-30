@@ -6,14 +6,14 @@ Provides generic struct() method for structured data extraction from LLM.
 
 import os
 import json
-import asyncio
 from typing import Dict, Any, Optional
 
 from agrr_core.adapter.interfaces.clients.llm_client_interface import LLMClientInterface
 
 # Conditional imports
 try:
-    from openai import AsyncOpenAI
+    # Use synchronous client to avoid async httpx close issues
+    from openai import OpenAI
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
@@ -26,11 +26,10 @@ except ImportError:
     # dotenv not available, use environment variables directly
     pass
 
-
 class LLMClient(LLMClientInterface):
     """LLM client using OpenAI API with proper environment variable management."""
 
-    async def struct(self, query: str, structure: Dict[str, Any], instruction: Optional[str] = None) -> Dict[str, Any]:
+    def struct(self, query: str, structure: Dict[str, Any], instruction: Optional[str] = None) -> Dict[str, Any]:
         # Check for OpenAI API key
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
@@ -40,96 +39,68 @@ class LLMClient(LLMClientInterface):
         if not OPENAI_AVAILABLE:
             raise RuntimeError("OpenAI library is not installed. Please install it with: pip install openai")
         
-        # Use AsyncOpenAI as context manager for proper resource management
-        async with AsyncOpenAI(api_key=api_key) as client:
-            # Convert provider-agnostic structure to JSON Schema (shallow conversion)
-            def to_json_schema(node: Any) -> Dict[str, Any]:  # type: ignore[name-defined]
-                if isinstance(node, dict):
-                    props = {k: to_json_schema(v) for k, v in node.items()}
-                    return {"type": "object", "properties": props, "additionalProperties": False}
-                if isinstance(node, list):
-                    item = node[0] if node else {}
-                    return {"type": "array", "items": to_json_schema(item)}
-                # Scalars or None → allow number/string/null
-                return {"type": ["number", "string", "null"]}
+        # Convert provider-agnostic structure to JSON Schema (shallow conversion)
+        def to_json_schema(node: Any) -> Dict[str, Any]:  # type: ignore[name-defined]
+            if isinstance(node, dict):
+                props = {k: to_json_schema(v) for k, v in node.items()}
+                return {"type": "object", "properties": props, "additionalProperties": False}
+            if isinstance(node, list):
+                item = node[0] if node else {}
+                return {"type": "array", "items": to_json_schema(item)}
+            # Scalars or None → allow number/string/null
+            return {"type": ["number", "string", "null"]}
 
-            schema = to_json_schema(structure)
+        schema = to_json_schema(structure)
 
-            # Wrap for Responses API
-            wrapped_schema = {
-                "name": os.getenv("OPENAI_JSON_SCHEMA_NAME", "structured_output"),
-                "schema": schema,
-                "strict": True,
-            }
+        system_prompt = instruction or ""
+        websearch_enabled = os.getenv("OPENAI_WEBSEARCH_ENABLED", "false").lower() == "true"
 
-            system_prompt = instruction or ""
+        client = OpenAI(api_key=api_key)
+        if websearch_enabled:
+            resp = client.responses.create(
+                model=os.getenv("OPENAI_MODEL", "gpt-4o"),
+                tools=[{"type": "web_search_preview"}],
+                input=f"{system_prompt}\n\n{query}\n\nPlease respond in JSON format."
+            )
+            text = getattr(resp, 'output_text', None)
+            content = text if isinstance(text, str) else str(resp)
+            provider = "openai_responses"
+        else:
+            messages = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            user_message = f"{query}\n\nPlease respond in JSON format."
+            messages.append({"role": "user", "content": user_message})
+            resp = client.chat.completions.create(
+                model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+                messages=messages,
+                temperature=0,
+                response_format={"type": "json_object"}
+            )
+            content = resp.choices[0].message.content if resp.choices else None
+            provider = "openai"
 
-            # Check if websearch is enabled
-            websearch_enabled = os.getenv("OPENAI_WEBSEARCH_ENABLED", "false").lower() == "true"
-            
-            # Use Responses API if websearch is enabled, otherwise use chat.completions
-            if websearch_enabled:
-                # Use Responses API with web_search_preview tool
-                response = await client.responses.create(
-                    model=os.getenv("OPENAI_MODEL", "gpt-4o"),
-                    tools=[{"type": "web_search_preview"}],
-                    input=f"{system_prompt}\n\n{query}\n\nPlease respond in JSON format."
-                )
-                
-                # Extract content from responses API
-                content = response.output_text if hasattr(response, 'output_text') else str(response)
-                
-                # Extract JSON from markdown code block if present
-                if content.startswith('```json'):
-                    # Remove markdown code block markers
-                    lines = content.split('\n')
-                    json_lines = []
-                    in_json = False
-                    for line in lines:
-                        if line.strip() == '```json':
-                            in_json = True
-                            continue
-                        elif line.strip() == '```':
-                            break
-                        elif in_json:
-                            json_lines.append(line)
-                    content = '\n'.join(json_lines)
-                
-                # Parse as JSON
-                try:
-                    data = json.loads(content)
-                except json.JSONDecodeError as e:
-                    print(f"[DEBUG] JSON parse error: {e}")
-                    print(f"[DEBUG] Content: {content}")
-                    raise RuntimeError(f"Failed to parse JSON response from OpenAI Responses API: {str(e)}")
-                
-                return {"provider": "openai_responses", "data": data, "schema": schema}
-            else:
-                # Use chat.completions API with JSON response format
-                messages = []
-                if system_prompt:
-                    messages.append({"role": "system", "content": system_prompt})
-                
-                user_message = f"{query}\n\nPlease respond in JSON format."
-                messages.append({"role": "user", "content": user_message})
-                
-                response = await client.chat.completions.create(
-                    model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-                    messages=messages,
-                    temperature=0,
-                    response_format={"type": "json_object"}
-                )
-                
-                content = response.choices[0].message.content if response.choices else None
-            
-            if not content:
-                raise RuntimeError("No response content from OpenAI API")
-            
-            try:
-                data = json.loads(content)
-                return {"provider": "openai", "data": data, "schema": schema}
-            except json.JSONDecodeError as e:
-                raise RuntimeError(f"Failed to parse JSON response from OpenAI: {str(e)}")
-            
-            # Ensure all pending tasks are completed before context manager exits
-            await asyncio.sleep(0)  # Allow other tasks to complete
+        if not content:
+            raise RuntimeError("No response content from OpenAI API")
+
+        # Extract JSON from markdown code block if present
+        if isinstance(content, str) and content.startswith('```json'):
+            lines = content.split('\n')
+            json_lines = []
+            in_json = False
+            for line in lines:
+                if line.strip() == '```json':
+                    in_json = True
+                    continue
+                elif line.strip() == '```':
+                    break
+                elif in_json:
+                    json_lines.append(line)
+            content = '\n'.join(json_lines)
+
+        try:
+            data = json.loads(content)  # type: ignore[arg-type]
+            return {"provider": provider, "data": data, "schema": schema}
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Failed to parse JSON response from OpenAI: {str(e)}")
+

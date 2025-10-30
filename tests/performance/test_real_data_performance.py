@@ -16,7 +16,6 @@ from agrr_core.adapter.gateways.interaction_rule_file_gateway import Interaction
 from agrr_core.adapter.gateways.crop_profile_inmemory_gateway import CropProfileInMemoryGateway
 from agrr_core.framework.services.io.file_service import FileService
 
-
 class TimedCropProfileFileGateway(CropProfileFileGateway):
     """Instrumented gateway to measure performance."""
     
@@ -28,10 +27,9 @@ class TimedCropProfileFileGateway(CropProfileFileGateway):
     async def get_all(self):
         self.get_all_count += 1
         start = time.time()
-        result = await super().get_all()
+        result = super().get_all()
         self.get_all_time += time.time() - start
         return result
-
 
 class TimedWeatherFileGateway(WeatherFileGateway):
     """Instrumented gateway to measure weather loading performance."""
@@ -44,13 +42,11 @@ class TimedWeatherFileGateway(WeatherFileGateway):
     async def get(self):
         self.get_count += 1
         start = time.time()
-        result = await super().get()
+        result = super().get()
         self.get_time += time.time() - start
         return result
 
-
-@pytest.mark.asyncio
-async def test_real_data_performance():
+def test_real_data_performance():
     """Test with real debug data to identify actual bottlenecks."""
     
     # Use the latest debug data
@@ -78,7 +74,7 @@ async def test_real_data_performance():
     
     # Load moves
     move_gateway = MoveInstructionFileGateway(file_service, moves_file)
-    moves = await move_gateway.get_all()
+    moves = move_gateway.get_all()
     
     print(f"\n=== Real Data Performance Test ===")
     print(f"Number of moves: {len(moves)}")
@@ -105,7 +101,7 @@ async def test_real_data_performance():
     print("\nStarting performance measurement...")
     
     overall_start = time.time()
-    response = await interactor.execute(request)
+    response = interactor.execute(request)
     overall_end = time.time()
     
     total_time = overall_end - overall_start

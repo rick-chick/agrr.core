@@ -2,7 +2,7 @@
 
 import pytest
 from datetime import datetime
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.crop_entity import Crop
@@ -23,15 +23,13 @@ from agrr_core.usecase.services.neighbor_operations import (
     AreaAdjustOperation,
 )
 
-
 @pytest.fixture
 def mock_crop_profile_gateway_internal():
     """Mock CropProfileGateway for internal use."""
-    gateway = AsyncMock()
+    gateway = Mock()
     gateway.save.return_value = None
     gateway.delete.return_value = None
     return gateway
-
 
 class TestMultiFieldCropAllocationComplete:
     """Test all neighborhood operations in the complete framework."""

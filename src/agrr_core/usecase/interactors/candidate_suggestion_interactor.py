@@ -4,7 +4,7 @@
 このモジュールは候補リスト提示機能のビジネスロジックを実装します。
 既存の最適化処理に独立した候補提示機能を提供します。
 """
-import asyncio
+
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 from agrr_core.usecase.dto.candidate_suggestion_request_dto import CandidateSuggestionRequestDTO
@@ -23,7 +23,6 @@ from agrr_core.usecase.gateways.field_gateway import FieldGateway
 from agrr_core.usecase.gateways.crop_gateway import CropGateway
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.gateways.interaction_rule_gateway import InteractionRuleGateway
-
 
 class CandidateSuggestionInteractor:
     """
@@ -71,7 +70,7 @@ class CandidateSuggestionInteractor:
         self._gdd_candidates_cache: Dict[str, List[Any]] = {}
         self._crop_profiles_cache: Dict[str, Any] = {}
     
-    async def execute(self, request: CandidateSuggestionRequestDTO) -> CandidateSuggestionResponseDTO:
+    def execute(self, request: CandidateSuggestionRequestDTO) -> CandidateSuggestionResponseDTO:
         """
         候補リスト提示を実行
         
@@ -83,7 +82,7 @@ class CandidateSuggestionInteractor:
         """
         try:
             # 1. 既存の最適化結果を取得
-            allocation_result = await self._allocation_result_gateway.get()
+            allocation_result = self._allocation_result_gateway.get()
             if not allocation_result:
                 return CandidateSuggestionResponseDTO(
                     candidates=[],
@@ -92,15 +91,15 @@ class CandidateSuggestionInteractor:
                 )
             
             # 2. 必要なデータを取得
-            fields = await self._field_gateway.get_all()
-            crops = await self._crop_gateway.get_all()
-            weather_data = await self._weather_gateway.get()
+            fields = self._field_gateway.get_all()
+            crops = self._crop_gateway.get_all()
+            weather_data = self._weather_gateway.get()
             
             # 3. Interaction rulesを読み込んでviolation checkerを初期化
             if self._interaction_rule_gateway:
                 try:
                     from agrr_core.usecase.services.interaction_rule_service import InteractionRuleService
-                    interaction_rules = await self._interaction_rule_gateway.get_rules()
+                    interaction_rules = self._interaction_rule_gateway.get_rules()
                     interaction_rule_service = InteractionRuleService(rules=interaction_rules)
                     self._violation_checker = ViolationCheckerService(
                         interaction_rule_service=interaction_rule_service
@@ -145,7 +144,7 @@ class CandidateSuggestionInteractor:
                 )
             
             # 4. 候補を生成
-            candidates = await self._generate_candidates(
+            candidates = self._generate_candidates(
                 allocation_result=allocation_result,
                 fields=fields,
                 crops=crops,
@@ -172,7 +171,7 @@ class CandidateSuggestionInteractor:
                 message=f"Error generating candidates: {str(e)}\n{traceback.format_exc()}"
             )
     
-    async def _generate_candidates(
+    def _generate_candidates(
         self,
         allocation_result: Any,
         fields: List[Field],
@@ -200,7 +199,7 @@ class CandidateSuggestionInteractor:
         candidates = []
         
         # 1. 新しい作物挿入候補を生成
-        insert_candidates = await self._generate_insert_candidates(
+        insert_candidates = self._generate_insert_candidates(
             fields=fields,
             target_crop=target_crop,
             weather_data=weather_data,
@@ -211,7 +210,7 @@ class CandidateSuggestionInteractor:
         candidates.extend(insert_candidates)
         
         # 2. 既存作物移動候補を生成
-        move_candidates = await self._generate_move_candidates(
+        move_candidates = self._generate_move_candidates(
             allocation_result=allocation_result,
             fields=fields,
             crops=crops,
@@ -223,7 +222,7 @@ class CandidateSuggestionInteractor:
         
         return candidates
     
-    async def _generate_insert_candidates(
+    def _generate_insert_candidates(
         self,
         fields: List[Field],
         target_crop: Crop,
@@ -259,7 +258,7 @@ class CandidateSuggestionInteractor:
             
             for start_date, end_date in available_periods:
                 # GDD候補を生成
-                gdd_candidates = await self._get_gdd_candidates(
+                gdd_candidates = self._get_gdd_candidates(
                     field=field,
                     crop=target_crop,
                     weather_data=weather_data,
@@ -269,7 +268,7 @@ class CandidateSuggestionInteractor:
                 
                 for gdd_candidate in gdd_candidates:
                     # 利益を計算
-                    profit = await self._calculate_profit(
+                    profit = self._calculate_profit(
                         field=field,
                         crop=target_crop,
                         allocation=gdd_candidate,
@@ -293,7 +292,7 @@ class CandidateSuggestionInteractor:
         
         return candidates
     
-    async def _generate_move_candidates(
+    def _generate_move_candidates(
         self,
         allocation_result: Any,
         fields: List[Field],
@@ -336,7 +335,7 @@ class CandidateSuggestionInteractor:
                 
                 for start_date, end_date in available_periods:
                     # 移動後の利益を計算
-                    profit = await self._calculate_move_profit(
+                    profit = self._calculate_move_profit(
                         source_allocation=allocation,
                         target_field=target_field,
                         new_start_date=start_date,
@@ -517,7 +516,7 @@ class CandidateSuggestionInteractor:
         
         return True
     
-    async def _get_gdd_candidates(
+    def _get_gdd_candidates(
         self,
         field: Field,
         crop: Crop,
@@ -555,7 +554,7 @@ class CandidateSuggestionInteractor:
         )
         
         try:
-            response = await self._growth_period_optimizer.execute(request)
+            response = self._growth_period_optimizer.execute(request)
             candidates = response.candidates if response.success else []
         except Exception:
             candidates = []
@@ -563,7 +562,7 @@ class CandidateSuggestionInteractor:
         self._gdd_candidates_cache[cache_key] = candidates
         return candidates
     
-    async def _calculate_profit(
+    def _calculate_profit(
         self,
         field: Field,
         crop: Crop,
@@ -603,7 +602,7 @@ class CandidateSuggestionInteractor:
         except Exception:
             return 0.0
     
-    async def _calculate_move_profit(
+    def _calculate_move_profit(
         self,
         source_allocation: CropAllocation,
         target_field: Field,

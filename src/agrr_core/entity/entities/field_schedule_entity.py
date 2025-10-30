@@ -22,7 +22,6 @@ from typing import List
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 
-
 @dataclass(frozen=True)
 class FieldSchedule:
     """Represents the complete cultivation schedule for a single field."""

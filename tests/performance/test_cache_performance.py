@@ -16,9 +16,7 @@ from agrr_core.adapter.gateways.interaction_rule_file_gateway import Interaction
 from agrr_core.adapter.gateways.crop_profile_inmemory_gateway import CropProfileInMemoryGateway
 from agrr_core.framework.services.io.file_service import FileService
 
-
-@pytest.mark.asyncio
-async def test_gdd_cache_performance():
+def test_gdd_cache_performance():
     """Test that GDD caching improves performance for multiple moves."""
     
     # Use real debug data
@@ -43,7 +41,7 @@ async def test_gdd_cache_performance():
     interaction_rule_gateway = InteractionRuleFileGateway(file_service, rules_file)
     
     # Load current allocation to get allocation IDs
-    current_result = await allocation_gateway.get()
+    current_result = allocation_gateway.get()
     
     # Get an allocation to use for testing
     test_allocation = current_result.field_schedules[0].allocations[0]
@@ -81,7 +79,7 @@ async def test_gdd_cache_performance():
     )
     
     start1 = time.time()
-    response1 = await interactor1.execute(request1)
+    response1 = interactor1.execute(request1)
     time1 = time.time() - start1
     
     print(f"\n--- Test 1: Single Move (Cold Cache) ---")
@@ -118,7 +116,7 @@ async def test_gdd_cache_performance():
     )
     
     start2 = time.time()
-    response2 = await interactor2.execute(request2)
+    response2 = interactor2.execute(request2)
     time2 = time.time() - start2
     
     print(f"\n--- Test 2: 10 Similar Moves (Warm Cache) ---")

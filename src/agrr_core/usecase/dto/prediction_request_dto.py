@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 
-
 @dataclass
 class PredictionRequestDTO:
     """DTO for prediction request."""

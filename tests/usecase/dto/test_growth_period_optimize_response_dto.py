@@ -10,7 +10,6 @@ from agrr_core.usecase.dto.growth_period_optimize_response_dto import (
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.crop_entity import Crop
 
-
 class TestCandidateResultDTO:
     """Tests for CandidateResultDTO."""
     
@@ -159,7 +158,6 @@ class TestCandidateResultDTO:
         assert result["is_optimal"] is True
         assert result["yield_factor"] == 1.0
         assert result["yield_loss_percentage"] == 0.0
-
 
 class TestOptimalGrowthPeriodResponseDTO:
     """Tests for OptimalGrowthPeriodResponseDTO."""

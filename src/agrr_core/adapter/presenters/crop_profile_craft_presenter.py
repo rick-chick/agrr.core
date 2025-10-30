@@ -6,7 +6,6 @@ from agrr_core.usecase.ports.output.crop_profile_craft_output_port import (
     CropProfileCraftOutputPort,
 )
 
-
 class CropProfileCraftPresenter(CropProfileCraftOutputPort):
     """Thin presenter that wraps success/error payloads."""
 
@@ -15,5 +14,4 @@ class CropProfileCraftPresenter(CropProfileCraftOutputPort):
 
     def format_success(self, data: Dict[str, Any]) -> Dict[str, Any]:
         return {"success": True, "data": data}
-
 

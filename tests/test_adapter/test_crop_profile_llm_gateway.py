@@ -1,7 +1,7 @@
 """Tests for CropProfileLLMGateway."""
 
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 from typing import Dict, Any
 
 from agrr_core.adapter.gateways.crop_profile_llm_gateway import (
@@ -9,17 +9,15 @@ from agrr_core.adapter.gateways.crop_profile_llm_gateway import (
 )
 from agrr_core.adapter.interfaces.clients.llm_client_interface import LLMClientInterface
 
-
 class MockLLMClient(LLMClientInterface):
     """Mock LLM client for testing."""
     
     def __init__(self):
-        self.struct = AsyncMock()
+        self.struct = Mock()
     
-    async def struct(self, query: str, structure: Dict[str, Any], instruction: str = None) -> Dict[str, Any]:
+    def struct(self, query: str, structure: Dict[str, Any], instruction: str = None) -> Dict[str, Any]:
         """Mock struct method."""
         pass
-
 
 class TestCropProfileLLMGateway:
     """Test cases for CropProfileLLMGateway."""
@@ -28,9 +26,8 @@ class TestCropProfileLLMGateway:
         """Set up test fixtures."""
         self.mock_llm_client = MockLLMClient()
         self.gateway = CropProfileLLMGateway(self.mock_llm_client)
-    
-    @pytest.mark.asyncio
-    async def test_extract_crop_variety(self):
+
+    def test_extract_crop_variety(self):
         """Test Step 1: Crop variety extraction."""
         crop_query = "トマト アイコ"
         
@@ -41,7 +38,7 @@ class TestCropProfileLLMGateway:
             }
         }
         
-        result = await self.gateway.extract_crop_variety(crop_query)
+        result = self.gateway.extract_crop_variety(crop_query)
         
         # Verify struct was called with correct parameters
         self.mock_llm_client.struct.assert_called_once()
@@ -54,9 +51,8 @@ class TestCropProfileLLMGateway:
         # Verify result
         assert result["crop_name"] == "トマト"
         assert result["variety"] == "アイコ"
-    
-    @pytest.mark.asyncio
-    async def test_define_growth_stages(self):
+
+    def test_define_growth_stages(self):
         """Test Step 2: Growth stage definition."""
         crop_name = "トマト"
         variety = "アイコ"
@@ -77,7 +73,7 @@ class TestCropProfileLLMGateway:
             }
         }
         
-        result = await self.gateway.define_growth_stages(crop_name, variety)
+        result = self.gateway.define_growth_stages(crop_name, variety)
         
         # Verify struct was called with correct parameters
         self.mock_llm_client.struct.assert_called_once()
@@ -93,9 +89,8 @@ class TestCropProfileLLMGateway:
         # Verify result
         assert result["crop_info"]["name"] == "トマト"
         assert len(result["growth_periods"]) == 1
-    
-    @pytest.mark.asyncio
-    async def test_research_stage_requirements(self):
+
+    def test_research_stage_requirements(self):
         """Test Step 3: Variety-specific requirement research."""
         crop_name = "トマト"
         variety = "アイコ"
@@ -123,7 +118,7 @@ class TestCropProfileLLMGateway:
             }
         }
         
-        result = await self.gateway.research_stage_requirements(
+        result = self.gateway.research_stage_requirements(
             crop_name, variety, stage_name, stage_description
         )
         
@@ -146,9 +141,8 @@ class TestCropProfileLLMGateway:
         assert result["temperature"]["base_temperature"] == 10.0
         assert result["sunshine"]["minimum_sunshine_hours"] == 4.0
         assert result["thermal"]["required_gdd"] == 300.0
-    
-    @pytest.mark.asyncio
-    async def test_extract_crop_economics(self):
+
+    def test_extract_crop_economics(self):
         """Test extracting crop economic information."""
         crop_name = "トマト"
         variety = "アイコ"
@@ -160,7 +154,7 @@ class TestCropProfileLLMGateway:
             }
         }
         
-        result = await self.gateway.extract_crop_economics(crop_name, variety)
+        result = self.gateway.extract_crop_economics(crop_name, variety)
         
         # Verify struct was called with correct parameters
         self.mock_llm_client.struct.assert_called_once()
@@ -174,9 +168,8 @@ class TestCropProfileLLMGateway:
         # Verify result
         assert result["area_per_unit"] == 0.5
         assert result["revenue_per_area"] == 3000.0
-    
-    @pytest.mark.asyncio
-    async def test_extract_crop_family(self):
+
+    def test_extract_crop_family(self):
         """Test extracting crop family information."""
         crop_name = "トマト"
         variety = "アイコ"
@@ -188,7 +181,7 @@ class TestCropProfileLLMGateway:
             }
         }
         
-        result = await self.gateway.extract_crop_family(crop_name, variety)
+        result = self.gateway.extract_crop_family(crop_name, variety)
         
         # Verify struct was called with correct parameters
         self.mock_llm_client.struct.assert_called_once()

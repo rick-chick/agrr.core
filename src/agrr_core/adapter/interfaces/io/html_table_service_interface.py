@@ -5,12 +5,11 @@ from typing import List
 
 from ..structures.html_table_structures import HtmlTable
 
-
 class HtmlTableServiceInterface(ABC):
     """HTMLテーブル取得サービスインターフェース"""
     
     @abstractmethod
-    async def get(self, url: str) -> List[HtmlTable]:
+    def get(self, url: str) -> List[HtmlTable]:
         """
         URLから全テーブルを取得
         

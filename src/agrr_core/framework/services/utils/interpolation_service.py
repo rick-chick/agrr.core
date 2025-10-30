@@ -12,7 +12,6 @@ Design:
 import numpy as np
 from typing import List
 
-
 class InterpolationService:
     """Service providing linear interpolation for missing values.
     

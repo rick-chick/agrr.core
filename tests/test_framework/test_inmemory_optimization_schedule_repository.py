@@ -17,12 +17,10 @@ from agrr_core.adapter.gateways.optimization_result_inmemory_gateway import (
     OptimizationResultInMemoryGateway,
 )
 
-
 class TestInMemoryOptimizationScheduleRepository:
     """Test suite for in-memory optimization schedule repository."""
 
-    @pytest.mark.asyncio
-    async def test_save_and_get_schedule(self):
+    def test_save_and_get_schedule(self):
         """Test saving and retrieving a schedule."""
         repository = OptimizationResultInMemoryGateway()
         
@@ -52,10 +50,10 @@ class TestInMemoryOptimizationScheduleRepository:
         ]
         
         # Save schedule using save() with total_cost
-        await repository.save("schedule_001", results, 1800.0)
+        repository.save("schedule_001", results, 1800.0)
         
         # Retrieve schedule using get()
-        retrieved = await repository.get("schedule_001")
+        retrieved = repository.get("schedule_001")
         
         assert retrieved is not None
         assert isinstance(retrieved, OptimizationSchedule)
@@ -65,17 +63,15 @@ class TestInMemoryOptimizationScheduleRepository:
         assert retrieved.selected_results[0].total_cost == 1000.0
         assert retrieved.selected_results[1].total_cost == 800.0
 
-    @pytest.mark.asyncio
-    async def test_get_nonexistent_schedule(self):
+    def test_get_nonexistent_schedule(self):
         """Test retrieving a schedule that doesn't exist."""
         repository = OptimizationResultInMemoryGateway()
         
-        result = await repository.get("nonexistent")
+        result = repository.get("nonexistent")
         
         assert result is None
 
-    @pytest.mark.asyncio
-    async def test_get_all_schedules(self):
+    def test_get_all_schedules(self):
         """Test retrieving all schedules."""
         repository = OptimizationResultInMemoryGateway()
         
@@ -108,11 +104,11 @@ class TestInMemoryOptimizationScheduleRepository:
         ]
         
         # Save schedules using save() with total_cost
-        await repository.save("schedule_001", results1, 1000.0)
-        await repository.save("schedule_002", results2, 900.0)
+        repository.save("schedule_001", results1, 1000.0)
+        repository.save("schedule_002", results2, 900.0)
         
         # Retrieve all (filter schedules with is_schedule)
-        all_results = await repository.get_all()
+        all_results = repository.get_all()
         all_schedules = [r for r in all_results if r.is_schedule]
         
         assert len(all_schedules) == 2
@@ -121,8 +117,7 @@ class TestInMemoryOptimizationScheduleRepository:
         assert "schedule_001" in schedule_ids
         assert "schedule_002" in schedule_ids
 
-    @pytest.mark.asyncio
-    async def test_delete_schedule(self):
+    def test_delete_schedule(self):
         """Test deleting a schedule."""
         repository = OptimizationResultInMemoryGateway()
         
@@ -141,28 +136,26 @@ class TestInMemoryOptimizationScheduleRepository:
             ),
         ]
         
-        await repository.save("schedule_001", results, 1000.0)
+        repository.save("schedule_001", results, 1000.0)
         
         # Delete schedule using delete()
-        deleted = await repository.delete("schedule_001")
+        deleted = repository.delete("schedule_001")
         
         assert deleted is True
         
         # Verify it's gone
-        retrieved = await repository.get("schedule_001")
+        retrieved = repository.get("schedule_001")
         assert retrieved is None
 
-    @pytest.mark.asyncio
-    async def test_delete_nonexistent_schedule(self):
+    def test_delete_nonexistent_schedule(self):
         """Test deleting a schedule that doesn't exist."""
         repository = OptimizationResultInMemoryGateway()
         
-        deleted = await repository.delete("nonexistent")
+        deleted = repository.delete("nonexistent")
         
         assert deleted is False
 
-    @pytest.mark.asyncio
-    async def test_clear_schedules(self):
+    def test_clear_schedules(self):
         """Test clearing all schedules."""
         repository = OptimizationResultInMemoryGateway()
         
@@ -181,19 +174,18 @@ class TestInMemoryOptimizationScheduleRepository:
             ),
         ]
         
-        await repository.save("schedule_001", results, 1000.0)
-        await repository.save("schedule_002", results, 1000.0)
+        repository.save("schedule_001", results, 1000.0)
+        repository.save("schedule_002", results, 1000.0)
         
         # Clear all schedules
-        await repository.clear_schedules()
+        repository.clear_schedules()
         
         # Verify they're all gone
-        all_results = await repository.get_all()
+        all_results = repository.get_all()
         all_schedules = [r for r in all_results if r.is_schedule]
         assert len(all_schedules) == 0
 
-    @pytest.mark.asyncio
-    async def test_schedules_and_results_separate(self):
+    def test_schedules_and_results_separate(self):
         """Test that schedules and results storage are separate."""
         repository = OptimizationResultInMemoryGateway()
         
@@ -213,7 +205,7 @@ class TestInMemoryOptimizationScheduleRepository:
             ),
         ]
         
-        await repository.save("opt_001", optimization_results)
+        repository.save("opt_001", optimization_results)
         
         # Save schedule
         schedule_results = [
@@ -228,11 +220,11 @@ class TestInMemoryOptimizationScheduleRepository:
             ),
         ]
         
-        await repository.save("schedule_001", schedule_results, 900.0)
+        repository.save("schedule_001", schedule_results, 900.0)
         
         # Verify both exist independently
-        opt_retrieved = await repository.get("opt_001")
-        schedule_retrieved = await repository.get("schedule_001")
+        opt_retrieved = repository.get("opt_001")
+        schedule_retrieved = repository.get("schedule_001")
         
         assert opt_retrieved is not None
         assert isinstance(opt_retrieved, OptimizationSchedule)
@@ -247,7 +239,7 @@ class TestInMemoryOptimizationScheduleRepository:
         assert schedule_retrieved.total_cost == 900.0  # Schedule has total_cost
         
         # Clear schedules should not affect optimization results
-        await repository.clear_schedules()
+        repository.clear_schedules()
         
-        opt_retrieved_after = await repository.get("opt_001")
+        opt_retrieved_after = repository.get("opt_001")
         assert opt_retrieved_after is not None

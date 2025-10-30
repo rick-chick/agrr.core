@@ -18,7 +18,6 @@ from agrr_core.entity.entities.optimization_intermediate_result_entity import (
     OptimizationIntermediateResult,
 )
 
-
 @dataclass(frozen=True)
 class OptimizationSchedule:
     """Unified entity for optimization results and schedules.

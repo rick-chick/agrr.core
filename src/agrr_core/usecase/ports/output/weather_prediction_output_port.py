@@ -5,7 +5,6 @@ from typing import List
 
 from agrr_core.entity import WeatherData, Forecast
 
-
 class WeatherPredictionOutputPort(ABC):
     """Interface for weather prediction output operations."""
     

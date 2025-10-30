@@ -17,7 +17,6 @@ from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 from agrr_core.framework.validation.output_validator import OutputValidator, OutputValidationError
 
-
 class WeatherFileGateway(WeatherGateway):
     """File-based implementation of WeatherGateway.
     
@@ -36,15 +35,15 @@ class WeatherFileGateway(WeatherGateway):
         self.file_repository = file_repository
         self.file_path = file_path
     
-    async def get(self) -> List[WeatherData]:
+    def get(self) -> List[WeatherData]:
         """Get weather data from configured file.
         
         Returns:
             List of WeatherData entities
         """
-        return await self.read_weather_data_from_file(self.file_path)
+        return self.read_weather_data_from_file(self.file_path)
     
-    async def create(self, weather_data: List[WeatherData], destination: str) -> None:
+    def create(self, weather_data: List[WeatherData], destination: str) -> None:
         """Create weather data at destination.
         
         Raises:
@@ -52,7 +51,7 @@ class WeatherFileGateway(WeatherGateway):
         """
         raise NotImplementedError("Weather data creation not implemented in WeatherFileGateway")
     
-    async def get_by_location_and_date_range(
+    def get_by_location_and_date_range(
         self,
         latitude: float,
         longitude: float,
@@ -72,7 +71,7 @@ class WeatherFileGateway(WeatherGateway):
             "Use WeatherAPIGateway or WeatherJMAGateway instead."
         )
     
-    async def get_forecast(
+    def get_forecast(
         self,
         latitude: float,
         longitude: float
@@ -92,7 +91,7 @@ class WeatherFileGateway(WeatherGateway):
     
     # ===== Reading Methods =====
     
-    async def read_weather_data_from_file(self, file_path: str) -> List[WeatherData]:
+    def read_weather_data_from_file(self, file_path: str) -> List[WeatherData]:
         """Read weather data from JSON or CSV file."""
         try:
             if not self.file_repository.exists(file_path):
@@ -106,9 +105,9 @@ class WeatherFileGateway(WeatherGateway):
             t0 = time.perf_counter() if prof else 0.0
             
             if extension == '.json':
-                result = await self._read_json_file(file_path)
+                result = self._read_json_file(file_path)
             elif extension == '.csv':
-                result = await self._read_csv_file(file_path)
+                result = self._read_csv_file(file_path)
             else:
                 raise FileError(f"Unsupported file format: {extension}. Supported formats: .json, .csv")
             if prof:
@@ -121,10 +120,10 @@ class WeatherFileGateway(WeatherGateway):
         except Exception as e:
             raise FileError(f"Failed to read weather data from file {file_path}: {e}")
     
-    async def _read_json_file(self, file_path: str) -> List[WeatherData]:
+    def _read_json_file(self, file_path: str) -> List[WeatherData]:
         """Read weather data from JSON file."""
         try:
-            content = await self.file_repository.read(file_path)
+            content = self.file_repository.read(file_path)
             data = json.loads(content)
             
             weather_data_list = []
@@ -154,10 +153,10 @@ class WeatherFileGateway(WeatherGateway):
         except Exception as e:
             raise FileError(f"Failed to read JSON file {file_path}: {e}")
     
-    async def _read_csv_file(self, file_path: str) -> List[WeatherData]:
+    def _read_csv_file(self, file_path: str) -> List[WeatherData]:
         """Read weather data from CSV file."""
         try:
-            content = await self.file_repository.read(file_path)
+            content = self.file_repository.read(file_path)
             # Use pandas to read CSV from content
             import io
             df = pd.read_csv(io.StringIO(content))
@@ -244,7 +243,7 @@ class WeatherFileGateway(WeatherGateway):
         except Exception:
             return False
     
-    async def get_input_file_info(self, file_path: str) -> Dict[str, Any]:
+    def get_input_file_info(self, file_path: str) -> Dict[str, Any]:
         """Get information about the input weather data file."""
         try:
             from pathlib import Path
@@ -262,7 +261,7 @@ class WeatherFileGateway(WeatherGateway):
             
             # Try to get sample data to determine structure
             try:
-                sample_data = await self.read_weather_data_from_file(file_path)
+                sample_data = self.read_weather_data_from_file(file_path)
                 file_info.update({
                     'record_count': len(sample_data),
                     'has_data': len(sample_data) > 0,
@@ -282,7 +281,7 @@ class WeatherFileGateway(WeatherGateway):
     
     # ===== Writing Methods =====
     
-    async def write_predictions_to_file(
+    def write_predictions_to_file(
         self, 
         predictions: List[Forecast], 
         output_path: str,
@@ -301,9 +300,9 @@ class WeatherFileGateway(WeatherGateway):
                 format_type = self._determine_output_format_from_extension(path.suffix)
             
             if format_type == 'json':
-                await self._write_json_file(predictions, output_path, include_metadata)
+                self._write_json_file(predictions, output_path, include_metadata)
             elif format_type == 'csv':
-                await self._write_csv_file(predictions, output_path, include_metadata)
+                self._write_csv_file(predictions, output_path, include_metadata)
             else:
                 raise FileError(f"Unsupported output format: {format_type}. Supported formats: json, csv")
                 
@@ -325,7 +324,7 @@ class WeatherFileGateway(WeatherGateway):
         
         return format_type
     
-    async def _write_json_file(
+    def _write_json_file(
         self, 
         predictions: List[Forecast], 
         output_path: str,
@@ -373,12 +372,12 @@ class WeatherFileGateway(WeatherGateway):
             # Write to file
             import json
             json_content = json.dumps(output_data, indent=2, ensure_ascii=False)
-            await self.file_repository.write(json_content, output_path)
+            self.file_repository.write(json_content, output_path)
                 
         except Exception as e:
             raise FileError(f"Failed to write JSON file {output_path}: {e}")
     
-    async def _write_csv_file(
+    def _write_csv_file(
         self, 
         predictions: List[Forecast], 
         output_path: str,
@@ -417,7 +416,7 @@ class WeatherFileGateway(WeatherGateway):
             # Create DataFrame and write to CSV
             df = pd.DataFrame(predictions_data)
             csv_content = df.to_csv(index=False, encoding='utf-8')
-            await self.file_repository.write(csv_content, output_path)
+            self.file_repository.write(csv_content, output_path)
             
             # Add metadata as comment if requested
             if include_metadata:
@@ -429,11 +428,11 @@ class WeatherFileGateway(WeatherGateway):
                 }
                 
                 # Read current content and prepend metadata
-                content = await self.file_repository.read(output_path)
+                content = self.file_repository.read(output_path)
                 metadata_header = '\n'.join([f'# {k}: {v}' for k, v in metadata.items()])
                 new_content = f"{metadata_header}\n{content}"
                 
-                await self.file_repository.write(new_content, output_path)
+                self.file_repository.write(new_content, output_path)
                 
         except Exception as e:
             raise FileError(f"Failed to write CSV file {output_path}: {e}")

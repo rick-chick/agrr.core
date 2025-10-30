@@ -4,7 +4,6 @@ import pytest
 
 from agrr_core.entity.entities.agricultural_task_entity import AgriculturalTask
 
-
 class TestAgriculturalTask:
     """Test cases for AgriculturalTask entity."""
     

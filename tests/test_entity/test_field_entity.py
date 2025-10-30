@@ -3,7 +3,6 @@
 import pytest
 from agrr_core.entity.entities.field_entity import Field
 
-
 class TestFieldEntity:
     """Test Field entity."""
 

@@ -26,7 +26,6 @@ from agrr_core.entity.value_objects.optimization_objective import (
     DEFAULT_OBJECTIVE,
 )
 
-
 class TestAllOptimizersInheritBaseOptimizer:
     """Verify all optimizers inherit from BaseOptimizer.
     
@@ -55,7 +54,6 @@ class TestAllOptimizersInheritBaseOptimizer:
             "to ensure unified objective function"
         )
 
-
 class TestAllOptimizersUseSameDefaultObjective:
     """Verify all optimizers use the same DEFAULT_OBJECTIVE.
     
@@ -80,7 +78,6 @@ class TestAllOptimizersUseSameDefaultObjective:
         interactor = OptimizationIntermediateResultScheduleInteractor()
         
         assert interactor.objective is DEFAULT_OBJECTIVE
-
 
 class TestUnifiedObjectiveFunctionSignature:
     """Test that all optimizers calculate the same objective value.
@@ -146,7 +143,6 @@ class TestUnifiedObjectiveFunctionSignature:
             f"period={value1}, schedule={value2}. "
             f"Expected -1000 for both (cost minimization)."
         )
-
 
 class TestObjectiveFunctionChangeDetection:
     """Detect when objective function changes.

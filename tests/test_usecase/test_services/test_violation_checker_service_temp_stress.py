@@ -16,7 +16,6 @@ from agrr_core.entity.entities.thermal_requirement_entity import ThermalRequirem
 from agrr_core.entity.value_objects.violation_type import ViolationType
 from agrr_core.usecase.services.violation_checker_service import ViolationCheckerService
 
-
 class TestTemperatureStressChecks:
     """Test temperature stress violation detection."""
     

@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 
 from agrr_core.entity import WeatherData
 
-
 class FeatureEngineeringService:
     """Service for creating features from weather time series data."""
     

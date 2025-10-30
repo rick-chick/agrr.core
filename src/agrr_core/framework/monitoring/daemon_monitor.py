@@ -11,7 +11,6 @@ from datetime import datetime, timedelta
 from ..logging.agrr_logger import get_logger, DaemonLogger
 from ..notifications.error_notifier import get_notifier
 
-
 class DaemonHealthChecker:
     """Daemon health monitoring system."""
     
@@ -154,7 +153,6 @@ class DaemonHealthChecker:
         
         return status
 
-
 class DaemonAutoRecovery:
     """Automatic daemon recovery system."""
     
@@ -239,7 +237,6 @@ class DaemonAutoRecovery:
         except Exception:
             return False
 
-
 class DaemonMonitor:
     """Comprehensive daemon monitoring system."""
     
@@ -281,10 +278,8 @@ class DaemonMonitor:
         """Force daemon recovery."""
         return self.auto_recovery.attempt_recovery()
 
-
 # Global monitor instance
 _global_monitor: Optional[DaemonMonitor] = None
-
 
 def get_monitor() -> DaemonMonitor:
     """Get global monitor instance."""
@@ -292,7 +287,6 @@ def get_monitor() -> DaemonMonitor:
     if _global_monitor is None:
         _global_monitor = DaemonMonitor()
     return _global_monitor
-
 
 def setup_monitoring(config: dict) -> DaemonMonitor:
     """Setup monitoring system from config."""

@@ -19,7 +19,6 @@ from agrr_core.usecase.services.neighbor_operations import (
     AreaAdjustOperation,
 )
 
-
 class NeighborGeneratorService:
     """Service to generate neighbor solutions for local search.
     

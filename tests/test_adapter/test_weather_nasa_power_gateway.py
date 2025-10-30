@@ -2,12 +2,11 @@
 
 import pytest
 from datetime import datetime
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import Mock, Mock, patch
 
 from agrr_core.adapter.gateways.weather_nasa_power_gateway import WeatherNASAPowerGateway
 from agrr_core.entity.exceptions.weather_api_error import WeatherAPIError
 from agrr_core.entity.exceptions.weather_data_not_found_error import WeatherDataNotFoundError
-
 
 class TestWeatherNASAPowerGateway:
     """Test WeatherNASAPowerGateway."""
@@ -27,24 +26,21 @@ class TestWeatherNASAPowerGateway:
         gateway = WeatherNASAPowerGateway(http_client)
         assert gateway.http_client == http_client
         assert gateway._request_count == 0
-    
-    @pytest.mark.asyncio
-    async def test_get_not_implemented(self, gateway):
+
+    def test_get_not_implemented(self, gateway):
         """Test that get() is not implemented."""
         with pytest.raises(NotImplementedError):
-            await gateway.get()
-    
-    @pytest.mark.asyncio
-    async def test_create_not_implemented(self, gateway):
+            gateway.get()
+
+    def test_create_not_implemented(self, gateway):
         """Test that create() is not implemented."""
         with pytest.raises(NotImplementedError):
-            await gateway.create([], "destination")
-    
-    @pytest.mark.asyncio
-    async def test_get_forecast_not_implemented(self, gateway):
+            gateway.create([], "destination")
+
+    def test_get_forecast_not_implemented(self, gateway):
         """Test that get_forecast() is not implemented."""
         with pytest.raises(NotImplementedError):
-            await gateway.get_forecast(28.6139, 77.2090)
+            gateway.get_forecast(28.6139, 77.2090)
     
     def test_build_url(self, gateway):
         """Test URL building."""
@@ -60,36 +56,32 @@ class TestWeatherNASAPowerGateway:
         assert "T2M_MIN" in url
         assert "T2M" in url
         assert "PRECTOTCORR" in url
-    
-    @pytest.mark.asyncio
-    async def test_invalid_latitude(self, gateway):
+
+    def test_invalid_latitude(self, gateway):
         """Test that invalid latitude raises error."""
         with pytest.raises(WeatherAPIError, match="Invalid latitude"):
-            await gateway.get_by_location_and_date_range(
+            gateway.get_by_location_and_date_range(
                 91.0, 77.2090, "2000-01-01", "2000-01-31"
             )
-    
-    @pytest.mark.asyncio
-    async def test_invalid_longitude(self, gateway):
+
+    def test_invalid_longitude(self, gateway):
         """Test that invalid longitude raises error."""
         with pytest.raises(WeatherAPIError, match="Invalid longitude"):
-            await gateway.get_by_location_and_date_range(
+            gateway.get_by_location_and_date_range(
                 28.6139, 181.0, "2000-01-01", "2000-01-31"
             )
-    
-    @pytest.mark.asyncio
-    async def test_invalid_date_format(self, gateway):
+
+    def test_invalid_date_format(self, gateway):
         """Test that invalid date format raises error."""
         with pytest.raises(WeatherAPIError, match="Invalid date format"):
-            await gateway.get_by_location_and_date_range(
+            gateway.get_by_location_and_date_range(
                 28.6139, 77.2090, "2000/01/01", "2000/01/31"
             )
-    
-    @pytest.mark.asyncio
-    async def test_invalid_date_order(self, gateway):
+
+    def test_invalid_date_order(self, gateway):
         """Test that invalid date order raises error."""
         with pytest.raises(WeatherAPIError, match="must be before or equal"):
-            await gateway.get_by_location_and_date_range(
+            gateway.get_by_location_and_date_range(
                 28.6139, 77.2090, "2000-02-01", "2000-01-01"
             )
     
@@ -232,9 +224,8 @@ class TestWeatherNASAPowerGateway:
         assert len(result) == 2
         assert result[0].time == datetime(2000, 1, 1)
         assert result[1].time == datetime(2000, 1, 2)
-    
-    @pytest.mark.asyncio
-    async def test_get_by_location_and_date_range_success(self, gateway):
+
+    def test_get_by_location_and_date_range_success(self, gateway):
         """Test successful data retrieval."""
         # Mock response data
         mock_response_data = {
@@ -248,10 +239,10 @@ class TestWeatherNASAPowerGateway:
         }
         
         # Mock fetch_data method
-        with patch.object(gateway, '_fetch_data', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(gateway, '_fetch_data', new_callable=Mock) as mock_fetch:
             mock_fetch.return_value = mock_response_data
             
-            result = await gateway.get_by_location_and_date_range(
+            result = gateway.get_by_location_and_date_range(
                 28.6139, 77.2090, "2000-01-01", "2000-01-01"
             )
             
@@ -259,18 +250,17 @@ class TestWeatherNASAPowerGateway:
             assert len(result.weather_data_list) == 1
             assert result.location.latitude == 28.6139
             assert result.location.longitude == 77.2090
-    
-    @pytest.mark.asyncio
-    async def test_get_by_location_and_date_range_no_data(self, gateway):
+
+    def test_get_by_location_and_date_range_no_data(self, gateway):
         """Test error when no data is found."""
         # Mock response with no data
         mock_response_data = {"properties": {"parameter": {"T2M": {}}}}
         
-        with patch.object(gateway, '_fetch_data', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(gateway, '_fetch_data', new_callable=Mock) as mock_fetch:
             mock_fetch.return_value = mock_response_data
             
             with pytest.raises(WeatherDataNotFoundError):
-                await gateway.get_by_location_and_date_range(
+                gateway.get_by_location_and_date_range(
                     28.6139, 77.2090, "2000-01-01", "2000-01-01"
                 )
 

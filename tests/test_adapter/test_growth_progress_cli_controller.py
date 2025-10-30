@@ -1,7 +1,7 @@
 """Tests for GrowthProgressCliController."""
 
 import pytest
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock, Mock
 from datetime import datetime
 
 from agrr_core.adapter.controllers.growth_progress_cli_controller import (
@@ -14,7 +14,6 @@ from agrr_core.usecase.dto.growth_progress_calculate_response_dto import (
     GrowthProgressCalculateResponseDTO,
     GrowthProgressRecordDTO,
 )
-
 
 class TestGrowthProgressCliController:
     """Test cases for GrowthProgressCliController."""
@@ -37,8 +36,7 @@ class TestGrowthProgressCliController:
         self.mock_weather_gateway = gateway_weather
         self.mock_presenter = output_port_growth_progress
 
-    @pytest.mark.asyncio
-    async def test_execute_calls_interactor(self):
+    def test_execute_calls_interactor(self):
         """Test that execute method calls interactor correctly."""
         # Setup request
         request = GrowthProgressCalculateRequestDTO(
@@ -56,17 +54,16 @@ class TestGrowthProgressCliController:
         )
         
         # Mock interactor's execute to return response
-        self.controller.interactor.execute = AsyncMock(return_value=mock_response)
+        self.controller.interactor.execute = Mock(return_value=mock_response)
         
         # Execute
-        result = await self.controller.execute(request)
+        result = self.controller.execute(request)
         
         # Assertions
         assert result == mock_response
         self.controller.interactor.execute.assert_called_once_with(request)
 
-    @pytest.mark.asyncio
-    async def test_handle_progress_command_success(self, tmp_path):
+    def test_handle_progress_command_success(self, tmp_path):
         """Test successful progress command handling."""
         # Create a temporary crop profile file
         from agrr_core.entity.entities.crop_entity import Crop
@@ -117,17 +114,16 @@ class TestGrowthProgressCliController:
         )
         
         # Mock interactor's execute
-        self.controller.interactor.execute = AsyncMock(return_value=mock_response)
+        self.controller.interactor.execute = Mock(return_value=mock_response)
         
         # Execute
-        await self.controller.handle_progress_command(args)
+        self.controller.handle_progress_command(args)
         
         # Assertions
         self.controller.interactor.execute.assert_called_once()
         self.mock_presenter.present.assert_called_once_with(mock_response)
 
-    @pytest.mark.asyncio
-    async def test_handle_progress_command_invalid_date(self, capsys, tmp_path):
+    def test_handle_progress_command_invalid_date(self, capsys, tmp_path):
         """Test error handling for invalid date format."""
         # Create a temporary crop profile file
         import json
@@ -154,14 +150,14 @@ class TestGrowthProgressCliController:
         args.format = "table"
         
         # Execute
-        await self.controller.handle_progress_command(args)
+        self.controller.handle_progress_command(args)
         
         # Assertions - should print error message
         captured = capsys.readouterr()
         assert "Invalid date format" in captured.out
         
         # Interactor should not be called
-        self.controller.interactor.execute = AsyncMock()
+        self.controller.interactor.execute = Mock()
         assert not self.controller.interactor.execute.called
 
     def test_controller_implements_input_port(self):

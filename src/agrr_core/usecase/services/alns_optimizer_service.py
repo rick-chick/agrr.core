@@ -24,7 +24,6 @@ from agrr_core.entity.entities.crop_entity import Crop
 from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 
-
 @dataclass
 class OperatorPerformance:
     """Track operator performance for adaptive weight adjustment."""
@@ -48,7 +47,6 @@ class OperatorPerformance:
         if self.success_count == 0:
             return 0.0
         return self.total_improvement / self.success_count
-
 
 class AdaptiveWeights:
     """Manage adaptive weights for destroy and repair operators."""
@@ -108,7 +106,6 @@ class AdaptiveWeights:
             for op in self.operators.values():
                 # Soft reset: move 50% toward neutral weight
                 op.weight = 0.5 * op.weight + 0.5
-
 
 class ALNSOptimizer:
     """Adaptive Large Neighborhood Search optimizer.

@@ -11,7 +11,6 @@ from agrr_core.usecase.gateways.move_instruction_gateway import MoveInstructionG
 from agrr_core.entity.entities.move_instruction_entity import MoveInstruction, MoveAction
 from agrr_core.adapter.interfaces.io.file_service_interface import FileServiceInterface
 
-
 class MoveInstructionFileGateway(MoveInstructionGateway):
     """File-based gateway for move instruction operations."""
     
@@ -29,7 +28,7 @@ class MoveInstructionFileGateway(MoveInstructionGateway):
         self.file_repository = file_repository
         self.file_path = file_path
     
-    async def get_all(self) -> List[MoveInstruction]:
+    def get_all(self) -> List[MoveInstruction]:
         """Get all move instructions from configured source (file in this implementation).
         
         Expected JSON format:
@@ -65,7 +64,7 @@ class MoveInstructionFileGateway(MoveInstructionGateway):
         
         try:
             # Read JSON file
-            content = await self.file_repository.read(self.file_path)
+            content = self.file_repository.read(self.file_path)
             data = json.loads(content)
             
             # Parse JSON to entities

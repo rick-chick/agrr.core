@@ -10,7 +10,6 @@ from agrr_core.usecase.dto.weather_data_response_dto import WeatherDataResponseD
 from agrr_core.usecase.dto.weather_data_list_response_dto import WeatherDataListResponseDTO
 from agrr_core.usecase.ports.output.weather_presenter_output_port import WeatherPresenterOutputPort
 
-
 class WeatherCLIPresenter(WeatherPresenterOutputPort):
     """CLI presenter for weather data display in terminal."""
     

@@ -9,13 +9,12 @@ Adapter layer tests focus on:
 """
 
 import pytest
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import MagicMock, Mock
 
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
 from agrr_core.adapter.presenters.weather_cli_presenter import WeatherCLIPresenter
 from agrr_core.adapter.controllers.weather_cli_controller import WeatherCliFetchController
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
-
 
 # ============================================================================
 # Adapter Layer - Controller Fixtures
@@ -26,7 +25,6 @@ def presenter_weather_cli():
     """Mock CLI presenter for weather data."""
     return MagicMock(spec=WeatherCLIPresenter)
 
-
 @pytest.fixture
 def controller_weather_cli_fetch(gateway_weather, presenter_weather_cli):
     """CLI weather fetch controller with mocked dependencies."""
@@ -35,7 +33,6 @@ def controller_weather_cli_fetch(gateway_weather, presenter_weather_cli):
         cli_presenter=presenter_weather_cli
     )
 
-
 # ============================================================================
 # UseCase Layer - Interactor Fixtures (for adapter tests)
 # ============================================================================
@@ -43,8 +40,7 @@ def controller_weather_cli_fetch(gateway_weather, presenter_weather_cli):
 @pytest.fixture
 def interactor_fetch_weather():
     """Mock fetch weather interactor for controller tests."""
-    return AsyncMock(spec=FetchWeatherDataInteractor)
-
+    return Mock(spec=FetchWeatherDataInteractor)
 
 # ============================================================================
 # Optimization Configuration Fixtures
@@ -56,5 +52,4 @@ def optimization_config_legacy():
     return OptimizationConfig(
         candidate_generation_strategy="candidate_pool"
     )
-
 

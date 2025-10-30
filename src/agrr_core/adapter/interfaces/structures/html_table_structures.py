@@ -3,12 +3,10 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-
 @dataclass
 class TableRow:
     """テーブルの1行"""
     cells: List[str]  # セルの値リスト（文字列）
-
 
 @dataclass
 class HtmlTable:

@@ -18,7 +18,6 @@ from agrr_core.adapter.interfaces.structures.html_table_structures import HtmlTa
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 
-
 # 気象庁観測地点マッピング（緯度経度 → (都道府県番号, 地点番号)）
 # 47都道府県すべての地点を定義（E2Eテストで100%検証済み）
 # テスト: tests/test_e2e/test_jma_47_prefectures.py
@@ -90,7 +89,6 @@ LOCATION_MAPPING: Dict[Tuple[float, float], Tuple[int, int, str]] = {
     (26.2124, 127.6809): (91, 47936, "那覇"),      # 47 沖縄 ✅
 }
 
-
 class WeatherJMAGateway(WeatherGateway):
     """Gateway for fetching weather data from JMA (Japan Meteorological Agency).
     
@@ -108,7 +106,7 @@ class WeatherJMAGateway(WeatherGateway):
         self.html_table_fetcher = html_table_fetcher
         self.logger = logging.getLogger(__name__)
     
-    async def get(self) -> List[WeatherData]:
+    def get(self) -> List[WeatherData]:
         """Get weather data from configured source.
         
         Note: This method is not used for JMA weather data.
@@ -122,7 +120,7 @@ class WeatherJMAGateway(WeatherGateway):
             "Use get_by_location_and_date_range() instead."
         )
     
-    async def create(self, weather_data: List[WeatherData], destination: str) -> None:
+    def create(self, weather_data: List[WeatherData], destination: str) -> None:
         """Create weather data at destination.
         
         Raises:
@@ -132,7 +130,7 @@ class WeatherJMAGateway(WeatherGateway):
             "Weather data creation not supported for JMA source"
         )
     
-    async def get_forecast(
+    def get_forecast(
         self,
         latitude: float,
         longitude: float
@@ -176,7 +174,7 @@ class WeatherJMAGateway(WeatherGateway):
         
         return nearest
     
-    async def get_by_location_and_date_range(
+    def get_by_location_and_date_range(
         self,
         latitude: float,
         longitude: float,
@@ -233,7 +231,7 @@ class WeatherJMAGateway(WeatherGateway):
                     url = self._build_url(prec_no, block_no, current.year, current.month)
                     
                     # Fetch HTML tables
-                    tables = await self.html_table_fetcher.get(url)
+                    tables = self.html_table_fetcher.get(url)
                     
                     # Find data table (id="tablefix1")
                     data_table = self._find_data_table(tables)

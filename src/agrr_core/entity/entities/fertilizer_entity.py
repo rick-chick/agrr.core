@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from typing import Optional, List
 
-
 @dataclass(frozen=True)
 class FertilizerListRequest:
     """Request for fertilizer list search.
@@ -17,7 +16,6 @@ class FertilizerListRequest:
     limit: int = 5
     area_m2: Optional[float] = None
 
-
 @dataclass(frozen=True)
 class FertilizerListResult:
     """Result of fertilizer list search.
@@ -27,7 +25,6 @@ class FertilizerListResult:
     """
     fertilizers: List[str]
 
-
 @dataclass(frozen=True)
 class FertilizerDetailRequest:
     """Request for fertilizer detail search.
@@ -36,7 +33,6 @@ class FertilizerDetailRequest:
         fertilizer_name: Name of the fertilizer to search for
     """
     fertilizer_name: str
-
 
 @dataclass(frozen=True)
 class FertilizerDetail:

@@ -7,7 +7,6 @@ from agrr_core.entity.entities.interaction_rule_entity import InteractionRule
 from agrr_core.entity.entities.crop_entity import Crop
 from agrr_core.entity.value_objects.rule_type import RuleType
 
-
 class TestGetContinuousCultivationImpact:
     """Test get_continuous_cultivation_impact method."""
     
@@ -220,7 +219,6 @@ class TestGetContinuousCultivationImpact:
         
         # Both rules apply: 0.8 * 0.9 = 0.72
         assert impact == pytest.approx(0.72, rel=0.001)
-
 
 class TestGetFieldCropImpact:
     """Test get_field_crop_impact method."""

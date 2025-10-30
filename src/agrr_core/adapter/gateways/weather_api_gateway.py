@@ -13,7 +13,6 @@ from agrr_core.adapter.interfaces.clients.http_client_interface import HttpClien
 from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWithLocationDTO
 from agrr_core.usecase.gateways.weather_gateway import WeatherGateway
 
-
 class WeatherAPIGateway(WeatherGateway):
     """Gateway for fetching weather data from Open-Meteo API.
     
@@ -30,7 +29,7 @@ class WeatherAPIGateway(WeatherGateway):
         self.http_service = http_service
         self.forecast_http_service = forecast_http_service or http_service
     
-    async def get(self) -> List[WeatherData]:
+    def get(self) -> List[WeatherData]:
         """Get weather data from configured source.
         
         Note: This method is not used for API-based weather data.
@@ -44,7 +43,7 @@ class WeatherAPIGateway(WeatherGateway):
             "Use get_by_location_and_date_range() or get_forecast() instead."
         )
     
-    async def create(self, weather_data: List[WeatherData], destination: str) -> None:
+    def create(self, weather_data: List[WeatherData], destination: str) -> None:
         """Create weather data at destination.
         
         Raises:
@@ -54,7 +53,7 @@ class WeatherAPIGateway(WeatherGateway):
             "Weather data creation not supported for API source"
         )
     
-    async def get_by_location_and_date_range(
+    def get_by_location_and_date_range(
         self,
         latitude: float,
         longitude: float,
@@ -94,7 +93,7 @@ class WeatherAPIGateway(WeatherGateway):
                 "timezone": "Asia/Tokyo"
             }
             
-            data = await self.http_service.get("", params)
+            data = self.http_service.get("", params)
             
             if "daily" not in data:
                 raise WeatherDataNotFoundError("No daily weather data found in API response")
@@ -149,7 +148,7 @@ class WeatherAPIGateway(WeatherGateway):
         except (IndexError, TypeError):
             return None
     
-    async def get_forecast(
+    def get_forecast(
         self,
         latitude: float,
         longitude: float
@@ -190,7 +189,7 @@ class WeatherAPIGateway(WeatherGateway):
                 "timezone": "Asia/Tokyo"
             }
             
-            data = await self.forecast_http_service.get("", params)
+            data = self.forecast_http_service.get("", params)
             
             if "daily" not in data:
                 raise WeatherDataNotFoundError("No daily weather data found in API response")

@@ -16,7 +16,6 @@ from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 from agrr_core.adapter.interfaces.clients.llm_client_interface import LLMClientInterface
 
-
 # Debug mode - set to True for debugging
 DEBUG_MODE = os.getenv("AGRRCORE_DEBUG", "false").lower() == "true"
 
@@ -106,7 +105,6 @@ def extract_prompt_section(content: str, section_name: str) -> str:
     
     return result
 
-
 class CropProfileLLMGateway(CropProfileGateway):
     """Gateway implementation using LLM for crop profile generation.
     
@@ -122,7 +120,7 @@ class CropProfileLLMGateway(CropProfileGateway):
         """
         self.llm_client = llm_client
     
-    async def get_all(self) -> List[CropProfile]:
+    def get_all(self) -> List[CropProfile]:
         """Get all crop profiles.
         
         Note: LLM-based gateway does not support listing all profiles.
@@ -133,7 +131,7 @@ class CropProfileLLMGateway(CropProfileGateway):
         return []
     
     # LLM-specific methods
-    async def extract_crop_variety(self, crop_query: str) -> Dict[str, Any]:
+    def extract_crop_variety(self, crop_query: str) -> Dict[str, Any]:
         """Step 1: Extract crop name and variety from user input.
         
         Args:
@@ -153,11 +151,11 @@ class CropProfileLLMGateway(CropProfileGateway):
         If variety is not specified, use "default" as variety.
         """
         
-        result = await self.llm_client.struct(crop_query, structure, instruction)
+        result = self.llm_client.struct(crop_query, structure, instruction)
         debug_print(f"Step 1 result: {result['data']}")
         return result.get("data", {})
     
-    async def define_growth_stages(self, crop_name: str, variety: str) -> Dict[str, Any]:
+    def define_growth_stages(self, crop_name: str, variety: str) -> Dict[str, Any]:
         """Step 2: Define growth stages for the crop variety.
         
         Args:
@@ -193,11 +191,11 @@ class CropProfileLLMGateway(CropProfileGateway):
             ]
         }
         
-        result = await self.llm_client.struct(query, structure, instruction)
+        result = self.llm_client.struct(query, structure, instruction)
         debug_print(f"Step 2 result: {result['data']}")
         return result.get("data", {})
     
-    async def research_stage_requirements(
+    def research_stage_requirements(
         self, crop_name: str, variety: str, stage_name: str, stage_description: str
     ) -> Dict[str, Any]:
         """Step 3: Research variety-specific requirements for a specific stage.
@@ -249,11 +247,11 @@ class CropProfileLLMGateway(CropProfileGateway):
             }
         }
         
-        result = await self.llm_client.struct(query, structure, instruction)
+        result = self.llm_client.struct(query, structure, instruction)
         debug_print(f"Step 3 result for {stage_name}: {result['data']}")
         return result.get("data", {})
     
-    async def extract_crop_economics(self, crop_name: str, variety: str) -> Dict[str, Any]:
+    def extract_crop_economics(self, crop_name: str, variety: str) -> Dict[str, Any]:
         """Extract crop economic information (area per unit and revenue per area).
         
         This is a separate LLM call independent from growth stage information.
@@ -323,7 +321,7 @@ class CropProfileLLMGateway(CropProfileGateway):
         - 信頼できる農業統計や市場データに基づくこと
         """
         
-        result = await self.llm_client.struct(query, structure, instruction)
+        result = self.llm_client.struct(query, structure, instruction)
         debug_print(f"Crop economics result: {result['data']}")
         
         # Extract data - handle nested structure if LLM returns it
@@ -340,7 +338,7 @@ class CropProfileLLMGateway(CropProfileGateway):
         
         return data
     
-    async def extract_crop_family(self, crop_name: str, variety: str) -> Dict[str, Any]:
+    def extract_crop_family(self, crop_name: str, variety: str) -> Dict[str, Any]:
         """Extract crop family (科) information.
         
         This is a separate LLM call to get the botanical family of the crop.
@@ -376,11 +374,11 @@ class CropProfileLLMGateway(CropProfileGateway):
         正確な植物分類学に基づいて科名を返してください。
         """
         
-        result = await self.llm_client.struct(query, structure, instruction)
+        result = self.llm_client.struct(query, structure, instruction)
         debug_print(f"Crop family result: {result['data']}")
         return result.get("data", {})
     
-    async def generate(self, crop_query: str) -> CropProfile:
+    def generate(self, crop_query: str) -> CropProfile:
         """Generate a crop profile using LLM.
         
         Args:
@@ -390,12 +388,12 @@ class CropProfileLLMGateway(CropProfileGateway):
             Generated CropProfile instance
         """
         # Step 1: Extract crop name and variety
-        crop_variety = await self.extract_crop_variety(crop_query)
+        crop_variety = self.extract_crop_variety(crop_query)
         crop_name = crop_variety.get("crop_name", crop_query)
         variety = crop_variety.get("variety", "default")
         
         # Step 2: Define growth stages
-        growth_data = await self.define_growth_stages(crop_name, variety)
+        growth_data = self.define_growth_stages(crop_name, variety)
         growth_periods = growth_data.get("growth_periods", [])
         
         # Step 3: Research requirements for each stage
@@ -404,7 +402,7 @@ class CropProfileLLMGateway(CropProfileGateway):
             stage_name = period.get("period_name", f"Stage {i}")
             stage_description = period.get("period_description", "")
             
-            requirements = await self.research_stage_requirements(
+            requirements = self.research_stage_requirements(
                 crop_name, variety, stage_name, stage_description
             )
             
@@ -448,12 +446,12 @@ class CropProfileLLMGateway(CropProfileGateway):
             stage_requirements.append(stage_requirement)
         
         # Step 4: Extract crop economics
-        economics = await self.extract_crop_economics(crop_name, variety)
+        economics = self.extract_crop_economics(crop_name, variety)
         area_per_unit = float(economics.get("area_per_unit", 0.25))
         revenue_per_area = float(economics.get("revenue_per_area", 5000.0))
         
         # Step 5: Extract crop family
-        family_data = await self.extract_crop_family(crop_name, variety)
+        family_data = self.extract_crop_family(crop_name, variety)
         family_scientific = family_data.get("family_scientific", "")
         
         # Create crop entity

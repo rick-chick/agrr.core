@@ -5,7 +5,6 @@ from typing import Optional
 
 from agrr_core.usecase.dto.allocation_adjust_response_dto import AllocationAdjustResponseDTO
 
-
 class AllocationAdjustCliPresenter:
     """Presenter for allocation adjustment CLI output."""
     

@@ -12,7 +12,6 @@ from agrr_core.usecase.dto.growth_period_optimize_request_dto import (
 )
 from agrr_core.entity.entities.field_entity import Field
 
-
 class TestFieldEntityToDTO:
     """Entity → DTO 境界のデータマッピングテスト"""
 

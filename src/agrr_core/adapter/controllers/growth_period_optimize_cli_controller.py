@@ -1,7 +1,7 @@
 """CLI controller for optimal growth period calculation (adapter layer)."""
 
 import argparse
-import asyncio
+
 from datetime import datetime
 from typing import Optional, List
 
@@ -29,7 +29,7 @@ from agrr_core.usecase.dto.growth_period_optimize_response_dto import (
 )
 from agrr_core.usecase.gateways.weather_interpolator import WeatherInterpolator
 from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
-
+from agrr_core.framework.logging.agrr_logger import get_logger
 
 class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
     """CLI controller implementing Input Port for optimal growth period calculation."""
@@ -60,7 +60,8 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
         self.field = field
         self.interaction_rule_gateway = interaction_rule_gateway
         self.weather_interpolator = weather_interpolator
-        
+        self.logger = get_logger()
+
         # Instantiate interactor inside controller
         self.interactor = GrowthPeriodOptimizeInteractor(
             crop_profile_gateway=self.crop_profile_gateway,
@@ -70,7 +71,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
             weather_interpolator=self.weather_interpolator,
         )
 
-    async def execute(
+    def execute(
         self, request: OptimalGrowthPeriodRequestDTO
     ) -> OptimalGrowthPeriodResponseDTO:
         """Execute the optimal growth period calculation use case.
@@ -83,7 +84,7 @@ class GrowthPeriodOptimizeCliController(GrowthPeriodOptimizeInputPort):
         Returns:
             Response DTO containing optimal growth period data
         """
-        return await self.interactor.execute(request)
+        return self.interactor.execute(request)
 
     def create_argument_parser(self) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(
@@ -115,7 +116,6 @@ Examples:
     --evaluation-start 2024-04-01 --evaluation-end 2024-09-30 \\
     --weather-file weather.json --field-file field_01.json \\
     --no-filter-redundant
-
 
 Weather File Format (JSON):
   {
@@ -280,7 +280,7 @@ Candidate Filtering (Default: Enabled):
                 f'Invalid date format: "{date_str}". Use YYYY-MM-DD (e.g., "2024-04-01")'
             )
 
-    async def handle_period_command(self, args) -> None:
+    def handle_period_command(self, args) -> None:
         """Handle the period optimization command.
         
         Finds the optimal cultivation start date that:
@@ -293,7 +293,7 @@ Candidate Filtering (Default: Enabled):
             evaluation_start = self._parse_date(args.evaluation_start)
             evaluation_end = self._parse_date(args.evaluation_end)
         except ValueError as e:
-            print(f'Error: {str(e)}')
+            self.logger.error(f'Error: {str(e)}')
             return
 
         # Update presenter format
@@ -301,14 +301,14 @@ Candidate Filtering (Default: Enabled):
 
         # Check if field entity was loaded
         if not self.field:
-            print('Error: Field configuration not loaded. Make sure --field-file is a valid field JSON file.')
+            self.logger.error('Error: Field configuration not loaded. Make sure --field-file is a valid field JSON file.')
             return
         
         # Load crop profile from gateway
         try:
-            crop_profile = await self.crop_profile_gateway.get()
+            crop_profile = self.crop_profile_gateway.get()
         except Exception as e:
-            print(f"Error loading crop profile: {str(e)}")
+            self.logger.error(f"Error loading crop profile: {str(e)}")
             return
         
         # Note: File paths are NOT passed to Interactor
@@ -327,18 +327,18 @@ Candidate Filtering (Default: Enabled):
 
         # Execute use case
         try:
-            response = await self.execute(request)
+            response = self.execute(request)
             self.presenter.present(response)
         except Exception as e:
-            print(f"Error calculating optimal growth period: {str(e)}")
+            self.logger.error(f"Error calculating optimal growth period: {str(e)}")
             import traceback
             traceback.print_exc()
 
-    async def run(self, args: Optional[list] = None) -> None:
+    def run(self, args: Optional[list] = None) -> None:
         """Run the controller with CLI arguments."""
         parser = self.create_argument_parser()
         parsed_args = parser.parse_args(args)
 
         # No subcommands - directly handle the period optimization
-        await self.handle_period_command(parsed_args)
+        self.handle_period_command(parsed_args)
 

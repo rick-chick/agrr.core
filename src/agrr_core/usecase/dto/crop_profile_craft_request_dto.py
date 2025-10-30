@@ -7,11 +7,9 @@ identifying the crop (and optionally variety), e.g., "トマト", "アイコト�
 from dataclasses import dataclass
 from typing import Optional
 
-
 @dataclass
 class CropProfileCraftRequestDTO:
     """DTO for crafting crop stage requirement profiles via LLM."""
 
     crop_query: str
-
 

@@ -5,7 +5,6 @@ import pytest
 from agrr_core.entity.value_objects.violation import Violation
 from agrr_core.entity.value_objects.violation_type import ViolationType
 
-
 class TestViolation:
     """Test Violation value object."""
     

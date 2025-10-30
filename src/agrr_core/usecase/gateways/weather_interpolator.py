@@ -10,7 +10,6 @@ from datetime import date
 
 from agrr_core.entity.entities.weather_entity import WeatherData
 
-
 class WeatherInterpolator(ABC):
     """Interface for interpolating missing weather data.
     

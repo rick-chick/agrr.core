@@ -5,7 +5,6 @@ from agrr_core.usecase.gateways.fertilizer_gateway import FertilizerGateway
 from agrr_core.usecase.ports.input.fertilizer_input_port import FertilizerDetailInputPort
 from agrr_core.entity.entities.fertilizer_entity import FertilizerDetailRequest, FertilizerDetail
 
-
 class FertilizerDetailInteractor(FertilizerDetailInputPort):
     """Interactor for searching detailed fertilizer information.
     
@@ -21,7 +20,7 @@ class FertilizerDetailInteractor(FertilizerDetailInputPort):
         """
         self.gateway = gateway
     
-    async def execute(self, request: FertilizerDetailRequestDTO) -> FertilizerDetailResponseDTO:
+    def execute(self, request: FertilizerDetailRequestDTO) -> FertilizerDetailResponseDTO:
         """Execute fertilizer detail search.
         
         Args:
@@ -36,7 +35,7 @@ class FertilizerDetailInteractor(FertilizerDetailInputPort):
         )
         
         # Call gateway
-        result: FertilizerDetail = await self.gateway.search_detail(entity_request)
+        result: FertilizerDetail = self.gateway.search_detail(entity_request)
         
         # Convert result to response DTO
         return FertilizerDetailResponseDTO(

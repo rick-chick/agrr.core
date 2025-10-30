@@ -9,7 +9,6 @@ from typing import Optional
 from agrr_core.usecase.dto.candidate_suggestion_response_dto import CandidateSuggestionResponseDTO
 from agrr_core.entity.entities.candidate_suggestion_entity import CandidateSuggestion, CandidateType
 
-
 class CandidateSuggestionCliPresenter:
     """
     候補リスト提示CLI Presenter

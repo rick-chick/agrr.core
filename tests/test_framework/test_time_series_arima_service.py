@@ -11,7 +11,6 @@ from agrr_core.framework.services.ml.time_series_arima_service import (
     STATSMODELS_AVAILABLE
 )
 
-
 class TestTimeSeriesARIMAService:
     """Test cases for TimeSeriesARIMAService."""
     
@@ -104,7 +103,6 @@ class TestTimeSeriesARIMAService:
         
         assert result == []
 
-
 class TestARIMAModel:
     """Test cases for ARIMAModel."""
     
@@ -165,7 +163,6 @@ class TestARIMAModel:
             
             with pytest.raises(RuntimeError, match="Statsmodels is not available"):
                 model.fit()
-
 
 class TestFittedARIMAModel:
     """Test cases for FittedARIMAModel."""

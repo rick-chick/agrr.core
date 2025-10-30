@@ -7,7 +7,6 @@ from agrr_core.usecase.gateways.task_schedule_generation_gateway import TaskSche
 from agrr_core.usecase.dto.task_schedule_generation_request_dto import TaskScheduleGenerationRequestDTO
 from agrr_core.entity.entities.task_schedule_result_entity import TaskScheduleResult
 
-
 class TaskScheduleGenerationInteractor:
     """Interactor for task schedule generation.
     
@@ -23,7 +22,7 @@ class TaskScheduleGenerationInteractor:
         """
         self.gateway = gateway
     
-    async def execute(self, request: TaskScheduleGenerationRequestDTO) -> TaskScheduleResult:
+    def execute(self, request: TaskScheduleGenerationRequestDTO) -> TaskScheduleResult:
         """Generate task schedule for a crop.
         
         Args:
@@ -42,7 +41,7 @@ class TaskScheduleGenerationInteractor:
         
         try:
             # Generate task schedule using gateway
-            result = await self.gateway.generate_task_schedule(
+            result = self.gateway.generate_task_schedule(
                 crop_name=request.crop_name,
                 variety=request.variety,
                 stage_requirements=request.stage_requirements,
@@ -50,7 +49,7 @@ class TaskScheduleGenerationInteractor:
             )
             
             # Validate generated result
-            if not await self.gateway.validate_task_schedule(result):
+            if not self.gateway.validate_task_schedule(result):
                 raise RuntimeError("Generated task schedule is invalid")
             
             return result
@@ -58,7 +57,7 @@ class TaskScheduleGenerationInteractor:
         except Exception as e:
             raise RuntimeError(f"Task schedule generation failed: {str(e)}")
     
-    async def generate_for_crop(
+    def generate_for_crop(
         self,
         crop_name: str,
         variety: str,
@@ -83,4 +82,4 @@ class TaskScheduleGenerationInteractor:
             agricultural_tasks=agricultural_tasks
         )
         
-        return await self.execute(request)
+        return self.execute(request)

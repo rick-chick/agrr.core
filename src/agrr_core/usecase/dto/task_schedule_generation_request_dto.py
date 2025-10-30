@@ -6,7 +6,6 @@ Data transfer object for task schedule generation requests.
 from dataclasses import dataclass
 from typing import List, Dict, Any
 
-
 @dataclass(frozen=True)
 class TaskScheduleGenerationRequestDTO:
     """Request DTO for task schedule generation.

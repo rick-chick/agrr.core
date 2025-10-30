@@ -1,7 +1,7 @@
 """Tests for FetchWeatherDataInteractor."""
 
 import pytest
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock, Mock
 from datetime import datetime
 
 from agrr_core.usecase.interactors.weather_fetch_interactor import FetchWeatherDataInteractor
@@ -10,18 +10,16 @@ from agrr_core.usecase.dto.weather_data_with_location_dto import WeatherDataWith
 from agrr_core.entity import WeatherData, Location
 from agrr_core.entity.exceptions.invalid_location_error import InvalidLocationError
 
-
 class TestFetchWeatherDataInteractor:
     """Test FetchWeatherDataInteractor."""
     
     def setup_method(self):
         """Set up test fixtures."""
-        self.mock_weather_gateway = AsyncMock()
+        self.mock_weather_gateway = Mock()
         self.mock_weather_presenter_output_port = Mock()
         self.interactor = FetchWeatherDataInteractor(self.mock_weather_gateway, self.mock_weather_presenter_output_port)
-    
-    @pytest.mark.asyncio
-    async def test_execute_success(self):
+
+    def test_execute_success(self):
         """Test successful execution."""
         # Setup mock data
         mock_weather_data = [
@@ -63,7 +61,7 @@ class TestFetchWeatherDataInteractor:
             end_date="2023-01-02"
         )
         
-        result = await self.interactor.execute(request)
+        result = self.interactor.execute(request)
         
         # Assertions
         assert result["success"] is True
@@ -77,9 +75,8 @@ class TestFetchWeatherDataInteractor:
         self.mock_weather_gateway.get_by_location_and_date_range.assert_called_once_with(
             35.7, 139.7, "2023-01-01", "2023-01-02"
         )
-    
-    @pytest.mark.asyncio
-    async def test_execute_invalid_location(self):
+
+    def test_execute_invalid_location(self):
         """Test execution with invalid location."""
         request = WeatherDataRequestDTO(
             latitude=91.0,  # Invalid latitude
@@ -91,7 +88,7 @@ class TestFetchWeatherDataInteractor:
         # Setup presenter mock for error response
         self.mock_weather_presenter_output_port.format_error.return_value = {"success": False, "error": {"message": "Invalid request parameters"}}
         
-        result = await self.interactor.execute(request)
+        result = self.interactor.execute(request)
         
         # Assertions
         assert result["success"] is False
@@ -100,9 +97,8 @@ class TestFetchWeatherDataInteractor:
         # Verify mock was not called
         self.mock_weather_gateway.get_by_location_and_date_range.assert_not_called()
         self.mock_weather_presenter_output_port.format_error.assert_called_once()
-    
-    @pytest.mark.asyncio
-    async def test_execute_invalid_date_range(self):
+
+    def test_execute_invalid_date_range(self):
         """Test execution with invalid date range."""
         request = WeatherDataRequestDTO(
             latitude=35.7,
@@ -114,7 +110,7 @@ class TestFetchWeatherDataInteractor:
         # Setup presenter mock for error response
         self.mock_weather_presenter_output_port.format_error.return_value = {"success": False, "error": {"message": "Invalid request parameters"}}
         
-        result = await self.interactor.execute(request)
+        result = self.interactor.execute(request)
         
         # Assertions
         assert result["success"] is False
@@ -123,9 +119,8 @@ class TestFetchWeatherDataInteractor:
         # Verify mock was not called
         self.mock_weather_gateway.get_by_location_and_date_range.assert_not_called()
         self.mock_weather_presenter_output_port.format_error.assert_called_once()
-    
-    @pytest.mark.asyncio
-    async def test_execute_empty_result(self):
+
+    def test_execute_empty_result(self):
         """Test execution with empty weather data."""
         mock_location = Location(latitude=35.7, longitude=139.7, elevation=37.0, timezone="Asia/Tokyo")
         mock_weather_data_with_location = WeatherDataWithLocationDTO(
@@ -145,7 +140,7 @@ class TestFetchWeatherDataInteractor:
         self.mock_weather_presenter_output_port.format_weather_data_list_dto.return_value = {"data": [], "total_count": 0}
         self.mock_weather_presenter_output_port.format_success.return_value = {"success": True, "data": {"data": [], "total_count": 0}}
         
-        result = await self.interactor.execute(request)
+        result = self.interactor.execute(request)
         
         # Should return empty result
         assert result["success"] is True

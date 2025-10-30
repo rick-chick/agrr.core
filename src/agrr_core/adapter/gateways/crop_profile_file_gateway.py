@@ -18,7 +18,6 @@ from agrr_core.entity.entities.crop_profile_entity import CropProfile
 from agrr_core.adapter.interfaces.io.file_service_interface import FileServiceInterface
 from agrr_core.usecase.gateways.crop_profile_gateway import CropProfileGateway
 
-
 class CropProfileFileGateway(CropProfileGateway):
     """File-based implementation of CropProfileGateway.
     
@@ -42,7 +41,7 @@ class CropProfileFileGateway(CropProfileGateway):
         self.file_path = file_path
         self._cache: Optional[Dict[str, CropProfile]] = None
     
-    async def get(self) -> CropProfile:
+    def get(self) -> CropProfile:
         """Get crop profile from configured file.
         
         Returns:
@@ -52,7 +51,7 @@ class CropProfileFileGateway(CropProfileGateway):
             raise ValueError("file_path not set. Cannot load crop profile.")
         
         # Read file using repository
-        content = await self.file_repository.read(self.file_path)
+        content = self.file_repository.read(self.file_path)
         
         # Parse JSON
         data = json.loads(content)
@@ -65,7 +64,7 @@ class CropProfileFileGateway(CropProfileGateway):
             # Single profile file
             return self._parse_single_profile(data)
     
-    async def get_all(self) -> List[CropProfile]:
+    def get_all(self) -> List[CropProfile]:
         """Get all crop profiles from the file.
         
         Works for both single profile and collection files.
@@ -73,10 +72,10 @@ class CropProfileFileGateway(CropProfileGateway):
         Returns:
             List of all CropProfile instances
         """
-        await self._load_cache()
+        self._load_cache()
         return list(self._cache.values())
     
-    async def save(self, crop_profile: CropProfile) -> None:
+    def save(self, crop_profile: CropProfile) -> None:
         """Save a crop profile.
         
         Args:
@@ -87,7 +86,7 @@ class CropProfileFileGateway(CropProfileGateway):
         """
         raise NotImplementedError("Save operation not implemented in CropProfileFileGateway")
     
-    async def delete(self) -> None:
+    def delete(self) -> None:
         """Delete current crop profile.
         
         Raises:
@@ -95,7 +94,7 @@ class CropProfileFileGateway(CropProfileGateway):
         """
         raise NotImplementedError("Delete operation not implemented in CropProfileFileGateway")
     
-    async def generate(self, crop_query: str) -> CropProfile:
+    def generate(self, crop_query: str) -> CropProfile:
         """Generate a crop profile from the given query.
         
         Note: Generation is not supported by file gateway.
@@ -109,7 +108,7 @@ class CropProfileFileGateway(CropProfileGateway):
             "Use CropProfileLLMGateway or CropProfileGatewayImpl instead."
         )
     
-    async def extract_crop_variety(self, crop_query: str) -> Dict:
+    def extract_crop_variety(self, crop_query: str) -> Dict:
         """Extract crop variety from query.
         
         Note: This is an LLM operation, not supported by file gateway.
@@ -122,7 +121,7 @@ class CropProfileFileGateway(CropProfileGateway):
             "Use CropProfileLLMGateway instead."
         )
     
-    async def define_growth_stages(self, crop_name: str, variety: str) -> Dict:
+    def define_growth_stages(self, crop_name: str, variety: str) -> Dict:
         """Define growth stages.
         
         Note: This is an LLM operation, not supported by file gateway.
@@ -135,7 +134,7 @@ class CropProfileFileGateway(CropProfileGateway):
             "Use CropProfileLLMGateway instead."
         )
     
-    async def research_stage_requirements(
+    def research_stage_requirements(
         self, 
         crop_name: str, 
         variety: str, 
@@ -154,7 +153,7 @@ class CropProfileFileGateway(CropProfileGateway):
             "Use CropProfileLLMGateway instead."
         )
     
-    async def extract_crop_economics(self, crop_name: str, variety: str) -> Dict:
+    def extract_crop_economics(self, crop_name: str, variety: str) -> Dict:
         """Extract crop economics.
         
         Note: This is an LLM operation, not supported by file gateway.
@@ -167,7 +166,7 @@ class CropProfileFileGateway(CropProfileGateway):
             "Use CropProfileLLMGateway instead."
         )
     
-    async def extract_crop_family(self, crop_name: str, variety: str) -> Dict:
+    def extract_crop_family(self, crop_name: str, variety: str) -> Dict:
         """Extract crop family.
         
         Note: This is an LLM operation, not supported by file gateway.
@@ -182,12 +181,12 @@ class CropProfileFileGateway(CropProfileGateway):
     
     # ===== Internal parsing methods =====
     
-    async def _load_cache(self) -> None:
+    def _load_cache(self) -> None:
         """Load all crops from file into cache."""
         if self._cache is not None:
             return
         
-        content = await self.file_repository.read(self.file_path)
+        content = self.file_repository.read(self.file_path)
         data = json.loads(content)
         
         self._cache = {}

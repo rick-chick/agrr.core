@@ -9,7 +9,6 @@ from agrr_core.usecase.dto.advanced_prediction_response_dto import (
     BatchPredictionResponseDTO
 )
 
-
 class PredictionAdvancedPresenter(AdvancedPredictionOutputPort):
     """Implementation of advanced prediction presenter."""
     

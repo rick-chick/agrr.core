@@ -5,7 +5,6 @@ from typing import Dict, Any
 
 from agrr_core.entity.entities.fertilizer_entity import FertilizerListRequest, FertilizerListResult, FertilizerDetailRequest, FertilizerDetail
 
-
 class FertilizerGateway(ABC):
     """Gateway for fertilizer information retrieval.
     
@@ -13,7 +12,7 @@ class FertilizerGateway(ABC):
     """
 
     @abstractmethod
-    async def search_list(self, request: FertilizerListRequest) -> FertilizerListResult:
+    def search_list(self, request: FertilizerListRequest) -> FertilizerListResult:
         """Search for popular fertilizers in a given language.
         
         Args:
@@ -25,7 +24,7 @@ class FertilizerGateway(ABC):
         pass
 
     @abstractmethod
-    async def search_detail(self, request: FertilizerDetailRequest) -> FertilizerDetail:
+    def search_detail(self, request: FertilizerDetailRequest) -> FertilizerDetail:
         """Search for detailed information about a specific fertilizer.
         
         Args:

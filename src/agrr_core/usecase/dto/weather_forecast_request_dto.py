@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 
-
 @dataclass
 class WeatherForecastRequestDTO:
     """DTO for weather forecast request."""

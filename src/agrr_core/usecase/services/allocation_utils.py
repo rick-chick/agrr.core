@@ -13,7 +13,6 @@ from datetime import datetime
 
 from agrr_core.entity.entities.crop_allocation_entity import CropAllocation
 
-
 class AllocationUtils:
     """Shared utility methods for allocation optimization.
     

@@ -21,7 +21,6 @@ References:
 from dataclasses import dataclass
 from typing import Dict
 
-
 @dataclass
 class YieldImpactAccumulator:
     """Accumulates yield impacts from daily temperature stress.

@@ -7,7 +7,6 @@ from agrr_core.usecase.gateways.model_config_gateway import ModelConfigGateway
 from agrr_core.usecase.gateways.prediction_model_gateway import PredictionModelGateway
 from agrr_core.usecase.ports.input.model_management_input_port import ModelManagementInputPort
 
-
 class ModelManagementInteractor(ModelManagementInputPort):
     """Interactor for model management operations."""
     
@@ -19,22 +18,22 @@ class ModelManagementInteractor(ModelManagementInputPort):
         self.model_config_gateway = model_config_gateway
         self.prediction_model_gateway = prediction_model_gateway
     
-    async def get_available_models(self) -> List[Dict[str, Any]]:
+    def get_available_models(self) -> List[Dict[str, Any]]:
         """Get available prediction models."""
         try:
-            models = await self.model_config_gateway.get_available_models()
+            models = self.model_config_gateway.get_available_models()
             return [{"name": model, "type": model} for model in models]
         except Exception as e:
             raise PredictionError(f"Failed to get available models: {e}")
     
-    async def get_model_info(self, model_type: str) -> Dict[str, Any]:
+    def get_model_info(self, model_type: str) -> Dict[str, Any]:
         """Get information about specific model."""
         try:
-            return await self.prediction_model_gateway.get_model_info(model_type)
+            return self.prediction_model_gateway.get_model_info(model_type)
         except Exception as e:
             raise PredictionError(f"Failed to get model info for {model_type}: {e}")
     
-    async def compare_models(
+    def compare_models(
         self,
         historical_data: List,
         test_data: List,

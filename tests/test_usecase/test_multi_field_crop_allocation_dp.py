@@ -2,7 +2,7 @@
 
 import pytest
 from datetime import datetime
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 
 from agrr_core.entity.entities.field_entity import Field
 from agrr_core.entity.entities.crop_entity import Crop
@@ -12,36 +12,31 @@ from agrr_core.usecase.interactors.multi_field_crop_allocation_greedy_interactor
 )
 from agrr_core.usecase.dto.optimization_config import OptimizationConfig
 
-
 @pytest.fixture
 def mock_field_gateway():
     """Mock FieldGateway."""
-    gateway = AsyncMock()
+    gateway = Mock()
     return gateway
-
 
 @pytest.fixture
 def mock_crop_gateway():
     """Mock CropProfileGateway."""
-    gateway = AsyncMock()
+    gateway = Mock()
     return gateway
-
 
 @pytest.fixture
 def mock_weather_gateway():
     """Mock WeatherGateway."""
-    gateway = AsyncMock()
+    gateway = Mock()
     return gateway
-
 
 @pytest.fixture
 def mock_crop_profile_gateway_internal():
     """Mock CropProfileGateway for internal use."""
-    gateway = AsyncMock()
+    gateway = Mock()
     gateway.save.return_value = None
     gateway.delete.return_value = None
     return gateway
-
 
 @pytest.fixture
 def interactor(
@@ -58,7 +53,6 @@ def interactor(
         crop_profile_gateway_internal=mock_crop_profile_gateway_internal,
         config=OptimizationConfig(),
     )
-
 
 class TestWeightedIntervalSchedulingDP:
     """Test weighted interval scheduling DP algorithm."""
@@ -203,7 +197,6 @@ class TestWeightedIntervalSchedulingDP:
         assert candidate_a in result
         assert candidate_c in result
         assert candidate_b not in result
-
 
 class TestFindLatestNonOverlapping:
     """Test binary search for finding latest non-overlapping candidate."""

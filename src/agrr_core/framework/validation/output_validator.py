@@ -6,11 +6,9 @@ Strict interface validation to prevent backward compatibility issues.
 from typing import Dict, List, Any
 from agrr_core.entity.entities.prediction_forecast_entity import Forecast
 
-
 class OutputValidationError(Exception):
     """Raised when output format violates interface specification."""
     pass
-
 
 class OutputValidator:
     """Validates prediction output against strict interface specification."""

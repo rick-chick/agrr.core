@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from agrr_core.entity.entities.field_entity import Field
     from agrr_core.usecase.dto.growth_period_optimize_response_dto import CandidateResultDTO
 
-
 @dataclass(frozen=True)
 class PeriodTemplate:
     """Crop growth period template (Field-independent).

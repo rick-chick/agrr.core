@@ -4,7 +4,6 @@ import pytest
 
 from agrr_core.entity.entities.crop_entity import Crop
 
-
 class TestCropCreation:
     """Test Crop entity creation."""
     
@@ -106,7 +105,6 @@ class TestCropCreation:
         
         assert crop.groups == []
         assert len(crop.groups) == 0
-
 
 class TestCropGroupExamples:
     """Test various crop group examples."""
@@ -225,7 +223,6 @@ class TestCropGroupExamples:
         assert "high_water_need" in crop.groups
         assert "deep_root" in crop.groups
 
-
 class TestCropImmutability:
     """Test that Crop entity is immutable (frozen)."""
     
@@ -251,7 +248,6 @@ class TestCropImmutability:
         
         with pytest.raises(AttributeError):
             crop.groups = ["Fabaceae"]
-
 
 class TestCropEquality:
     """Test Crop entity equality."""

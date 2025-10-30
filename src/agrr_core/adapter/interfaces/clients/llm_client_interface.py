@@ -1,13 +1,12 @@
 """LLM client interface (adapter layer).
 
-Defines the minimal async interface for Large Language Model clients used by
+Defines the minimal sync interface for Large Language Model clients used by
 adapters/gateways. Concrete implementations should live under the framework
 layer and implement this contract.
 """
 
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
-
 
 class LLMClientInterface(ABC):
     """Abstract client for structured extraction with an LLM (provider-agnostic).
@@ -17,7 +16,7 @@ class LLMClientInterface(ABC):
     """
 
     @abstractmethod
-    async def struct(self, query: str, structure: Dict[str, Any], instruction: Optional[str] = None) -> Dict[str, Any]:
+    def struct(self, query: str, structure: Dict[str, Any], instruction: Optional[str] = None) -> Dict[str, Any]:
         """Return structured data following the provided structure description.
 
         Args:

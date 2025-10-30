@@ -13,7 +13,6 @@ from agrr_core.usecase.dto.growth_progress_calculate_response_dto import (
     GrowthProgressRecordDTO,
 )
 
-
 class TestGrowthProgressCLIPresenter:
     """Test cases for GrowthProgressCLIPresenter."""
 

@@ -31,7 +31,6 @@ Invariants
 from dataclasses import dataclass
 from typing import Optional
 
-
 @dataclass(frozen=True)
 class TemperatureProfile:
     """Temperature thresholds for a crop at a given growth stage.
@@ -300,5 +299,4 @@ class TemperatureProfile:
             impacts["sterility"] = self.sterility_daily_impact
         
         return impacts
-
 

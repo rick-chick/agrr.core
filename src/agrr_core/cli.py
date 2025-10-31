@@ -681,6 +681,37 @@ Examples:
                 controller = FertilizerDetailCliController(interactor=interactor)
                 output = controller.execute(fertilizer_name=fertilizer_name, json_output=json_output)
                 print(output)
+            elif subcommand == 'recommend':
+                # Wire recommend subcommand (help-first)
+                from agrr_core.adapter.controllers.fertilizer_cli_recommend_controller import FertilizerCliRecommendController
+                from agrr_core.usecase.interactors.fertilizer_llm_recommend_interactor import FertilizerLLMRecommendInteractor
+                from agrr_core.adapter.gateways.fertilizer_recommend_inmemory_gateway import FertilizerRecommendInMemoryGateway
+
+                # Show help if requested
+                if '--help' in args or '-h' in args:
+                    controller = FertilizerCliRecommendController(interactor=None)  # interactor not needed for help
+                    parser = controller.create_argument_parser()
+                    # Print help to stdout
+                    print(parser.format_help())
+                    sys.exit(0)
+
+                # Parse arguments for recommend command using controller's parser
+                controller_for_parse = FertilizerCliRecommendController(interactor=None)
+                parser = controller_for_parse.create_argument_parser()
+                try:
+                    parsed_args = parser.parse_args(args[2:])
+                except SystemExit:
+                    return
+
+                # Use synchronous in-memory gateway to avoid async in CLI path
+                rec_gateway = FertilizerRecommendInMemoryGateway()
+                interactor = FertilizerLLMRecommendInteractor(gateway=rec_gateway)
+                controller = FertilizerCliRecommendController(interactor=interactor)
+
+                output = controller.handle(parsed_args)
+                # Output JSON/text to stdout (controller decides based on args)
+                if output:
+                    print(output)
             else:
                 logger.error(f"Error: Unknown fertilize subcommand '{subcommand}'")
                 logger.info("Available: list, get, recommend")

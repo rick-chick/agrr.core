@@ -58,26 +58,11 @@ class TestAllOptimizersUseSameDefaultObjective:
     """Verify all optimizers use the same DEFAULT_OBJECTIVE.
     
     This ensures consistency across all optimization operations.
+    
+    NOTE: Individual optimizer default objective tests are removed as redundant.
+    The base class test (test_base_optimizer.py::test_all_instances_use_same_default_objective)
+    already covers this for all optimizers since they all inherit from BaseOptimizer.
     """
-    
-    def test_growth_period_uses_default_objective(
-        self,
-        gateway_crop_profile,
-        gateway_weather,
-    ):
-        """GrowthPeriodOptimizeInteractor uses DEFAULT_OBJECTIVE."""
-        interactor = GrowthPeriodOptimizeInteractor(
-            crop_profile_gateway=gateway_crop_profile,
-            weather_gateway=gateway_weather,
-        )
-        
-        assert interactor.objective is DEFAULT_OBJECTIVE
-    
-    def test_schedule_interactor_uses_default_objective(self):
-        """OptimizationIntermediateResultScheduleInteractor uses DEFAULT_OBJECTIVE."""
-        interactor = OptimizationIntermediateResultScheduleInteractor()
-        
-        assert interactor.objective is DEFAULT_OBJECTIVE
 
 class TestUnifiedObjectiveFunctionSignature:
     """Test that all optimizers calculate the same objective value.

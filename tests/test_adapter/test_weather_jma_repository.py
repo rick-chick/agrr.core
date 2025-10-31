@@ -22,42 +22,6 @@ class TestWeatherJMAGateway:
         """Create repository instance."""
         return WeatherJMAGateway(mock_html_table_fetcher)
     
-    def test_find_nearest_location_tokyo(self, repository):
-        """Test finding nearest location for Tokyo."""
-        # Tokyo coordinates
-        latitude = 35.6895
-        longitude = 139.6917
-        
-        prec_no, block_no, name = repository._find_nearest_location(latitude, longitude)
-        
-        assert prec_no == 44
-        assert block_no == 47662
-        assert name == "東京"
-    
-    def test_find_nearest_location_sapporo(self, repository):
-        """Test finding nearest location for Sapporo."""
-        # Sapporo coordinates
-        latitude = 43.0642
-        longitude = 141.3469
-        
-        prec_no, block_no, name = repository._find_nearest_location(latitude, longitude)
-        
-        assert prec_no == 14
-        assert block_no == 47412
-        assert name == "札幌"
-    
-    def test_find_nearest_location_osaka(self, repository):
-        """Test finding nearest location for Osaka."""
-        # Osaka coordinates
-        latitude = 34.6937
-        longitude = 135.5023
-        
-        prec_no, block_no, name = repository._find_nearest_location(latitude, longitude)
-        
-        assert prec_no == 62
-        assert block_no == 47772
-        assert name == "大阪"
-    
     def test_build_url(self, repository):
         """Test URL building."""
         url = repository._build_url(

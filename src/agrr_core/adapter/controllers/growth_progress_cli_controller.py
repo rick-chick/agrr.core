@@ -165,7 +165,9 @@ Note:
         try:
             start_date = datetime.strptime(args.start_date, "%Y-%m-%d")
         except ValueError:
-            self.logger.error('Error: Invalid date format. Use YYYY-MM-DD (e.g., "2024-05-01")')
+            message = 'Error: Invalid date format. Use YYYY-MM-DD (e.g., "2024-05-01")'
+            self.logger.error(message)
+            print(message)
             return
 
         # Update presenter format

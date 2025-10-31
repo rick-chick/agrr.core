@@ -8,7 +8,7 @@ class _FakeFertilizerRecommendGateway(FertilizerRecommendGateway):
     def __init__(self, plan: FertilizerPlan):
         self._plan = plan
 
-    async def recommend(self, crop_profile):
+    def recommend(self, crop_profile):
         return self._plan
 
 @pytest.fixture
@@ -165,6 +165,202 @@ def entity_crop_profile_rice() -> CropProfile:
     thermal = ThermalRequirement(required_gdd=500.0)
     sr = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
     return CropProfile(crop=crop, stage_requirements=[sr])
+
+# --------------------------------------------------------------------------
+# Two-stage crop profile and constant weather for allocate vs progress tests
+# --------------------------------------------------------------------------
+
+@pytest.fixture
+def entity_crop_profile_two_stage_diff() -> CropProfile:
+    """Two-stage crop with different base/max temperatures per stage.
+
+    Stage 1: base 5°C, required_gdd 50 (fast under mean 20°C)
+    Stage 2: base 15°C, required_gdd 100 (slower under mean 20°C)
+    """
+    crop = Crop(crop_id="testcrop", name="TestCrop", area_per_unit=1.0, variety="v1")
+
+    stage1 = GrowthStage(name="Stage1", order=1)
+    temp1 = TemperatureProfile(
+        base_temperature=5.0,
+        optimal_min=18.0,
+        optimal_max=25.0,
+        low_stress_threshold=10.0,
+        high_stress_threshold=35.0,
+        frost_threshold=0.0,
+        sterility_risk_threshold=None,
+        max_temperature=40.0,
+    )
+    sun = SunshineProfile(minimum_sunshine_hours=3.0, target_sunshine_hours=6.0)
+    thermal1 = ThermalRequirement(required_gdd=50.0)
+
+    stage2 = GrowthStage(name="Stage2", order=2)
+    temp2 = TemperatureProfile(
+        base_temperature=15.0,
+        optimal_min=20.0,
+        optimal_max=28.0,
+        low_stress_threshold=12.0,
+        high_stress_threshold=36.0,
+        frost_threshold=0.0,
+        sterility_risk_threshold=None,
+        max_temperature=45.0,
+    )
+    thermal2 = ThermalRequirement(required_gdd=100.0)
+
+    sr1 = StageRequirement(stage=stage1, temperature=temp1, sunshine=sun, thermal=thermal1)
+    sr2 = StageRequirement(stage=stage2, temperature=temp2, sunshine=sun, thermal=thermal2)
+    return CropProfile(crop=crop, stage_requirements=[sr1, sr2])
+
+@pytest.fixture
+def entity_weather_constant_20c_200d():
+    """200 days of constant mean 20°C, min 10°C, max 30°C starting 2024-04-01."""
+    base_date = datetime(2024, 4, 1)
+    data = []
+    for i in range(200):
+        d = base_date + timedelta(days=i)
+        data.append(WeatherData(
+            time=d,
+            temperature_2m_max=30.0,
+            temperature_2m_min=10.0,
+            temperature_2m_mean=20.0,
+            precipitation_sum=0.0,
+            sunshine_duration=28800.0,
+        ))
+    return data
+
+@pytest.fixture
+def gateway_crop_profile_two_stage(entity_crop_profile_two_stage_diff):
+    """In-memory gateway exposing get/get_all for the two-stage crop profile."""
+    class _Gateway:
+        def get(self):
+            return entity_crop_profile_two_stage_diff
+        def get_all(self):
+            return [entity_crop_profile_two_stage_diff]
+        def save(self, profile):
+            self._saved = profile
+        def delete(self):
+            self._saved = None
+    return _Gateway()
+
+@pytest.fixture
+def gateway_weather_constant(entity_weather_constant_20c_200d):
+    """In-memory weather gateway returning the constant series."""
+    class _Gateway:
+        def get(self):
+            return entity_weather_constant_20c_200d
+        def create(self, weather_data, destination: str):
+            return None
+        def get_by_location_and_date_range(self, latitude, longitude, start_date, end_date):
+            return entity_weather_constant_20c_200d
+        def get_forecast(self, latitude, longitude):
+            return entity_weather_constant_20c_200d
+    return _Gateway()
+
+@pytest.fixture
+def entity_crop_profile_single_stage() -> CropProfile:
+    """Single-stage crop that can complete under constant 20°C weather.
+
+    Stage: base 10°C, required_gdd 150.
+    """
+    crop = Crop(crop_id="singlecrop", name="SingleCrop", area_per_unit=1.0, variety="v1")
+    stage = GrowthStage(name="SingleStage", order=1)
+    temp = TemperatureProfile(
+        base_temperature=10.0,
+        optimal_min=18.0,
+        optimal_max=25.0,
+        low_stress_threshold=10.0,
+        high_stress_threshold=35.0,
+        frost_threshold=0.0,
+        sterility_risk_threshold=None,
+        max_temperature=40.0,
+    )
+    sun = SunshineProfile(minimum_sunshine_hours=3.0, target_sunshine_hours=6.0)
+    thermal = ThermalRequirement(required_gdd=150.0)
+    sr = StageRequirement(stage=stage, temperature=temp, sunshine=sun, thermal=thermal)
+    return CropProfile(crop=crop, stage_requirements=[sr])
+
+@pytest.fixture
+def gateway_crop_profile_single_stage(entity_crop_profile_single_stage):
+    """In-memory gateway for the single-stage crop profile."""
+    class _Gateway:
+        def get(self):
+            return entity_crop_profile_single_stage
+        def get_all(self):
+            return [entity_crop_profile_single_stage]
+        def save(self, profile):
+            self._saved = profile
+        def delete(self):
+            self._saved = None
+    return _Gateway()
+
+@pytest.fixture
+def entity_crop_profile_three_stage() -> CropProfile:
+    """Three-stage crop with distinct base/max and required GDD per stage.
+
+    Stage1: base 5°C,   req 40
+    Stage2: base 12°C,  req 60
+    Stage3: base 18°C,  req 80
+    """
+    crop = Crop(crop_id="threecrop", name="ThreeCrop", area_per_unit=1.0, variety="v1")
+
+    sun = SunshineProfile(minimum_sunshine_hours=3.0, target_sunshine_hours=6.0)
+
+    s1 = GrowthStage(name="S1", order=1)
+    t1 = TemperatureProfile(
+        base_temperature=5.0,
+        optimal_min=16.0,
+        optimal_max=24.0,
+        low_stress_threshold=9.0,
+        high_stress_threshold=34.0,
+        frost_threshold=0.0,
+        sterility_risk_threshold=None,
+        max_temperature=40.0,
+    )
+    r1 = ThermalRequirement(required_gdd=40.0)
+
+    s2 = GrowthStage(name="S2", order=2)
+    t2 = TemperatureProfile(
+        base_temperature=12.0,
+        optimal_min=18.0,
+        optimal_max=26.0,
+        low_stress_threshold=12.0,
+        high_stress_threshold=35.0,
+        frost_threshold=0.0,
+        sterility_risk_threshold=None,
+        max_temperature=42.0,
+    )
+    r2 = ThermalRequirement(required_gdd=60.0)
+
+    s3 = GrowthStage(name="S3", order=3)
+    t3 = TemperatureProfile(
+        base_temperature=18.0,
+        optimal_min=20.0,
+        optimal_max=28.0,
+        low_stress_threshold=14.0,
+        high_stress_threshold=36.0,
+        frost_threshold=0.0,
+        sterility_risk_threshold=None,
+        max_temperature=45.0,
+    )
+    r3 = ThermalRequirement(required_gdd=80.0)
+
+    sr1 = StageRequirement(stage=s1, temperature=t1, sunshine=sun, thermal=r1)
+    sr2 = StageRequirement(stage=s2, temperature=t2, sunshine=sun, thermal=r2)
+    sr3 = StageRequirement(stage=s3, temperature=t3, sunshine=sun, thermal=r3)
+    return CropProfile(crop=crop, stage_requirements=[sr1, sr2, sr3])
+
+@pytest.fixture
+def gateway_crop_profile_three_stage(entity_crop_profile_three_stage):
+    """In-memory gateway for three-stage crop profile."""
+    class _Gateway:
+        def get(self):
+            return entity_crop_profile_three_stage
+        def get_all(self):
+            return [entity_crop_profile_three_stage]
+        def save(self, profile):
+            self._saved = profile
+        def delete(self):
+            self._saved = None
+    return _Gateway()
 
 # ============================================================================
 # UseCase Layer Fixtures - Gateway Interfaces
@@ -415,12 +611,8 @@ def external_http_service():
 # Pytest Configuration
 # ============================================================================
 
-# Async test marker
-pytest_plugins = ['pytest_asyncio']
-
 def pytest_configure(config):
     """Configure pytest with custom markers."""
-    config.addinivalue_line("markers", "asyncio: mark test as async")
     config.addinivalue_line("markers", "slow: mark test as slow running")
     config.addinivalue_line("markers", "integration: mark test as integration test")
     config.addinivalue_line("markers", "unit: mark test as unit test")

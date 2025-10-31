@@ -483,12 +483,10 @@ class MultiFieldCropAllocationGreedyInteractor(BaseOptimizer[AllocationCandidate
                 )
                 tasks.append(task)
         
-        # Execute all tasks in parallel
-        candidate_lists = asyncio.gather(*tasks)
-        
-        # Flatten results
+        # Execute tasks sequentially (synchronous execution)
         all_candidates = []
-        for candidate_list in candidate_lists:
+        for task in tasks:
+            candidate_list = task
             all_candidates.extend(candidate_list)
         
         # ===== LEGACY POST-FILTERING - DO NOT REPLICATE =====

@@ -25,19 +25,19 @@ class FertilizerCliRecommendController:
         parser.add_argument("--json", "-j", action="store_true", help="Output JSON only (no extra text)")
         return parser
 
-    async def handle(self, args: argparse.Namespace) -> str:
-        crop_profile = await self._load_crop_profile(args.crop_file)
+    def handle(self, args: argparse.Namespace) -> str:
+        crop_profile = self._load_crop_profile(args.crop_file)
         req = FertilizerRecommendRequestDTO(crop_profile=crop_profile)
-        plan = await self._interactor.execute(req)
+        plan = self._interactor.execute(req)
         output = FertilizerRecommendCliPresenter.to_json(plan)
 
         if args.output:
-            await self._file_service.write(output, args.output)
+            self._file_service.write(output, args.output)
             return ""  # quiet when writing to file
         return output if args.json else output
 
-    async def _load_crop_profile(self, path: str) -> Dict[str, Any]:
-        content = await self._file_service.read(path)
+    def _load_crop_profile(self, path: str) -> Dict[str, Any]:
+        content = self._file_service.read(path)
         data = json.loads(content)
         # Minimal validation: must contain 'crop' with crop_id and name
         if "crop" not in data or "crop_id" not in data["crop"] or "name" not in data["crop"]:

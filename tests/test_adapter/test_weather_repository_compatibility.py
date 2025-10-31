@@ -189,8 +189,8 @@ class TestWeatherRepositoryCompatibility:
             assert hasattr(repo, 'get_by_location_and_date_range')
             assert callable(repo.get_by_location_and_date_range)
             
-            # Method should be async
-            assert inspect.iscoroutinefunction(repo.get_by_location_and_date_range)
+            # Method should be callable (sync)
+            assert callable(repo.get_by_location_and_date_range)
     
     def test_data_source_identification(self):
         """

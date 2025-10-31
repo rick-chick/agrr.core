@@ -26,7 +26,7 @@ class TimedCropProfileFileGateway(CropProfileFileGateway):
         self.get_all_count = 0
         self.get_all_time = 0.0
     
-    async def get_all(self):
+    def get_all(self):
         self.get_all_count += 1
         start = time.time()
         result = super().get_all()

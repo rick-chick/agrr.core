@@ -37,7 +37,7 @@ class TestFilterRedundantComparison:
         """Get test_data directory path."""
         return Path(__file__).parent.parent.parent / "test_data"
 
-    async def _run_optimization(
+    def _run_optimization(
         self,
         fields_file: Path,
         crops_file: Path,

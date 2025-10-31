@@ -23,8 +23,8 @@ class FertilizerLLMRecommendInteractor:
     def __init__(self, gateway: FertilizerRecommendGateway) -> None:
         self._gateway = gateway
 
-    async def execute(self, request: FertilizerRecommendRequestDTO) -> FertilizerPlan:
-        plan = await self._gateway.recommend(request.crop_profile)
+    def execute(self, request: FertilizerRecommendRequestDTO) -> FertilizerPlan:
+        plan = self._gateway.recommend(request.crop_profile)
         self._validate_plan(plan)
         return plan
 

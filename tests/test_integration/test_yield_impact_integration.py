@@ -41,7 +41,7 @@ class MockCropProfileGateway:
     def __init__(self, crop_profile: CropProfile):
         self.crop_profile = crop_profile
     
-    async def get(self):
+    def get(self):
         return self.crop_profile
 
 class MockWeatherGateway:
@@ -50,7 +50,7 @@ class MockWeatherGateway:
     def __init__(self, weather_data: List[WeatherData]):
         self.weather_data = weather_data
     
-    async def get(self):
+    def get(self):
         return self.weather_data
 
 @pytest.fixture

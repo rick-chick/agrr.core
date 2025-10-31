@@ -20,7 +20,7 @@ class CandidateSuggestionCliPresenter:
         """初期化"""
         self.output_format = "table"  # デフォルトはTable形式
     
-    async def present(self, response: CandidateSuggestionResponseDTO, output_path: str) -> None:
+    def present(self, response: CandidateSuggestionResponseDTO, output_path: str) -> None:
         """
         候補リスト提示結果を出力
         
@@ -29,13 +29,13 @@ class CandidateSuggestionCliPresenter:
             output_path: 出力ファイルパス
         """
         if self.output_format == "table":
-            await self._present_table_format(response, output_path)
+            self._present_table_format(response, output_path)
         elif self.output_format == "json":
-            await self._present_json_format(response, output_path)
+            self._present_json_format(response, output_path)
         else:
             raise ValueError(f"Unsupported output format: {self.output_format}")
-    
-    async def _present_table_format(self, response: CandidateSuggestionResponseDTO, output_path: str) -> None:
+
+    def _present_table_format(self, response: CandidateSuggestionResponseDTO, output_path: str) -> None:
         """
         Table形式で出力
         
@@ -88,8 +88,8 @@ class CandidateSuggestionCliPresenter:
                     f.write("\n")
                 
                 f.write("\n")
-    
-    async def _present_json_format(self, response: CandidateSuggestionResponseDTO, output_path: str) -> None:
+
+    def _present_json_format(self, response: CandidateSuggestionResponseDTO, output_path: str) -> None:
         """
         JSON形式で出力
         

@@ -40,6 +40,11 @@ class MultiMetricPredictionInteractor(MultiMetricPredictionInputPort):
             
             # Validate date range
             date_range = DateRange(request.start_date, request.end_date)
+            # Additional validation: start_date must not be after end_date
+            start_dt = datetime.strptime(date_range.start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(date_range.end_date, "%Y-%m-%d")
+            if start_dt > end_dt:
+                raise InvalidDateRangeError("start_date must be on or before end_date")
             
             # Get historical weather data
             historical_data_list, actual_location = self.weather_data_gateway.get_weather_data_by_location_and_date_range(

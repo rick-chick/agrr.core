@@ -42,36 +42,38 @@ class FieldSwapOperation(NeighborOperation):
         # Tolerance for start date proximity (None means unlimited if not configured)
         tolerance_days = getattr(config, "candidate_date_tolerance_days", None) if config else None
         
-        # Legacy fallback: if no candidate pool is provided, perform direct swap using original periods
+        # If no candidate pool is provided, perform simple swap keeping original periods
         if not candidates:
             for i in range(len(solution)):
                 for j in range(i + 1, len(solution)):
-                    if solution[i].field.field_id != solution[j].field.field_id:
-                        swapped = self._swap_allocations_with_area_adjustment(
-                            solution[i], solution[j], solution
-                        )
-                        if swapped is not None:
-                            new_alloc_a, new_alloc_b = swapped
-                            # Fallow-period overlap checks
-                            has_overlap_a = False
-                            for alloc in solution:
-                                if alloc.allocation_id != solution[j].allocation_id:
-                                    if alloc.field.field_id == new_alloc_a.field.field_id:
-                                        if new_alloc_a.overlaps_with_fallow(alloc):
-                                            has_overlap_a = True
-                                            break
-                            has_overlap_b = False
-                            for alloc in solution:
-                                if alloc.allocation_id != solution[i].allocation_id:
-                                    if alloc.field.field_id == new_alloc_b.field.field_id:
-                                        if new_alloc_b.overlaps_with_fallow(alloc):
-                                            has_overlap_b = True
-                                            break
-                            if has_overlap_a or has_overlap_b:
-                                continue
-                            neighbor = solution.copy()
-                            neighbor[i], neighbor[j] = swapped
-                            neighbors.append(neighbor)
+                    alloc_a = solution[i]
+                    alloc_b = solution[j]
+                    if alloc_a.field.field_id == alloc_b.field.field_id:
+                        continue
+                    swapped = self._swap_allocations_with_area_adjustment(alloc_a, alloc_b, solution)
+                    if swapped is None:
+                        continue
+                    new_alloc_a, new_alloc_b = swapped
+                    # Check fallow overlap constraints in their new fields
+                    has_overlap = False
+                    for alloc in solution:
+                        if alloc.allocation_id != alloc_b.allocation_id and alloc.field.field_id == new_alloc_a.field.field_id:
+                            if new_alloc_a.overlaps_with_fallow(alloc):
+                                has_overlap = True
+                                break
+                    if has_overlap:
+                        continue
+                    for alloc in solution:
+                        if alloc.allocation_id != alloc_a.allocation_id and alloc.field.field_id == new_alloc_b.field.field_id:
+                            if new_alloc_b.overlaps_with_fallow(alloc):
+                                has_overlap = True
+                                break
+                    if has_overlap:
+                        continue
+                    neighbor = solution.copy()
+                    neighbor[i] = new_alloc_a
+                    neighbor[j] = new_alloc_b
+                    neighbors.append(neighbor)
             return neighbors
         
         for i in range(len(solution)):

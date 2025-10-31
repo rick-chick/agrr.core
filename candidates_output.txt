@@ -1,4 +1,0 @@
-候補リスト提示結果
-==================================================
-
-エラー: Error generating candidates: get() takes 1 positional argument but 2 were given

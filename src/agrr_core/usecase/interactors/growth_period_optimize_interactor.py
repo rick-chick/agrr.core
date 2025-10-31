@@ -218,9 +218,8 @@ class GrowthPeriodOptimizeInteractor(
             for stage_req in crop_profile.stage_requirements
         )
         
-        # Get temperature profile from first stage (assuming same for all stages)
-        # Use entity method for GDD calculation instead of direct calculation
-        temperature_profile = crop_profile.stage_requirements[0].temperature
+        # Stage requirements (for stage-aware GDD accumulation)
+        stage_requirements = crop_profile.stage_requirements
         
         # Create weather data lookup by date
         weather_by_date = {w.time.date(): w for w in weather_data}
@@ -247,54 +246,31 @@ class GrowthPeriodOptimizeInteractor(
         results = []
         gdd_per_candidate = []  # Track accumulated GDD for each candidate
         
-        # Find first completion
+        # Initial scan removed in favor of stage-aware computation path
         t_init0 = time.perf_counter() if prof else 0.0
-        while window_end_idx < len(sorted_dates) and accumulated_gdd < total_required_gdd:
-            date = sorted_dates[window_end_idx]
-            if date >= current_start.date():
-                weather = weather_by_date[date]
-                # Use entity method for GDD calculation (with temperature efficiency)
-                daily_gdd = temperature_profile.daily_gdd(weather.temperature_2m_mean)
-                accumulated_gdd += daily_gdd
-                window_end_idx += 1
-            else:
-                window_end_idx += 1
-                continue
         
-        # Check if first candidate completes
-        if accumulated_gdd >= total_required_gdd and window_end_idx > 0:
-            completion_date = datetime.combine(sorted_dates[window_end_idx - 1], datetime.min.time())
-            if completion_date <= request.evaluation_period_end:
-                growth_days = (completion_date - current_start).days + 1
-                
-                # Calculate yield_factor for this candidate
-                yield_factor = self._calculate_yield_factor_for_period(
-                    current_start,
-                    completion_date,
-                    weather_by_date,
-                    crop_profile.stage_requirements
-                )
-                
-                # Create candidate with field and crop entities (calculation happens in get_metrics())
-                results.append(CandidateResultDTO(
-                    start_date=current_start,
-                    completion_date=completion_date,
-                    growth_days=growth_days,
-                    field=request.field,
-                    crop=crop,
-                    is_optimal=False,
-                    yield_factor=yield_factor
-                ))
-                gdd_per_candidate.append(accumulated_gdd)
-                # Early-stop option: for adjust use case, we can stop sliding once a valid candidate is known
-                if request.early_stop_at_first:
-                    # Return only the first valid candidate discovered
-                    # Sort/concat below expects full pass; short-circuit by returning here
-                    return results
-            else:
-                # Exceeds deadline - don't add this candidate to results
-                # This prevents the error message from showing incorrect completion dates
-                pass
+        # Early-stop fast path: compute completion from current_start using stage-aware accumulation
+        if request.early_stop_at_first:
+            comp = self._compute_completion_from_start(
+                start=current_start,
+                weather_by_date=weather_by_date,
+                sorted_dates=sorted_dates,
+                stage_requirements=stage_requirements,
+            )
+            if comp is not None:
+                completion_date, growth_days, yield_factor = comp
+                if completion_date <= request.evaluation_period_end:
+                    results.append(CandidateResultDTO(
+                        start_date=current_start,
+                        completion_date=completion_date,
+                        growth_days=growth_days,
+                        field=request.field,
+                        crop=crop,
+                        is_optimal=False,
+                        yield_factor=yield_factor,
+                    ))
+            # Short-circuit return (only evaluate first start date)
+            return results
         
         # Slide window: move start date forward one day at a time
         if prof:
@@ -306,55 +282,34 @@ class GrowthPeriodOptimizeInteractor(
             prev_start = current_start
             current_start += timedelta(days=1)
             
-            # Remove GDD from the day that's no longer in the window
-            if prev_start.date() in weather_by_date:
-                weather = weather_by_date[prev_start.date()]
-                # Use entity method for GDD calculation (with temperature efficiency)
-                daily_gdd = temperature_profile.daily_gdd(weather.temperature_2m_mean)
-                accumulated_gdd -= daily_gdd
-            
-            # Add days at the end until we reach required GDD again
-            while accumulated_gdd < total_required_gdd and window_end_idx < len(sorted_dates):
-                date = sorted_dates[window_end_idx]
-                weather = weather_by_date[date]
-                # Use entity method for GDD calculation (with temperature efficiency)
-                daily_gdd = temperature_profile.daily_gdd(weather.temperature_2m_mean)
-                accumulated_gdd += daily_gdd
-                window_end_idx += 1
+            # For multi-stage with different temperature profiles, exact sliding-window subtraction
+            # is non-trivial. Use stage-aware recomputation from current_start to completion.
+            comp = self._compute_completion_from_start(
+                start=current_start,
+                weather_by_date=weather_by_date,
+                sorted_dates=sorted_dates,
+                stage_requirements=stage_requirements,
+            )
             
             # Check if this candidate is valid
-            if accumulated_gdd >= total_required_gdd and window_end_idx > 0:
-                completion_date = datetime.combine(sorted_dates[window_end_idx - 1], datetime.min.time())
-                if completion_date <= request.evaluation_period_end:
-                    growth_days = (completion_date - current_start).days + 1
-                    
-                    # Calculate yield_factor for this candidate
-                    yield_factor = self._calculate_yield_factor_for_period(
-                        current_start,
-                        completion_date,
-                        weather_by_date,
-                        crop_profile.stage_requirements
-                    )
-                    
-                    # Create candidate with field and crop entities (calculation happens in get_metrics())
-                    results.append(CandidateResultDTO(
-                        start_date=current_start,
-                        completion_date=completion_date,
-                        growth_days=growth_days,
-                        field=request.field,
-                        crop=crop,
-                        is_optimal=False,
-                        yield_factor=yield_factor
-                    ))
-                    gdd_per_candidate.append(accumulated_gdd)
-                    # Early-stop option: stop sliding once a valid candidate is found
-                    if request.early_stop_at_first:
-                        break
-                else:
-                    # Completion exceeds deadline - stop here
+            if comp is None:
+                break
+            completion_date, growth_days, yield_factor = comp
+            if completion_date <= request.evaluation_period_end:
+                results.append(CandidateResultDTO(
+                    start_date=current_start,
+                    completion_date=completion_date,
+                    growth_days=growth_days,
+                    field=request.field,
+                    crop=crop,
+                    is_optimal=False,
+                    yield_factor=yield_factor,
+                ))
+                # Early-stop option: stop sliding once a valid candidate is found
+                if request.early_stop_at_first:
                     break
             else:
-                # Cannot complete within available weather data
+                # Completion exceeds deadline - stop here
                 break
         
         if prof:
@@ -395,6 +350,59 @@ class GrowthPeriodOptimizeInteractor(
             t_all1 = time.perf_counter()
             print(f"[PROFILE] GrowthPeriod: total elapsed={t_all1-t_all0:.3f}s out_candidates={len(out)}", flush=True)
         return out
+
+    def _compute_completion_from_start(self, start, weather_by_date, sorted_dates, stage_requirements):
+        """Compute completion date using stage-aware GDD accumulation from a start date.
+
+        Returns tuple (completion_date, growth_days, yield_factor) or None if cannot complete.
+        """
+        from datetime import datetime, timedelta
+        # Initialize per-stage remaining requirements
+        remaining = [sr.thermal.required_gdd for sr in stage_requirements]
+        if not remaining:
+            return None
+        stage_idx = 0
+        completion_date = None
+        # Iterate forward from start across available weather
+        idx = 0
+        # Find starting index in sorted_dates
+        while idx < len(sorted_dates) and datetime.combine(sorted_dates[idx], datetime.min.time()) < start:
+            idx += 1
+        if idx >= len(sorted_dates):
+            return None
+        current_date = None
+        while idx < len(sorted_dates) and stage_idx < len(stage_requirements):
+            date_key = sorted_dates[idx]
+            weather = weather_by_date.get(date_key)
+            if weather is None:
+                idx += 1
+                continue
+            # Use current stage's temperature profile for daily GDD
+            temp_profile = stage_requirements[stage_idx].temperature
+            daily_gdd = temp_profile.daily_gdd(weather.temperature_2m_mean)
+            remaining[stage_idx] -= daily_gdd
+            current_date = datetime.combine(date_key, datetime.min.time())
+            # Move to next stage if current met
+            while stage_idx < len(stage_requirements) and remaining[stage_idx] <= 0.0:
+                # Carry over surplus GDD to next stage if any
+                surplus = -remaining[stage_idx]
+                stage_idx += 1
+                if stage_idx < len(stage_requirements):
+                    remaining[stage_idx] -= surplus
+            if stage_idx >= len(stage_requirements):
+                completion_date = current_date
+                break
+            idx += 1
+        if completion_date is None:
+            return None
+        growth_days = (completion_date - start).days + 1
+        yield_factor = self._calculate_yield_factor_for_period(
+            start,
+            completion_date,
+            weather_by_date,
+            stage_requirements,
+        )
+        return completion_date, growth_days, yield_factor
 
     def _calculate_yield_factor_for_period(
         self,

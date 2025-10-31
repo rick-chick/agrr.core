@@ -9,7 +9,7 @@ class _FakeInteractor(FertilizerLLMRecommendInteractor):
     def __init__(self, plan):
         self._plan = plan
 
-    async def execute(self, request: FertilizerRecommendRequestDTO):
+    def execute(self, request: FertilizerRecommendRequestDTO):
         return self._plan
 
 def test_cli_outputs_json(tmp_path, fake_gateway_valid, crop_profile_sample):
